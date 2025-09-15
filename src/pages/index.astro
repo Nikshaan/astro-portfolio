@@ -1,16 +1,13 @@
 ---
-
+import MainLayout from '../layouts/MainLayout.astro'
+import '../styles/global.css'
+import Navbar from '../components/navbar.astro'
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development.'>
+	<main class="bg-[#111111] text-neutral-50 min-h-[100svh] w-full p-2">
+		<div class="min-h-[80svh] flex justify-center">
+			<Navbar />
+		</div>
+	</main>
+</MainLayout>
