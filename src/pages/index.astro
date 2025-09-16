@@ -2,12 +2,70 @@
 import MainLayout from '../layouts/MainLayout.astro'
 import '../styles/global.css'
 import Navbar from '../components/navbar.astro'
+import { Image } from 'astro:assets';
+import beeImage from '../data/bee.webp';
 ---
 
-<MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development.'>
-	<main class="bg-[#111111] text-neutral-50 min-h-[100svh] w-full p-2">
-		<div class="min-h-[80svh] flex justify-center">
-			<Navbar />
-		</div>
+<MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style.'>
+	<main class="grid-bg bg-[#111111] text-neutral-50 min-h-[100svh] w-full p-2 flex items-center flex-col">
+    <Navbar />
+
+    <section id="home" class="min-h-[80svh] text-white m-auto p-2">
+      <div class="bg-[#171717] shadow-lg rounded-lg border border-slate-300 hover:border-cyan-300 align-start flex-none h-[15rem] w-[31rem] p-4 justify-start transform transition-all duration-200 ease-in-out">
+        <div class="flex">
+          <div class="flex flex-col gap-2 w-[60%]">
+            <div class="font-light">
+              <p>
+                Hi, I'm <span class="font-medium text-lg">Nikshaan Shetty</span>, a 19 years old AI/ML student.
+              </p>
+              <p class="mt-2">My interest lies in:</p>
+              <ul class="list-disc list-inside">
+                <li>Machine & Deep Learning</li>
+                <li>Web development</li>
+                <li>Music</li>
+                <li>Photography</li>
+              </ul>
+            </div>
+          </div>
+          <div class="flex justify-center items-center w-[50%]">
+            <Image src={beeImage} alt="killer bee art" class="w-auto max-h-[300px] select-none" height="300" width="300" />
+          </div>
+        </div>
+      </div>
+    </section>
+		<section id="projects">
+      
+    </section>
+    <section id="non_tech">
+
+    </section>
 	</main>
 </MainLayout>
+
+<style>
+.grid-bg {
+  position: relative;
+  background-color: #111111; 
+  background-image:
+    linear-gradient(to bottom, rgba(17,17,17,0.2),  rgba(17,17,17,1) 70%),
+    repeating-linear-gradient(
+      to right,
+      rgba(255,255,255,0.2) 0px,
+      rgba(255,255,255,0.2) 1px,
+      transparent 1px,
+      transparent 80px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.2) 0px,
+      rgba(255,255,255,0.2) 1px,
+      transparent 1px,
+      transparent 80px
+    );
+  background-size: auto, 80px 100%, 100% 80px;
+  background-position: top left, top left, top left;
+  background-repeat: no-repeat, repeat, repeat;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(17,17,17,1), rgba(17,17,17,1) 60%);
+  mask-image: linear-gradient(to bottom, rgba(17,17,17,1), rgba(17,17,17,1) 60%);
+}
+</style>
