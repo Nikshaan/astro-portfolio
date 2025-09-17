@@ -1,0 +1,33 @@
+---
+import Image from "astro/components/Image.astro";
+import aryaLogo from "../data/arya.webp";
+import codeAIlogo from "../data/codeai.webp";
+---
+
+<div class="bg-[#171717] group shadow-lg rounded-lg border border-slate-300 hover:border-cyan-300 align-start flex-none h-[17.5rem] w-[31rem] p-4 justify-start transform transition-all duration-200 ease-in-out">
+    <p class="italic font-light mb-2">extra curricular</p>
+    <div class="flex flex-col gap-8">
+        <div class="flex">
+            <div class="w-[20%] flex justify-center items-center">
+                <Image src = {aryaLogo} alt = "arya-logo" class="grayscale-100 select-none transition-all transform duration-200 group-hover:grayscale-0" width={70} loading="eager"  />
+            </div>
+            <div class="w-[80%] flex flex-col items-end text-right">
+                <p class="">DJS ARYA</p>
+                <p class="text-sm font-light italic">Canister satellite team of DJSCOE</p>
+                <p class="text-sm font-light">Software Team Member</p>
+                <p class="text-sm font-light italic">march 2025 - present</p>
+            </div>
+        </div>
+        <div class="flex">
+            <div class="w-[20%] flex justify-center items-center">
+                <Image src = {codeAIlogo} alt = "codeai-logo" class="grayscale-100 select-none transition-all transform duration-200 group-hover:grayscale-0 rounded-full" width={70} loading="eager"  />
+            </div>
+            <div class="w-[80%] flex flex-col items-end text-right">
+                <p class="">DJS CodeAI</p>
+                <p class="text-sm font-light italic">AI/ML club of DJSCOE</p>
+                <p class="text-sm font-light">AI mentee</p>
+                <p class="text-sm font-light italic">august 2025 - present</p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -4,6 +4,7 @@ import '../styles/global.css';
 import Navbar from '../components/navbar.astro';
 import Intro from '../components/intro.astro';
 import Education from '../components/education.astro';
+import Extracurr from '../components/extracurr.astro';
 
 ---
 
@@ -11,10 +12,13 @@ import Education from '../components/education.astro';
 	<main class="grid-bg bg-[#111111] text-neutral-50 min-h-[100svh] w-full p-2 flex items-center flex-col">
     <Navbar />
 
-    <section id="home" class="h-full text-white m-auto p-2">
-      <div class="flex flex-col gap-3 min-h-[80svh]">
+    <section id="home" class="h-full mt-10 p-2 flex flex-col lg:flex-row gap-2">
+      <div class="flex flex-col gap-2 lg:min-h-[70svh]">
         <Intro />
         <Education />
+      </div>
+      <div class="flex flex-col gap-2 lg:min-h-[70svh]">
+        <Extracurr />
       </div>
     </section>
 		<section id="projects">
