@@ -1,9 +1,10 @@
 ---
 import { Image } from 'astro:assets';
 import beeImage from '../data/bee.webp';
+import Card from './card.astro';
 ---
 
-<div class="bg-[#171717] shadow-lg rounded-lg border border-slate-300 hover:border-cyan-300 align-start flex-none h-[15rem] w-[31rem] p-4 justify-start transform transition-all duration-200 ease-in-out">
+<Card height='h-[15rem]' width='w-[31rem]'>
     <div class="flex">
         <div class="flex flex-col gap-2 w-[60%]">
             <div class="font-light">
@@ -23,4 +24,4 @@ import beeImage from '../data/bee.webp';
             <Image src={beeImage} alt="killer bee art" class="w-auto max-h-[300px] select-none" height="300" width="300" loading="eager" />
         </div>
     </div>
-</div>
+</Card>

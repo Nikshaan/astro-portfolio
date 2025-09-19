@@ -1,0 +1,10 @@
+---
+import Card from "./card.astro";
+import Mode from "./mode";
+---
+
+<Card height="h-[12rem]" width="w-[31rem] lg:w-[14.4rem]">
+    <div class="h-full w-full flex justify-center items-center">
+        <Mode client:load/>
+    </div>
+</Card>
