@@ -9,6 +9,8 @@ import Location from '../components/location.astro';
 import Modecard from '../components/modecard.astro';
 import Stackcard from '../components/stackcard.astro';
 import Filler from '../components/filler.astro';
+import projects from "../data/projects.json";
+import Projectcard from '../components/projectcard.astro';
 ---
 
 <MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style.'>
@@ -31,9 +33,22 @@ import Filler from '../components/filler.astro';
         <Stackcard />
       </div>
     </section>
-		<section id="projects" class="bg-[#111111] min-h-[100svh] w-[65rem] flex-1 m-auto">
-        <div class="flex flex-col mt-5 ml-1 lg:m-0 lg:p-3 justify-start items-start">
+		<section id="projects" class="bg-[#111111] min-h-[100svh] w-[65rem] flex-1 m-auto mt-5">
+        <div class="flex flex-col mt-5 pl-4 ml-1 lg:mt-0 lg:ml-3 lg:px-2 justify-start items-start">
+          <div class="flex justify-between items-center w-full mb-5">
             <p class="text-xl font-medium">PROJECTS</p>
+              <div class="flex gap-1">
+                <p class="border border-white p-1 text-sm">Web development</p>
+                <p class="border border-white p-1 text-sm">AI/ML</p>
+              </div>
+          </div>
+          <div class="px-4 border-l">
+              {
+                projects.web_projects.map((project) => (
+                  <Projectcard name = {project.name} techstack = {project.techstack} summary = {project.summary} github = {project.github} live = {project.live} />
+                ))
+              }
+          </div>
         </div>
     </section>
     <section id="non_tech">

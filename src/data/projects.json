@@ -1,0 +1,46 @@
+{
+    "web_projects": [
+        {
+            "name": "LocalBee",
+            "techstack": ["NextJS", "FastAPI", "PostgreSQL"],
+            "summary": "World map to track places I have visited and store their photos.",
+            "github": "https://github.com/Nikshaan/LocalBee",
+            "live": "https://local-bee.vercel.app/"
+        },
+        {
+            "name": "Pokedex",
+            "techstack": ["ReactJS", "TailwindCSS", "ChartJS"],
+            "summary": "Pokedex for 8 generations of pokemon using PokeAPI.",
+            "github": "https://github.com/Nikshaan/Pokedex",
+            "live": "https://nikshaan.github.io/Pokedex/"
+        },
+        {
+            "name": "Cineverse",
+            "techstack": ["ReactJS", "TailwindCSS", "Redux"],
+            "summary": "Movie and series collection with rating, plot & cast information using OMDb API.",
+            "github": "https://github.com/Nikshaan/Cineverse",
+            "live": "https://nikshaan.github.io/Cineverse/"
+        },
+        {
+            "name": "Blogeez",
+            "techstack": ["ReactJS", "NodeJS", "ExpressJS", "MongoDB"],
+            "summary": "Website to read, upload, edit & delete blogs with authentication.",
+            "github": "https://github.com/Nikshaan/Blogeez-backend",
+            "live": "https://blogeez-backend-1.onrender.com/feed"
+        },
+        {
+            "name": "Valorant tracker",
+            "techstack": ["ReactJS", "TailwindCSS", "TypeScript"],
+            "summary": "Valorant match history and statistics tracker.",
+            "github": "https://github.com/Nikshaan/valorant-tracker",
+            "live": "https://valorant-tracker-alpha.vercel.app/"
+        },
+        {
+            "name": "Floraghar",
+            "techstack": ["ReactJS", "TailwindCSS"],
+            "summary": "Online plant nursery website.",
+            "github": "https://github.com/Nikshaan/FloraGhar",
+            "live": "https://nikshaan.github.io/FloraGhar/"
+        }
+    ]
+}
