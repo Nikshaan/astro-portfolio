@@ -1,4 +1,6 @@
 ---
+import { Tooltips } from 'astro-tooltips';
+
 interface Props {
     title: string;
     description: string;
@@ -19,6 +21,7 @@ const { title, description } = Astro.props;
     <meta content={title} property="og:title" />
     <meta content={description} property="og:description" />
     <meta content="website" property="og:type" />
+    <Tooltips interactive={false} delay={[15, 100]} />
 </head>
 <body>
     <slot />

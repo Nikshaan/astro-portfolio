@@ -11,7 +11,7 @@ interface Props {
 const { height, width, body, title } = Astro.props;
 ---
 
-<div class={`bg-[#171717] group shadow-lg rounded-lg border border-slate-300 hover:border-cyan-300 align-start flex-none ${height} ${width} p-4 justify-start transform transition-all duration-200 ease-in-out`}>
+<div class={`bg-[#171717] group shadow-lg rounded-lg border border-slate-300 hover:border-purple-500 align-start flex-none ${height} ${width} p-4 justify-start transform transition-all duration-200 ease-in-out`}>
     {
         <Content body = {body} title = {title}>
             <slot />

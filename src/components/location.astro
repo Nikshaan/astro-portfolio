@@ -7,21 +7,21 @@ import { LINK } from "../lib/constants";
 
 <Card height="h-[12rem]" width="w-[31rem] lg:w-[16rem]">
     <div class="flex justify-center items-center">
-        <Icon name="Pin" class="w-[30px] h-[30px] mb-1 grayscale-75 select-none transition-all transform duration-200 group-hover:grayscale-0" /> 
-        <p class="text-2xl font-medium mr-3">Mumbai, India</p>
+        <Icon name="Pin" class="w-[30px] h-[30px] mb-1 select-none transition-all transform duration-200" /> 
+        <p class="text-xl font-medium mr-3">Mumbai, India</p>
     </div>
     <div class="flex justify-center items-center">
         <Clock client:load />
     </div>
     <div class="flex justify-center items-center gap-2.5">
-        <a href={LINK.github}>
-            <Icon title="Github" name="Github" class="w-10 h-10 cursor-pointer grayscale-75 select-none transition-all transform duration-200 group-hover:grayscale-0 hover:scale-90" />
+        <a data-tooltip-placement="bottom" href={LINK.github} title="Github">
+            <Icon title="Github" name="Github" class="w-10 h-10 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
         </a>
-        <a href={LINK.linkedlin}>
-            <Icon title="LinkedIn" name="LinkedIN" class="w-10 h-10 cursor-pointer grayscale-75 select-none transition-all transform duration-200 group-hover:grayscale-0 hover:scale-90" />
+        <a data-tooltip-placement="bottom" href={LINK.linkedlin} title="LinkedIn">
+            <Icon title="LinkedIn" name="LinkedIN" class="w-10 h-10 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
         </a>
-        <a href={LINK.email}>
-            <Icon title="Gmail" name="Gmail" class="w-10 h-10 cursor-pointer grayscale-75 select-none transition-all transform duration-200 group-hover:grayscale-0 hover:scale-90" />
+        <a data-tooltip-placement="bottom" href={LINK.email} title="Gmail">
+            <Icon title="Gmail" name="Gmail" class="w-10 h-10 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
         </a>
         </div>
 </Card>

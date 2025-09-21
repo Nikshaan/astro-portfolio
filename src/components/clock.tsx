@@ -25,7 +25,7 @@ useEffect(() => {
 
 
 return (
-    <div className="text-3xl my-5 font-light">
+    <div className="text-2xl my-5 font-light">
         <p>{currentTime}</p>
     </div>
     )

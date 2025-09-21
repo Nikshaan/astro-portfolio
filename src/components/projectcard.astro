@@ -10,7 +10,7 @@ interface Props {
 const { name, techstack, summary, github, live } = Astro.props;
 ---
 
-<div class="flex justify-between w-[62rem] border-b  p-1 py-4">
+<div class="flex justify-between lg:w-[62rem] border-b  p-1 py-4">
     <div class="flex flex-col">
         <p class="text-lg font-medium">{name}</p>
         <p class="text-sm font-light">{summary}</p>
@@ -18,7 +18,7 @@ const { name, techstack, summary, github, live } = Astro.props;
     </div>
     <div class="flex flex-col gap-1">
         <a class="cursor-pointer underline underline-offset-2" href={live}>live</a>
-        <p class="cursor-pointer underline underline-offset-2">Why this?</p>
+        <p class="cursor-pointer underline underline-offset-2">read</p>
         <a class="cursor-pointer underline underline-offset-2" href={github}>github</a>
     </div>
 </div>
