@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+
 interface Props {
     name?: string,
     techstack?: string[],
@@ -8,13 +10,51 @@ interface Props {
 }
 
 const { name, techstack, summary, github, live } = Astro.props;
+
+let techstackLink = []
+
+if (techstack) {
+    for (let i = 0; i < techstack.length; i++) {
+        if (techstack[i] === 'ReactJS') {
+            techstackLink.push("https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB");
+        } else if (techstack[i] === 'NextJS') {
+            techstackLink.push("https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white");
+        } else if (techstack[i] === 'TailwindCSS') {
+            techstackLink.push("https://img.shields.io/badge/Tailwind_CSS-38B2AC?logo=tailwindcss&logoColor=white");
+        } else if (techstack[i] === 'NodeJS') {
+            techstackLink.push("https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white");
+        } else if (techstack[i] === 'FastAPI') {
+            techstackLink.push("https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white");
+        } else if (techstack[i] === 'Redux') {
+            techstackLink.push("https://img.shields.io/badge/Redux-593D88?logo=redux&logoColor=white");
+        } else if (techstack[i] === 'ExpressJS') {
+            techstackLink.push("https://img.shields.io/badge/Express.js-000000?logo=express&logoColor=white");
+        } else if (techstack[i] === 'MongoDB') {
+            techstackLink.push("https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white");
+        } else if (techstack[i] === 'PostgreSQL') {
+            techstackLink.push("https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white");
+        } else if (techstack[i] === 'Motion') {
+            techstackLink.push("https://img.shields.io/badge/Framer_Motion-0055FF?logo=framer&logoColor=white");
+        } else if (techstack[i] === 'ChartJS') {
+            techstackLink.push("https://img.shields.io/badge/Chart.js-FF6384?logo=chartdotjs&logoColor=white");
+        } else if (techstack[i] === 'TypeScript') {
+            techstackLink.push("https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white");
+        }
+    }
+}
 ---
 
 <div class="flex justify-between lg:w-[62rem] border-b  p-1 py-4">
     <div class="flex flex-col">
         <p class="text-lg font-medium">{name}</p>
         <p class="text-sm font-light">{summary}</p>
-        <p class="text-sm font-light italic my-2">tech stack</p>
+        <div class="text-sm font-light italic my-2 flex gap-1">
+            {
+                techstackLink.map((tech) => (
+                    <Image src={tech} alt="tech" height={60} width={60} loading="lazy" />
+                ))
+            }
+        </div>
     </div>
     <div class="flex flex-col gap-1">
         <a class="cursor-pointer underline underline-offset-2" href={live}>live</a>

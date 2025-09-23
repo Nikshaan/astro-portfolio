@@ -23,7 +23,7 @@ const { title, description } = Astro.props;
     <meta content="website" property="og:type" />
     <Tooltips interactive={false} delay={[15, 100]} />
 </head>
-<body>
+<body class="lenis-wrapper">
     <slot />
 </body>
 </html>
@@ -34,3 +34,5 @@ const { title, description } = Astro.props;
         overflow-x: hidden;
     }
 </style>
+
+<script src="../lib/lenis.js"></script>

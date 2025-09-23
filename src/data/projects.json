@@ -9,7 +9,7 @@
         },
         {
             "name": "Pokedex",
-            "techstack": ["ReactJS", "TailwindCSS", "ChartJS"],
+            "techstack": ["ReactJS", "TailwindCSS", "ChartJS", "Motion"],
             "summary": "Pokedex for 8 generations of pokemon using PokeAPI.",
             "github": "https://github.com/Nikshaan/Pokedex",
             "live": "https://nikshaan.github.io/Pokedex/"
@@ -23,7 +23,7 @@
         },
         {
             "name": "Blogeez",
-            "techstack": ["ReactJS", "NodeJS", "ExpressJS", "MongoDB"],
+            "techstack": ["ReactJS", "TailwindCSS","NodeJS", "ExpressJS", "MongoDB"],
             "summary": "Website to read, upload, edit & delete blogs with authentication.",
             "github": "https://github.com/Nikshaan/Blogeez-backend",
             "live": "https://blogeez-backend-1.onrender.com/feed"

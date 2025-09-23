@@ -2,8 +2,8 @@
 
 ---
 
-<div class="bg-[#171717] mt-2 h-10 w-[350px] border border-slate-300 rounded-2xl flex justify-around items-center">
-    <a href="#home" class="cursor-pointer text-purple-500">
+<div id="navbar" class="bg-[#111111]/50 z-50 sticky top-2 mt-2 h-10 w-[350px] border border-slate-300 rounded-lg flex justify-around items-center transition-all duration-200">
+    <a href="#home" class="cursor-pointer">
         me
     </a>
     <a href="#projects" class="cursor-pointer">
@@ -13,3 +13,22 @@
         non-tech
     </a>
 </div>
+
+
+<script>
+    let lastScrollTop = 0;
+    const navbar = document.getElementById('navbar');
+
+    const navbarHeight = navbar.offsetHeight;
+
+    window.addEventListener('scroll', function(){
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        if(navbar && scrollTop > lastScrollTop && scrollTop > navbarHeight){
+            navbar.style.top = `-${navbarHeight}px`;
+        } else if(navbar){
+            navbar.style.top = '0.5rem';
+        }
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    });
+</script>
