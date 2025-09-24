@@ -1,0 +1,12 @@
+---
+import lastfm from "../lastfm/lastfm";
+import MusicCharts from "../components/musiccharts";
+
+let musicStats = await lastfm();
+// console.log(musicStats)
+---
+
+<div class="flex flex-col h-[15rem] w-[80svh] lg:w-[65rem]">
+    <p class="pl-4 my-4 font-thin">Daily music scrobbles</p>
+    <MusicCharts data={musicStats?.weeklyScrobbles ?? []} client:visible />
+</div>
