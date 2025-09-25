@@ -2,7 +2,7 @@
     "web_projects": [
         {
             "name": "LocalBee",
-            "techstack": ["NextJS", "FastAPI", "PostgreSQL"],
+            "techstack": ["NextJS", "TailwindCSS", "FastAPI", "PostgreSQL"],
             "summary": "World map to track places I have visited and store their photos.",
             "github": "https://github.com/Nikshaan/LocalBee",
             "live": "https://local-bee.vercel.app/"

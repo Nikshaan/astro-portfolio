@@ -11,16 +11,16 @@ import { LINK } from "../lib/constants";
         <p class="text-xl font-medium mr-3">Mumbai, India</p>
     </div>
     <div class="flex justify-center items-center">
-        <Clock client:load />
+        <Clock client:only />
     </div>
     <div class="flex justify-center items-center gap-2.5">
-        <a data-tooltip-placement="bottom" href={LINK.github} title="Github">
+        <a aria-label="link to nikshaan's github" data-tooltip-placement="bottom" href={LINK.github} title="Github">
             <Icon title="Github" name="Github" class="w-10 h-10 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
         </a>
-        <a data-tooltip-placement="bottom" href={LINK.linkedlin} title="LinkedIn">
+        <a aria-label="link to nikshaan's linkedIn" data-tooltip-placement="bottom" href={LINK.linkedlin} title="LinkedIn">
             <Icon title="LinkedIn" name="LinkedIN" class="w-10 h-10 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
         </a>
-        <a data-tooltip-placement="bottom" href={LINK.email} title="Gmail">
+        <a aria-label="nikshaan's email address" data-tooltip-placement="bottom" href={LINK.email} title="Gmail">
             <Icon title="Gmail" name="Gmail" class="w-10 h-10 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
         </a>
         </div>
