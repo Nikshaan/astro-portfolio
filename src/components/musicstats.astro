@@ -4,7 +4,6 @@ import MusicCharts from "./musiccharts";
 interface artistInfoType {
     name?: string;
     count?: string;
-    image?: string;
 }
 
 interface daily {
@@ -59,7 +58,6 @@ try {
         .then(data => data?.topartists?.artist?.map((artist: any) => ({
             name: artist?.name,
             count: artist?.playcount,
-            image: artist?.image?.[0]?.["#text"]
         })) ?? [])
         .catch(error => {
             console.error('Error fetching top artists:', error);
@@ -90,7 +88,42 @@ try {
 }
 ---
 
-<div class="flex flex-col h-[15rem] w-[80svh] lg:w-[65rem]">
-    <MusicCharts data={weeklyScrobbles} client:visible>
-    </MusicCharts>
+<div class="flex justify-around mt-5">
+    <div>
+        <p class="font-thin mb-2">Complete music scrobbles</p>
+        <div class="flex flex-col justify-start items-start h-full w-fit gap-2">
+            <p>Play count: {upperStatsArray[0]}</p>
+            <p>Track count: {upperStatsArray[1]}</p>
+            <p>Artist count: {upperStatsArray[2]}</p>
+            <p>Album count: {upperStatsArray[3]}</p>
+        </div>
+    </div>
+    <div>
+        <p class="font-thin mb-2">Top artists of the week</p>
+        <div class="">
+            {
+                artistsInfo.map((artist) => (
+                    <div class="flex flex-row justify-start items-start h-full w-fit gap-2">
+                        <div class="flex gap-2">
+                            <p>{artist.name}</p>
+                            <p>plays: {artist.count}</p>
+                        </div>
+                    </div>
+                ))
+            }
+        </div>
+    </div>
 </div>
+<div class="flex flex-col h-[15rem] w-[80svh] lg:w-[65rem] mt-10">
+    <p class="my-4 font-thin text-center">Daily music scrobbles</p>
+    <MusicCharts data={weeklyScrobbles} client:visible />
+</div>
+<style>
+    :global(.recharts-wrapper *) {
+    outline: none;
+    }
+
+    :global(.recharts-surface) {
+        outline: none;
+    }
+</style>

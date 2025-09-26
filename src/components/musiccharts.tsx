@@ -27,12 +27,13 @@ export default function MusicCharts({ data }: { data: data[] }) {
     }
     
     return (
-        <div className='w-full h-full pr-10 select-none'>
+        <div className='w-full h-full pr-10 lg:px-20 select-none'>
             <ResponsiveContainer width="100%" height="100%" minWidth={300} minHeight={200}>
                 <AreaChart
                     width={dimensions.width}
                     height={dimensions.height}
                     data={data}
+                    tabIndex={-1}
                     margin={{
                         top: 10,
                         right: 30,
