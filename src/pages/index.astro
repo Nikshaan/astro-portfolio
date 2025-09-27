@@ -12,10 +12,12 @@ import Filler from '../components/filler.astro';
 import projects from "../data/projects.json";
 import Projectcard from '../components/projectcard.astro';
 import Musicstats from '../components/musicstats.astro';
+import Gallery from '../components/gallery.astro';
 ---
 
 <MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style.'>
-	<main id="home" class="grid-bg bg-[#111111] text-neutral-50 min-h-[100svh] w-full p-2 flex items-center flex-col">
+	<main id="home" class="bg-[#111111] text-neutral-50 min-h-[100svh] w-full flex items-center flex-col">
+    <div class="grid-bg w-full flex flex-col justify-center items-center">
     <Navbar />
     <section class="h-full mt-10 p-2 flex flex-col lg:flex-row gap-2 flex-1">
       <div class="flex flex-col gap-2 h-full">
@@ -34,6 +36,7 @@ import Musicstats from '../components/musicstats.astro';
         <Stackcard />
       </div>
     </section>
+    </div>
 		<section id="projects" class="min-h-[100svh] lg:w-[65rem] flex-1 m-auto mt-5">
         <div class="flex flex-col mt-5 pl-4 ml-1 lg:mt-0 lg:ml-3 lg:px-2 justify-start items-start">
           <div class="flex justify-between items-center w-full mb-5">
@@ -59,6 +62,10 @@ import Musicstats from '../components/musicstats.astro';
           <p class="pl-4 my-4 font-thin">MUSIC</p>
             <Musicstats />
         </div>
+        <div class="min-h-[70svh] overflow-hidden lg:w-[65rem] mt-10">
+          <p class="pl-4 my-4 font-thin">GALLERY</p>
+            <Gallery />
+        </div>
       </div>
     </section>
 	</main>
@@ -69,7 +76,7 @@ import Musicstats from '../components/musicstats.astro';
   position: relative;
   background-color: #111111; 
   background-image:
-    linear-gradient(to bottom, rgba(63, 0, 145, 0.332),  rgb(11, 11, 11) 30%),
+    linear-gradient(to bottom, rgba(63, 0, 145, 0.332),  rgb(11, 11, 11) 40%),
     repeating-linear-gradient(
       to right,
       rgba(255,255,255,0.3) 0px,

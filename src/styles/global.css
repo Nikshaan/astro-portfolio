@@ -31,3 +31,22 @@ html.lenis {
   width: 100%;
   min-height: 100vh;
 }
+
+.f-carousel {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.f-carousel__nav {
+  display: flex;
+  justify-content: center;
+  flex-direction: row-reverse;
+  margin-bottom: 1rem;
+}
+
+.f-carousel__button.is-prev,
+.f-carousel__button.is-next {
+  position: unset;
+  transform: unset;
+  margin: 0 12px;
+}
