@@ -1,247 +1,101 @@
 ---
 import ImageCarousel from './fancybox';
-import photo1 from '../data/photos/photo1.webp';
-import photo2 from '../data/photos/photo2.webp';
-import photo3 from '../data/photos/photo3.webp';
-import photo4 from '../data/photos/photo4.webp';
-import photo5 from '../data/photos/photo5.webp';
-import photo6 from '../data/photos/photo6.webp';
-import photo7 from '../data/photos/photo7.webp';
-import photo8 from '../data/photos/photo8.webp';
-import photo9 from '../data/photos/photo9.webp';
-import photo10 from '../data/photos/photo10.webp';
-import photo11 from '../data/photos/photo11.webp';
-import photo12 from '../data/photos/photo12.webp';
-import photo13 from '../data/photos/photo13.webp';
-import photo14 from '../data/photos/photo14.webp';
-import photo15 from '../data/photos/photo15.webp';
-import photo16 from '../data/photos/photo16.webp';
-import photo17 from '../data/photos/photo17.webp';
-import photo18 from '../data/photos/photo18.webp';
-import photo19 from '../data/photos/photo19.webp';
-import photo20 from '../data/photos/photo20.webp';
-import photo21 from '../data/photos/photo21.webp';
-import photo22 from '../data/photos/photo22.webp';
-import photo23 from '../data/photos/photo23.webp';
-import photo24 from '../data/photos/photo24.webp';
-import photo25 from '../data/photos/photo25.webp';
-import photo26 from '../data/photos/photo26.webp';
-import photo27 from '../data/photos/photo27.webp';
-import photo28 from '../data/photos/photo28.webp';
-import photo29 from '../data/photos/photo29.webp';
-import photo30 from '../data/photos/photo30.webp';
-import photo31 from '../data/photos/photo31.webp';
-import photo32 from '../data/photos/photo32.webp';
-import photo33 from '../data/photos/photo33.webp';
-import photo34 from '../data/photos/photo34.webp';
-import photo35 from '../data/photos/photo35.webp';
-import photo36 from '../data/photos/photo36.webp';
-import photo37 from '../data/photos/photo37.webp';
-import photo38 from '../data/photos/photo38.webp';
-import photo39 from '../data/photos/photo39.webp';
-import photo40 from '../data/photos/photo40.webp';
-import photo41 from '../data/photos/photo41.webp';
-import photo42 from '../data/photos/photo42.webp';
-import photo43 from '../data/photos/photo43.webp';
-import photo44 from '../data/photos/photo44.webp';
-import photo45 from '../data/photos/photo45.webp';
-import photo46 from '../data/photos/photo46.webp';
-import photo47 from '../data/photos/photo47.webp';
-import photo48 from '../data/photos/photo48.webp';
-import photo49 from '../data/photos/photo49.webp';
-import photo50 from '../data/photos/photo50.webp';
-import photo51 from '../data/photos/photo51.webp';
-import photo52 from '../data/photos/photo52.webp';
-import photo53 from '../data/photos/photo53.webp';
-import photo54 from '../data/photos/photo54.webp';
-import photo55 from '../data/photos/photo55.webp';
-import photo56 from '../data/photos/photo56.webp';
-import photo57 from '../data/photos/photo57.webp';
-import photo58 from '../data/photos/photo58.webp';
-import photo59 from '../data/photos/photo59.webp';
-import photo60 from '../data/photos/photo60.webp';
-import photo61 from '../data/photos/photo61.webp';
-import photo62 from '../data/photos/photo62.webp';
-import photo63 from '../data/photos/photo63.webp';
-import photo64 from '../data/photos/photo64.webp';
-import photo66 from '../data/photos/photo66.webp';
-import photo67 from '../data/photos/photo67.webp';
-import photo72 from '../data/photos/photo72.webp';
-import photo73 from '../data/photos/photo73.webp';
-import photo74 from '../data/photos/photo74.webp';
-import photo75 from '../data/photos/photo75.webp';
-import photo76 from '../data/photos/photo76.webp';
-import photo77 from '../data/photos/photo77.webp';
-import photo78 from '../data/photos/photo78.webp';
-import photo79 from '../data/photos/photo79.webp';
-import photo80 from '../data/photos/photo80.webp';
-import photo81 from '../data/photos/photo81.webp';
-import photo82 from '../data/photos/photo82.webp';
-import photo83 from '../data/photos/photo83.webp';
-import photo84 from '../data/photos/photo84.webp';
-import photo85 from '../data/photos/photo85.webp';
-import photo86 from '../data/photos/photo86.webp';
-import photo87 from '../data/photos/photo87.webp';
-import photo88 from '../data/photos/photo88.webp';
-import photo89 from '../data/photos/photo89.webp';
-import photo90 from '../data/photos/photo90.webp';
-import photo91 from '../data/photos/photo91.webp';
-import photo92 from '../data/photos/photo92.webp';
-import photo93 from '../data/photos/photo93.webp';
-import photo94 from '../data/photos/photo94.webp';
-import photo95 from '../data/photos/photo95.webp';
-import photo96 from '../data/photos/photo96.webp';
-import photo97 from '../data/photos/photo97.webp';
-import photo98 from '../data/photos/photo98.webp';
-import photo99 from '../data/photos/photo99.webp';
-import photo100 from '../data/photos/photo100.webp';
-import photo101 from '../data/photos/photo101.webp';
-import photo102 from '../data/photos/photo102.webp';
-import photo103 from '../data/photos/photo103.webp';
-import photo104 from '../data/photos/photo104.webp';
-import photo105 from '../data/photos/photo105.webp';
-import photo106 from '../data/photos/photo106.webp';
 import { getImage } from 'astro:assets';
 
-const imageData = [
-  { photo: photo1, title: 'Mall road, Manali' },
-  { photo: photo2, title: 'Manali' },
-  { photo: photo3, title: 'Manali' },
-  { photo: photo4, title: 'Hadimba temple, Manali' },
-  { photo: photo5, title: 'Manali' },
-  { photo: photo6, title: 'Manali' },
-  { photo: photo7, title: 'Manali' },
-  { photo: photo8, title: 'Manali' },
-  { photo: photo9, title: 'Manali' },
-  { photo: photo10, title: "Humayun's tomb, Delhi" },
-  { photo: photo11, title: "Humayun's tomb, Delhi" },
-  { photo: photo12, title: "Humayun's tomb, Delhi" },
-  { photo: photo13, title: "Humayun's tomb, Delhi" },
-  { photo: photo14, title: 'Jama masjid, Delhi' },
-  { photo: photo15, title: 'Jama masjid, Delhi' },
-  { photo: photo16, title: 'Red fort, Delhi' },
-  { photo: photo17, title: 'Darwaza-i-rauza, Agra' },
-  { photo: photo18, title: 'Darwaza-i-rauza, Agra' },
-  { photo: photo19, title: 'Taj mahal, Agra' },
-  { photo: photo20, title: 'Taj mahal, Agra' },
-  { photo: photo21, title: 'Taj mahal, Agra' },
-  { photo: photo22, title: 'Taj mahal, Agra' },
-  { photo: photo23, title: 'Fort kochi, Kerala' },
-  { photo: photo24, title: 'St. Francis church, Fort kochi, Kerala' },
-  { photo: photo25, title: 'Fort kochi, Kerala' },
-  { photo: photo26, title: 'Kerala' },
-  { photo: photo27, title: 'Fort kochi, Kerala' },
-  { photo: photo28, title: 'Kerala' },
-  { photo: photo29, title: 'Kerala' },
-  { photo: photo30, title: 'Kerala' },
-  { photo: photo31, title: 'Kerala' },
-  { photo: photo32, title: 'Kerala' },
-  { photo: photo33, title: 'Kerala' },
-  { photo: photo34, title: 'Kerala' },
-  { photo: photo35, title: 'Mangluru' },
-  { photo: photo36, title: 'Mangluru' },
-  { photo: photo37, title: 'Mangluru' },
-  { photo: photo38, title: 'Mangluru' },
-  { photo: photo39, title: 'Mangluru' },
-  { photo: photo40, title: 'Wada, Maharashtra' },
-  { photo: photo41, title: 'Mumbai, Maharashtra' },
-  { photo: photo42, title: 'Mangluru' },
-  { photo: photo43, title: 'Maharashtra' },
-  { photo: photo44, title: 'Mangluru' },
-  { photo: photo45, title: 'Mangluru' },
-  { photo: photo46, title: 'Mangluru' },
-  { photo: photo47, title: 'Mangluru' },
-  { photo: photo48, title: 'Padubidri beach, Udupi' },
-  { photo: photo49, title: 'Padubidri beach, Udupi' },
-  { photo: photo50, title: 'Padubidri beach, Udupi' },
-  { photo: photo51, title: 'Marine Drive, Mumbai' },
-  { photo: photo52, title: 'Padubidri beach, Udupi' },
-  { photo: photo53, title: 'Padubidri beach, Udupi' },
-  { photo: photo54, title: 'Padubidri beach, Udupi' },
-  { photo: photo55, title: 'Padubidri beach, Udupi' },
-  { photo: photo56, title: 'Padubidri beach, Udupi' },
-  { photo: photo57, title: 'Padubidri beach, Udupi' },
-  { photo: photo58, title: 'Padubidri beach, Udupi' },
-  { photo: photo59, title: 'Kerala' },
-  { photo: photo60, title: 'Kerala' },
-  { photo: photo61, title: 'Padubidri beach, Udupi' },
-  { photo: photo62, title: 'Padubidri beach, Udupi' },
-  { photo: photo63, title: 'Mumbai, Maharashtra' },
-  { photo: photo64, title: 'Mumbai, Maharashtra' },
-  { photo: photo66, title: 'Pune, Maharashtra' },
-  { photo: photo67, title: 'Pune, Maharashtra' },
-  { photo: photo72, title: 'Marine Drive, Mumbai' },
-  { photo: photo73, title: 'Marine Drive, Mumbai' },
-  { photo: photo74, title: 'Marine Drive, Mumbai' },
-  { photo: photo75, title: 'Marine Drive, Mumbai' },
-  { photo: photo76, title: 'Taj hotel, Mumbai' },
-  { photo: photo77, title: 'Gurudwara Shri Manikaran Sahib, Manikaran' },
-  { photo: photo78, title: 'Manikaran' },
-  { photo: photo79, title: 'Manali' },
-  { photo: photo80, title: 'Manali' },
-  { photo: photo81, title: 'Manali' },
-  { photo: photo82, title: 'Hadimba temple, Manali' },
-  { photo: photo83, title: 'Ugrasen ki Baoli, New Delhi' },
-  { photo: photo84, title: 'Red fort, Delhi' },
-  { photo: photo85, title: 'Manikaran' },
-  { photo: photo86, title: 'Manikaran' },
-  { photo: photo87, title: 'Manikaran' },
-  { photo: photo88, title: 'Manali' },
-  { photo: photo89, title: 'Manali' },
-  { photo: photo90, title: 'Manali' },
-  { photo: photo91, title: 'Manali' },
-  { photo: photo92, title: 'Manali' },
-  { photo: photo93, title: 'Mall road, Manali' },
-  { photo: photo94, title: 'Manali' },
-  { photo: photo95, title: 'Manali' },
-  { photo: photo96, title: 'Attari - Wagah Border, Punjab' },
-  { photo: photo97, title: 'Attari - Wagah Border, Punjab' },
-  { photo: photo98, title: 'Mangluru' },
-  { photo: photo99, title: 'Mangluru' },
-  { photo: photo100, title: 'Mangluru' },
-  { photo: photo101, title: 'Mangluru' },
-  { photo: photo102, title: 'Padubidri beach, Udupi' },
-  { photo: photo103, title: 'Mumbai, Maharashtra' },
-  { photo: photo104, title: 'Goa' },
-  { photo: photo105, title: 'Basilica of bom jesus, Goa' },
-  { photo: photo106, title: 'Basilica of bom jesus, Goa' },
-];
+const photoModules = import.meta.glob('../data/photos/photo*.webp', { eager: true });
+
+const photoTitles = {
+  1: 'Mall road, Manali', 2: 'Manali', 3: 'Manali', 4: 'Hadimba temple, Manali',
+  5: 'Manali', 6: 'Manali', 7: 'Manali', 8: 'Manali', 9: 'Manali',
+  10: "Humayun's tomb, Delhi", 11: "Humayun's tomb, Delhi", 12: "Humayun's tomb, Delhi", 13: "Humayun's tomb, Delhi",
+  14: 'Jama masjid, Delhi', 15: 'Jama masjid, Delhi', 16: 'Red fort, Delhi',
+  17: 'Darwaza-i-rauza, Agra', 18: 'Darwaza-i-rauza, Agra',
+  19: 'Taj mahal, Agra', 20: 'Taj mahal, Agra', 21: 'Taj mahal, Agra', 22: 'Taj mahal, Agra',
+  23: 'Fort kochi, Kerala', 24: 'St. Francis church, Fort kochi, Kerala', 25: 'Fort kochi, Kerala',
+  26: 'Kerala', 27: 'Fort kochi, Kerala', 28: 'Kerala', 29: 'Kerala', 30: 'Kerala', 31: 'Kerala', 32: 'Kerala', 33: 'Kerala', 34: 'Kerala',
+  35: 'Mangluru', 36: 'Mangluru', 37: 'Mangluru', 38: 'Mangluru', 39: 'Mangluru',
+  40: 'Wada, Maharashtra', 41: 'Mumbai, Maharashtra', 42: 'Mangluru', 43: 'Maharashtra',
+  44: 'Mangluru', 45: 'Mangluru', 46: 'Mangluru', 47: 'Mangluru',
+  48: 'Padubidri beach, Udupi', 49: 'Padubidri beach, Udupi', 50: 'Padubidri beach, Udupi',
+  51: 'Marine Drive, Mumbai', 52: 'Padubidri beach, Udupi', 53: 'Padubidri beach, Udupi',
+  54: 'Padubidri beach, Udupi', 55: 'Padubidri beach, Udupi', 56: 'Padubidri beach, Udupi',
+  57: 'Padubidri beach, Udupi', 58: 'Padubidri beach, Udupi', 59: 'Kerala', 60: 'Kerala',
+  61: 'Padubidri beach, Udupi', 62: 'Padubidri beach, Udupi', 63: 'Mumbai, Maharashtra',
+  64: 'Mumbai, Maharashtra', 66: 'Pune, Maharashtra', 67: 'Pune, Maharashtra',
+  72: 'Marine Drive, Mumbai', 73: 'Marine Drive, Mumbai', 74: 'Marine Drive, Mumbai', 75: 'Marine Drive, Mumbai',
+  76: 'Taj hotel, Mumbai', 77: 'Gurudwara Shri Manikaran Sahib, Manikaran', 78: 'Manikaran',
+  79: 'Manali', 80: 'Manali', 81: 'Manali', 82: 'Hadimba temple, Manali',
+  83: 'Ugrasen ki Baoli, New Delhi', 84: 'Red fort, Delhi', 85: 'Manikaran',
+  86: 'Manikaran', 87: 'Manikaran', 88: 'Manali', 89: 'Manali', 90: 'Manali',
+  91: 'Manali', 92: 'Manali', 93: 'Mall road, Manali', 94: 'Manali', 95: 'Manali',
+  96: 'Attari - Wagah Border, Punjab', 97: 'Attari - Wagah Border, Punjab',
+  98: 'Mangluru', 99: 'Mangluru', 100: 'Mangluru', 101: 'Mangluru',
+  102: 'Padubidri beach, Udupi', 103: 'Mumbai, Maharashtra', 104: 'Goa',
+  105: 'Basilica of bom jesus, Goa', 106: 'Basilica of bom jesus, Goa',
+};
 
 const images = await Promise.all(
-  imageData.map(async ({ photo, title }) => {
-    const optimizedImage = await getImage({
-      src: photo,
-      width: 800,
-      height: 600,
-      format: 'webp',
-      quality: 85
-    });
+  Object.entries(photoModules)
+    .sort(([a], [b]) => {
+      const aNum = parseInt(a.match(/photo(\d+)/)?.[1] || '0');
+      const bNum = parseInt(b.match(/photo(\d+)/)?.[1] || '0');
+      return aNum - bNum;
+    })
+    .map(async ([path, module]) => {
+      const photoNumber = parseInt(path.match(/photo(\d+)/)?.[1] || '0');
+      const imageModule = module as any;
+      
+      if (!imageModule.default) return null;
+      
+      const fullSize = await getImage({
+        src: imageModule.default,
+        width: 1200,
+        height: 900,
+        format: 'webp',
+        quality: 90
+      });
 
-    return {
-      src: optimizedImage.src,
-      alt: 'photography',
-      title: title,
-    };
-  })
-);
+      const thumbnail = await getImage({
+        src: imageModule.default,
+        width: 800,
+        height: 600,
+        format: 'webp',
+        quality: 85
+      });
+
+      return {
+        src: fullSize.src,
+        thumbnail: thumbnail.src,
+        alt: 'photography',
+        title: photoTitles[photoNumber] || `Photo ${photoNumber}`,
+      };
+    })
+).then(results => results.filter(Boolean));
 ---
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>Photography</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {images.slice(0, 3).map(image => (
+      <link rel="preload" as="image" href={image.thumbnail} />
+    ))}
   </head>
   <body>
     <main class="h-full w-full px-10 overflow-hidden">
       <ImageCarousel 
         images={images}
-        client:idle
+        client:load
         options={{
+          infinite: true,
           slidesPerPage: 1,
           center: true,
           Dots: true,
           Navigation: true,
-          Arrows: true,
+          Arrows: {
+            autoHide: false,
+          },
         }}
       />
     </main>

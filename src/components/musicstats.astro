@@ -114,13 +114,20 @@ try {
         </div>
     </div>
 </div>
+
 <div class="flex flex-col h-[15rem] w-[80svh] lg:w-[65rem] mt-10">
     <p class="my-4 font-thin text-center">Daily music scrobbles</p>
-    <MusicCharts data={weeklyScrobbles} client:visible />
+    <div class="w-full h-full pr-10 lg:px-20 select-none">
+        <MusicCharts data={weeklyScrobbles} client:visible>
+            <div class='w-full h-full flex items-center justify-center'>
+                <div class="text-gray-400 text-sm">Loading chart...</div>
+            </div>
+        </MusicCharts>
+    </div>
 </div>
 <style>
     :global(.recharts-wrapper *) {
-    outline: none;
+        outline: none;
     }
 
     :global(.recharts-surface) {

@@ -1,36 +1,26 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
-import useCarousel from './useFancybox';
-import { Fancybox } from "@fancyapps/ui/dist/fancybox/";
-import "@fancyapps/ui/dist/fancybox/fancybox.css";
 
 interface ImageCarouselProps {
-  images: {
-    src: string;
-    alt: string;
-    title?: string;
-    thumbnail?: string;
-  }[];
+  images: any[];
   options?: any;
 }
 
-const CarouselImage = React.memo(({ image, index }: { image: any; index: number }) => (
+const CarouselImage = React.memo(({ image, index }: any) => (
   <div className="f-carousel__slide">
     <a 
       href={image.src} 
       data-fancybox="gallery" 
       data-src={image.src}
       data-caption={image.title}
-      tabIndex={0}
     >
       <img
         src={image.thumbnail || image.src} 
         alt={image.alt} 
         title={image.title}
-        loading="lazy"
-        tabIndex={-1}
+        loading={index < 3 ? "eager" : "lazy"}
         style={{ 
           width: '100%', 
-          height: '300px',
+          height: '500px',
           objectFit: 'cover',
           cursor: 'pointer'
         }}
@@ -40,53 +30,64 @@ const CarouselImage = React.memo(({ image, index }: { image: any; index: number 
 ));
 
 export default React.memo(function ImageCarousel({ images, options = {} }: ImageCarouselProps) {
-  
-  const carouselOptions = useMemo(() => ({
-    infinite: true,
-    center: true,
-    slidesPerPage: 1,
-    transition: "slide",
-    Dots: true,
-    Navigation: true,
-    Arrows: {
-      autoHide: false,
-    },
-    keyboard: {
-    tabToNext: true,
-    tabToPrev: true,
-    },
-    trapFocus: false,
-      ...options
-  }), [options]);
-
-  const [carouselRef, carouselInstance] = useCarousel(carouselOptions);
-
-  const initializeFancybox = useCallback(() => {
-    Fancybox.bind("[data-fancybox='gallery']", {
-      Toolbar: {
-        display: {
-          left: ["infobar"],
-          middle: [
-            "zoomIn",
-            "zoomOut",
-            "toggle1to1",
-            "rotateCCW",
-            "rotateCW",
-            "flipX",
-            "flipY",
-          ],
-          right: ["slideshow", "thumbs", "close"],
-        },
-      },
-    });
-  }, []);
+  const [carouselRef, setCarouselRef] = React.useState<HTMLDivElement | null>(null);
+  const [isLoaded, setIsLoaded] = React.useState(false);
 
   useEffect(() => {
-    initializeFancybox();
-    return () => {
-      Fancybox.unbind("[data-fancybox='gallery']");
+    if (!carouselRef || isLoaded) return;
+
+    let mounted = true;
+
+    const loadLibraries = async () => {
+      try {
+        // Load only what we need
+        const [carousel, fancybox] = await Promise.all([
+          import('@fancyapps/ui/dist/carousel/').then(m => m.Carousel),
+          import('@fancyapps/ui/dist/fancybox/').then(m => m.Fancybox)
+        ]);
+
+        const { Arrows } = await import('@fancyapps/ui/dist/carousel/carousel.arrows.js');
+
+        if (!mounted) return;
+
+        // Initialize carousel with minimal options
+        const instance = carousel(carouselRef, {
+          infinite: true,
+          slidesPerPage: 1,
+          center: true,
+          Dots: true,
+          Navigation: true,
+          Arrows: { autoHide: false },
+          ...options
+        }, { Arrows }).init();
+
+        // Initialize fancybox with minimal toolbar
+        fancybox.bind("[data-fancybox='gallery']", {
+          Toolbar: {
+            display: {
+              left: [],
+              middle: ["zoomIn", "zoomOut"],
+              right: ["close"],
+            },
+          },
+        });
+
+        setIsLoaded(true);
+
+        return () => {
+          if (mounted) {
+            instance?.destroy();
+            fancybox.unbind("[data-fancybox='gallery']");
+          }
+        };
+      } catch (error) {
+        console.error('Failed to load:', error);
+      }
     };
-  }, [initializeFancybox]);
+
+    loadLibraries();
+    return () => { mounted = false; };
+  }, [carouselRef, options, isLoaded]);
 
   const renderedImages = useMemo(() => 
     images.map((image, index) => (
@@ -95,7 +96,7 @@ export default React.memo(function ImageCarousel({ images, options = {} }: Image
   );
 
   return (
-    <div ref={carouselRef} className="f-carousel" style={{ position: 'relative' }}>
+    <div ref={setCarouselRef} className="f-carousel">
       {renderedImages}
     </div>
   );
