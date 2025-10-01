@@ -50,17 +50,18 @@ const images = await Promise.all(
       const fullSize = await getImage({
         src: imageModule.default,
         width: 1200,
-        height: 900,
-        format: 'webp',
-        quality: 90
+        height: 800,
+        format: 'avif',
+        quality: 75,
       });
 
+    
       const thumbnail = await getImage({
         src: imageModule.default,
-        width: 800,
-        height: 600,
-        format: 'webp',
-        quality: 85
+        width: 400,
+        height: 300,
+        format: 'avif',
+        quality: 70,
       });
 
       return {
@@ -78,9 +79,6 @@ const images = await Promise.all(
     <meta charset="utf-8" />
     <title>Photography</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    {images.slice(0, 3).map(image => (
-      <link rel="preload" as="image" href={image.thumbnail} />
-    ))}
   </head>
   <body>
     <main class="h-full w-full px-10 overflow-hidden">

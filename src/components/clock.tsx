@@ -1,32 +1,40 @@
 import { useEffect, useState } from "react";
 
-export default function Clock () {
+export default function Clock() {
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [isMounted, setIsMounted] = useState(false);
 
-const currentIST = new Date().toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    timeStyle: 'medium'
-    });
+  useEffect(() => {
+    setIsMounted(true);
+    
+    const updateTime = () => {
+      const currentIST = new Date().toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        timeStyle: 'medium'
+      });
+      setCurrentTime(currentIST);
+    };
 
-const [currentTime, setCurrentTime] = useState<String>(currentIST + ".");
-
-useEffect(() => {
-
-    const currentIST = new Date().toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    timeStyle: 'medium'
-    });
-
+    updateTime();
+    
     const timer = setInterval(() => {
-    setCurrentTime(currentIST);
+      updateTime();
     }, 1000);
 
     return () => clearInterval(timer);
-}, [currentTime]);
+  }, []);
 
+  if (!isMounted) {
+    return (
+      <div className="text-2xl my-5 font-light">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
-return (
+  return (
     <div className="text-2xl my-5 font-light">
-        <p>{currentTime}</p>
+      <p suppressHydrationWarning={true}>{currentTime}</p>
     </div>
-    )
+  );
 }

@@ -1,103 +1,99 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import '@fancyapps/ui/dist/carousel/carousel.css';
+import '@fancyapps/ui/dist/fancybox/fancybox.css';
 
-interface ImageCarouselProps {
-  images: any[];
-  options?: any;
-}
+export default function ImageCarousel({ images, options }: any) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
-const CarouselImage = React.memo(({ image, index }: any) => (
-  <div className="f-carousel__slide">
-    <a 
-      href={image.src} 
-      data-fancybox="gallery" 
-      data-src={image.src}
-      data-caption={image.title}
-    >
-      <img
-        src={image.thumbnail || image.src} 
-        alt={image.alt} 
-        title={image.title}
-        loading={index < 3 ? "eager" : "lazy"}
-        style={{ 
-          width: '100%', 
-          height: '500px',
-          objectFit: 'cover',
-          cursor: 'pointer'
-        }}
-      />
-    </a>
-  </div>
-));
-
-export default React.memo(function ImageCarousel({ images, options = {} }: ImageCarouselProps) {
-  const [carouselRef, setCarouselRef] = React.useState<HTMLDivElement | null>(null);
-  const [isLoaded, setIsLoaded] = React.useState(false);
+  // Fix hydration mismatch - only initialize after client mount
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
-    if (!carouselRef || isLoaded) return;
-
-    let mounted = true;
-
-    const loadLibraries = async () => {
+    if (!ref.current || !isMounted) return;
+    
+    const initCarousel = async () => {
       try {
-        // Load only what we need
-        const [carousel, fancybox] = await Promise.all([
-          import('@fancyapps/ui/dist/carousel/').then(m => m.Carousel),
-          import('@fancyapps/ui/dist/fancybox/').then(m => m.Fancybox)
+        const [{ Carousel }, { Arrows }, { Fancybox }] = await Promise.all([
+          import('@fancyapps/ui/dist/carousel/'),
+          import('@fancyapps/ui/dist/carousel/carousel.arrows.js'),
+          import('@fancyapps/ui/dist/fancybox/')
         ]);
 
-        const { Arrows } = await import('@fancyapps/ui/dist/carousel/carousel.arrows.js');
+        // Ensure DOM is ready
+        setTimeout(() => {
+          if (!ref.current) return;
 
-        if (!mounted) return;
+          const carouselInstance = Carousel(ref.current, {
+            infinite: true,
+            slidesPerPage: 1,
+            center: true,
+            Dots: true,
+            Navigation: true,
+            Arrows: { autoHide: false },
+            ...options
+          }, { Arrows });
 
-        // Initialize carousel with minimal options
-        const instance = carousel(carouselRef, {
-          infinite: true,
-          slidesPerPage: 1,
-          center: true,
-          Dots: true,
-          Navigation: true,
-          Arrows: { autoHide: false },
-          ...options
-        }, { Arrows }).init();
+          carouselInstance.init();
 
-        // Initialize fancybox with minimal toolbar
-        fancybox.bind("[data-fancybox='gallery']", {
-          Toolbar: {
-            display: {
-              left: [],
-              middle: ["zoomIn", "zoomOut"],
-              right: ["close"],
-            },
-          },
-        });
+          Fancybox.bind("[data-fancybox='gallery']", {
+            Toolbar: { display: { right: ["close"] } }
+          });
+        }, 100);
 
-        setIsLoaded(true);
-
-        return () => {
-          if (mounted) {
-            instance?.destroy();
-            fancybox.unbind("[data-fancybox='gallery']");
-          }
-        };
       } catch (error) {
-        console.error('Failed to load:', error);
+        console.error('Carousel failed:', error);
       }
     };
 
-    loadLibraries();
-    return () => { mounted = false; };
-  }, [carouselRef, options, isLoaded]);
+    initCarousel();
+  }, [isMounted, options]);
 
-  const renderedImages = useMemo(() => 
-    images.map((image, index) => (
-      <CarouselImage key={`${image.src}-${index}`} image={image} index={index} />
-    )), [images]
-  );
+  // Show loading state until mounted (prevents hydration mismatch)
+  if (!isMounted) {
+    return (
+      <div className="f-carousel-loading">
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          {images.slice(0, 3).map((img: any, i: number) => (
+            <div key={i} style={{ width: '100%', maxWidth: '400px' }}>
+              <img 
+                src={img.src} 
+                alt={img.alt}
+                style={{
+                  width: '100%', 
+                  height: '300px', 
+                  objectFit: 'cover',
+                  display: 'block'
+                }} 
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div ref={setCarouselRef} className="f-carousel">
-      {renderedImages}
+    <div ref={ref} className="f-carousel">
+      {images.map((img: any, i: number) => (
+        <div key={i} className="f-carousel__slide">
+          <a href={img.src} data-fancybox="gallery" data-caption={img.title}>
+            <img 
+              src={img.src} 
+              alt={img.alt} 
+              loading={i < 2 ? "eager" : "lazy"} 
+              style={{
+                width: '100%', 
+                height: '500px', 
+                objectFit: 'cover',
+                display: 'block'
+              }} 
+            />
+          </a>
+        </div>
+      ))}
     </div>
   );
-});
+}

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+html { scroll-behavior: smooth; }
+body { margin: 0; font-family: system-ui, sans-serif; }
+.f-carousel { position: relative; }
+.f-carousel__slide { display: block; }
+
+
 body {
   background-color: black;
 }
