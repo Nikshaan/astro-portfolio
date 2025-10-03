@@ -6,13 +6,12 @@ import Intro from '../components/intro.astro';
 import Education from '../components/education.astro';
 import Extracurr from '../components/extracurr.astro';
 import Location from '../components/location.astro';
-import Modecard from '../components/modecard.astro';
 import Stackcard from '../components/stackcard.astro';
-import Filler from '../components/filler.astro';
 import projects from "../data/projects.json";
 import Projectcard from '../components/projectcard.astro';
 import Musicstats from '../components/musicstats.astro';
 import Gallery from '../components/gallery.astro';
+import Modecard from '../components/modecard.astro';
 ---
 
 <MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style.'>
@@ -22,18 +21,18 @@ import Gallery from '../components/gallery.astro';
     <section class="h-full p-2 pt-24 flex flex-col lg:flex-row gap-2 flex-1">
       <div class="flex flex-col gap-2 h-full">
         <Intro />
-        <Education />
-        <Filler />
+        <Stackcard />
       </div>
       <div class="flex flex-col gap-2 h-full">
         <div class="flex flex-col gap-2 lg:flex-row">
             <Location />
             <Modecard />
         </div>
+        <Education />
         <Extracurr />
       </div>
       <div class="flex flex-col gap-2 h-full">
-        <Stackcard />
+       
       </div>
     </section>
     </div>

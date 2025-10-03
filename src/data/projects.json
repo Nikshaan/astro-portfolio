@@ -25,8 +25,7 @@
             "name": "Blogeez",
             "techstack": ["ReactJS", "TailwindCSS","NodeJS", "ExpressJS", "MongoDB"],
             "summary": "Website to read, upload, edit & delete blogs with authentication.",
-            "github": "https://github.com/Nikshaan/Blogeez-backend",
-            "live": "https://blogeez-backend-1.onrender.com/feed"
+            "github": "https://github.com/Nikshaan/Blogeez-backend"
         },
         {
             "name": "Valorant tracker",

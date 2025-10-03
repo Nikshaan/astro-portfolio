@@ -21,12 +21,13 @@ function getDailyTimestamps(daysAgo: number) {
     date.setUTCHours(0, 0, 0, 0);
     const fromTimestamp = Math.floor(date.getTime() / 1000);
     const toTimestamp = fromTimestamp + 86399;
-    return { from: fromTimestamp, to: toTimestamp, day: dayNumber - daysAgo };
+    return { from: fromTimestamp, to: toTimestamp, day: dayLabels[date.getUTCDay()] };
 }
 
 let weeklyScrobbles: daily[] = [];
 let upperStatsArray: number[] = [];
 let artistsInfo: artistInfoType[] = [];
+const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 try {
     const dailyPromises = Array.from({ length: 7 }, (_, i) => {
@@ -86,6 +87,7 @@ try {
         scrobbles: 0
     }));
 }
+console.log(weeklyScrobbles)
 ---
 
 <div class="flex justify-around mt-5">

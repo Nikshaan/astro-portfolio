@@ -56,9 +56,15 @@ if (techstack) {
             }
         </div>
     </div>
-    <div class="flex flex-col gap-1">
-        <a aria-label="link to live demo of the project" class="cursor-pointer underline underline-offset-2" href={live}>live</a>
-        <p class="cursor-pointer underline underline-offset-2">read</p>
-        <a aria-label="link to github repository of the project" class="cursor-pointer underline underline-offset-2" href={github}>github</a>
+    <div class="flex flex-col justify-center items-center gap-1">
+        { 
+            live && <a aria-label="link to live demo of the project" class="cursor-pointer underline underline-offset-2" href={live}>live</a>
+        }
+        {
+            summary && <p class="cursor-pointer underline underline-offset-2">read</p>
+        }
+        {
+            github && <a aria-label="link to github repository of the project" class="cursor-pointer underline underline-offset-2" href={github}>github</a>
+        }
     </div>
 </div>
