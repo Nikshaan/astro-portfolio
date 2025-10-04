@@ -12,6 +12,7 @@ import Projectcard from '../components/projectcard.astro';
 import Musicstats from '../components/musicstats.astro';
 import Gallery from '../components/gallery.astro';
 import Modecard from '../components/modecard.astro';
+import Experience from '../components/experience.astro';
 ---
 
 <MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style.'>
@@ -21,7 +22,7 @@ import Modecard from '../components/modecard.astro';
     <section class="h-full p-2 pt-24 flex flex-col lg:flex-row gap-2 flex-1">
       <div class="flex flex-col gap-2 h-full">
         <Intro />
-        <Stackcard />
+        <Experience />
       </div>
       <div class="flex flex-col gap-2 h-full">
         <div class="flex flex-col gap-2 lg:flex-row">
@@ -32,7 +33,7 @@ import Modecard from '../components/modecard.astro';
         <Extracurr />
       </div>
       <div class="flex flex-col gap-2 h-full">
-       
+        <Stackcard />
       </div>
     </section>
     </div>

@@ -1,0 +1,37 @@
+---
+import { Image } from "astro:assets";
+import Card from "./card.astro";
+import varakLogo from "../data/varak.avif";
+import gssocLogo from "../data/gssoc.avif";
+---
+
+<Card height='h-[20rem]' width='w-[31rem]' title="experience">
+    <div class="flex flex-col gap-8">
+        <div class="flex">
+            <div class="w-[20%] flex justify-center items-center">
+                <Image src = {varakLogo} alt = "varak-logo" class="select-none transition-all transform duration-200 rounded-full" width={70} loading="eager"  />
+            </div>
+            <div class="w-[80%] flex flex-col items-end text-right">
+                <p class="font-medium">Full stack developer intern</p>
+                <p class="text-sm">Varak Welfare Society</p>
+                <p class="text-sm font-light italic">september 2025 - present</p>
+            </div>
+        </div>
+        <div class="flex">
+            <div class="w-[20%] flex justify-center items-center">
+                <Image src = {gssocLogo} alt = "gssoc-logo" class="select-none transition-all transform duration-200 rounded-full" width={70} loading="eager"  />
+            </div>
+            <div class="w-[80%] flex flex-col items-end text-right">
+                <p class="font-medium">Open source contributor</p>
+                <p class="text-sm">GirlScript Summer of Code 2025</p>
+                <p class="text-sm font-light italic">august 2025</p>
+            </div>
+        </div>
+        <div class="text-sm">
+            <p class="italic text-base mb-2 font-bold">certification</p>
+            <div class="flex flex-col text-right">
+                <p class="font-light"><span class="font-medium">Machine Learning I</span> - University of Columbia</p>
+            </div>
+        </div>
+    </div>
+</Card>
