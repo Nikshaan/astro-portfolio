@@ -1,0 +1,28 @@
+---
+import Navbar from "../components/navbar.astro";
+import Projectcard from "../components/projectcard.astro";
+import projects from "../data/projects.json";
+import SubLayout from "../layouts/SubLayout.astro";
+import '../styles/global.css';
+---
+<SubLayout title="Nikshaan | Portfolio - Projects" description="Projects made by Nikshaan on web development, machine learning and deep learning.">
+<section class="-mt-10 lg:w-[65rem] m-auto flex-1 text-white">
+        <Navbar />
+        <div class="flex py-16 flex-col mt-5 pl-4 ml-1 lg:mt-0 lg:ml-3 lg:px-2 justify-start items-start">
+          <div class="flex justify-between items-center w-full mb-5">
+            <p class="text-xl font-medium">PROJECTS</p>
+              <div class="flex gap-1">
+                <p class="border border-white p-1 text-sm cursor-pointer">Web development</p>
+                <p class="border bg-white border-black cursor-pointer text-black p-1 text-sm">AI/ML</p>
+              </div>
+          </div>
+          <div class="px-4 border-l">
+              {
+                projects.web_projects.map((project) => (
+                  <Projectcard name = {project.name} techstack = {project.techstack} summary = {project.summary} github = {project.github} live = {project.live} />
+                ))
+              }
+          </div>
+        </div>
+    </section>
+</SubLayout>

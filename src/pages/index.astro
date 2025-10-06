@@ -7,19 +7,15 @@ import Education from '../components/education.astro';
 import Extracurr from '../components/extracurr.astro';
 import Location from '../components/location.astro';
 import Stackcard from '../components/stackcard.astro';
-import projects from "../data/projects.json";
-import Projectcard from '../components/projectcard.astro';
-import Musicstats from '../components/musicstats.astro';
-import Gallery from '../components/gallery.astro';
 import Modecard from '../components/modecard.astro';
 import Experience from '../components/experience.astro';
 ---
 
 <MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style.'>
 	<Navbar />
-  <main id="home" class="bg-black -mt-12 text-neutral-50 min-h-[100svh] w-full flex items-center flex-col">
+  <main class="bg-black -mt-12 text-neutral-50 min-h-[100svh] w-full flex items-center flex-col">
     <div class="grid-bg w-full flex flex-col justify-center items-center">
-    <section class="h-full p-2 pt-24 flex flex-col lg:flex-row gap-2 flex-1">
+    <section class="h-full p-2 pt-16 flex flex-col lg:flex-row gap-2 flex-1">
       <div class="flex flex-col gap-2 h-full">
         <Intro />
         <Experience />
@@ -37,37 +33,6 @@ import Experience from '../components/experience.astro';
       </div>
     </section>
     </div>
-		<section id="projects" class="min-h-[100svh] lg:w-[65rem] flex-1 m-auto mt-5">
-        <div class="flex flex-col mt-5 pl-4 ml-1 lg:mt-0 lg:ml-3 lg:px-2 justify-start items-start">
-          <div class="flex justify-between items-center w-full mb-5">
-            <p class="text-xl font-medium">PROJECTS</p>
-              <div class="flex gap-1">
-                <p class="border border-white p-1 text-sm cursor-pointer">Web development</p>
-                <p class="border bg-white border-black cursor-pointer text-black p-1 text-sm">AI/ML</p>
-              </div>
-          </div>
-          <div class="px-4 border-l">
-              {
-                projects.web_projects.map((project) => (
-                  <Projectcard name = {project.name} techstack = {project.techstack} summary = {project.summary} github = {project.github} live = {project.live} />
-                ))
-              }
-          </div>
-        </div>
-    </section>
-    <section id="non_tech" class="min-h-[100svh] lg:w-[65rem] flex-1 m-auto mt-5">
-      <div class="mt-8 min-w-[80svh] flex flex-col justify-start items-start">
-        <p class="text-xl pl-4 text-left font-medium">NON TECH</p>
-        <div class="min-h-[50svh] lg:w-[65rem]">
-          <p class="pl-4 my-4 font-thin">MUSIC</p>
-            <Musicstats />
-        </div>
-        <div class="min-h-[100svh] overflow-hidden lg:w-[65rem] mt-10">
-          <p class="pl-4 my-4 font-thin">GALLERY</p>
-            <Gallery />
-        </div>
-      </div>
-    </section>
 	</main>
 </MainLayout>
 

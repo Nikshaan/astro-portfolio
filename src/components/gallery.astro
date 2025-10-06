@@ -84,7 +84,7 @@ const images = await Promise.all(
     <main class="h-full w-full px-10 overflow-hidden">
       <ImageCarousel 
         images={images}
-        client:load
+        client:idle
         options={{
           infinite: true,
           slidesPerPage: 1,
