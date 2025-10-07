@@ -7,12 +7,12 @@ body { margin: 0; font-family: system-ui, sans-serif; }
 
 
 body {
-  background-color: black;
+  background-color: #080808;
 }
 
 html {
     scroll-behavior: smooth;
-    background-color: black;
+    background-color: #080808;
 }
 
 html.lenis {

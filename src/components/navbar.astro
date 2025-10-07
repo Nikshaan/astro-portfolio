@@ -2,14 +2,14 @@
 const { pathname } = Astro.url;
 ---
 
-<div id="navbar" class="bg-[#111111]/50 text-white z-50 sticky left-1/2 transform -translate-x-1/2 top-2 mt-2 h-10 w-[350px] border border-slate-300 rounded-lg flex justify-around items-center transition-all duration-200 nav-links">
-    <a class:list={{ active: pathname === '/' }} aria-label="navigation to home section" href="/" class="cursor-pointer">
+<div id="navbar" class="bg-[#111111]/80 text-white z-50 sticky left-1/2 transform -translate-x-1/2 top-2 mt-2 h-10 w-[350px] border border-slate-300 rounded-lg flex justify-around items-center transition-all duration-200 nav-links">
+    <a class:list={{ active: pathname === `${import.meta.env.BASE_URL}` }} aria-label="navigation to home section" href=`${import.meta.env.BASE_URL}` class="cursor-pointer">
         me
     </a>
-    <a class:list={{ active: pathname === '/projects' }} aria-label="navigation to projects section" href="/projects" class="cursor-pointer">
+    <a class:list={{ active: pathname === `${import.meta.env.BASE_URL}/projects/` }} aria-label="navigation to projects section" href=`${import.meta.env.BASE_URL}/projects/` class="cursor-pointer">
         projects
     </a>
-    <a class:list={{ active: pathname === '/non-tech' }} aria-label="navigation to non-tech section" href="/non-tech" class="cursor-pointer">
+    <a class:list={{ active: pathname === `${import.meta.env.BASE_URL}/non-tech/` }} aria-label="navigation to non-tech section" href=`${import.meta.env.BASE_URL}/non-tech/` class="cursor-pointer">
         non-tech
     </a>
 </div>

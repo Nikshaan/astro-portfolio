@@ -4,6 +4,8 @@ import icon from 'astro-icon';
 import react from '@astrojs/react';
 
 export default defineConfig({
+  site: 'https://Nikshaan.github.io',
+  base: '/astro-portfolio',
   vite: {
     plugins: [tailwindcss()],
     build: {
