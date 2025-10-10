@@ -1,0 +1,99 @@
+---
+
+---
+
+<div class="contributions-container">
+  <h3>GitHub Contributions (2025)</h3>
+  <div id="contribution-graph" class="graph"></div>
+  <p id="error-msg" style="display: none; color: red;">Failed to load contributions</p>
+</div>
+
+<script is:inline>
+  (function(){
+    async function loadContributions() {
+      try{
+        const response = await fetch('/api/githubapi.json');
+        const data = await response.json();
+        
+        if(!data.data?.user?.contributionsCollection?.contributionCalendar?.weeks) {
+          console.error('Invalid data structure:', data);
+          document.getElementById('error-msg').style.display = 'block';
+          return;
+        }
+        
+        const weeks = data.data.user.contributionsCollection.contributionCalendar.weeks;
+        const graph = document.getElementById('contribution-graph');
+        
+        weeks.forEach((week) => {
+          const weekColumn = document.createElement('div');
+          weekColumn.className = 'week';
+          
+          week.contributionDays.forEach((day) => {
+            const dayBox = document.createElement('div');
+            dayBox.className = 'day';
+            dayBox.style.cssText = `background-color: ${day.color}; width: 12px; height: 12px;`;
+            dayBox.title = `${day.date}: ${day.contributionCount} contributions`;
+            weekColumn.appendChild(dayBox);
+          });
+          
+          graph.appendChild(weekColumn);
+        });
+      } catch(error){
+        document.getElementById('error-msg').style.display = 'block';
+        console.error('Failed to load GitHub contributions:', error);
+      }
+    }
+    
+    if(document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadContributions);
+    } else{
+      loadContributions();
+    }
+  })();
+</script>
+
+<style is:global>
+  .contributions-container {
+    margin-top: 80px;
+    width: 100%;
+  }
+  
+  .contributions-container h3 {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    font-weight: 500;
+  }
+  
+  .graph {
+    display: flex !important;
+    gap: 3px !important;
+    overflow-x: auto !important;
+    padding: 1rem !important;
+    background: #0d1117 !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+  }
+  
+  .week {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .day {
+    width: 12px !important;
+    height: 12px !important;
+    min-width: 12px !important;
+    min-height: 12px !important;
+    border-radius: 2px !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+  }
+  
+  @media (max-width: 768px) {
+    .week:nth-child(n+34) {
+      display: none !important;
+    }
+  }
+</style>
