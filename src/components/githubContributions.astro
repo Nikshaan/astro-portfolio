@@ -1,0 +1,155 @@
+---
+interface ContributionDay {
+  contributionCount: number;
+  date: string;
+  color: string;
+}
+
+interface ContributionWeek {
+  contributionDays: ContributionDay[];
+}
+
+interface ContributionCalendar {
+  totalContributions: number;
+  weeks: ContributionWeek[];
+}
+
+interface ContributionsCollection {
+  contributionCalendar: ContributionCalendar;
+}
+
+interface User {
+  contributionsCollection: ContributionsCollection;
+}
+
+interface GitHubAPIResponse {
+  data: {
+    user: User;
+  };
+  errors?: Array<{ message: string }>;
+}
+
+const GH_TOKEN = import.meta.env.GH_TOKEN as string;
+const GH_USERNAME = import.meta.env.GH_USERNAME as string;
+
+let contributionData: GitHubAPIResponse | null = null;
+
+if (GH_TOKEN && GH_USERNAME) {
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const from: string = oneYearAgo.toISOString();
+  const to: string = new Date().toISOString();
+
+  const query = `
+    query($username: String!, $from: DateTime!, $to: DateTime!) {
+      user(login: $username) {
+        contributionsCollection(from: $from, to: $to) {
+          contributionCalendar {
+            totalContributions
+            weeks {
+              contributionDays {
+                contributionCount
+                date
+                color
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch('https://api.github.com/graphql', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${GH_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables: { username: GH_USERNAME, from, to }
+      })
+    });
+
+    const data: GitHubAPIResponse = await response.json();
+    
+    if (data.errors) {
+      console.error('GitHub API errors:', data.errors);
+    } else {
+      contributionData = data;
+    }
+  } catch (error) {
+    console.error('Failed to fetch contributions:', error);
+  }
+}
+
+const weeks: ContributionWeek[] = contributionData?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || [];
+---
+
+<div class="contributions-container">
+  <h3>GitHub Contributions (2025)</h3>
+  {weeks.length > 0 ? (
+    <div class="graph">
+      {weeks.map((week: ContributionWeek) => (
+        <div class="week">
+          {week.contributionDays.map((day: ContributionDay) => (
+            <div 
+              class="day" 
+              style={`background-color: ${day.color};`}
+              title={`${day.date}: ${day.contributionCount} contributions`}
+            ></div>
+          ))}
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p style="color: red;">Failed to load contributions</p>
+  )}
+</div>
+
+<style>
+  .contributions-container {
+    margin-top: 80px;
+    width: 100%;
+  }
+  
+  .contributions-container h3 {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    font-weight: 500;
+  }
+  
+  .graph {
+    display: flex;
+    gap: 3px;
+    overflow-x: auto;
+    padding: 1rem;
+    background: #0d1117;
+    border-radius: 8px;
+    width: 100%;
+  }
+  
+  .week {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  
+  .day {
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    min-height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    display: block;
+  }
+  
+  @media (max-width: 768px) {
+    .week:nth-child(n+34) {
+      display: none;
+    }
+  }
+</style>
