@@ -1,8 +1,8 @@
 export async function GET() {
-  const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
-  const GITHUB_USERNAME = import.meta.env.GITHUB_USERNAME;
+  const GH_TOKEN = import.meta.env.GH_TOKEN;
+  const GH_USERNAME = import.meta.env.GH_USERNAME;
   
-  if (!GITHUB_TOKEN || !GITHUB_USERNAME){
+  if (!GH_TOKEN || !GH_USERNAME){
     return new Response(
       JSON.stringify({ error: 'Missing GitHub credentials' }), 
       { status: 500 }
@@ -37,12 +37,12 @@ export async function GET() {
     const response = await fetch('https://api.github.com/graphql', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+        'Authorization': `Bearer ${GH_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         query,
-        variables: { username: GITHUB_USERNAME, from, to }
+        variables: { username: GH_USERNAME, from, to }
       })
     });
 

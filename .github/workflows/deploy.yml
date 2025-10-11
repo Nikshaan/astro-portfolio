@@ -16,6 +16,8 @@ jobs:
     env:
       PUBLIC__LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
       PUBLIC__LASTFM_USERNAME: ${{ secrets.LASTFM_USERNAME }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      GH_USERNAME: ${{ secrets.GH_USERNAME }}
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v4
