@@ -1,6 +1,17 @@
 import '../styles/CustomTooltip.css';
 
-const CustomTooltip = ({ active, payload }) => {
+interface TooltipPayload {
+  value: number;
+  name?: string;
+  dataKey?: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+}
+
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="custom-tooltip text-black text-sm">

@@ -33,12 +33,15 @@ const GH_TOKEN = import.meta.env.GH_TOKEN as string;
 const GH_USERNAME = import.meta.env.GH_USERNAME as string;
 
 let contributionData: GitHubAPIResponse | null = null;
+let totalContributions = 0;
+let currentYear = new Date().getFullYear();
 
 if (GH_TOKEN && GH_USERNAME) {
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  const from: string = oneYearAgo.toISOString();
-  const to: string = new Date().toISOString();
+  const startOfYear = new Date(currentYear, 0, 1);
+  const today = new Date();
+  
+  const from: string = startOfYear.toISOString();
+  const to: string = today.toISOString();
 
   const query = `
     query($username: String!, $from: DateTime!, $to: DateTime!) {
@@ -76,19 +79,29 @@ if (GH_TOKEN && GH_USERNAME) {
     
     if (data.errors) {
       console.error('GitHub API errors:', data.errors);
-    } else {
+    } else if (data.data?.user?.contributionsCollection?.contributionCalendar) {
       contributionData = data;
+      totalContributions = data.data.user.contributionsCollection.contributionCalendar.totalContributions;
+    } else {
+      console.error('Unexpected API response structure:', JSON.stringify(data));
     }
   } catch (error) {
     console.error('Failed to fetch contributions:', error);
   }
+} else {
+  console.warn('GitHub token or username not configured. Set GH_TOKEN and GH_USERNAME environment variables.');
 }
 
 const weeks: ContributionWeek[] = contributionData?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || [];
 ---
 
 <div class="contributions-container">
-  <h3>GitHub Contributions (2025)</h3>
+  <div class="header">
+    <h3>GitHub Contributions ({currentYear})</h3>
+    {totalContributions > 0 && (
+      <span class="total">{totalContributions} contributions this year</span>
+    )}
+  </div>
   {weeks.length > 0 ? (
     <div class="graph">
       {weeks.map((week: ContributionWeek) => (
@@ -96,7 +109,7 @@ const weeks: ContributionWeek[] = contributionData?.data?.user?.contributionsCol
           {week.contributionDays.map((day: ContributionDay) => (
             <div 
               class="day" 
-              style={`background-color: ${day.color};`}
+              style={`background-color: ${day.color || '#161b22'};`}
               title={`${day.date}: ${day.contributionCount} contributions`}
             ></div>
           ))}
@@ -104,7 +117,7 @@ const weeks: ContributionWeek[] = contributionData?.data?.user?.contributionsCol
       ))}
     </div>
   ) : (
-    <p style="color: red;">Failed to load contributions</p>
+    <p style="color: red;">Failed to load contributions. Check console for details.</p>
   )}
 </div>
 
@@ -114,20 +127,56 @@ const weeks: ContributionWeek[] = contributionData?.data?.user?.contributionsCol
     width: 100%;
   }
   
-  .contributions-container h3 {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .contributions-container h3 {
     font-size: 1.25rem;
     font-weight: 500;
+    margin: 0;
+  }
+  
+  .total {
+    color: #8b949e;
+    font-size: 0.9rem;
   }
   
   .graph {
     display: flex;
     gap: 3px;
     overflow-x: auto;
+    overflow-y: hidden;
     padding: 1rem;
     background: #0d1117;
     border-radius: 8px;
     width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #30363d #0d1117;
+  }
+  
+  .graph::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  .graph::-webkit-scrollbar-track {
+    background: #0d1117;
+    border-radius: 4px;
+  }
+  
+  .graph::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 4px;
+  }
+  
+  .graph::-webkit-scrollbar-thumb:hover {
+    background: #484f58;
   }
   
   .week {
@@ -145,11 +194,78 @@ const weeks: ContributionWeek[] = contributionData?.data?.user?.contributionsCol
     border-radius: 2px;
     flex-shrink: 0;
     display: block;
+    transition: transform 0.2s ease;
+  }
+  
+  .day:hover {
+    transform: scale(1.5);
+    z-index: 10;
+    position: relative;
+  }
+  
+  @media (max-width: 1024px) {
+    .day {
+      width: 10px;
+      height: 10px;
+      min-width: 10px;
+      min-height: 10px;
+    }
+    
+    .graph {
+      gap: 2px;
+    }
+    
+    .week {
+      gap: 2px;
+    }
   }
   
   @media (max-width: 768px) {
-    .week:nth-child(n+34) {
-      display: none;
+    .day {
+      width: 8px;
+      height: 8px;
+      min-width: 8px;
+      min-height: 8px;
+    }
+    
+    .graph {
+      gap: 2px;
+      padding: 0.75rem;
+    }
+    
+    .week {
+      gap: 2px;
+    }
+    
+    .contributions-container h3 {
+      font-size: 1.1rem;
+    }
+    
+    .total {
+      font-size: 0.85rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .day {
+      width: 6px;
+      height: 6px;
+      min-width: 6px;
+      min-height: 6px;
+      border-radius: 1px;
+    }
+    
+    .graph {
+      gap: 1.5px;
+      padding: 0.5rem;
+    }
+    
+    .week {
+      gap: 1.5px;
+    }
+    
+    .contributions-container {
+      margin-top: 60px;
     }
   }
 </style>

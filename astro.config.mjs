@@ -12,20 +12,20 @@ export default defineConfig({
       minify: 'terser',
       terserOptions: {
         compress: {
-          drop_console: true,        
-          drop_debugger: true,      
-          pure_funcs: [             
+          drop_console: true,
+          drop_debugger: true,
+          pure_funcs: [
             'console.log',
             'console.error',
             'console.warn',
             'console.info',
             'React.createElement'
           ],
-          passes: 2,               
-          dead_code: true           
+          passes: 2,
+          dead_code: true
         },
         mangle: {
-          safari10: true            
+          safari10: true
         }
       },
       rollupOptions: {

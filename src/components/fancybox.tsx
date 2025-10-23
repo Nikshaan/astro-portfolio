@@ -6,7 +6,6 @@ export default function ImageCarousel({ images, options }: any) {
   const ref = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Fix hydration mismatch - only initialize after client mount
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -22,7 +21,6 @@ export default function ImageCarousel({ images, options }: any) {
           import('@fancyapps/ui/dist/fancybox/')
         ]);
 
-        // Ensure DOM is ready
         setTimeout(() => {
           if (!ref.current) return;
 
@@ -40,7 +38,7 @@ export default function ImageCarousel({ images, options }: any) {
 
           Fancybox.bind("[data-fancybox='gallery']", {
             Toolbar: { display: { right: ["close"] } }
-          });
+          } as any);
         }, 100);
 
       } catch (error) {
@@ -51,7 +49,6 @@ export default function ImageCarousel({ images, options }: any) {
     initCarousel();
   }, [isMounted, options]);
 
-  // Show loading state until mounted (prevents hydration mismatch)
   if (!isMounted) {
     return (
       <div className="f-carousel-loading">
