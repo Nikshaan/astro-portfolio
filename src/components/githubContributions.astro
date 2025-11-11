@@ -123,8 +123,22 @@ const weeks: ContributionWeek[] = contributionData?.data?.user?.contributionsCol
 
 <style>
   .contributions-container {
-    margin-top: 80px;
+    margin-top: 50px;
     width: 100%;
+    padding: 0 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .contributions-container {
+      margin-top: 60px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .contributions-container {
+      margin-top: 80px;
+      padding: 0;
+    }
   }
   
   .header {
@@ -137,28 +151,59 @@ const weeks: ContributionWeek[] = contributionData?.data?.user?.contributionsCol
   }
   
   .contributions-container h3 {
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 500;
     margin: 0;
+  }
+
+  @media (min-width: 640px) {
+    .contributions-container h3 {
+      font-size: 1.125rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .contributions-container h3 {
+      font-size: 1.25rem;
+    }
   }
   
   .total {
     color: #8b949e;
-    font-size: 0.9rem;
+    font-size: 0.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .total {
+      font-size: 0.875rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .total {
+      font-size: 0.9rem;
+    }
   }
   
   .graph {
     display: flex;
-    gap: 3px;
+    gap: 2px;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 1rem;
+    padding: 0.75rem;
     background: #0d1117;
     border-radius: 8px;
     width: 100%;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: #30363d #0d1117;
+  }
+
+  @media (min-width: 640px) {
+    .graph {
+      gap: 3px;
+      padding: 1rem;
+    }
   }
   
   .graph::-webkit-scrollbar {
@@ -182,19 +227,43 @@ const weeks: ContributionWeek[] = contributionData?.data?.user?.contributionsCol
   .week {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
     flex-shrink: 0;
+  }
+
+  @media (min-width: 640px) {
+    .week {
+      gap: 3px;
+    }
   }
   
   .day {
-    width: 12px;
-    height: 12px;
-    min-width: 12px;
-    min-height: 12px;
+    width: 10px;
+    height: 10px;
+    min-width: 10px;
+    min-height: 10px;
     border-radius: 2px;
     flex-shrink: 0;
     display: block;
     transition: transform 0.2s ease;
+  }
+
+  @media (min-width: 640px) {
+    .day {
+      width: 11px;
+      height: 11px;
+      min-width: 11px;
+      min-height: 11px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .day {
+      width: 12px;
+      height: 12px;
+      min-width: 12px;
+      min-height: 12px;
+    }
   }
   
   .day:hover {

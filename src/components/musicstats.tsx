@@ -135,24 +135,24 @@ export default function MusicStatsClient({ apiKey, username }: { apiKey: string;
 
     return (
         <>
-            <div className="flex justify-around mt-5">
-                <div>
-                    <p className="font-thin mb-2">Complete music scrobbles</p>
-                    <div className="flex flex-col justify-start items-start h-full w-fit gap-2">
+            <div className="flex flex-col lg:flex-row justify-center lg:justify-around items-center lg:items-start gap-8 lg:gap-4 mt-5 px-4">
+                <div className="w-full lg:w-auto text-center lg:text-left">
+                    <p className="font-thin mb-4 text-sm sm:text-base">Total music scrobbles</p>
+                    <div className="flex flex-col justify-start items-center lg:items-start h-full w-full gap-2 text-sm sm:text-base">
                         <p>Play count: {data.upperStatsArray[0]}</p>
                         <p>Track count: {data.upperStatsArray[1]}</p>
                         <p>Artist count: {data.upperStatsArray[2]}</p>
                         <p>Album count: {data.upperStatsArray[3]}</p>
                     </div>
                 </div>
-                <div>
-                    <p className="font-thin mb-2">Top artists of the week</p>
-                    <div>
+                <div className="w-full lg:w-auto text-center lg:text-left">
+                    <p className="font-thin mb-4 text-sm sm:text-base">Top artists of the week</p>
+                    <div className="text-sm sm:text-base">
                         {data.artistsInfo.map((artist, index) => (
-                            <div key={index} className="flex flex-row justify-start items-start h-full w-fit gap-2">
+                            <div key={index} className="flex flex-col sm:flex-row justify-center lg:justify-start items-center lg:items-start h-full w-full gap-1 sm:gap-2 mb-2">
                                 <div className="flex gap-2">
-                                    <p>{artist.name}</p>
-                                    <p>plays: {artist.count}</p>
+                                    <p className="font-medium">{artist.name}</p>
+                                    <p className="text-gray-400">plays: {artist.count}</p>
                                 </div>
                             </div>
                         ))}
@@ -160,9 +160,9 @@ export default function MusicStatsClient({ apiKey, username }: { apiKey: string;
                 </div>
             </div>
 
-            <div className="flex flex-col h-[15rem] w-[80svh] lg:w-[65rem] mt-10">
-                <p className="my-4 font-thin text-center">Daily music scrobbles</p>
-                <div className="w-full h-full pr-10 lg:px-20 select-none">
+            <div className="flex flex-col h-[15rem] sm:h-[18rem] lg:h-[20rem] w-full mt-10 px-4">
+                <p className="my-4 font-thin text-center text-sm sm:text-base">Daily music scrobbles</p>
+                <div className="w-full h-full pr-4 sm:pr-10 lg:px-20 select-none">
                     <MusicCharts data={data.weeklyScrobbles} />
                 </div>
             </div>

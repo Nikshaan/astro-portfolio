@@ -4,7 +4,7 @@ import { getImage } from 'astro:assets';
 
 const photoModules = import.meta.glob('../data/photos/photo*.webp', { eager: true });
 
-const photoTitles = {
+const photoTitles: Record<number, string> = {
   1: 'Mall road, Manali', 2: 'Manali', 3: 'Manali', 4: 'Hadimba temple, Manali',
   5: 'Manali', 6: 'Manali', 7: 'Manali', 8: 'Manali', 9: 'Manali',
   10: "Humayun's tomb, Delhi", 11: "Humayun's tomb, Delhi", 12: "Humayun's tomb, Delhi", 13: "Humayun's tomb, Delhi",

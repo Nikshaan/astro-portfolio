@@ -1,16 +1,23 @@
 ---
-import GithubContributions from "../components/githubContributions.astro";
+import GithubContributions from "../components/githubContributions.tsx";
 import Navbar from "../components/navbar.astro";
 import Projectcard from "../components/projectcard.astro";
 import projects from "../data/projects.json";
 import SubLayout from "../layouts/SubLayout.astro";
 import '../styles/global.css';
+
+const GH_TOKEN = import.meta.env.GH_TOKEN as string;
+const GH_USERNAME = import.meta.env.GH_USERNAME as string;
 ---
 <SubLayout title="Nikshaan | Portfolio - Projects" description="Projects made by Nikshaan on web development, machine learning and deep learning.">
+<script is:inline define:vars={{ GH_TOKEN, GH_USERNAME }}>
+  window.__GH_TOKEN__ = GH_TOKEN;
+  window.__GH_USERNAME__ = GH_USERNAME;
+</script>
 <section class="-mt-10 lg:w-[65rem] m-auto flex-1 text-white bg-[#080808]">
         <Navbar />
         <div class="w-full px-4 lg:px-2">
-          <GithubContributions />
+          <GithubContributions client:load />
         </div>
         <div class="flex py-16 flex-col mt-5 pl-4 ml-1 lg:mt-0 lg:ml-3 lg:px-2 justify-start items-start">
           <div class="flex justify-between items-center w-full mb-5">
