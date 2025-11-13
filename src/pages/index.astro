@@ -6,14 +6,15 @@ import Intro from '../components/intro.astro';
 import Education from '../components/education.astro';
 import Extracurr from '../components/extracurr.astro';
 import Location from '../components/location.astro';
-import Stackcard from '../components/stackcard.astro';
 import Modecard from '../components/modecard.astro';
 import Experience from '../components/experience.astro';
+import Projects from './projects.astro';
+import Fun from './fun.astro';
 ---
 
 <MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style.'>
 	<Navbar />
-  <main class="bg-black -mt-12 text-neutral-50 min-h-[100svh] w-full flex items-center flex-col">
+  <main id="me" class="bg-black -mt-12 text-neutral-50 min-h-[100svh] w-full flex items-center flex-col">
     <div class="grid-bg w-full flex flex-col justify-center items-center">
     <section class="h-full p-2 pt-16 flex flex-col lg:flex-row gap-2 flex-1">
       <div class="flex flex-col gap-2 h-full">
@@ -28,8 +29,15 @@ import Experience from '../components/experience.astro';
         <Education />
         <Extracurr />
       </div>
-      <div class="flex flex-col gap-2 h-full">
-        <Stackcard />
+    </section>
+    <section id="projects" class="w-full p-2 pb-16 flex flex-col lg:flex-row gap-2 flex-1">
+      <div class="flex flex-col gap-2 h-full w-full">
+        <Projects />
+      </div>
+    </section>
+    <section id="fun" class="w-full p-2 pb-16 flex flex-col lg:flex-row gap-2 flex-1">
+      <div class="flex flex-col gap-2 h-full w-full">
+        <Fun />
       </div>
     </section>
     </div>
