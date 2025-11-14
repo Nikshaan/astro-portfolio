@@ -1,0 +1,117 @@
+/* Light Theme Styles */
+
+/* Backgrounds */
+[data-theme="light"] .bg-black,
+[data-theme="light"] .bg-\[\#111111\]\/80,
+[data-theme="light"] .bg-\[\#111111\],
+[data-theme="light"] .bg-\[\#171717\],
+[data-theme="light"] .bg-\[\#080808\] {
+  background-color: #ffffff !important;
+}
+
+/* Card backgrounds */
+[data-theme="light"] .bg-\[\#171717\] {
+  background-color: #e0f2fe !important;
+}
+
+/* Text colors */
+[data-theme="light"] .text-white,
+[data-theme="light"] .text-neutral-50 {
+  color: #000000 !important;
+}
+
+/* Borders */
+[data-theme="light"] .border-slate-300 {
+  border-color: #000000 !important;
+}
+
+[data-theme="light"] .border-b {
+  border-color: #000000 !important;
+}
+
+[data-theme="light"] .border-l {
+  border-color: #000000 !important;
+}
+
+/* Hover effects */
+[data-theme="light"] .hover\:border-purple-500:hover {
+  border-color: #3b82f6 !important;
+}
+
+[data-theme="light"] .hover\:text-purple-500:hover {
+  color: #3b82f6 !important;
+}
+
+[data-theme="light"] .hover\:bg-purple-500\/20:hover {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Navbar specific */
+[data-theme="light"] #navbar {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* Grid background for light theme */
+[data-theme="light"] .grid-bg {
+  background-color: #ffffff !important;
+  background-image:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgb(255, 255, 255) 80%),
+    repeating-linear-gradient(
+      to right,
+      rgba(0,0,0,0.2) 0px,
+      rgba(0,0,0,0.2) 1px,
+      transparent 1px,
+      transparent 80px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.2) 0px,
+      rgba(0,0,0,0.2) 1px,
+      transparent 1px,
+      transparent 80px
+    ) !important;
+}
+
+/* Links and underlines */
+[data-theme="light"] a {
+  color: #000000;
+}
+
+[data-theme="light"] .underline:hover {
+  color: #3b82f6;
+}
+
+/* Buttons with white background in dark mode */
+[data-theme="light"] .bg-white {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .text-black {
+  color: #000000 !important;
+}
+
+/* Graph and Chart Colors - Blue theme in light mode */
+[data-theme="light"] .recharts-area {
+  fill: #93c5fd !important;
+  stroke: #3b82f6 !important;
+}
+
+[data-theme="light"] .recharts-cartesian-grid line {
+  stroke: #e5e7eb !important;
+}
+
+[data-theme="light"] .recharts-text {
+  fill: #000000 !important;
+}
+
+[data-theme="light"] .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+/* Active nav link in light mode */
+[data-theme="light"] .nav-links a.active {
+  color: #3b82f6 !important;
+}

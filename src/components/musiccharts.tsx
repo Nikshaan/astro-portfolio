@@ -1,4 +1,5 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState, useEffect } from 'react';
 import CustomTooltip from './CustomTooltip';
 
 interface ChartData {
@@ -7,6 +8,27 @@ interface ChartData {
 }
 
 export default function MusicCharts({ data }: { data: ChartData[] }) {
+    const [isLightTheme, setIsLightTheme] = useState(false);
+
+    useEffect(() => {
+        // Check initial theme
+        const checkTheme = () => {
+            const theme = document.documentElement.getAttribute('data-theme');
+            setIsLightTheme(theme === 'light');
+        };
+
+        checkTheme();
+
+        // Listen for theme changes
+        const observer = new MutationObserver(checkTheme);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
     if (!data || data.length === 0) {
         return (
             <div className='w-full h-full flex items-center justify-center'>
@@ -14,6 +36,12 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
             </div>
         );
     }
+
+    // Define colors based on theme
+    const strokeColor = isLightTheme ? '#3b82f6' : '#ac46fd';  // Blue in light mode, purple in dark
+    const fillColor = isLightTheme ? '#93c5fd' : '#571388';    // Light blue in light mode, dark purple in dark
+    const gridColor = isLightTheme ? '#e5e7eb' : '#374151';    // Light gray in light, dark gray in dark
+    const textColor = isLightTheme ? '#000000' : '#ffffff';    // Black in light, white in dark
 
     return (
         <ResponsiveContainer width="100%" height="100%">
@@ -26,15 +54,21 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
                     bottom: 0,
                 }}
             >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                <XAxis dataKey="name" stroke={textColor} />
+                <YAxis stroke={textColor} />
                 <Tooltip
                     content={<CustomTooltip />}
                     wrapperStyle={{ outline: 'none' }}
                     cursor={{ fill: 'transparent' }}
                 />
-                <Area type="monotone" dataKey="scrobbles" stroke="#ac46fd" fill="#571388" />
+                <Area 
+                    type="monotone" 
+                    dataKey="scrobbles" 
+                    stroke={strokeColor} 
+                    fill={fillColor}
+                    fillOpacity={0.6}
+                />
             </AreaChart>
         </ResponsiveContainer>
     );

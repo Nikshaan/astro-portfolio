@@ -69,5 +69,29 @@ import Fun from './fun.astro';
   background-repeat: no-repeat, repeat, repeat;
   -webkit-mask-image: linear-gradient(to bottom, rgba(17,17,17,1), rgba(17,17,17,1) 60%);
   mask-image: linear-gradient(to bottom, rgba(17,17,17,1), rgba(17,17,17,1) 60%);
+  transition: background-color 0.3s ease;
+}
+
+/* Light mode grid background */
+[data-theme="light"] .grid-bg {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgb(255, 255, 255) 80%),
+    repeating-linear-gradient(
+      to right,
+      rgba(0,0,0,0.2) 0px,
+      rgba(0,0,0,0.2) 1px,
+      transparent 1px,
+      transparent 80px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.2) 0px,
+      rgba(0,0,0,0.2) 1px,
+      transparent 1px,
+      transparent 80px
+    );
+  -webkit-mask-image: linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,1) 60%);
+  mask-image: linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,1) 60%);
 }
 </style>

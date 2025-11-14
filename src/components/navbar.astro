@@ -2,38 +2,182 @@
 const { pathname } = Astro.url;
 ---
 
-<div id="navbar" class="bg-[#111111]/80 text-white z-50 sticky left-1/2 transform -translate-x-1/2 top-2 mt-2 h-10 w-[350px] border border-slate-300 rounded-lg flex justify-around items-center transition-all duration-200 nav-links">
-    <a class:list={{ active: pathname === `${import.meta.env.BASE_URL}` }} aria-label="navigation to home section" href=`#me` class="cursor-pointer">
+<div id="navbar" class="bg-[#111111]/80 text-white z-50 sticky left-1/2 transform -translate-x-1/2 top-2 mt-2 h-10 w-[400px] border border-slate-300 rounded-lg flex justify-around items-center transition-all duration-200 nav-links">
+    <a class:list={{ active: pathname === `${import.meta.env.BASE_URL}` }} aria-label="navigation to home section" href=`#me` class="nav-link cursor-pointer">
         me
     </a>
-    <a class:list={{ active: pathname === `${import.meta.env.BASE_URL}/projects/` }} aria-label="navigation to projects section" href=`#projects` class="cursor-pointer">
+    <a class:list={{ active: pathname === `${import.meta.env.BASE_URL}/projects/` }} aria-label="navigation to projects section" href=`#projects` class="nav-link cursor-pointer">
         projects
     </a>
-    <a class:list={{ active: pathname === `${import.meta.env.BASE_URL}/fun/` }} aria-label="navigation to fun section" href=`#fun` class="cursor-pointer">
+    <a class:list={{ active: pathname === `${import.meta.env.BASE_URL}/fun/` }} aria-label="navigation to fun section" href=`#fun` class="nav-link cursor-pointer">
         fun
     </a>
+    <button id="theme-toggle" aria-label="toggle theme" class="cursor-pointer p-1 rounded hover:bg-purple-500/20 hover:scale-110 transition-all duration-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path id="sun-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            <path id="moon-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+    </button>
 </div>
 
 <style>
   .nav-links a.active {
     color: #622f8e;
   }
+
+  /* Navbar link animations */
+  .nav-link {
+    position: relative;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+  }
+
+  .nav-link:hover {
+    color: #a855f7;
+    background-color: rgba(168, 85, 247, 0.1);
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  .nav-link:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* Light theme hover colors */
+  [data-theme="light"] .nav-link:hover {
+    color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+
+  /* Underline animation effect */
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #a855f7, #ec4899);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%);
+  }
+
+  .nav-link:hover::after {
+    width: 80%;
+  }
+
+  /* Light theme underline */
+  [data-theme="light"] .nav-link::after {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  }
+
+  /* Active link styling */
+  .nav-link.active {
+    color: #a855f7;
+    background-color: rgba(168, 85, 247, 0.15);
+  }
+
+  [data-theme="light"] .nav-link.active {
+    color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.15);
+  }
+
+  /* Theme toggle button animations */
+  #theme-toggle {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #theme-toggle:hover {
+    transform: scale(1.1) rotate(10deg);
+  }
+
+  #theme-toggle:active {
+    transform: scale(0.95) rotate(-5deg);
+  }
+
+  [data-theme="light"] #theme-toggle:hover {
+    background-color: rgba(59, 130, 246, 0.2);
+  }
+
+  /* SVG icon animations */
+  #theme-toggle svg {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #theme-toggle:hover svg {
+    transform: rotate(20deg);
+  }
 </style>
 
 <script>
     let lastScrollTop = 0;
     const navbar = document.getElementById('navbar');
+    const themeToggle = document.getElementById('theme-toggle');
+    const sunIcon = document.getElementById('sun-icon');
+    const moonIcon = document.getElementById('moon-icon');
 
-    const navbarHeight = navbar.offsetHeight;
+    // Initialize navbar scroll behavior
+    if (navbar) {
+        const navbarHeight = navbar.offsetHeight;
 
-    window.addEventListener('scroll', function(){
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        window.addEventListener('scroll', function(){
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-        if(navbar && scrollTop > lastScrollTop && scrollTop > navbarHeight){
-            navbar.style.top = `-${navbarHeight}px`;
-        } else if(navbar){
-            navbar.style.top = '0.5rem';
+            if(navbar && scrollTop > lastScrollTop && scrollTop > navbarHeight){
+                navbar.style.top = `-${navbarHeight}px`;
+            } else if(navbar){
+                navbar.style.top = '0.5rem';
+            }
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        });
+    }
+
+    // Theme toggle functionality
+    function updateThemeIcon() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        if (currentTheme === 'light') {
+            // Show sun icon (for switching back to dark)
+            sunIcon?.classList.remove('hidden');
+            moonIcon?.classList.add('hidden');
+        } else {
+            // Show moon icon (for switching to light)
+            sunIcon?.classList.add('hidden');
+            moonIcon?.classList.remove('hidden');
         }
-        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-    });
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-theme');
+        
+        console.log('Toggle clicked! Current theme:', currentTheme);
+        
+        if (currentTheme === 'light') {
+            // Switch to dark mode (Primary Mode)
+            html.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'default');
+            console.log('Switched to dark mode');
+        } else {
+            // Switch to light mode (Secondary Mode)
+            html.setAttribute('data-theme', 'light');
+            localStorage.setItem('theme', 'light');
+            console.log('Switched to light mode');
+        }
+        
+        updateThemeIcon();
+        console.log('New theme:', html.getAttribute('data-theme'));
+    }
+
+    // Initialize theme icon on page load
+    updateThemeIcon();
+    console.log('Theme toggle initialized');
+
+    // Add click event listener to toggle button
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+        console.log('Click listener attached to theme toggle');
+    } else {
+        console.error('Theme toggle button not found!');
+    }
 </script>

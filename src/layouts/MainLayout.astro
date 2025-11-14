@@ -22,8 +22,17 @@ const { title, description } = Astro.props;
     <meta content={description} property="og:description" />
     <meta content="website" property="og:type" />
     <Tooltips interactive={false} delay={[15, 100]} />
+    
+    <!-- Theme initialization script (runs immediately to prevent flash) -->
+    <script is:inline>
+        // Check localStorage for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
 </head>
-<body class="lenis-wrapper h-full">
+<body class="lenis-wrapper h-full bg-black text-neutral-50 transition-colors duration-300">
     <slot />
 </body>
 </html>
@@ -32,6 +41,12 @@ const { title, description } = Astro.props;
     body {
         background-color: #111111;
         overflow-x: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    [data-theme="light"] body {
+        background-color: #ffffff;
+        color: #000000;
     }
 </style>
 

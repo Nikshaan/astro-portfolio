@@ -125,14 +125,24 @@ export default function GithubContributions() {
         <div className="graph">
           {weeks.map((week: ContributionWeek, weekIndex: number) => (
             <div key={weekIndex} className="week">
-              {week.contributionDays.map((day: ContributionDay, dayIndex: number) => (
-                <div
-                  key={dayIndex}
-                  className="day"
-                  style={{ backgroundColor: day.color || '#161b22' }}
-                  title={`${day.date}: ${day.contributionCount} contributions`}
-                ></div>
-              ))}
+              {week.contributionDays.map((day: ContributionDay, dayIndex: number) => {
+                // Get contribution level (0-4) based on count
+                const count = day.contributionCount;
+                let level = 0;
+                if (count > 0 && count <= 3) level = 1;
+                else if (count > 3 && count <= 6) level = 2;
+                else if (count > 6 && count <= 9) level = 3;
+                else if (count > 9) level = 4;
+                
+                return (
+                  <div
+                    key={dayIndex}
+                    className={`day contribution-level-${level}`}
+                    style={{ backgroundColor: day.color || '#161b22' }}
+                    title={`${day.date}: ${day.contributionCount} contributions`}
+                  ></div>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -176,15 +186,27 @@ export default function GithubContributions() {
           color: white;
         }
 
+        [data-theme="light"] .header h3 {
+          color: black;
+        }
+
         .header .total {
           font-size: 0.875rem;
           color: #8b949e;
+        }
+
+        [data-theme="light"] .header .total {
+          color: #57606a;
         }
 
         .loading {
           color: #8b949e;
           padding: 2rem 0;
           text-align: center;
+        }
+
+        [data-theme="light"] .loading {
+          color: #57606a;
         }
 
         .graph {
@@ -196,6 +218,10 @@ export default function GithubContributions() {
           scrollbar-color: #30363d #0d1117;
         }
 
+        [data-theme="light"] .graph {
+          scrollbar-color: #d0d7de #ffffff;
+        }
+
         .graph::-webkit-scrollbar {
           height: 8px;
         }
@@ -204,9 +230,17 @@ export default function GithubContributions() {
           background: #0d1117;
         }
 
+        [data-theme="light"] .graph::-webkit-scrollbar-track {
+          background: #f6f8fa;
+        }
+
         .graph::-webkit-scrollbar-thumb {
           background: #30363d;
           border-radius: 4px;
+        }
+
+        [data-theme="light"] .graph::-webkit-scrollbar-thumb {
+          background: #d0d7de;
         }
 
         .week {
@@ -227,6 +261,31 @@ export default function GithubContributions() {
         .day:hover {
           transform: scale(1.2);
           outline: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="light"] .day:hover {
+          outline: 1px solid rgba(0, 0, 0, 0.2);
+        }
+
+        /* Blue color scheme for light theme */
+        [data-theme="light"] .contribution-level-0 {
+          background-color: #ebedf0 !important;
+        }
+
+        [data-theme="light"] .contribution-level-1 {
+          background-color: #9be9ff !important;
+        }
+
+        [data-theme="light"] .contribution-level-2 {
+          background-color: #64d2ff !important;
+        }
+
+        [data-theme="light"] .contribution-level-3 {
+          background-color: #39b6f0 !important;
+        }
+
+        [data-theme="light"] .contribution-level-4 {
+          background-color: #0969da !important;
         }
 
         @media (min-width: 640px) {

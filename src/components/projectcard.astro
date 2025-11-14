@@ -56,7 +56,7 @@ if (techstack) {
 }
 ---
 
-<div class="flex justify-between lg:w-[62rem] border-b  p-1 py-4">
+<div class="flex justify-between lg:w-[62rem] border-b p-1 py-4">
     <div class="flex flex-col">
         <p class="text-lg font-medium">{name}</p>
         <p class="text-sm font-light">{summary}</p>
@@ -70,13 +70,13 @@ if (techstack) {
     </div>
     <div class="flex flex-col justify-center items-center gap-1">
         { 
-            live && <a aria-label="link to live demo of the project" class="cursor-pointer underline underline-offset-2" href={live}>live</a>
+            live && <a aria-label="link to live demo of the project" class="cursor-pointer underline underline-offset-2 hover:text-purple-500" href={live}>live</a>
         }
         {
-            summary && <p class="cursor-pointer underline underline-offset-2">read</p>
+            summary && <p class="cursor-pointer underline underline-offset-2 hover:text-purple-500">read</p>
         }
         {
-            github && <a aria-label="link to github repository of the project" class="cursor-pointer underline underline-offset-2" href={github}>github</a>
+            github && <a aria-label="link to github repository of the project" class="cursor-pointer underline underline-offset-2 hover:text-purple-500" href={github}>github</a>
         }
     </div>
 </div>
