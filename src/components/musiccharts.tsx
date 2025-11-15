@@ -37,11 +37,10 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
         );
     }
 
-    // Define colors based on theme
-    const strokeColor = isLightTheme ? '#3b82f6' : '#ac46fd';  // Blue in light mode, purple in dark
-    const fillColor = isLightTheme ? '#93c5fd' : '#571388';    // Light blue in light mode, dark purple in dark
-    const gridColor = isLightTheme ? '#e5e7eb' : '#374151';    // Light gray in light, dark gray in dark
-    const textColor = isLightTheme ? '#000000' : '#ffffff';    // Black in light, white in dark
+    const strokeColor = isLightTheme ? '#3b82f6' : '#ac46fd'; 
+    const fillColor = isLightTheme ? '#93c5fd' : '#571388';  
+    const gridColor = isLightTheme ? '#e5e7eb' : '#374151';
+    const textColor = isLightTheme ? '#000000' : '#ffffff';
 
     return (
         <ResponsiveContainer width="100%" height="100%">

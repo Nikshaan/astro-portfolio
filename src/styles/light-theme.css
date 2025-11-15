@@ -113,5 +113,5 @@
 
 /* Active nav link in light mode */
 [data-theme="light"] .nav-links a.active {
-  color: #3b82f6 !important;
+  color: #2563eb !important;
 }

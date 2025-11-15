@@ -1,22 +1,21 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
 import '../styles/global.css';
-import Navbar from '../components/navbar.astro';
+import NavbarWrapper from '../components/NavbarWrapper.astro';
 import Intro from '../components/intro.astro';
 import Education from '../components/education.astro';
 import Extracurr from '../components/extracurr.astro';
 import Location from '../components/location.astro';
-import Modecard from '../components/modecard.astro';
 import Experience from '../components/experience.astro';
 import Projects from './projects.astro';
 import Fun from './fun.astro';
 ---
 
 <MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style.'>
-	<Navbar />
-  <main id="me" class="bg-black -mt-12 text-neutral-50 min-h-[100svh] w-full flex items-center flex-col">
+	<NavbarWrapper />
+  <main class="bg-black -mt-12 text-neutral-50 min-h-[100svh] w-full flex items-center flex-col">
     <div class="grid-bg w-full flex flex-col justify-center items-center">
-    <section class="h-full p-2 pt-16 flex flex-col lg:flex-row gap-2 flex-1">
+    <section id="me" class="h-full p-2 pt-16 flex flex-col lg:flex-row gap-2 flex-1" data-section="me">
       <div class="flex flex-col gap-2 h-full">
         <Intro />
         <Experience />
@@ -24,18 +23,17 @@ import Fun from './fun.astro';
       <div class="flex flex-col gap-2 h-full">
         <div class="flex flex-col gap-2 lg:flex-row">
             <Location />
-            <Modecard />
         </div>
         <Education />
         <Extracurr />
       </div>
     </section>
-    <section id="projects" class="w-full p-2 pb-16 flex flex-col lg:flex-row gap-2 flex-1">
+    <section id="projects" class="w-full p-2 pb-16 flex flex-col lg:flex-row gap-2 flex-1" data-section="projects">
       <div class="flex flex-col gap-2 h-full w-full">
         <Projects />
       </div>
     </section>
-    <section id="fun" class="w-full p-2 pb-16 flex flex-col lg:flex-row gap-2 flex-1">
+    <section id="fun" class="w-full p-2 pb-16 flex flex-col lg:flex-row gap-2 flex-1" data-section="fun">
       <div class="flex flex-col gap-2 h-full w-full">
         <Fun />
       </div>

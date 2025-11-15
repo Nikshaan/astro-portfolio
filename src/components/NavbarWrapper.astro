@@ -1,0 +1,64 @@
+---
+import Navbar from './Navbar';
+---
+
+<Navbar client:load />
+
+<style is:global>
+  .nav-link {
+    position: relative;
+    color: #ffffff;
+  }
+
+  .nav-link:hover {
+    color: #c084fc;
+    opacity: 0.9;
+  }
+
+  .nav-link.active {
+    color: #a855f7 !important;
+    font-weight: 600;
+  }
+
+  .nav-link.active:hover {
+    color: #a855f7 !important;
+    opacity: 1;
+  }
+  
+  [data-theme="light"] .nav-link {
+    color: #3b82f6 !important;
+  }
+  [data-theme="light"] .nav-link:hover {
+    color: #2563eb !important;
+    opacity: 0.9;
+  }
+
+  [data-theme="light"] .nav-link.active {
+    color: #1e40af !important;
+    font-weight: 600 !important;
+  }
+
+  [data-theme="light"] .nav-link.active:hover {
+    color: #1e40af !important;
+    opacity: 1;
+  }
+
+  [data-theme="light"] #navbar {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    color: #000000 !important;
+    border-color: #000000 !important;
+  }
+
+  [data-theme="light"] #theme-toggle:hover {
+    background-color: rgba(37, 99, 235, 0.2) !important;
+  }
+
+  #theme-toggle:hover {
+    background-color: rgba(168, 85, 247, 0.2);
+  }
+
+  .nav-link,
+  #theme-toggle {
+    transition: all 0.2s ease-in-out;
+  }
+</style>

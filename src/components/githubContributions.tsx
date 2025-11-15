@@ -39,7 +39,7 @@ export default function GithubContributions() {
 
   useEffect(() => {
     const fetchContributions = async () => {
-      // Get credentials from window object (set by Astro)
+    
       const token = (window as any).__GH_TOKEN__;
       const username = (window as any).__GH_USERNAME__;
 
@@ -126,7 +126,7 @@ export default function GithubContributions() {
           {weeks.map((week: ContributionWeek, weekIndex: number) => (
             <div key={weekIndex} className="week">
               {week.contributionDays.map((day: ContributionDay, dayIndex: number) => {
-                // Get contribution level (0-4) based on count
+           
                 const count = day.contributionCount;
                 let level = 0;
                 if (count > 0 && count <= 3) level = 1;
