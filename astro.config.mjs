@@ -6,6 +6,11 @@ import react from '@astrojs/react';
 export default defineConfig({
   site: 'https://Nikshaan.github.io',
   base: '/astro-portfolio',
+  trailingSlash: 'ignore',
+  build: {
+    assets: '_astro',
+    inlineStylesheets: 'auto'
+  },
   vite: {
     plugins: [tailwindcss()],
     build: {
