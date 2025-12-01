@@ -1,0 +1,10 @@
+{
+    "aiml_projects": [
+        {
+            "name": "ProductWizz",
+            "techstack": ["Langchain", "ChromaDB", "HuggingFace", "ReactJS", "FastAPI"],
+            "summary": "An AI-powered shopping assistant browser extension for amazon.in & flipkart.com.",
+            "github": "https://github.com/Nikshaan/ProductWizz"
+        }
+    ]
+}
