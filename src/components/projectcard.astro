@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import reactjs from '../data/react.svg';
+import Card from './card.astro';
 import nextjs from '../data/next.svg';
 import nodejs from '../data/node.svg';
 import fastapi from '../data/fastapi.svg';
@@ -21,7 +22,8 @@ interface Props {
     techstack?: string[],
     summary?: string,
     github?: string,
-    live?: string; 
+    live?: string;
+    class?: string;
 }
 
 const { name, techstack, summary, github, live } = Astro.props;
@@ -65,32 +67,33 @@ if (techstack) {
 }
 ---
 
-<div class="flex justify-between lg:w-[62rem] border-b p-1 py-4">
-    <div class="flex flex-col">
-        <p class="text-lg font-medium">{name}</p>
-        <p class="text-sm font-light">{summary}</p>
-        <div class="text-sm font-light italic my-2 flex gap-1 items-center">
-            {
-                techstack && techstack.map((techName, index) => {
-                    const needsWhiteBg = ['Langchain', 'HuggingFace', 'ChromaDB'].includes(techName);
-                    return (
-                        <div class={needsWhiteBg ? 'bg-white p-0.5 rounded flex items-center justify-center' : 'flex items-center justify-center'} style="height: 25px; width: 80px;">
-                            <Image src={techstackLink[index]} alt={techName} height={80} width={80} loading="eager" style="max-height: 100%; max-width: 100%; object-fit: contain;" />
-                        </div>
-                    );
-                })
-            }
+<Card class={Astro.props.class}>
+    <div class="flex flex-col h-full justify-between">
+        <div>
+            <p class="text-xl font-medium mb-2">{name}</p>
+            <p class="text-sm font-light text-neutral-600 dark:text-neutral-400">{summary}</p>
+        </div>
+        <div class="flex flex-col gap-4 mt-auto pt-4">
+            <div class="grid grid-cols-4 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full">
+                {
+                    techstack && techstack.map((techName, index) => {
+                        const needsWhiteBg = ['Langchain', 'HuggingFace', 'ChromaDB'].includes(techName);
+                        return (
+                            <div class={`flex items-center justify-center p-2 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12 ${needsWhiteBg ? 'bg-white' : 'bg-neutral-100 dark:bg-neutral-800'}`} title={techName}>
+                                <Image src={techstackLink[index]} alt={techName} class="w-full h-full object-contain" loading="lazy" />
+                            </div>
+                        );
+                    })
+                }
+            </div>
+            <div class="flex gap-4 text-sm font-medium">
+                { 
+                    live && <a aria-label={`Live demo of ${name}`} class="cursor-pointer hover:text-blue-500 transition-colors" href={live} target="_blank" rel="noopener noreferrer">Live</a>
+                }
+                {
+                    github && <a aria-label={`Github repo of ${name}`} class="cursor-pointer hover:text-blue-500 transition-colors" href={github} target="_blank" rel="noopener noreferrer">GitHub</a>
+                }
+            </div>
         </div>
     </div>
-    <div class="flex flex-col justify-center items-center gap-1">
-        { 
-            live && <a aria-label="link to live demo of the project" class="cursor-pointer underline underline-offset-2 hover:text-purple-500" href={live}>live</a>
-        }
-        {
-            summary && <p class="cursor-pointer underline underline-offset-2 hover:text-purple-500">read</p>
-        }
-        {
-            github && <a aria-label="link to github repository of the project" class="cursor-pointer underline underline-offset-2 hover:text-purple-500" href={github}>github</a>
-        }
-    </div>
-</div>
+</Card>

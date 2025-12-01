@@ -4,7 +4,7 @@ interface NavbarProps {
   sections?: Array<{ id: string; label: string }>;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ 
+const Navbar: React.FC<NavbarProps> = ({
   sections = [
     { id: 'me', label: 'me' },
     { id: 'projects', label: 'projects' },
@@ -13,7 +13,7 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
 
   const [activeSection, setActiveSection] = useState<string>('me');
-  
+
   const [theme, setTheme] = useState<string>('dark');
 
   const [isVisible, setIsVisible] = useState(true);
@@ -31,7 +31,7 @@ const Navbar: React.FC<NavbarProps> = ({
     const observerCallback: IntersectionObserverCallback = (entries) => {
       entries.forEach((entry) => {
         const sectionId = entry.target.id;
-        
+
         if (entry.isIntersecting) {
           sectionVisibility.set(sectionId, entry.intersectionRatio);
         } else {
@@ -126,10 +126,10 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
     e.preventDefault();
-    
+
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
-      targetSection.scrollIntoView({ 
+      targetSection.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       });
@@ -147,7 +147,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const handleThemeToggle = () => {
     const html = document.documentElement;
     const currentTheme = html.getAttribute('data-theme');
-    
+
     if (currentTheme === 'light') {
       html.removeAttribute('data-theme');
       localStorage.setItem('theme', 'default');
@@ -165,59 +165,62 @@ const Navbar: React.FC<NavbarProps> = ({
     if (isActive) {
       return `${baseClasses} active font-semibold`;
     }
-    
+
     return baseClasses;
   };
 
   return (
-    <div 
+    <div
       ref={navbarRef}
-      id="navbar" 
-      className="bg-[#111111]/80 text-white z-50 sticky left-1/2 transform -translate-x-1/2 h-10 w-[400px] border border-slate-300 rounded-lg flex justify-around items-center transition-all duration-200 nav-links"
+      id="navbar"
+      className="bg-[#111111]/80 dark:bg-[#111111]/80 backdrop-blur-md text-white z-50 sticky left-1/2 transform -translate-x-1/2 h-12 w-[380px] border border-white/20 rounded-full flex justify-between px-6 items-center transition-all duration-300 shadow-lg nav-links"
       style={{
-        top: isVisible ? '0.5rem' : '-4rem',
-        marginTop: '0.5rem'
+        top: isVisible ? '1rem' : '-5rem'
       }}
     >
-      {sections.map(({ id, label }) => (
-        <a
-          key={id}
-          href={`#${id}`}
-          onClick={(e) => handleNavClick(e, id)}
-          aria-label={`navigation to ${label} section`}
-          className={getLinkClasses(id)}
-          data-section={id}
-        >
-          {label}
-        </a>
-      ))}
-      
-      <button 
-        id="theme-toggle" 
-        aria-label="toggle theme" 
-        className="cursor-pointer p-1 rounded hover:scale-110 transition-all duration-200"
+      <div className="flex gap-1">
+        {sections.map(({ id, label }) => (
+          <a
+            key={id}
+            href={`#${id}`}
+            onClick={(e) => handleNavClick(e, id)}
+            aria-label={`navigation to ${label} section`}
+            className={getLinkClasses(id)}
+            data-section={id}
+          >
+            {label}
+          </a>
+        ))}
+      </div>
+
+      <div className="h-6 w-[1px] bg-white/20 mx-2"></div>
+
+      <button
+        id="theme-toggle"
+        aria-label="toggle theme"
+        className="cursor-pointer p-1.5 rounded-full hover:bg-white/10 transition-all duration-200"
         onClick={handleThemeToggle}
       >
-        <svg 
-          className="w-5 h-5" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24" 
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
         >
           {theme === 'light' ? (
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth="2" 
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
               d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
             />
           ) : (
 
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth="2" 
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
               d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
             />
           )}

@@ -37,10 +37,10 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
         );
     }
 
-    const strokeColor = isLightTheme ? '#3b82f6' : '#ac46fd'; 
-    const fillColor = isLightTheme ? '#93c5fd' : '#571388';  
-    const gridColor = isLightTheme ? '#e5e7eb' : '#374151';
-    const textColor = isLightTheme ? '#000000' : '#ffffff';
+    const strokeColor = isLightTheme ? '#3b82f6' : '#ac46fd'; // Blue-500
+    const fillColor = isLightTheme ? '#93c5fd' : '#571388';  // Blue-300
+    const gridColor = isLightTheme ? '#bfdbfe' : '#374151'; // Blue-200
+    const textColor = isLightTheme ? '#1e3a8a' : '#ffffff'; // Blue-900
 
     return (
         <ResponsiveContainer width="100%" height="100%">
@@ -61,10 +61,10 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
                     wrapperStyle={{ outline: 'none' }}
                     cursor={{ fill: 'transparent' }}
                 />
-                <Area 
-                    type="monotone" 
-                    dataKey="scrobbles" 
-                    stroke={strokeColor} 
+                <Area
+                    type="monotone"
+                    dataKey="scrobbles"
+                    stroke={strokeColor}
                     fill={fillColor}
                     fillOpacity={0.6}
                 />

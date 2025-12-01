@@ -26,27 +26,27 @@ import Navbar from './Navbar';
   }
   
   [data-theme="light"] .nav-link {
-    color: #3b82f6 !important;
+    color: #1e3a8a !important;
   }
   [data-theme="light"] .nav-link:hover {
     color: #2563eb !important;
-    opacity: 0.9;
+    background-color: rgba(37, 99, 235, 0.1);
   }
 
   [data-theme="light"] .nav-link.active {
     color: #1e40af !important;
-    font-weight: 600 !important;
+    background-color: rgba(37, 99, 235, 0.1);
   }
 
   [data-theme="light"] .nav-link.active:hover {
     color: #1e40af !important;
-    opacity: 1;
   }
 
   [data-theme="light"] #navbar {
-    background-color: rgba(255, 255, 255, 0.9) !important;
-    color: #000000 !important;
-    border-color: #000000 !important;
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(12px) !important;
+    border-color: rgba(37, 99, 235, 0.2) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
 
   [data-theme="light"] #theme-toggle:hover {

@@ -1,0 +1,130 @@
+---
+import Card from "./card.astro";
+import MusicStatsClient from "./musicstats";
+import { Image } from "astro:assets";
+import { getImage } from "astro:assets";
+
+const apiKey = import.meta.env.PUBLIC__LASTFM_API_KEY;
+const username = import.meta.env.PUBLIC__LASTFM_USERNAME;
+
+// Image Logic
+const photoModules = import.meta.glob('../data/photos/photo*.webp', { eager: true });
+const photoTitles: Record<number, string> = {
+  1: 'Mall road, Manali', 2: 'Manali', 3: 'Manali', 4: 'Hadimba temple, Manali',
+  5: 'Manali', 6: 'Manali', 7: 'Manali', 8: 'Manali', 9: 'Manali',
+  10: "Humayun's tomb, Delhi", 11: "Humayun's tomb, Delhi", 12: "Humayun's tomb, Delhi", 13: "Humayun's tomb, Delhi",
+  14: 'Jama masjid, Delhi', 15: 'Jama masjid, Delhi', 16: 'Red fort, Delhi',
+  17: 'Darwaza-i-rauza, Agra', 18: 'Darwaza-i-rauza, Agra',
+  19: 'Taj mahal, Agra', 20: 'Taj mahal, Agra', 21: 'Taj mahal, Agra', 22: 'Taj mahal, Agra',
+  23: 'Fort kochi, Kerala', 24: 'St. Francis church, Fort kochi, Kerala', 25: 'Fort kochi, Kerala',
+  26: 'Kerala', 27: 'Fort kochi, Kerala', 28: 'Kerala', 29: 'Kerala', 30: 'Kerala', 31: 'Kerala', 32: 'Kerala', 33: 'Kerala', 34: 'Kerala',
+  35: 'Mangluru', 36: 'Mangluru', 37: 'Mangluru', 38: 'Mangluru', 39: 'Mangluru',
+  40: 'Wada, Maharashtra', 41: 'Mumbai, Maharashtra', 42: 'Mangluru', 43: 'Maharashtra',
+  44: 'Mangluru', 45: 'Mangluru', 46: 'Mangluru', 47: 'Mangluru',
+  48: 'Padubidri beach, Udupi', 49: 'Padubidri beach, Udupi', 50: 'Padubidri beach, Udupi',
+  51: 'Marine Drive, Mumbai', 52: 'Padubidri beach, Udupi', 53: 'Padubidri beach, Udupi',
+  54: 'Padubidri beach, Udupi', 55: 'Padubidri beach, Udupi', 56: 'Padubidri beach, Udupi',
+  57: 'Padubidri beach, Udupi', 58: 'Padubidri beach, Udupi', 59: 'Kerala', 60: 'Kerala',
+  61: 'Padubidri beach, Udupi', 62: 'Padubidri beach, Udupi', 63: 'Mumbai, Maharashtra',
+  64: 'Mumbai, Maharashtra', 66: 'Pune, Maharashtra', 67: 'Pune, Maharashtra',
+  72: 'Marine Drive, Mumbai', 73: 'Marine Drive, Mumbai', 74: 'Marine Drive, Mumbai', 75: 'Marine Drive, Mumbai',
+  76: 'Taj hotel, Mumbai', 77: 'Gurudwara Shri Manikaran Sahib, Manikaran', 78: 'Manikaran',
+  79: 'Manali', 80: 'Manali', 81: 'Manali', 82: 'Hadimba temple, Manali',
+  83: 'Ugrasen ki Baoli, New Delhi', 84: 'Red fort, Delhi', 85: 'Manikaran',
+  86: 'Manikaran', 87: 'Manikaran', 88: 'Manali', 89: 'Manali', 90: 'Manali',
+  91: 'Manali', 92: 'Manali', 93: 'Mall road, Manali', 94: 'Manali', 95: 'Manali',
+  96: 'Attari - Wagah Border, Punjab', 97: 'Attari - Wagah Border, Punjab',
+  98: 'Mangluru', 99: 'Mangluru', 100: 'Mangluru', 101: 'Mangluru',
+  102: 'Padubidri beach, Udupi', 103: 'Mumbai, Maharashtra', 104: 'Goa',
+  105: 'Basilica of bom jesus, Goa', 106: 'Basilica of bom jesus, Goa',
+};
+
+// Process images
+const allImages = Object.entries(photoModules)
+  .sort(([a], [b]) => {
+      const aNum = parseInt(a.match(/photo(\d+)/)?.[1] || '0');
+      const bNum = parseInt(b.match(/photo(\d+)/)?.[1] || '0');
+      return aNum - bNum;
+  })
+  .map(([path, module]) => {
+      const photoNumber = parseInt(path.match(/photo(\d+)/)?.[1] || '0');
+      const imageModule = module as any;
+      if (!imageModule.default) return null;
+      return {
+          src: imageModule.default,
+          title: photoTitles[photoNumber] || `Photo ${photoNumber}`,
+          alt: `Photography - ${photoTitles[photoNumber] || 'Photo ' + photoNumber}`
+      };
+  })
+  .filter(Boolean);
+
+// Select a subset for the grid (e.g., 8 images)
+// We can pick specific ones or just the first 8.
+// Let's pick a mix to show variety.
+const gridImages = allImages.slice(0, 8); 
+---
+
+<div class="w-full max-w-[1400px] mx-auto p-4 pt-16">
+    <h2 class="text-4xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight mb-8 px-2">Fun Stuff</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(200px,auto)]">
+        <!-- Music Stats Card -->
+        <Card class="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 min-h-[400px] !p-0 flex flex-col">
+            <div class="h-full flex flex-col">
+                <h3 class="text-xl font-medium mb-4 p-6 pb-0">Music Stats</h3>
+                <div class="flex-1 overflow-y-auto custom-scrollbar px-2">
+                    <MusicStatsClient apiKey={apiKey} username={username} client:visible />
+                </div>
+            </div>
+        </Card>
+
+        <!-- Gallery Grid -->
+        {gridImages.map((image: any, index) => (
+            <Card class="col-span-1 row-span-1 p-0 overflow-hidden group relative">
+                <a href={image.src.src} data-fancybox="gallery" data-caption={image.title} class="block w-full h-full cursor-zoom-in">
+                    <Image 
+                        src={image.src} 
+                        alt={image.alt} 
+                        width={400} 
+                        height={400} 
+                        loading="lazy"
+                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-end p-4">
+                        <p class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-medium truncate w-full">
+                            {image.title}
+                        </p>
+                    </div>
+                </a>
+            </Card>
+        ))}
+    </div>
+</div>
+
+<script>
+  import { Fancybox } from "@fancyapps/ui";
+  import "@fancyapps/ui/dist/fancybox/fancybox.css";
+
+  Fancybox.bind("[data-fancybox='gallery']", {
+    Toolbar: {
+      display: {
+        left: ["infobar"],
+        middle: [],
+        right: ["slideshow", "thumbs", "close"],
+      },
+    },
+  });
+</script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5);
+        border-radius: 20px;
+    }
+</style>

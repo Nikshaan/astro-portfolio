@@ -39,7 +39,7 @@ export default function GithubContributions() {
 
   useEffect(() => {
     const fetchContributions = async () => {
-    
+
       const token = (window as any).__GH_TOKEN__;
       const username = (window as any).__GH_USERNAME__;
 
@@ -51,7 +51,7 @@ export default function GithubContributions() {
 
       const startOfYear = new Date(currentYear, 0, 1);
       const today = new Date();
-      
+
       const from: string = startOfYear.toISOString();
       const to: string = today.toISOString();
 
@@ -88,7 +88,7 @@ export default function GithubContributions() {
         });
 
         const data: GitHubAPIResponse = await response.json();
-        
+
         if (data.errors) {
           console.error('GitHub API errors:', data.errors);
           setError('Failed to load contributions');
@@ -126,14 +126,14 @@ export default function GithubContributions() {
           {weeks.map((week: ContributionWeek, weekIndex: number) => (
             <div key={weekIndex} className="week">
               {week.contributionDays.map((day: ContributionDay, dayIndex: number) => {
-           
+
                 const count = day.contributionCount;
                 let level = 0;
                 if (count > 0 && count <= 3) level = 1;
                 else if (count > 3 && count <= 6) level = 2;
                 else if (count > 6 && count <= 9) level = 3;
                 else if (count > 9) level = 4;
-                
+
                 return (
                   <div
                     key={dayIndex}
@@ -152,20 +152,20 @@ export default function GithubContributions() {
 
       <style>{`
         .contributions-container {
-          margin-top: 50px;
+          margin-top: 0;
           width: 100%;
           padding: 0 1rem;
         }
 
         @media (min-width: 640px) {
           .contributions-container {
-            margin-top: 60px;
+            margin-top: 0;
           }
         }
 
         @media (min-width: 1024px) {
           .contributions-container {
-            margin-top: 80px;
+            margin-top: 0;
             padding: 0;
           }
         }
@@ -269,23 +269,23 @@ export default function GithubContributions() {
 
         /* Blue color scheme for light theme */
         [data-theme="light"] .contribution-level-0 {
-          background-color: #ebedf0 !important;
+          background-color: #eff6ff !important; /* Blue-50 */
         }
 
         [data-theme="light"] .contribution-level-1 {
-          background-color: #9be9ff !important;
+          background-color: #bfdbfe !important; /* Blue-200 */
         }
 
         [data-theme="light"] .contribution-level-2 {
-          background-color: #64d2ff !important;
+          background-color: #60a5fa !important; /* Blue-400 */
         }
 
         [data-theme="light"] .contribution-level-3 {
-          background-color: #39b6f0 !important;
+          background-color: #3b82f6 !important; /* Blue-500 */
         }
 
         [data-theme="light"] .contribution-level-4 {
-          background-color: #0969da !important;
+          background-color: #1e40af !important; /* Blue-800 */
         }
 
         @media (min-width: 640px) {

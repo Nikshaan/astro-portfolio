@@ -4,9 +4,9 @@ import beeImage from '../data/bee.avif';
 import Card from './card.astro';
 ---
 
-<Card height='h-[15rem]' width='w-[31rem]'>
-    <div class="flex">
-        <div class="flex flex-col gap-2 w-[60%]">
+<Card>
+    <div class="flex h-full justify-between">
+        <div class="flex flex-col gap-2 w-[60%] h-full justify-between">
             <div class="font-light">
             <p>
                 Hi, I'm <span class="font-medium text-lg">Nikshaan Shetty</span>, a 19 years old AI/ML student.
@@ -20,8 +20,8 @@ import Card from './card.astro';
             </ul>
             </div>
         </div>
-        <div class="flex justify-center items-center w-[50%]">
-            <Image fetchpriority="high" src={beeImage} alt="killer bee art" class="w-auto border rounded-full max-h-[300px] select-none" height="300" width="300" loading="eager" />
+        <div class="flex justify-center items-center w-[50%] h-full">
+            <Image fetchpriority="high" src={beeImage} alt="killer bee art" class="w-auto border rounded-full max-h-[200px] lg:max-h-[300px] select-none object-cover" loading="eager" />
         </div>
     </div>
 </Card>
