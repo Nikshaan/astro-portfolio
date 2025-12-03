@@ -11,13 +11,13 @@ const aimlProjects = aimlprojects.aiml_projects;
   <div class="flex justify-between items-end mb-8 px-2">
     <h2 class="text-4xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">Projects</h2>
     <div class="flex gap-1 bg-neutral-200 dark:bg-neutral-800 p-1 rounded-full">
-      <button id="aiml-btn" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100">AI/ML</button>
-      <button id="web-btn" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">Web</button>
+      <button id="aiml-btn" class="px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition-all bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100">AI/ML</button>
+      <button id="web-btn" class="px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition-all text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100">Web</button>
     </div>
   </div>
 
-  <div id="web-projects" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr">
-    {webProjects.map((project) => (
+  <div id="web-projects" class="grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr" style="display: none;">
+    {webProjects.map((project: any) => (
       <Projectcard
         class="col-span-1 h-full"
         name={project.name}
@@ -30,7 +30,7 @@ const aimlProjects = aimlprojects.aiml_projects;
   </div>
 
   <div id="aiml-projects" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr">
-    {aimlProjects.map((project) => (
+    {aimlProjects.map((project: any) => (
       <Projectcard
         class="col-span-1 h-full"
         name={project.name}
@@ -49,13 +49,14 @@ const aimlProjects = aimlprojects.aiml_projects;
   const webProjects = document.getElementById('web-projects');
   const aimlProjects = document.getElementById('aiml-projects');
 
-  // Set initial state for buttons
   aimlBtn?.classList.add('bg-white', 'dark:bg-neutral-700', 'shadow-sm', 'text-neutral-900', 'dark:text-neutral-100');
   webBtn?.classList.add('text-neutral-500');
 
   webBtn?.addEventListener('click', () => {
-    webProjects?.classList.remove('hidden');
-    aimlProjects?.classList.add('hidden');
+    if (webProjects && aimlProjects) {
+      webProjects.style.display = 'grid';
+      aimlProjects.style.display = 'none';
+    }
     
     webBtn.classList.add('bg-white', 'dark:bg-neutral-700', 'shadow-sm', 'text-neutral-900', 'dark:text-neutral-100');
     webBtn.classList.remove('text-neutral-500');
@@ -65,8 +66,10 @@ const aimlProjects = aimlprojects.aiml_projects;
   });
 
   aimlBtn?.addEventListener('click', () => {
-    aimlProjects?.classList.remove('hidden');
-    webProjects?.classList.add('hidden');
+    if (webProjects && aimlProjects) {
+      aimlProjects.style.display = 'grid';
+      webProjects.style.display = 'none';
+    }
     
     aimlBtn.classList.add('bg-white', 'dark:bg-neutral-700', 'shadow-sm', 'text-neutral-900', 'dark:text-neutral-100');
     aimlBtn.classList.remove('text-neutral-500');

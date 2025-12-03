@@ -29,14 +29,6 @@ const GH_USERNAME = import.meta.env.GH_USERNAME as string;
       <div class="flex flex-col gap-4">
         <Intro />
         <Extracurr />
-        <div class="flex gap-4">
-          <div class="flex-1">
-            <Location />
-          </div>
-          <div class="w-28 shrink-0">
-            <Win />
-          </div>
-        </div>
       </div>
       
       <!-- Right Column -->
@@ -53,7 +45,7 @@ const GH_USERNAME = import.meta.env.GH_USERNAME as string;
         <Experience />
       </div>
     </section>
-    <section id="projects" class="w-full flex flex-col gap-2 flex-1" data-section="projects">
+    <section class="w-full flex flex-col gap-2 flex-1">
       <div class="w-full max-w-[1400px] mx-auto px-4 lg:px-2 mb-8">
         <Card>
           <div class="p-4">
@@ -61,7 +53,9 @@ const GH_USERNAME = import.meta.env.GH_USERNAME as string;
           </div>
         </Card>
       </div>
-      <ProjectsGrid />
+      <div data-section="projects" id="projects" class="-mt-5">
+        <ProjectsGrid />
+      </div>
     </section>
     <section id="fun" class="w-full flex flex-col lg:flex-row gap-2 flex-1" data-section="fun">
       <FunGrid />

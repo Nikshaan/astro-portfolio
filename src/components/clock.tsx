@@ -33,7 +33,7 @@ export default function Clock() {
   }
 
   return (
-    <div className="text-xl my-5 font-light">
+    <div className="text-2xl my-5 font-light">
       <p suppressHydrationWarning={true}>{currentTime}</p>
     </div>
   );

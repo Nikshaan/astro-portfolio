@@ -35,33 +35,73 @@ async function fetchMusicStats(apiKey: string, username: string): Promise<MusicS
             const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&from=${from}&to=${to}&api_key=${apiKey}&format=json`;
 
             return fetch(url)
-                .then(res => res.ok ? res.json() : Promise.reject(`Failed: ${res.status}`))
-                .then(data => ({
-                    name: String(day),
-                    scrobbles: data?.recenttracks?.track?.length ?? 0
-                }))
+                .then(res => {
+                    if (!res.ok) {
+                        console.warn(`Day ${day} API returned ${res.status}`);
+                        return null;
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data || !data.recenttracks || !data.recenttracks.track) {
+                        return { name: String(day), scrobbles: 0 };
+                    }
+                    const tracks = Array.isArray(data.recenttracks.track) 
+                        ? data.recenttracks.track 
+                        : [data.recenttracks.track];
+                    return {
+                        name: String(day),
+                        scrobbles: tracks.length
+                    };
+                })
                 .catch(error => {
-                    console.error(`Error fetching day ${day}:`, error);
+                    console.warn(`Error fetching day ${day}:`, error);
                     return { name: String(day), scrobbles: 0 };
                 });
         });
 
         const upperStatsPromise = fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getinfo&user=${username}&api_key=${apiKey}&format=json`)
-            .then(res => res.ok ? res.json() : Promise.reject(`Stats failed: ${res.status}`))
-            .then(data => data.user)
+            .then(res => {
+                if (!res.ok) {
+                    console.warn(`User stats API returned ${res.status}`);
+                    return null;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!data || !data.user) {
+                    return { playcount: 0, track_count: 0, artist_count: 0, album_count: 0 };
+                }
+                return data.user;
+            })
             .catch(error => {
-                console.error('Error fetching user stats:', error);
+                console.warn('Error fetching user stats:', error);
                 return { playcount: 0, track_count: 0, artist_count: 0, album_count: 0 };
             });
 
         const topArtistsPromise = fetch(`https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${username}&period=7day&api_key=${apiKey}&format=json&limit=5`)
-            .then(res => res.ok ? res.json() : Promise.reject(`Artists failed: ${res.status}`))
-            .then(data => data?.topartists?.artist?.map((artist: any) => ({
-                name: artist?.name,
-                count: artist?.playcount,
-            })) ?? [])
+            .then(res => {
+                if (!res.ok) {
+                    console.warn(`Top artists API returned ${res.status}, using fallback data`);
+                    return null;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!data || !data.topartists || !data.topartists.artist) {
+                    console.warn('No artist data available');
+                    return [];
+                }
+                const artists = Array.isArray(data.topartists.artist) 
+                    ? data.topartists.artist 
+                    : [data.topartists.artist];
+                return artists.map((artist: any) => ({
+                    name: artist?.name || 'Unknown Artist',
+                    count: artist?.playcount || '0',
+                })).slice(0, 5);
+            })
             .catch(error => {
-                console.error('Error fetching top artists:', error);
+                console.warn('Error fetching top artists:', error);
                 return [];
             });
 

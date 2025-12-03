@@ -11,7 +11,6 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
     const [isLightTheme, setIsLightTheme] = useState(false);
 
     useEffect(() => {
-        // Check initial theme
         const checkTheme = () => {
             const theme = document.documentElement.getAttribute('data-theme');
             setIsLightTheme(theme === 'light');
@@ -19,7 +18,6 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
 
         checkTheme();
 
-        // Listen for theme changes
         const observer = new MutationObserver(checkTheme);
         observer.observe(document.documentElement, {
             attributes: true,
@@ -37,10 +35,10 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
         );
     }
 
-    const strokeColor = isLightTheme ? '#3b82f6' : '#ac46fd'; // Blue-500
-    const fillColor = isLightTheme ? '#93c5fd' : '#571388';  // Blue-300
-    const gridColor = isLightTheme ? '#bfdbfe' : '#374151'; // Blue-200
-    const textColor = isLightTheme ? '#1e3a8a' : '#ffffff'; // Blue-900
+    const strokeColor = isLightTheme ? '#3b82f6' : '#ac46fd';
+    const fillColor = isLightTheme ? '#93c5fd' : '#571388';
+    const gridColor = isLightTheme ? '#bfdbfe' : '#374151';
+    const textColor = isLightTheme ? '#1e3a8a' : '#ffffff';
 
     return (
         <ResponsiveContainer width="100%" height="100%">

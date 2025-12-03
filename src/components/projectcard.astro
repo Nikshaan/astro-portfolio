@@ -79,7 +79,7 @@ if (techstack) {
                     techstack && techstack.map((techName, index) => {
                         const needsWhiteBg = ['Langchain', 'HuggingFace', 'ChromaDB'].includes(techName);
                         return (
-                            <div class={`flex items-center justify-center p-2 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12 ${needsWhiteBg ? 'bg-white' : 'bg-neutral-100 dark:bg-neutral-800'}`} title={techName}>
+                            <div data-tooltip-placement="bottom" class={`flex items-center justify-center p-2 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12 ${needsWhiteBg ? 'bg-white special-badge' : 'bg-neutral-100 dark:bg-neutral-800'}`} title={techName}>
                                 <Image src={techstackLink[index]} alt={techName} class="w-full h-full object-contain" loading="lazy" />
                             </div>
                         );
@@ -93,6 +93,9 @@ if (techstack) {
                 {
                     github && <a aria-label={`Github repo of ${name}`} class="cursor-pointer hover:text-blue-500 transition-colors" href={github} target="_blank" rel="noopener noreferrer">GitHub</a>
                 }
+                <!-- {
+                    read && <a aria-label={`Read more about ${name}`} class="cursor-pointer hover:text-blue-500 transition-colors" href={read} target="_blank" rel="noopener noreferrer">Read More</a>
+                } -->
             </div>
         </div>
     </div>

@@ -6,25 +6,25 @@ import { LINK } from "../lib/constants";
 ---
 
 <Card>
-    <div class="flex justify-center items-center">
-        <div class="flex flex-col w-[60%]">
+    <div class="flex justify-between items-center w-full">
+        <div class="flex flex-col w-[60%] h-full">
             <div class="flex justify-center items-center">
-                <Icon name="Pin" class="w-[30px] h-[30px] mb-1 select-none transition-all transform duration-200" /> 
-                <p class="text-xl font-medium mr-3">Mumbai, India</p>
+                <Icon name="Pin" class="w-[40px] h-[40px] mb-2 select-none transition-all transform duration-200" /> 
+                <p class="text-2xl font-medium mr-3">Mumbai, India</p>
             </div>
             <div class="flex justify-center items-center -mt-5">
                 <Clock client:load />
             </div>
         </div>
-        <div class="flex justify-center items-center gap-2.5 w-[40%] -mt-5">
+        <div class="flex justify-center items-center gap-4.5 w-[50%]">
             <a aria-label="link to nikshaan's github" data-tooltip-placement="bottom" href={LINK.github} title="Github">
-                <Icon title="Github" name="Github" class="w-10 h-10 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
+                <Icon title="Github" name="Github" class="w-12 h-12 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
             </a>
             <a aria-label="link to nikshaan's linkedIn" data-tooltip-placement="bottom" href={LINK.linkedlin} title="LinkedIn">
-                <Icon title="LinkedIn" name="LinkedIN" class="w-10 h-10 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
+                <Icon title="LinkedIn" name="LinkedIN" class="w-12 h-12 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
             </a>
             <a aria-label="nikshaan's email address" data-tooltip-placement="bottom" href={LINK.email} title="Gmail">
-                <Icon title="Gmail" name="Gmail" class="w-10 h-10 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
+                <Icon title="Gmail" name="Gmail" class="w-12 h-12 cursor-pointer select-none transition-all transform duration-200 hover:scale-90" />
             </a>
         </div>
     </div>
