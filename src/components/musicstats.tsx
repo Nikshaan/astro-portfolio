@@ -17,123 +17,6 @@ interface MusicStatsData {
     artistsInfo: artistInfoType[];
 }
 
-const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-function getDailyTimestamps(daysAgo: number) {
-    const date = new Date();
-    date.setUTCDate(date.getUTCDate() - daysAgo);
-    date.setUTCHours(0, 0, 0, 0);
-    const fromTimestamp = Math.floor(date.getTime() / 1000);
-    const toTimestamp = fromTimestamp + 86399;
-    return { from: fromTimestamp, to: toTimestamp, day: dayLabels[date.getUTCDay()] };
-}
-
-async function fetchMusicStats(apiKey: string, username: string): Promise<MusicStatsData> {
-    try {
-        const dailyPromises = Array.from({ length: 7 }, (_, i) => {
-            const { from, to, day } = getDailyTimestamps(6 - i);
-            const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&from=${from}&to=${to}&api_key=${apiKey}&format=json`;
-
-            return fetch(url)
-                .then(res => {
-                    if (!res.ok) {
-                        console.warn(`Day ${day} API returned ${res.status}`);
-                        return null;
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    if (!data || !data.recenttracks || !data.recenttracks.track) {
-                        return { name: String(day), scrobbles: 0 };
-                    }
-                    const tracks = Array.isArray(data.recenttracks.track) 
-                        ? data.recenttracks.track 
-                        : [data.recenttracks.track];
-                    return {
-                        name: String(day),
-                        scrobbles: tracks.length
-                    };
-                })
-                .catch(error => {
-                    console.warn(`Error fetching day ${day}:`, error);
-                    return { name: String(day), scrobbles: 0 };
-                });
-        });
-
-        const upperStatsPromise = fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getinfo&user=${username}&api_key=${apiKey}&format=json`)
-            .then(res => {
-                if (!res.ok) {
-                    console.warn(`User stats API returned ${res.status}`);
-                    return null;
-                }
-                return res.json();
-            })
-            .then(data => {
-                if (!data || !data.user) {
-                    return { playcount: 0, track_count: 0, artist_count: 0, album_count: 0 };
-                }
-                return data.user;
-            })
-            .catch(error => {
-                console.warn('Error fetching user stats:', error);
-                return { playcount: 0, track_count: 0, artist_count: 0, album_count: 0 };
-            });
-
-        const topArtistsPromise = fetch(`https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${username}&period=7day&api_key=${apiKey}&format=json&limit=5`)
-            .then(res => {
-                if (!res.ok) {
-                    console.warn(`Top artists API returned ${res.status}, using fallback data`);
-                    return null;
-                }
-                return res.json();
-            })
-            .then(data => {
-                if (!data || !data.topartists || !data.topartists.artist) {
-                    console.warn('No artist data available');
-                    return [];
-                }
-                const artists = Array.isArray(data.topartists.artist) 
-                    ? data.topartists.artist 
-                    : [data.topartists.artist];
-                return artists.map((artist: any) => ({
-                    name: artist?.name || 'Unknown Artist',
-                    count: artist?.playcount || '0',
-                })).slice(0, 5);
-            })
-            .catch(error => {
-                console.warn('Error fetching top artists:', error);
-                return [];
-            });
-
-        const [dailyResults, upperStats, topArtists] = await Promise.all([
-            Promise.all(dailyPromises),
-            upperStatsPromise,
-            topArtistsPromise
-        ]);
-
-        return {
-            weeklyScrobbles: dailyResults,
-            artistsInfo: topArtists,
-            upperStatsArray: [
-                upperStats.playcount,
-                upperStats.track_count,
-                upperStats.artist_count,
-                upperStats.album_count
-            ]
-        };
-    } catch (error) {
-        console.error('Error: ', error);
-        return {
-            weeklyScrobbles: Array.from({ length: 7 }, (_, i) => ({
-                name: dayLabels[(new Date().getUTCDay() - (6 - i) + 7) % 7],
-                scrobbles: 0
-            })),
-            upperStatsArray: [0, 0, 0, 0],
-            artistsInfo: []
-        };
-    }
-}
-
 export default function MusicStatsClient({ apiKey, username }: { apiKey: string; username: string }) {
     const [data, setData] = useState<MusicStatsData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -143,11 +26,18 @@ export default function MusicStatsClient({ apiKey, username }: { apiKey: string;
         const loadData = async () => {
             try {
                 setLoading(true);
-                const musicData = await fetchMusicStats(apiKey, username);
+                const baseUrl = import.meta.env.BASE_URL || '/';
+                const apiPath = baseUrl.endsWith('/') ? 'api/music-stats' : '/api/music-stats';
+                const response = await fetch(`${baseUrl}${apiPath}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch music stats');
+                }
+                
+                const musicData = await response.json();
                 setData(musicData);
                 setError(null);
             } catch (err) {
-                console.error('Failed to load music stats:', err);
                 setError('Failed to load music stats');
             } finally {
                 setLoading(false);
@@ -155,7 +45,7 @@ export default function MusicStatsClient({ apiKey, username }: { apiKey: string;
         };
 
         loadData();
-    }, [apiKey, username]);
+    }, []);
 
     if (loading) {
         return (
@@ -175,7 +65,7 @@ export default function MusicStatsClient({ apiKey, username }: { apiKey: string;
 
     return (
         <div className="flex flex-col h-full justify-center pb-4 lg:gap-20">
-            <div className="flex flex-col lg:flex-row justify-center lg:justify-around items-center lg:items-start gap-8 lg:gap-4 px-4 w-full">
+            <div className="flex flex-row justify-center lg:justify-around items-center lg:items-start gap-8 lg:gap-4 px-4 w-full">
                 <div className="w-full text-center lg:text-left">
                     <p className="font-thin mb-4 text-sm sm:text-base text-center">Total music scrobbles</p>
                     <div className="flex flex-col justify-center items-center lg:items-center h-full w-full gap-2 text-sm sm:text-base">
@@ -188,14 +78,20 @@ export default function MusicStatsClient({ apiKey, username }: { apiKey: string;
                 <div className="w-full text-center lg:text-left">
                     <p className="font-thin mb-4 text-sm sm:text-base text-center">Top artists of the week</p>
                     <div className="text-sm sm:text-base">
-                        {data.artistsInfo.map((artist, index) => (
-                            <div key={index} className="flex flex-col sm:flex-row justify-center lg:justify-center items-center lg:items-center h-full w-full gap-1 sm:gap-2 mb-2">
-                                <div className="flex gap-2">
-                                    <p className="font-medium">{artist.name}</p>
-                                    <p className="text-gray-400">plays: {artist.count}</p>
+                        {data.artistsInfo.length > 0 ? (
+                            data.artistsInfo.map((artist, index) => (
+                                <div key={index} className="flex flex-col sm:flex-row justify-center lg:justify-center items-center lg:items-center h-full w-full gap-1 sm:gap-2 mb-2">
+                                    <div className="flex gap-2">
+                                        <p className="font-medium">{artist.name}</p>
+                                        <p className="text-gray-400">plays: {artist.count}</p>
+                                    </div>
                                 </div>
+                            ))
+                        ) : (
+                            <div className="flex items-center justify-center h-full">
+                                <p className="text-gray-400 text-xs italic">No recent listening data available</p>
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             </div>

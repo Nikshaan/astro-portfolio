@@ -1,15 +1,11 @@
 ---
-import Content from './content.astro';
-
 interface Props {
-    height?: string;
-    width?: string;
     body?: string;
     title?: string;
     class?: string;
 }
 
-const { height, width, body, title } = Astro.props;
+const { body, title } = Astro.props;
 ---
 
 <div class={`bg-neutral-50 dark:bg-[#171717] group shadow-sm rounded-3xl border border-white dark:border-white/20 flex flex-col p-6 transition-all duration-300 ease-in-out h-full w-full ${Astro.props.class || ''}`}>
@@ -18,10 +14,14 @@ const { height, width, body, title } = Astro.props;
     background-color: #dbeafe !important;
     border-color: #93c5fd !important;
   }
+  [data-theme="light"] .group:hover {
+    border-color: #1e3a8a !important;
+  }
+  .group:hover {
+    border-color: #c084fc !important;
+  }
 </style>
-    {
-        <Content body = {body} title = {title}>
-            <slot />
-        </Content>
-    }
+    {title && <h2 class="italic mb-2 font-bold text-xl">{title}</h2>}
+    {body && <p class="m-0 font-light text-base flex flex-col">{body}</p>}
+    <slot />
 </div>

@@ -2,48 +2,19 @@
 import MainLayout from '../layouts/MainLayout.astro';
 import '../styles/global.css';
 import NavbarWrapper from '../components/NavbarWrapper.astro';
-import Intro from '../components/intro.astro';
-import Education from '../components/education.astro';
-import Extracurr from '../components/extracurr.astro';
-import Location from '../components/location.astro';
-import Experience from '../components/experience.astro';
-import ProjectsGrid from '../components/ProjectsGrid.astro';
+import ProjectsBentoGrid from '../components/ProjectsBentoGrid';
 import GithubContributions from '../components/githubContributions';
-import FunGrid from '../components/FunGrid.astro';
+import FunBentoGrid from '../components/FunBentoGrid';
 import Card from '../components/card.astro';
-import Win from '../components/win.astro';
-const GH_TOKEN = import.meta.env.GH_TOKEN as string;
-const GH_USERNAME = import.meta.env.GH_USERNAME as string;
+import MeBentoGrid from '../components/MeBentoGrid';
 ---
 
 <MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style.'>
-  <script is:inline define:vars={{ GH_TOKEN, GH_USERNAME }}>
-    window.__GH_TOKEN__ = GH_TOKEN;
-    window.__GH_USERNAME__ = GH_USERNAME;
-  </script>
 	<NavbarWrapper />
   <main class="bg-black -mt-12 text-neutral-50 min-h-[100svh] w-full flex items-center flex-col">
     <div class="grid-bg w-full flex flex-col justify-start items-center">
-    <section id="me" class="w-full max-w-[1400px] p-4 pt-24 grid grid-cols-1 lg:grid-cols-2 gap-4" data-section="me">
-      <!-- Left Column -->
-      <div class="flex flex-col gap-4">
-        <Intro />
-        <Extracurr />
-      </div>
-      
-      <!-- Right Column -->
-      <div class="flex flex-col gap-4">
-        <Education />
-        <div class="flex gap-4">
-          <div class="flex-1">
-            <Location />
-          </div>
-          <div class="w-28 shrink-0">
-            <Win />
-          </div>
-        </div>
-        <Experience />
-      </div>
+    <section id="me" class="w-full max-w-[1400px] p-4 pt-24" data-section="me">
+      <MeBentoGrid client:visible />
     </section>
     <section class="w-full flex flex-col gap-2 flex-1">
       <div class="w-full max-w-[1400px] mx-auto px-4 lg:px-2 mb-8">
@@ -54,11 +25,11 @@ const GH_USERNAME = import.meta.env.GH_USERNAME as string;
         </Card>
       </div>
       <div data-section="projects" id="projects" class="-mt-5">
-        <ProjectsGrid />
+        <ProjectsBentoGrid client:visible />
       </div>
     </section>
     <section id="fun" class="w-full flex flex-col lg:flex-row gap-2 flex-1" data-section="fun">
-      <FunGrid />
+      <FunBentoGrid client:visible apiKey={import.meta.env.PUBLIC__LASTFM_API_KEY} username={import.meta.env.PUBLIC__LASTFM_USERNAME} />
     </section>
     </div>
 	</main>

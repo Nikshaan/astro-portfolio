@@ -1,0 +1,262 @@
+[
+    {
+        "id": "intro",
+        "type": "intro",
+        "colSpan": "lg:col-span-1",
+        "isExpandable": false,
+        "theme": "dark",
+        "data": {
+            "title": "About Me",
+            "text": "Hi, I'm <span class=\"font-medium text-2xl\">Nikshaan Shetty</span>, a 19 years old AI/ML student.",
+            "interests": [
+                "Machine & Deep Learning",
+                "Web development",
+                "Music",
+                "Photography"
+            ],
+            "image": "beeImage"
+        },
+        "content": ""
+    },
+    {
+        "id": "extracurr",
+        "type": "extracurr",
+        "colSpan": "lg:col-span-1",
+        "isExpandable": false,
+        "theme": "dark",
+        "data": {
+            "title": "extra curricular",
+            "items": [
+                {
+                    "image": "aryaLogo",
+                    "title": "DJS ARYA",
+                    "subtitle": "Canister satellite team of DJSCOE",
+                    "role": "Software Team Member",
+                    "date": "march 2025 - present"
+                },
+                {
+                    "image": "codeAIlogo",
+                    "title": "DJS CodeAI",
+                    "subtitle": "AI/ML club of DJSCOE",
+                    "role": "AI mentee",
+                    "date": "august 2025 - present"
+                }
+            ]
+        },
+        "content": ""
+    },
+    {
+        "id": "education",
+        "type": "education",
+        "colSpan": "lg:col-span-1",
+        "isExpandable": false,
+        "theme": "dark",
+        "data": {
+            "title": "education",
+            "image": "collegeLogo",
+            "school": "Dwarkadas J. Sanghvi College of Engineering",
+            "degree": "Bachelor of technology in <br> Artificial Intelligence and Machine Learning, <br> Honours in AI in Finance",
+            "date": "2024 - 2028"
+        },
+        "content": ""
+    },
+    {
+        "id": "location",
+        "type": "location",
+        "colSpan": "lg:col-span-1",
+        "isExpandable": false,
+        "theme": "dark",
+        "data": {
+            "location": "Mumbai, India",
+            "links": {
+                "github": "https://github.com/Nikshaan",
+                "linkedin": "https://www.linkedin.com/in/nikshaan-shetty-6a6b2b250/",
+                "email": "mailto:nikshaanshetty@gmail.com"
+            }
+        },
+        "content": ""
+    },
+    {
+        "id": "win",
+        "type": "win",
+        "colSpan": "lg:col-span-0",
+        "isExpandable": true,
+        "theme": "dark",
+        "data": {
+            "image": "trophy"
+        },
+        "content": "<p>test data</p>"
+    },
+    {
+        "id": "experience",
+        "type": "experience",
+        "colSpan": "lg:col-span-1",
+        "isExpandable": true,
+        "theme": "dark",
+        "data": {
+            "title": "experience",
+            "items": [
+                {
+                    "image": "varakLogo",
+                    "title": "Full stack developer intern",
+                    "company": "Varak Welfare Society",
+                    "date": "september 2025 - present"
+                },
+                {
+                    "image": "gssocLogo",
+                    "title": "Open source contributor",
+                    "company": "GirlScript Summer of Code 2025",
+                    "date": "august 2025"
+                }
+            ],
+            "certification": {
+                "title": "Machine Learning I",
+                "issuer": "University of Columbia"
+            }
+        },
+        "content": "<p>test data</p>"
+    },
+    {
+        "id": "project-localbee",
+        "type": "project",
+        "category": "web",
+        "colSpan": 1,
+        "isExpandable": true,
+        "theme": "dark",
+        "data": {
+            "name": "LocalBee",
+            "techstack": [
+                "NextJS",
+                "TailwindCSS",
+                "FastAPI",
+                "PostgreSQL"
+            ],
+            "summary": "World map to track places I have visited and store their photos.",
+            "github": "https://github.com/Nikshaan/LocalBee",
+            "live": "https://local-bee.vercel.app/"
+        },
+        "content": "<p>World map to track places I have visited and store their photos.</p>"
+    },
+    {
+        "id": "project-pokedex",
+        "type": "project",
+        "category": "web",
+        "colSpan": 1,
+        "isExpandable": true,
+        "theme": "dark",
+        "data": {
+            "name": "Pokedex",
+            "techstack": [
+                "ReactJS",
+                "TailwindCSS",
+                "ChartJS",
+                "Motion"
+            ],
+            "summary": "Pokedex for 8 generations of pokemon using PokeAPI.",
+            "github": "https://github.com/Nikshaan/Pokedex",
+            "live": "https://nikshaan.github.io/Pokedex/"
+        },
+        "content": "<p>Pokedex for 8 generations of pokemon using PokeAPI.</p>"
+    },
+    {
+        "id": "project-cineverse",
+        "type": "project",
+        "category": "web",
+        "colSpan": 1,
+        "isExpandable": true,
+        "theme": "dark",
+        "data": {
+            "name": "Cineverse",
+            "techstack": [
+                "ReactJS",
+                "TailwindCSS",
+                "Redux"
+            ],
+            "summary": "Movie and series collection with rating, plot & cast information using OMDb API.",
+            "github": "https://github.com/Nikshaan/Cineverse",
+            "live": "https://nikshaan.github.io/Cineverse/"
+        },
+        "content": "<p>Movie and series collection with rating, plot & cast information using OMDb API.</p>"
+    },
+    {
+        "id": "project-blogeez",
+        "type": "project",
+        "category": "web",
+        "colSpan": 1,
+        "isExpandable": true,
+        "theme": "dark",
+        "data": {
+            "name": "Blogeez",
+            "techstack": [
+                "ReactJS",
+                "TailwindCSS",
+                "NodeJS",
+                "ExpressJS",
+                "MongoDB"
+            ],
+            "summary": "Website to read, upload, edit & delete blogs with authentication.",
+            "github": "https://github.com/Nikshaan/Blogeez-backend"
+        },
+        "content": "<p>Website to read, upload, edit & delete blogs with authentication.</p>"
+    },
+    {
+        "id": "project-valorant",
+        "type": "project",
+        "category": "web",
+        "colSpan": 1,
+        "isExpandable": true,
+        "theme": "dark",
+        "data": {
+            "name": "Valorant tracker",
+            "techstack": [
+                "ReactJS",
+                "TailwindCSS",
+                "TypeScript"
+            ],
+            "summary": "Valorant match history and statistics tracker.",
+            "github": "https://github.com/Nikshaan/valorant-tracker",
+            "live": "https://valorant-tracker-alpha.vercel.app/"
+        },
+        "content": "<p>Valorant match history and statistics tracker.</p>"
+    },
+    {
+        "id": "project-floraghar",
+        "type": "project",
+        "category": "web",
+        "colSpan": 1,
+        "isExpandable": true,
+        "theme": "dark",
+        "data": {
+            "name": "Floraghar",
+            "techstack": [
+                "ReactJS",
+                "TailwindCSS"
+            ],
+            "summary": "Online plant nursery website.",
+            "github": "https://github.com/Nikshaan/FloraGhar",
+            "live": "https://nikshaan.github.io/FloraGhar/"
+        },
+        "content": "<p>Online plant nursery website.</p>"
+    },
+    {
+        "id": "project-productwizz",
+        "type": "project",
+        "category": "aiml",
+        "colSpan": 1,
+        "isExpandable": true,
+        "theme": "dark",
+        "data": {
+            "name": "ProductWizz",
+            "techstack": [
+                "Langchain",
+                "ChromaDB",
+                "HuggingFace",
+                "ReactJS",
+                "FastAPI"
+            ],
+            "summary": "An AI-powered shopping assistant browser extension for amazon.in & flipkart.com.",
+            "github": "https://github.com/Nikshaan/ProductWizz"
+        },
+        "content": "<p>An AI-powered shopping assistant browser extension for amazon.in & flipkart.com.</p>"
+    }
+]

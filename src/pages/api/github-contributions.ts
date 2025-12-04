@@ -6,7 +6,7 @@ export const GET: APIRoute = async () => {
 
   if (!GH_TOKEN || !GH_USERNAME) {
     return new Response(JSON.stringify({ 
-      error: 'GitHub token or username not configured' 
+      error: 'GitHub credentials not configured' 
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -62,7 +62,6 @@ export const GET: APIRoute = async () => {
       }
     });
   } catch (error) {
-    console.error('Failed to fetch contributions:', error);
     return new Response(JSON.stringify({ 
       error: 'Failed to fetch GitHub contributions' 
     }), {

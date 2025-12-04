@@ -129,10 +129,20 @@ const Navbar: React.FC<NavbarProps> = ({
 
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
-      targetSection.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
+      const lenis = (window as any).lenis;
+      
+      if (lenis) {
+        lenis.scrollTo(targetSection, {
+          offset: 0,
+          duration: 1.2,
+          immediate: false
+        });
+      } else {
+        targetSection.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
 
       setActiveSection(sectionId);
 
@@ -184,7 +194,7 @@ const Navbar: React.FC<NavbarProps> = ({
             key={id}
             href={`#${id}`}
             onClick={(e) => handleNavClick(e, id)}
-            aria-label={`navigation to ${label} section`}
+            aria-label={`Navigate to ${label} section`}
             className={getLinkClasses(id)}
             data-section={id}
           >

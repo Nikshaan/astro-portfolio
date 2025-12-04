@@ -39,58 +39,20 @@ export default function GithubContributions() {
 
   useEffect(() => {
     const fetchContributions = async () => {
-
-      const token = (window as any).__GH_TOKEN__;
-      const username = (window as any).__GH_USERNAME__;
-
-      if (!token || !username) {
-        setError('GitHub credentials not configured');
-        setLoading(false);
-        return;
-      }
-
-      const startOfYear = new Date(currentYear, 0, 1);
-      const today = new Date();
-
-      const from: string = startOfYear.toISOString();
-      const to: string = today.toISOString();
-
-      const query = `
-        query($username: String!, $from: DateTime!, $to: DateTime!) {
-          user(login: $username) {
-            contributionsCollection(from: $from, to: $to) {
-              contributionCalendar {
-                totalContributions
-                weeks {
-                  contributionDays {
-                    contributionCount
-                    date
-                    color
-                  }
-                }
-              }
-            }
-          }
-        }
-      `;
-
       try {
-        const response = await fetch('https://api.github.com/graphql', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query,
-            variables: { username, from, to }
-          })
-        });
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const apiPath = baseUrl.endsWith('/') ? 'api/github-contributions' : '/api/github-contributions';
+        const response = await fetch(`${baseUrl}${apiPath}`);
+        
+        if (!response.ok) {
+          setError('Failed to load contributions');
+          setLoading(false);
+          return;
+        }
 
         const data: GitHubAPIResponse = await response.json();
 
         if (data.errors) {
-          console.error('GitHub API errors:', data.errors);
           setError('Failed to load contributions');
         } else if (data.data?.user?.contributionsCollection?.contributionCalendar) {
           setWeeks(data.data.user.contributionsCollection.contributionCalendar.weeks);
@@ -99,7 +61,6 @@ export default function GithubContributions() {
           setError('Unexpected API response');
         }
       } catch (err) {
-        console.error('Failed to fetch contributions:', err);
         setError('Failed to load contributions');
       } finally {
         setLoading(false);
@@ -126,7 +87,6 @@ export default function GithubContributions() {
           {weeks.map((week: ContributionWeek, weekIndex: number) => (
             <div key={weekIndex} className="week">
               {week.contributionDays.map((day: ContributionDay, dayIndex: number) => {
-
                 const count = day.contributionCount;
                 let level = 0;
                 if (count > 0 && count <= 3) level = 1;
@@ -140,6 +100,7 @@ export default function GithubContributions() {
                     className={`day contribution-level-${level}`}
                     style={{ backgroundColor: day.color || '#161b22' }}
                     title={`${day.date}: ${day.contributionCount} contributions`}
+                    data-tooltip-placement="bottom"
                   ></div>
                 );
               })}
@@ -267,25 +228,24 @@ export default function GithubContributions() {
           outline: 1px solid rgba(0, 0, 0, 0.2);
         }
 
-        /* Blue color scheme for light theme */
         [data-theme="light"] .contribution-level-0 {
-          background-color: #eff6ff !important; /* Blue-50 */
+          background-color: #eff6ff !important;
         }
 
         [data-theme="light"] .contribution-level-1 {
-          background-color: #bfdbfe !important; /* Blue-200 */
+          background-color: #bfdbfe !important;
         }
 
         [data-theme="light"] .contribution-level-2 {
-          background-color: #60a5fa !important; /* Blue-400 */
+          background-color: #60a5fa !important;
         }
 
         [data-theme="light"] .contribution-level-3 {
-          background-color: #3b82f6 !important; /* Blue-500 */
+          background-color: #3b82f6 !important;
         }
 
         [data-theme="light"] .contribution-level-4 {
-          background-color: #1e40af !important; /* Blue-800 */
+          background-color: #1e40af !important;
         }
 
         @media (min-width: 640px) {

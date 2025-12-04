@@ -1,29 +1,34 @@
-let fancyboxPromise: Promise<any> | null = null;
-let carouselPromise: Promise<any> | null = null;
+import Lenis from 'lenis';
 
-export const loadFancybox = () => {
-  if (!fancyboxPromise) {
-    fancyboxPromise = Promise.all([
-      import('@fancyapps/ui/dist/fancybox/'),
-      import('@fancyapps/ui/dist/fancybox/fancybox.css')
-    ]).then(([module]) => module);
+let lenis: Lenis | null = null;
+
+export function initLenis() {
+  if (typeof window === 'undefined' || lenis) return;
+
+  lenis = new Lenis({
+    duration: 1.2,
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    orientation: 'vertical',
+    gestureOrientation: 'vertical',
+    smoothWheel: true,
+    wheelMultiplier: 1,
+    touchMultiplier: 2,
+    infinite: false,
+  });
+
+  function raf(time: number) {
+    lenis?.raf(time);
+    requestAnimationFrame(raf);
   }
-  return fancyboxPromise;
-};
 
-export const loadCarousel = () => {
-  if (!carouselPromise) {
-    carouselPromise = Promise.all([
-      import('@fancyapps/ui/dist/carousel/'),
-      import('@fancyapps/ui/dist/carousel/carousel.arrows.js'),
-      import('@fancyapps/ui/dist/carousel/carousel.css'),
-      import('@fancyapps/ui/dist/carousel/carousel.arrows.css')
-    ]).then(([carouselModule, arrowsModule]) => ({
-      Carousel: carouselModule.Carousel,
-      Arrows: arrowsModule.Arrows
-    }));
+  requestAnimationFrame(raf);
+
+  return lenis;
+}
+
+export function destroyLenis() {
+  if (lenis) {
+    lenis.destroy();
+    lenis = null;
   }
-  return carouselPromise;
-};
-
-export const loadBoth = () => Promise.all([loadCarousel(), loadFancybox()]);
+}

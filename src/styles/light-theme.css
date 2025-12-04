@@ -84,7 +84,7 @@
 }
 
 [data-theme="light"] .hover\:border-purple-500:hover {
-  border-color: #2563eb !important; 
+  border-color: #2563eb !important;
 }
 
 [data-theme="light"] .hover\:text-purple-500:hover {
@@ -144,7 +144,7 @@
 }
 
 [data-theme="light"] .text-black {
-  color: #0f172a !important; 
+  color: #0f172a !important;
 }
 
 [data-theme="light"] .shadow-sm {
@@ -178,7 +178,7 @@
 }
 
 [data-theme="light"] .hover\:text-blue-500:hover {
-  color: #2563eb !important; 
+  color: #2563eb !important;
 }
 
 [data-theme="light"] .hover\:bg-gray-300:hover {
