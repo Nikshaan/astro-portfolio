@@ -33,7 +33,6 @@ interface GitHubAPIResponse {
 export default function GithubContributions() {
   const [weeks, setWeeks] = useState<ContributionWeek[]>([]);
   const [totalContributions, setTotalContributions] = useState(0);
-  const [currentYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,14 +67,14 @@ export default function GithubContributions() {
     };
 
     fetchContributions();
-  }, [currentYear]);
+  }, []);
 
   return (
     <div className="contributions-container">
       <div className="header">
-        <h3>GitHub Contributions ({currentYear})</h3>
+        <h3>GitHub Contributions (Last 12 Months)</h3>
         {totalContributions > 0 && (
-          <span className="total">{totalContributions} contributions this year</span>
+          <span className="total">{totalContributions} contributions in the last year</span>
         )}
       </div>
       {loading ? (
@@ -172,11 +171,13 @@ export default function GithubContributions() {
 
         .graph {
           display: flex;
-          gap: 3px;
+          gap: 2px;
           overflow-x: auto;
           padding: 0.5rem 0;
           scrollbar-width: thin;
           scrollbar-color: #30363d #0d1117;
+          width: 100%;
+          justify-content: stretch;
         }
 
         [data-theme="light"] .graph {
@@ -207,13 +208,15 @@ export default function GithubContributions() {
         .week {
           display: flex;
           flex-direction: column;
-          gap: 3px;
-          min-width: 11px;
+          gap: 2px;
+          flex: 1;
+          min-width: 0;
         }
 
         .day {
-          width: 11px;
-          height: 11px;
+          width: 100%;
+          aspect-ratio: 1;
+          min-height: 10px;
           border-radius: 2px;
           cursor: pointer;
           transition: transform 0.2s;
@@ -249,13 +252,16 @@ export default function GithubContributions() {
         }
 
         @media (min-width: 640px) {
+          .graph {
+            gap: 2px;
+          }
+          
           .week {
-            min-width: 12px;
+            gap: 2px;
           }
 
           .day {
-            width: 12px;
-            height: 12px;
+            min-height: 11px;
           }
         }
 
@@ -268,13 +274,16 @@ export default function GithubContributions() {
             font-size: 1rem;
           }
 
+          .graph {
+            gap: 3px;
+          }
+
           .week {
-            min-width: 14px;
+            gap: 3px;
           }
 
           .day {
-            width: 14px;
-            height: 14px;
+            min-height: 12px;
           }
         }
       `}</style>

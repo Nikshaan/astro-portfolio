@@ -13,12 +13,16 @@ export const GET: APIRoute = async () => {
     });
   }
 
-  const currentYear = new Date().getFullYear();
-  const startOfYear = new Date(currentYear, 0, 1);
   const today = new Date();
+  const oneYearAgo = new Date(today);
+  oneYearAgo.setDate(today.getDate() - 365);
+  oneYearAgo.setHours(0, 0, 0, 0);
   
-  const from: string = startOfYear.toISOString();
-  const to: string = today.toISOString();
+  const todayEnd = new Date(today);
+  todayEnd.setHours(23, 59, 59, 999);
+  
+  const from: string = oneYearAgo.toISOString();
+  const to: string = todayEnd.toISOString();
 
   const query = `
     query($username: String!, $from: DateTime!, $to: DateTime!) {

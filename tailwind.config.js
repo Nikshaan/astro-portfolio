@@ -5,7 +5,12 @@ module.exports = {
     './src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['Instrument Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', 'monospace'],
+      },
+    },
   },
   plugins: [],
 }

@@ -1,9 +1,15 @@
 @import "tailwindcss";
 @import "./light-theme.css";
 
+* {
+  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   background-color: #080808;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -11,6 +17,21 @@ body {
 html {
   scroll-behavior: smooth;
   background-color: #080808;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+button, .font-medium, .font-semibold, .font-bold {
+  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
 }
 
 .f-carousel {
@@ -161,4 +182,143 @@ html.lenis, html.lenis body {
 @keyframes tooltip-fade {
   from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.prose,
+.prose p,
+.prose li,
+.prose td,
+.prose th,
+.prose blockquote {
+  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+}
+
+.prose code,
+.prose pre {
+  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace !important;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6,
+.prose-invert h1,
+.prose-invert h2,
+.prose-invert h3,
+.prose-invert h4,
+.prose-invert h5,
+.prose-invert h6 {
+  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.2 !important;
+}
+
+.prose strong,
+.prose b,
+.prose-invert strong,
+.prose-invert b {
+  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+  font-weight: 600 !important;
+}
+
+.prose-lg {
+  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+}
+
+.prose-invert {
+  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+}
+
+.prose ul,
+.prose ol {
+  list-style-position: outside;
+  padding-left: 1.625rem;
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.prose ul {
+  list-style-type: disc;
+}
+
+.prose ol {
+  list-style-type: decimal;
+}
+
+.prose li {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 0.375rem;
+}
+
+.prose ul ul,
+.prose ul ol,
+.prose ol ul,
+.prose ol ol {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose ul > li {
+  position: relative;
+}
+
+.prose-invert ul,
+.prose-invert ol {
+  list-style-position: outside;
+  padding-left: 1.625rem;
+}
+
+.prose-invert ul {
+  list-style-type: disc;
+}
+
+.prose-invert li {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose a,
+.prose-invert a {
+  color: #a855f7;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s ease;
+}
+
+.prose a:hover,
+.prose-invert a:hover {
+  color: #c084fc;
+  text-decoration: underline;
+}
+
+[data-theme="light"] .prose a,
+[data-theme="light"] .prose-invert a {
+  color: #2563eb;
+}
+
+[data-theme="light"] .prose a:hover,
+[data-theme="light"] .prose-invert a:hover {
+  color: #1e40af;
+}
+
+.prose p,
+.prose-invert p {
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+.github-contributions-card {
+  transition: border-color 0.3s ease-in-out !important;
+}
+
+.github-contributions-card:hover {
+  border-color: #c084fc !important;
+}
+
+[data-theme="light"] .github-contributions-card:hover {
+  border-color: #1e3a8a !important;
 }
