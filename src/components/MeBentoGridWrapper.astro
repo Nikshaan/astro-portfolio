@@ -1,0 +1,29 @@
+---
+import MeBentoGrid from "./MeBentoGrid";
+import { getImage } from "astro:assets";
+import collegeLogo from "../data/djsce-logo.avif";
+import aryaLogo from "../data/arya.avif";
+import codeAIlogo from "../data/codeai.avif";
+import varakLogo from "../data/varak.avif";
+import gssocLogo from "../data/gssoc.avif";
+import trophy from "../data/trophy.png";
+
+const { beeImage } = Astro.props;
+
+const optimizedImages = {
+    beeImage: beeImage,
+    collegeLogo: await getImage({
+        src: collegeLogo,
+        format: "avif",
+        width: 113,
+        quality: 60,
+    }),
+    aryaLogo: await getImage({ src: aryaLogo, format: "avif", width: 113, quality: 60 }),
+    codeAIlogo: await getImage({ src: codeAIlogo, format: "avif", width: 113, quality: 60 }),
+    varakLogo: await getImage({ src: varakLogo, format: "avif", width: 113, quality: 60 }),
+    gssocLogo: await getImage({ src: gssocLogo, format: "avif", width: 113, quality: 60 }),
+    trophy: await getImage({ src: trophy, format: "avif", width: 400, quality: 65 }),
+};
+---
+
+<MeBentoGrid client:visible optimizedImages={optimizedImages} />

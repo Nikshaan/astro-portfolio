@@ -69,17 +69,26 @@ const Navbar: React.FC<NavbarProps> = ({
   }, [sections]);
 
   useEffect(() => {
+    const navbarHeight = 48; // Fixed height from CSS (3rem = 48px)
+    let ticking = false;
+
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const navbarHeight = navbarRef.current?.offsetHeight || 0;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
 
-      if (currentScrollY > lastScrollY.current && currentScrollY > navbarHeight) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
+          if (currentScrollY > lastScrollY.current && currentScrollY > navbarHeight) {
+            setIsVisible(false);
+          } else {
+            setIsVisible(true);
+          }
+
+          lastScrollY.current = currentScrollY <= 0 ? 0 : currentScrollY;
+          ticking = false;
+        });
+
+        ticking = true;
       }
-
-      lastScrollY.current = currentScrollY <= 0 ? 0 : currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });

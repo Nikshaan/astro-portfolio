@@ -1,7 +1,20 @@
 ---
-
+import MainLayout from "../layouts/MainLayout.astro";
 ---
 
-<div class="min-h-[100svh] w-full bg-[#111111] text-9xl flex justify-center items-center">
-    <p>Page does not exist! <a class="cursor-pointer" href="/astro-portfolio/" aria-label="Go back to homepage">Go back</a></p>
-</div>
+<MainLayout 
+    title="404 - Page Not Found | Nikshaan"
+    description="The page you're looking for doesn't exist. Return to homepage."
+>
+    <div class="min-h-[100svh] w-full bg-[#111111] text-white flex flex-col justify-center items-center gap-4 p-4">
+        <h1 class="text-6xl md:text-9xl font-bold">404</h1>
+        <p class="text-xl md:text-2xl text-neutral-400">Page does not exist!</p>
+        <a 
+            class="cursor-pointer px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-full transition-colors text-lg font-medium" 
+            href="/astro-portfolio/" 
+            aria-label="Go back to homepage"
+        >
+            Go back home
+        </a>
+    </div>
+</MainLayout>

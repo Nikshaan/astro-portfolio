@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://Nikshaan.github.io/astro-portfolio/sitemap.xml

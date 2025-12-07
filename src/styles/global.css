@@ -19,18 +19,28 @@ html {
   background-color: #080808;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.2;
 }
 
-button, .font-medium, .font-semibold, .font-bold {
+button,
+.font-medium,
+.font-semibold,
+.font-bold {
   font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
-code, pre, .font-mono {
+code,
+pre,
+.font-mono {
   font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
 }
 
@@ -51,7 +61,8 @@ code, pre, .font-mono {
   background-color: #ffffff !important;
 }
 
-html.lenis, html.lenis body {
+html.lenis,
+html.lenis body {
   height: auto;
 }
 
@@ -104,11 +115,11 @@ html.lenis, html.lenis body {
   margin-top: 8px !important;
 }
 
-.tippy-box[data-placement^='bottom'] > .tippy-arrow {
+.tippy-box[data-placement^='bottom']>.tippy-arrow {
   top: 0 !important;
 }
 
-.tippy-box[data-placement^='bottom'] > .tippy-arrow:before {
+.tippy-box[data-placement^='bottom']>.tippy-arrow:before {
   border-bottom-color: rgba(23, 23, 23, 0.95) !important;
   top: -7px !important;
 }
@@ -122,16 +133,18 @@ html.lenis, html.lenis body {
   color: #ffffff !important;
 }
 
-[data-theme="light"] .tippy-box[data-placement^='bottom'] > .tippy-arrow:before {
+[data-theme="light"] .tippy-box[data-placement^='bottom']>.tippy-arrow:before {
   border-bottom-color: rgba(30, 58, 138, 0.95) !important;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: rgba(156, 163, 175, 0.5);
   border-radius: 20px;
@@ -180,8 +193,15 @@ html.lenis, html.lenis body {
 }
 
 @keyframes tooltip-fade {
-  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .prose,
@@ -262,7 +282,7 @@ html.lenis, html.lenis body {
   margin-bottom: 0.75rem;
 }
 
-.prose ul > li {
+.prose ul>li {
   position: relative;
 }
 
@@ -321,4 +341,13 @@ html.lenis, html.lenis body {
 
 [data-theme="light"] .github-contributions-card:hover {
   border-color: #1e3a8a !important;
+}
+
+.fancybox__image {
+  border-radius: 24px !important;
+  overflow: hidden;
+}
+
+.fancybox__content {
+  background: transparent !important;
 }

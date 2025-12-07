@@ -1,59 +1,95 @@
 ---
-import { Tooltips } from 'astro-tooltips';
-import '@fontsource/instrument-sans/400.css';
-import '@fontsource/instrument-sans/500.css';
-import '@fontsource/instrument-sans/600.css';
-import '@fontsource/instrument-sans/700.css';
-import '@fontsource/jetbrains-mono/400.css';
-import '@fontsource/jetbrains-mono/500.css';
-import '@fontsource/jetbrains-mono/600.css';
-import '@fontsource/jetbrains-mono/700.css';
+import { Tooltips } from "astro-tooltips";
+import "@fontsource/instrument-sans/400.css";
+import "@fontsource/instrument-sans/500.css";
+import "@fontsource/instrument-sans/600.css";
+import "@fontsource/instrument-sans/700.css";
+import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/jetbrains-mono/500.css";
+import "@fontsource/jetbrains-mono/600.css";
+import "@fontsource/jetbrains-mono/700.css";
 
 interface Props {
     title: string;
     description: string;
+    preloadImage?: string;
 }
 
-const { title, description } = Astro.props;
+const { title, description, preloadImage } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/astro-portfolio/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
-    <meta content={description} name="description" />
-    <meta content={title} property="og:title" />
-    <meta content={description} property="og:description" />
-    <meta content="website" property="og:type" />
-    <Tooltips interactive={false} delay={[0, 50]} />
-    
-    <script is:inline>
-        (function() {
-            var theme = localStorage.getItem('theme');
-            if (theme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
-        })();
-    </script>
-</head>
-<body class="h-full bg-black text-neutral-50 transition-colors duration-300">
-    <slot />
-</body>
+    <head>
+        <meta charset="utf-8" />
+        <link
+            rel="icon"
+            type="image/svg+xml"
+            href="/astro-portfolio/favicon.svg"
+        />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="generator" content={Astro.generator} />
+        <title>{title}</title>
+        <meta content={description} name="description" />
+        <meta content={title} property="og:title" />
+        <meta content={description} property="og:description" />
+        <meta content="website" property="og:type" />
+        
+        <!-- Additional SEO meta tags -->
+        <meta name="theme-color" content="#111111" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="canonical" href="https://Nikshaan.github.io/astro-portfolio/" />
+        <link rel="manifest" href="/astro-portfolio/manifest.json" />
+        
+        <!-- DNS prefetch only for external domains -->
+        <link rel="dns-prefetch" href="https://api.github.com" />
+        <link rel="dns-prefetch" href="https://ws.audioscrobbler.com" />
+        
+        <!-- Preload critical image with fetchpriority -->
+        {preloadImage && (
+            <link 
+                rel="preload" 
+                as="image" 
+                href={preloadImage} 
+                fetchpriority="high"
+                type="image/avif"
+            />
+        )}
+        
+        <Tooltips interactive={false} delay={[0, 50]} />
+
+        <!-- Critical inline script for theme - must run before render -->
+        <script is:inline>
+            (function () {
+                try {
+                    var theme = localStorage.getItem("theme");
+                    if (theme === "light") {
+                        document.documentElement.setAttribute("data-theme", "light");
+                    }
+                } catch (e) {}
+            })();
+        </script>
+    </head>
+    <body
+        class="h-full bg-black text-neutral-50 transition-colors duration-300"
+    >
+        <slot />
+    </body>
 </html>
 
 <style>
     body {
         background-color: #111111;
         overflow-x: hidden;
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition:
+            background-color 0.3s ease,
+            color 0.3s ease;
         margin: 0;
         padding: 0;
     }
-    
+
     [data-theme="light"] body {
         background-color: #ffffff;
         color: #000000;
@@ -61,31 +97,46 @@ const { title, description } = Astro.props;
 </style>
 
 <script>
-  import Lenis from 'lenis';
-  import 'lenis/dist/lenis.css';
+    // Defer Lenis initialization until after page load
+    let lenisInitialized = false;
 
-  const lenis = new Lenis({
-    duration: 1.2,
-    easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    orientation: 'vertical',
-    gestureOrientation: 'vertical',
-    smoothWheel: true,
-    wheelMultiplier: 1,
-    touchMultiplier: 2,
-    infinite: false,
-  });
+    async function initLenis() {
+        if (lenisInitialized) return;
+        
+        const Lenis = (await import("lenis")).default;
+        
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            orientation: "vertical",
+            gestureOrientation: "vertical",
+            smoothWheel: true,
+            wheelMultiplier: 1,
+            touchMultiplier: 2,
+            infinite: false,
+        });
 
-  (window as any).lenis = lenis;
+        (window as any).lenis = lenis;
 
-  function raf(time: number) {
-    lenis.raf(time);
-    requestAnimationFrame(raf);
-  }
+        function raf(time: number) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
 
-  requestAnimationFrame(raf);
+        requestAnimationFrame(raf);
+        lenisInitialized = true;
 
-  document.addEventListener('astro:before-swap', () => {
-    lenis.destroy();
-    delete (window as any).lenis;
-  });
+        document.addEventListener("astro:before-swap", () => {
+            lenis.destroy();
+            delete (window as any).lenis;
+            lenisInitialized = false;
+        });
+    }
+
+    // Initialize after page is fully loaded
+    if (document.readyState === 'complete') {
+        initLenis();
+    } else {
+        window.addEventListener('load', initLenis);
+    }
 </script>

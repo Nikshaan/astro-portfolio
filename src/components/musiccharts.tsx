@@ -65,6 +65,7 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
                     stroke={strokeColor}
                     fill={fillColor}
                     fillOpacity={0.6}
+                    isAnimationActive={false}
                 />
             </AreaChart>
         </ResponsiveContainer>

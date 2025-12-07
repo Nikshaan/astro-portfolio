@@ -1,0 +1,19 @@
+{
+  "name": "Nikshaan Portfolio",
+  "short_name": "Nikshaan",
+  "description": "Portfolio website of Nikshaan - Developer passionate about ML, DL and Web Development",
+  "start_url": "/astro-portfolio/",
+  "scope": "/astro-portfolio/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/astro-portfolio/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

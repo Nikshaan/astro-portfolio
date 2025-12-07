@@ -1,4 +1,11 @@
 import { useEffect, useState } from 'react';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface ContributionDay {
   contributionCount: number;
@@ -30,19 +37,29 @@ interface GitHubAPIResponse {
   errors?: Array<{ message: string }>;
 }
 
-export default function GithubContributions() {
-  const [weeks, setWeeks] = useState<ContributionWeek[]>([]);
-  const [totalContributions, setTotalContributions] = useState(0);
-  const [loading, setLoading] = useState(true);
+interface GithubContributionsProps {
+  initialData?: GitHubAPIResponse;
+}
+
+export default function GithubContributions({ initialData }: GithubContributionsProps) {
+  const [weeks, setWeeks] = useState<ContributionWeek[]>(
+    initialData?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || []
+  );
+  const [totalContributions, setTotalContributions] = useState(
+    initialData?.data?.user?.contributionsCollection?.contributionCalendar?.totalContributions || 0
+  );
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (initialData) return;
+
     const fetchContributions = async () => {
       try {
         const baseUrl = import.meta.env.BASE_URL || '/';
         const apiPath = baseUrl.endsWith('/') ? 'api/github-contributions' : '/api/github-contributions';
         const response = await fetch(`${baseUrl}${apiPath}`);
-        
+
         if (!response.ok) {
           setError('Failed to load contributions');
           setLoading(false);
@@ -67,50 +84,68 @@ export default function GithubContributions() {
     };
 
     fetchContributions();
-  }, []);
+  }, [initialData]);
 
   return (
-    <div className="contributions-container">
-      <div className="header">
-        <h3>GitHub Contributions (Last 12 Months)</h3>
-        {totalContributions > 0 && (
-          <span className="total">{totalContributions} contributions in the last year</span>
+    <LazyMotion features={domAnimation}>
+      <m.div
+        className={cn(
+          "relative p-6 rounded-3xl border overflow-hidden w-full flex flex-col justify-between group transition-colors github-card-hover",
+          "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
+          "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]"
         )}
-      </div>
-      {loading ? (
-        <div className="loading">Loading contributions...</div>
-      ) : error ? (
-        <p style={{ color: 'red' }}>{error}</p>
-      ) : weeks.length > 0 ? (
-        <div className="graph">
-          {weeks.map((week: ContributionWeek, weekIndex: number) => (
-            <div key={weekIndex} className="week">
-              {week.contributionDays.map((day: ContributionDay, dayIndex: number) => {
-                const count = day.contributionCount;
-                let level = 0;
-                if (count > 0 && count <= 3) level = 1;
-                else if (count > 3 && count <= 6) level = 2;
-                else if (count > 6 && count <= 9) level = 3;
-                else if (count > 9) level = 4;
-
-                return (
-                  <div
-                    key={dayIndex}
-                    className={`day contribution-level-${level}`}
-                    style={{ backgroundColor: day.color || '#161b22' }}
-                    title={`${day.date}: ${day.contributionCount} contributions`}
-                    data-tooltip-placement="bottom"
-                  ></div>
-                );
-              })}
-            </div>
-          ))}
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{
+          opacity: 1,
+          y: 0,
+          transition: {
+            duration: 0.5,
+            ease: "easeOut"
+          }
+        }}
+        viewport={{ once: true, margin: "-50px" }}
+      >
+        <div className="header">
+          <h3>GitHub Contributions (Last 12 Months)</h3>
+          {totalContributions > 0 && (
+            <span className="total">{totalContributions} contributions in the last year</span>
+          )}
         </div>
-      ) : (
-        <p style={{ color: 'red' }}>No contribution data available</p>
-      )}
+        {loading ? (
+          <div className="loading">Loading contributions...</div>
+        ) : error ? (
+          <p style={{ color: 'red' }}>{error}</p>
+        ) : weeks.length > 0 ? (
+          <div className="graph">
+            {weeks.map((week: ContributionWeek, weekIndex: number) => (
+              <div key={weekIndex} className="week">
+                {week.contributionDays.map((day: ContributionDay, dayIndex: number) => {
+                  const count = day.contributionCount;
+                  let level = 0;
+                  if (count > 0 && count <= 3) level = 1;
+                  else if (count > 3 && count <= 6) level = 2;
+                  else if (count > 6 && count <= 9) level = 3;
+                  else if (count > 9) level = 4;
 
-      <style>{`
+                  return (
+                    <div
+                      key={dayIndex}
+                      className={`day contribution-level-${level}`}
+                      style={{ backgroundColor: day.color || '#161b22' }}
+                      title={`${day.date}: ${day.contributionCount} contributions`}
+                      data-tooltip-placement="bottom"
+                      suppressHydrationWarning
+                    ></div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ color: 'red' }}>No contribution data available</p>
+        )}
+
+        <style>{`
         .contributions-container {
           margin-top: 0;
           width: 100%;
@@ -286,7 +321,15 @@ export default function GithubContributions() {
             min-height: 12px;
           }
         }
+
+        [data-theme="light"] .github-card-hover:hover {
+            border-color: #3b82f6 !important;
+        }
+        .github-card-hover:hover {
+            border-color: #c084fc !important;
+        }
       `}</style>
-    </div>
+      </m.div>
+    </LazyMotion>
   );
 }

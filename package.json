@@ -4,13 +4,16 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro check && astro build",
+    "build:prod": "astro build",
+    "build:fast": "astro build --no-minify",
     "preview": "astro preview",
     "astro": "astro",
     "purge-css": "purgecss --css dist/**/*.css --content dist/**/*.html --output dist/assets/"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
+    "@astrojs/sitemap": "^3.6.0",
     "@fancyapps/ui": "^6.0.32",
     "@fontsource/instrument-sans": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",

@@ -1,87 +1,146 @@
 ---
-import MainLayout from '../layouts/MainLayout.astro';
-import '../styles/global.css';
-import NavbarWrapper from '../components/NavbarWrapper.astro';
-import ProjectsBentoGrid from '../components/ProjectsBentoGrid';
-import GithubContributions from '../components/githubContributions';
-import FunBentoGrid from '../components/FunBentoGrid';
-import Card from '../components/card.astro';
-import MeBentoGrid from '../components/MeBentoGrid';
+import MainLayout from "../layouts/MainLayout.astro";
+import "../styles/global.css";
+import NavbarWrapper from "../components/NavbarWrapper.astro";
+import ProjectsBentoGridWrapper from "../components/ProjectsBentoGridWrapper.astro";
+import GithubContributions from "../components/githubContributions";
+import FunBentoGridWrapper from "../components/FunBentoGridWrapper.astro";
+
+import MeBentoGridWrapper from "../components/MeBentoGridWrapper.astro";
+import beeImage from "../data/bee.avif";
+import { fetchGithubContributions } from "../lib/github";
+import { getImage } from "astro:assets";
+
+const githubData = await fetchGithubContributions();
+
+const optimizedBeeImage = await getImage({
+  src: beeImage,
+  format: "avif",
+  width: 313,
+  quality: 60,
+});
 ---
 
-<MainLayout title='Nikshaan | Portfolio' description='I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style.'>
-	<NavbarWrapper />
-  <main class="bg-black -mt-12 text-neutral-50 min-h-[100svh] w-full flex items-center flex-col">
+<script is:inline>
+  // Force scroll to top on load and refresh - inline for performance
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+  window.scrollTo(0, 0);
+</script>
+
+<MainLayout
+  title="Nikshaan | Portfolio"
+  description="I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style."
+  preloadImage={optimizedBeeImage.src}
+>
+  <NavbarWrapper />
+  <main
+    class="bg-black -mt-12 text-neutral-50 min-h-[100svh] w-full flex items-center flex-col"
+  >
     <div class="grid-bg w-full flex flex-col justify-start items-center">
-    <section id="me" class="w-full max-w-[1400px] p-4 pt-24" data-section="me">
-      <MeBentoGrid client:visible />
-    </section>
-    <section class="w-full flex flex-col gap-2 flex-1">
-      <div class="w-full max-w-[1400px] mx-auto px-4 mb-8">
-        <Card>
-          <div class="p-4">
-            <GithubContributions client:visible />
-          </div>
-        </Card>
-      </div>
-      <div data-section="projects" id="projects" class="-mt-5">
-        <ProjectsBentoGrid client:visible />
-      </div>
-    </section>
-    <section id="fun" class="w-full flex flex-col lg:flex-row gap-2 flex-1" data-section="fun">
-      <FunBentoGrid client:visible apiKey={import.meta.env.PUBLIC__LASTFM_API_KEY} username={import.meta.env.PUBLIC__LASTFM_USERNAME} />
-    </section>
+      <section
+        id="me"
+        class="w-full max-w-[1400px] p-4 pt-24"
+        data-section="me"
+      >
+        <MeBentoGridWrapper beeImage={optimizedBeeImage} />
+      </section>
+      <section class="w-full flex flex-col gap-2 flex-1">
+        <div class="w-full max-w-[1400px] mx-auto px-4 mb-8">
+          <GithubContributions client:visible initialData={githubData} />
+        </div>
+        <div data-section="projects" id="projects" class="-mt-5">
+          <ProjectsBentoGridWrapper />
+        </div>
+      </section>
+      <section
+        id="fun"
+        class="w-full flex flex-col lg:flex-row gap-2 flex-1"
+        data-section="fun"
+      >
+        <FunBentoGridWrapper
+          apiKey={import.meta.env.PUBLIC__LASTFM_API_KEY}
+          username={import.meta.env.PUBLIC__LASTFM_USERNAME}
+        />
+      </section>
     </div>
-	</main>
+  </main>
 </MainLayout>
 
 <style>
-.grid-bg {
-  position: relative;
-  background-color: #111111; 
-  background-image:
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.3),  rgb(0, 0, 0) 80%),
-    repeating-linear-gradient(
-      to right,
-      rgba(255,255,255,0.3) 0px,
-      rgba(255,255,255,0.3) 1px,
-      transparent 1px,
-      transparent 80px
-    ),
-    repeating-linear-gradient(
+  .grid-bg {
+    position: relative;
+    background-color: #111111;
+    background-image:
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgb(0, 0, 0) 80%),
+      repeating-linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0.3) 0px,
+        rgba(255, 255, 255, 0.3) 1px,
+        transparent 1px,
+        transparent 80px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.3) 0px,
+        rgba(255, 255, 255, 0.3) 1px,
+        transparent 1px,
+        transparent 80px
+      );
+    background-size:
+      auto,
+      80px 100%,
+      100% 80px;
+    background-position:
+      top left,
+      top left,
+      top left;
+    background-repeat: no-repeat, repeat, repeat;
+    -webkit-mask-image: linear-gradient(
       to bottom,
-      rgba(255,255,255,0.3) 0px,
-      rgba(255,255,255,0.3) 1px,
-      transparent 1px,
-      transparent 80px
+      rgba(17, 17, 17, 1),
+      rgba(17, 17, 17, 1) 60%
     );
-  background-size: auto, 80px 100%, 100% 80px;
-  background-position: top left, top left, top left;
-  background-repeat: no-repeat, repeat, repeat;
-  -webkit-mask-image: linear-gradient(to bottom, rgba(17,17,17,1), rgba(17,17,17,1) 60%);
-  mask-image: linear-gradient(to bottom, rgba(17,17,17,1), rgba(17,17,17,1) 60%);
-  transition: background-color 0.3s ease;
-}
+    mask-image: linear-gradient(
+      to bottom,
+      rgba(17, 17, 17, 1),
+      rgba(17, 17, 17, 1) 60%
+    );
+    transition: background-color 0.3s ease;
+  }
 
-[data-theme="light"] .grid-bg {
-  background-color: #f0f9ff;
-  background-image:
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.8) 80%),
-    repeating-linear-gradient(
-      to right,
-      rgba(59, 130, 246, 0.1) 0px,
-      rgba(59, 130, 246, 0.1) 1px,
-      transparent 1px,
-      transparent 80px
-    ),
-    repeating-linear-gradient(
+  [data-theme="light"] .grid-bg {
+    background-color: #f0f9ff;
+    background-image:
+      linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.5),
+        rgba(255, 255, 255, 0.8) 80%
+      ),
+      repeating-linear-gradient(
+        to right,
+        rgba(30, 58, 138, 0.3) 0px,
+        rgba(30, 58, 138, 0.3) 1px,
+        transparent 1px,
+        transparent 80px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(30, 58, 138, 0.3) 0px,
+        rgba(30, 58, 138, 0.3) 1px,
+        transparent 1px,
+        transparent 80px
+      );
+    -webkit-mask-image: linear-gradient(
       to bottom,
-      rgba(59, 130, 246, 0.1) 0px,
-      rgba(59, 130, 246, 0.1) 1px,
-      transparent 1px,
-      transparent 80px
+      rgba(255, 255, 255, 1),
+      rgba(255, 255, 255, 1) 60%
     );
-  -webkit-mask-image: linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,1) 60%);
-  mask-image: linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,1) 60%);
-}
+    mask-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 1),
+      rgba(255, 255, 255, 1) 60%
+    );
+  }
 </style>

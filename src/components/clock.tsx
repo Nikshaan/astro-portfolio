@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 
-export default function Clock() {
+const Clock = memo(function Clock() {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    
+
     const updateTime = () => {
       const currentIST = new Date().toLocaleString("en-IN", {
         timeZone: "Asia/Kolkata",
@@ -16,7 +16,7 @@ export default function Clock() {
     };
 
     updateTime();
-    
+
     const timer = setInterval(() => {
       updateTime();
     }, 1000);
@@ -37,4 +37,6 @@ export default function Clock() {
       <p suppressHydrationWarning={true}>{currentTime}</p>
     </div>
   );
-}
+});
+
+export default Clock;
