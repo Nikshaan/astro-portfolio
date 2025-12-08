@@ -70,10 +70,10 @@ export default defineConfig({
     react(),
     sitemap()
   ],
-  
+
   // Enable compression
   compressHTML: true,
-  
+
   // Prefetch settings for faster navigation
   prefetch: {
     prefetchAll: true,

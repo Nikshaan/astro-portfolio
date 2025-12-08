@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { m, LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, Maximize2, Github, ExternalLink } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
 import { clsx, type ClassValue } from 'clsx';
@@ -54,7 +54,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index, selec
     const shouldAnimate = selectedId === null || selectedId === card.id;
 
     return (
-        <m.div
+        <motion.div
             className={cn("h-full w-full", className)}
             variants={{
                 hidden: { opacity: 0, y: 20 },
@@ -69,7 +69,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index, selec
                 }
             }}
         >
-            <m.div
+            <motion.div
                 layoutId={shouldAnimate ? `card-${card.id}` : undefined}
                 onClick={() => card.isExpandable && setSelectedId(card.id)}
                 className={cn(
@@ -124,8 +124,8 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index, selec
                         <Maximize2 size={16} className="text-neutral-400" />
                     </div>
                 )}
-            </m.div>
-        </m.div>
+            </motion.div>
+        </motion.div>
     );
 };
 
@@ -161,121 +161,119 @@ const ProjectsBentoGrid: React.FC = () => {
     }, [selectedId]);
 
     return (
-        <LazyMotion features={domAnimation}>
-            <div className="w-full max-w-[1400px] mx-auto p-4 pt-16">
-                <div className="flex justify-between items-end mb-8 px-2">
-                    <h2 className="text-4xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">Projects</h2>
-                    <div className="flex gap-1 bg-neutral-200 dark:bg-neutral-800 p-1 rounded-full">
-                        <button
-                            onClick={() => setActiveCategory('aiml')}
-                            className={cn(
-                                "px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition-all",
-                                activeCategory === 'aiml'
-                                    ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100"
-                                    : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
-                            )}
-                        >
-                            AI/ML
-                        </button>
-                        <button
-                            onClick={() => setActiveCategory('web')}
-                            className={cn(
-                                "px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition-all",
-                                activeCategory === 'web'
-                                    ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100"
-                                    : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
-                            )}
-                        >
-                            Web
-                        </button>
-                    </div>
+        <div className="w-full max-w-[1400px] mx-auto p-4 pt-16">
+            <div className="flex justify-between items-end mb-8 px-2">
+                <h2 className="text-4xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">Projects</h2>
+                <div className="flex gap-1 bg-neutral-200 dark:bg-neutral-800 p-1 rounded-full">
+                    <button
+                        onClick={() => setActiveCategory('aiml')}
+                        className={cn(
+                            "px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition-all",
+                            activeCategory === 'aiml'
+                                ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100"
+                                : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+                        )}
+                    >
+                        AI/ML
+                    </button>
+                    <button
+                        onClick={() => setActiveCategory('web')}
+                        className={cn(
+                            "px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition-all",
+                            activeCategory === 'web'
+                                ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100"
+                                : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+                        )}
+                    >
+                        Web
+                    </button>
                 </div>
+            </div>
 
-                <m.div
-                    key={activeCategory}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr"
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-50px" }}
-                >
-                    {projects.map((project, i) => (
-                        <CardWrapper key={project.id} card={project} index={i} className="min-h-[250px]" selectedId={selectedId} setSelectedId={setSelectedId} />
-                    ))}
-                </m.div>
+            <motion.div
+                key={activeCategory}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+            >
+                {projects.map((project, i) => (
+                    <CardWrapper key={project.id} card={project} index={i} className="min-h-[250px]" selectedId={selectedId} setSelectedId={setSelectedId} />
+                ))}
+            </motion.div>
 
-                <AnimatePresence>
-                    {selectedId && selectedItem && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
-                            <m.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setSelectedId(null)}
-                                className="absolute inset-0 bg-black/60 backdrop-blur-md"
-                            />
+            <AnimatePresence>
+                {selectedId && selectedItem && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedId(null)}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                        />
 
-                            <m.div
-                                layoutId={`card-${selectedId}`}
-                                className={cn(
-                                    "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col",
-                                    "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
-                                    "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]"
-                                )}
+                        <motion.div
+                            layoutId={`card-${selectedId}`}
+                            className={cn(
+                                "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col",
+                                "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
+                                "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]"
+                            )}
+                        >
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedId(null);
+                                }}
+                                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-20 cursor-pointer"
                             >
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedId(null);
-                                    }}
-                                    className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-20 cursor-pointer"
-                                >
-                                    <X size={20} />
-                                </button>
+                                <X size={20} />
+                            </button>
 
-                                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                                    <div className="flex flex-col gap-6">
-                                        <div className="flex justify-between items-start pr-12">
-                                            <h2 className="text-3xl font-bold">{selectedItem.data.name}</h2>
-                                            <div className="flex gap-2">
-                                                {selectedItem.data.live && (
-                                                    <a href={selectedItem.data.live} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" aria-label={`View live demo of ${selectedItem.data.name}`} title="View Live Demo">
-                                                        <ExternalLink size={24} />
-                                                    </a>
-                                                )}
-                                                {selectedItem.data.github && (
-                                                    <a href={selectedItem.data.github} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" aria-label={`View source code of ${selectedItem.data.name} on GitHub`} title="View on GitHub">
-                                                        <Github size={24} />
-                                                    </a>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-6 gap-2 w-full">
-                                            {selectedItem.data.techstack?.map((tech: string, i: number) => {
-                                                const needsWhiteBg = ['Langchain', 'HuggingFace', 'ChromaDB'].includes(tech);
-                                                const icon = techstackIcons[tech];
-                                                return (
-                                                    <div key={i} title={tech} data-tooltip-placement="bottom" className={cn(
-                                                        "flex items-center justify-center p-2 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12",
-                                                        needsWhiteBg ? "bg-white special-badge" : "bg-neutral-100 dark:bg-neutral-800"
-                                                    )}>
-                                                        {icon && <img src={icon.src} width={icon.width} height={icon.height} alt={tech} className="w-full h-full object-contain" loading="lazy" decoding="async" />}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-
-                                        <div className="prose prose-invert prose-lg max-w-none">
-                                            <div dangerouslySetInnerHTML={{ __html: selectedItem.content || '' }} />
+                            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                                <div className="flex flex-col gap-6">
+                                    <div className="flex justify-between items-start pr-12">
+                                        <h2 className="text-3xl font-bold">{selectedItem.data.name}</h2>
+                                        <div className="flex gap-2">
+                                            {selectedItem.data.live && (
+                                                <a href={selectedItem.data.live} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" aria-label={`View live demo of ${selectedItem.data.name}`} title="View Live Demo">
+                                                    <ExternalLink size={24} />
+                                                </a>
+                                            )}
+                                            {selectedItem.data.github && (
+                                                <a href={selectedItem.data.github} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" aria-label={`View source code of ${selectedItem.data.name} on GitHub`} title="View on GitHub">
+                                                    <Github size={24} />
+                                                </a>
+                                            )}
                                         </div>
                                     </div>
+
+                                    <div className="grid grid-cols-6 gap-2 w-full">
+                                        {selectedItem.data.techstack?.map((tech: string, i: number) => {
+                                            const needsWhiteBg = ['Langchain', 'HuggingFace', 'ChromaDB'].includes(tech);
+                                            const icon = techstackIcons[tech];
+                                            return (
+                                                <div key={i} title={tech} data-tooltip-placement="bottom" className={cn(
+                                                    "flex items-center justify-center p-2 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12",
+                                                    needsWhiteBg ? "bg-white special-badge" : "bg-neutral-100 dark:bg-neutral-800"
+                                                )}>
+                                                    {icon && <img src={icon.src} width={icon.width} height={icon.height} alt={tech} className="w-full h-full object-contain" loading="lazy" decoding="async" />}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="prose prose-invert prose-lg max-w-none">
+                                        <div dangerouslySetInnerHTML={{ __html: selectedItem.content || '' }} />
+                                    </div>
                                 </div>
-                            </m.div>
-                        </div>
-                    )}
-                </AnimatePresence>
-            </div>
-        </LazyMotion>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 };
 

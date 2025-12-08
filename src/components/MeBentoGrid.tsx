@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { m, LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, Maximize2, MapPin, Github, Linkedin, Mail } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
 import { clsx, type ClassValue } from 'clsx';
@@ -190,7 +190,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index = 0, s
     const shouldAnimate = selectedId === null || selectedId === card.id;
 
     return (
-        <m.div
+        <motion.div
             className={cn("h-full w-full", className)}
             initial={{ opacity: 0, y: 50 }}
             whileInView={{
@@ -204,7 +204,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index = 0, s
             }}
             viewport={{ once: true, margin: "-50px" }}
         >
-            <m.div
+            <motion.div
                 layoutId={shouldAnimate ? `card-${card.id}` : undefined}
                 onClick={() => card.isExpandable && setSelectedId(card.id)}
                 className={cn(
@@ -225,8 +225,8 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index = 0, s
                         <Maximize2 size={16} className={card.id === 'win' ? "text-white drop-shadow-md" : "text-neutral-400"} />
                     </div>
                 )}
-            </m.div>
-        </m.div>
+            </motion.div>
+        </motion.div>
     );
 };
 
@@ -273,7 +273,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
 
 
     return (
-        <LazyMotion features={domAnimation}>
+        <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full auto-rows-fr">
                 <div className="flex flex-col gap-4 h-full">
                     {introCard && <CardWrapper card={introCard} index={0} className="flex-1 min-h-[300px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
@@ -293,7 +293,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
             <AnimatePresence>
                 {selectedId && selectedItem && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
-                        <m.div
+                        <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -301,7 +301,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                             className="absolute inset-0 bg-black/60 backdrop-blur-md"
                         />
 
-                        <m.div
+                        <motion.div
                             layoutId={`card-${selectedId}`}
                             className={cn(
                                 "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col",
@@ -324,7 +324,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                                     <div dangerouslySetInnerHTML={{ __html: selectedItem.content || '' }} />
                                 </div>
                             </div>
-                        </m.div>
+                        </motion.div>
                     </div>
                 )}
             </AnimatePresence>
@@ -339,7 +339,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                     border-color: #1e3a8a !important;
                 }
             `}</style>
-        </LazyMotion>
+        </>
     );
 };
 

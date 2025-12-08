@@ -240,6 +240,15 @@ export default function GithubContributions({ initialData }: GithubContributions
           background: #d0d7de;
         }
 
+        .graph::-webkit-scrollbar {
+          display: none;
+        }
+
+        .graph {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+
         .week {
           display: flex;
           flex-direction: column;
