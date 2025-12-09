@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -51,6 +51,14 @@ export default function GithubContributions({ initialData }: GithubContributions
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
 
+  const graphRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (graphRef.current) {
+      graphRef.current.scrollLeft = graphRef.current.scrollWidth;
+    }
+  }, [weeks, loading]);
+
   useEffect(() => {
     if (initialData) return;
 
@@ -100,7 +108,8 @@ export default function GithubContributions({ initialData }: GithubContributions
           y: 0,
           transition: {
             duration: 0.5,
-            ease: "easeOut"
+            ease: "easeOut",
+            delay: 0.6
           }
         }}
         viewport={{ once: true, margin: "-50px" }}
@@ -116,7 +125,7 @@ export default function GithubContributions({ initialData }: GithubContributions
         ) : error ? (
           <p style={{ color: 'red' }}>{error}</p>
         ) : weeks.length > 0 ? (
-          <div className="graph">
+          <div className="graph" ref={graphRef}>
             {weeks.map((week: ContributionWeek, weekIndex: number) => (
               <div key={weekIndex} className="week">
                 {week.contributionDays.map((day: ContributionDay, dayIndex: number) => {
@@ -212,7 +221,7 @@ export default function GithubContributions({ initialData }: GithubContributions
           scrollbar-width: thin;
           scrollbar-color: #30363d #0d1117;
           width: 100%;
-          justify-content: stretch;
+          justify-content: flex-start; /* Changed from stretch to flex-start for scrolling */
         }
 
         [data-theme="light"] .graph {
@@ -221,6 +230,7 @@ export default function GithubContributions({ initialData }: GithubContributions
 
         .graph::-webkit-scrollbar {
           height: 8px;
+          display: block; /* Ensure scrollbar is visible if needed, or hide if preferred but allow scroll */
         }
 
         .graph::-webkit-scrollbar-track {
@@ -240,20 +250,25 @@ export default function GithubContributions({ initialData }: GithubContributions
           background: #d0d7de;
         }
 
+        /* Hide scrollbar for cleaner look but allow scroll */
         .graph::-webkit-scrollbar {
-          display: none;
+            height: 4px; /* Make it thin */
         }
-
-        .graph {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+        
+        @media (max-width: 768px) {
+            .graph {
+                scrollbar-width: none; /* Hide scrollbar on mobile */
+            }
+            .graph::-webkit-scrollbar {
+                display: none;
+            }
         }
 
         .week {
           display: flex;
           flex-direction: column;
           gap: 2px;
-          flex: 1;
+          flex: 0 0 auto; /* Prevent shrinking */
           min-width: 0;
         }
 

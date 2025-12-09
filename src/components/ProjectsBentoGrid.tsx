@@ -73,7 +73,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index, selec
                 layoutId={shouldAnimate ? `card-${card.id}` : undefined}
                 onClick={() => card.isExpandable && setSelectedId(card.id)}
                 className={cn(
-                    "relative p-6 rounded-3xl border flex flex-col justify-between h-full transition-all duration-300 ease-in-out",
+                    "relative p-5 md:p-6 rounded-3xl border flex flex-col justify-between h-full transition-all duration-300 ease-in-out",
                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
                     "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]",
                     card.isExpandable && !selectedId ? "cursor-pointer group hover:border-neutral-600 transition-colors" : ""
@@ -83,8 +83,8 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index, selec
             >
                 <div className="flex flex-col h-full justify-between">
                     <div>
-                        <h3 className="text-xl font-medium mb-2">{card.data.name}</h3>
-                        <p className="text-sm font-light text-neutral-600 dark:text-neutral-400">{card.data.summary}</p>
+                        <h3 className="text-lg md:text-xl font-medium mb-2">{card.data.name}</h3>
+                        <p className="text-sm md:text-base font-light text-neutral-600 dark:text-neutral-400 text-pretty">{card.data.summary}</p>
                     </div>
                     <div className="flex flex-col gap-4 mt-auto pt-4">
                         <div className="grid grid-cols-4 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full">
@@ -101,7 +101,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index, selec
                                 );
                             })}
                         </div>
-                        <div className="flex gap-4 text-sm font-medium">
+                        <div className="flex gap-4 text-sm md:text-base font-medium">
                             {card.data.live && (
                                 <a href={card.data.live} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="cursor-pointer hover:text-blue-500 transition-colors flex items-center gap-1" aria-label={`View live demo of ${card.data.name}`}>
                                     <ExternalLink size={16} /> Live
@@ -163,7 +163,7 @@ const ProjectsBentoGrid: React.FC = () => {
     return (
         <div className="w-full max-w-[1400px] mx-auto p-4 pt-16">
             <div className="flex justify-between items-end mb-8 px-2">
-                <h2 className="text-4xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">Projects</h2>
+                <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">Projects</h2>
                 <div className="flex gap-1 bg-neutral-200 dark:bg-neutral-800 p-1 rounded-full">
                     <button
                         onClick={() => setActiveCategory('aiml')}
@@ -192,13 +192,13 @@ const ProjectsBentoGrid: React.FC = () => {
 
             <motion.div
                 key={activeCategory}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr"
+                className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr"
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: "-50px" }}
             >
                 {projects.map((project, i) => (
-                    <CardWrapper key={project.id} card={project} index={i} className="min-h-[250px]" selectedId={selectedId} setSelectedId={setSelectedId} />
+                    <CardWrapper key={project.id} card={project} index={i} className="col-span-2 md:col-span-1 lg:col-span-1 min-h-[250px]" selectedId={selectedId} setSelectedId={setSelectedId} />
                 ))}
             </motion.div>
 
@@ -233,7 +233,7 @@ const ProjectsBentoGrid: React.FC = () => {
 
                             <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                                 <div className="flex flex-col gap-6">
-                                    <div className="flex justify-between items-start pr-12">
+                                    <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0 md:pr-12">
                                         <h2 className="text-3xl font-bold">{selectedItem.data.name}</h2>
                                         <div className="flex gap-2">
                                             {selectedItem.data.live && (
@@ -249,7 +249,7 @@ const ProjectsBentoGrid: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-6 gap-2 w-full">
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 w-full">
                                         {selectedItem.data.techstack?.map((tech: string, i: number) => {
                                             const needsWhiteBg = ['Langchain', 'HuggingFace', 'ChromaDB'].includes(tech);
                                             const icon = techstackIcons[tech];

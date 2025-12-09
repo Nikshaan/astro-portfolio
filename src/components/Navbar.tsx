@@ -139,7 +139,7 @@ const Navbar: React.FC<NavbarProps> = ({
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
       const lenis = (window as any).lenis;
-      
+
       if (lenis) {
         lenis.scrollTo(targetSection, {
           offset: 0,
@@ -179,7 +179,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const getLinkClasses = (sectionId: string) => {
     const isActive = activeSection === sectionId;
 
-    const baseClasses = 'nav-link cursor-pointer px-3 py-1 rounded-md transition-all duration-200 font-medium';
+    const baseClasses = 'nav-link cursor-pointer px-3 py-1 rounded-md transition-all duration-200 font-medium text-sm md:text-base';
 
     if (isActive) {
       return `${baseClasses} active font-semibold`;
@@ -192,7 +192,7 @@ const Navbar: React.FC<NavbarProps> = ({
     <div
       ref={navbarRef}
       id="navbar"
-      className="bg-[#111111]/80 dark:bg-[#111111]/80 backdrop-blur-md text-white z-50 sticky left-1/2 transform -translate-x-1/2 h-12 w-[380px] border border-white/20 rounded-full flex justify-between px-6 items-center transition-all duration-300 shadow-lg nav-links"
+      className="bg-[#111111]/80 dark:bg-[#111111]/80 backdrop-blur-md text-white z-50 fixed left-1/2 transform -translate-x-1/2 h-12 w-[90%] max-w-[380px] border border-white/20 rounded-full flex justify-between px-6 items-center transition-all duration-300 shadow-lg nav-links"
       style={{
         top: isVisible ? '1rem' : '-5rem'
       }}

@@ -123,14 +123,14 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ apiKey, username, images, a
 
     return (
         <div className="w-full max-w-[1400px] mx-auto p-4 pt-16">
-            <h2 className="text-4xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight mb-8 px-2">Fun Stuff</h2>
+            <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight mb-8 px-2">Fun Stuff</h2>
 
             <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(200px,auto)]"
+                className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(200px,auto)]"
             >
-                <CardWrapper key="music-stats" index={0} className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 min-h-[400px]">
+                <CardWrapper key="music-stats" index={0} className="col-span-2 md:col-span-2 lg:col-span-2 row-span-2 min-h-[400px]">
                     <div className="h-full flex flex-col w-full">
-                        <h3 className="text-xl font-medium mb-4 p-6 pb-0">Music Stats</h3>
+                        <h3 className="text-xl font-medium mb-4 p-5 md:p-6 pb-0">Music Stats</h3>
                         <div className="flex-1 overflow-y-auto custom-scrollbar px-2 w-full">
                             <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Loading music stats...</div>}>
                                 <MusicStatsClient apiKey={apiKey} username={username} />

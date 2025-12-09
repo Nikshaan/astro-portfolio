@@ -33,7 +33,7 @@ const Clock = memo(function Clock() {
   }
 
   return (
-    <div className="text-2xl my-5 font-light">
+    <div className="text-2xl my-5 font-light text-center">
       <p suppressHydrationWarning={true}>{currentTime}</p>
     </div>
   );
