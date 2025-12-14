@@ -107,9 +107,9 @@ export default function GithubContributions({ initialData }: GithubContributions
           opacity: 1,
           y: 0,
           transition: {
-            duration: 0.5,
+            duration: 0.4,
             ease: "easeOut",
-            delay: 0.6
+            delay: 0.1
           }
         }}
         viewport={{ once: true, margin: "-50px" }}
@@ -185,7 +185,7 @@ export default function GithubContributions({ initialData }: GithubContributions
 
         .header h3 {
           font-size: 1.25rem;
-          font-weight: 600;
+          font-weight: 500;
           margin: 0;
           color: white;
         }
@@ -221,7 +221,22 @@ export default function GithubContributions({ initialData }: GithubContributions
           scrollbar-width: thin;
           scrollbar-color: #30363d #0d1117;
           width: 100%;
-          justify-content: flex-start; /* Changed from stretch to flex-start for scrolling */
+          justify-content: flex-start;
+        }
+
+        @media (min-width: 768px) {
+          .graph {
+            justify-content: stretch;
+            overflow-x: visible;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .graph {
+            width: 100%;
+            gap: 2px;
+            overflow-x: hidden;
+          }
         }
 
         [data-theme="light"] .graph {
@@ -268,8 +283,15 @@ export default function GithubContributions({ initialData }: GithubContributions
           display: flex;
           flex-direction: column;
           gap: 2px;
-          flex: 0 0 auto; /* Prevent shrinking */
+          flex: 0 0 auto;
           min-width: 0;
+        }
+
+        @media (min-width: 1024px) {
+          .week {
+            flex: 1 1 0;
+            min-width: 0;
+          }
         }
 
         .day {

@@ -157,13 +157,13 @@ html.lenis body {
   left: 50%;
   transform: translateX(-50%);
   margin-top: 8px;
-  background-color: rgba(23, 23, 23, 0.95);
+  background-color: rgb(23, 23, 23);
   color: #ffffff;
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 14px;
   white-space: nowrap;
-  z-index: 50;
+  z-index: 9999;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   pointer-events: none;
   animation: tooltip-fade 0.2s ease-in-out;
@@ -178,18 +178,18 @@ html.lenis body {
   margin-top: 1px;
   border-width: 0 7px 7px 7px;
   border-style: solid;
-  border-color: transparent transparent rgba(23, 23, 23, 0.95) transparent;
-  z-index: 50;
+  border-color: transparent transparent rgb(23, 23, 23) transparent;
+  z-index: 9999;
   pointer-events: none;
   animation: tooltip-fade 0.2s ease-in-out;
 }
 
 [data-theme="light"] .tooltip-trigger:hover::after {
-  background-color: rgba(30, 58, 138, 0.95);
+  background-color: rgb(30, 58, 138);
 }
 
 [data-theme="light"] .tooltip-trigger:hover::before {
-  border-color: transparent transparent rgba(30, 58, 138, 0.95) transparent;
+  border-color: transparent transparent rgb(30, 58, 138) transparent;
 }
 
 @keyframes tooltip-fade {

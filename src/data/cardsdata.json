@@ -7,9 +7,9 @@
         "theme": "dark",
         "data": {
             "title": "About Me",
-            "text": "Hi, I'm <span class=\"font-medium text-2xl\">Nikshaan Shetty</span>, a 19 years old AI/ML student.",
+            "text": "Hi, I'm <span class=\"font-medium text-lg\">Nikshaan Shetty</span>, a 19 years old AI/ML student.",
             "interests": [
-                "Machine & Deep Learning",
+                "Machine Learning & Deep Learning",
                 "Web development",
                 "Music",
                 "Photography"
@@ -83,7 +83,7 @@
         "isExpandable": true,
         "theme": "dark",
         "data": {
-            "image": "trophy"
+            "image": "winIcon"
         },
         "content": "<ul><li><h1>HackOps (2025) - 2nd Runner Up and 1st in AIML domain</h1><p>Developed <a href=\"https://github.com/Nikshaan/HackOps_HackCORS\" target=\"_blank\" rel=\"noopener noreferrer\">JournalPal.ai</a>, a research journal-paper matcher.</p></li><br><li><h1>CodeQuest (2025) - 1st Runner Up and 1st in AIML domain</h1><p>Developed <a href=\"https://github.com/Nikshaan/HACKCORS_Legal_CodeQuest\" target=\"_blank\" rel=\"noopener noreferrer\">Nyaysetu</a>, an AI legal assistant.</p></li></ul>"
     },

@@ -132,14 +132,14 @@ const allImages = await Promise.all(
             const optimizedThumbnail = await getImage({
                 src: imageModule.default,
                 width: 380,
-                quality: 55,
+                quality: 100,
                 format: "avif",
             });
 
             const optimizedFull = await getImage({
                 src: imageModule.default,
                 width: 1200,
-                quality: 70,
+                quality: 100,
                 format: "avif",
             });
 

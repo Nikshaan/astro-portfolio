@@ -64,7 +64,7 @@ export default function MusicStatsClient({ apiKey, username }: { apiKey: string;
     }
 
     return (
-        <div className="flex flex-col h-full justify-center pb-4 lg:gap-20">
+        <div className="flex flex-col h-full justify-around pb-4">
             <div className="flex flex-col md:flex-row justify-center md:justify-around items-center md:items-start gap-12 md:gap-4 px-4 w-full">
                 <div className="w-full text-center">
                     <p className="mb-4 text-base md:text-lg text-center font-bold">Total music scrobbles</p>
@@ -96,7 +96,7 @@ export default function MusicStatsClient({ apiKey, username }: { apiKey: string;
                 </div>
             </div>
 
-            <div className="flex flex-col w-full mt-12 h-[200px]">
+            <div className="flex flex-col w-full mt-12 lg:mt-4 h-[200px] lg:h-[300px]">
                 <p className="mb-4 text-base md:text-lg text-center font-bold">Daily music scrobbles</p>
                 <div className="w-full flex-1 select-none min-h-0">
                     <MusicCharts data={data.weeklyScrobbles} />

@@ -11,7 +11,7 @@ import aryaLogo from '../data/arya.avif';
 import codeAIlogo from '../data/codeai.avif';
 import varakLogo from '../data/varak.avif';
 import gssocLogo from '../data/gssoc.avif';
-import trophy from '../data/trophy.png';
+import winIcon from '../data/winIcon.png';
 
 const defaultImages: Record<string, any> = {
     beeImage: beeImage,
@@ -20,7 +20,7 @@ const defaultImages: Record<string, any> = {
     codeAIlogo: codeAIlogo,
     varakLogo: varakLogo,
     gssocLogo: gssocLogo,
-    trophy: trophy,
+    winIcon: winIcon,
 };
 
 function cn(...inputs: ClassValue[]) {
@@ -32,7 +32,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
         case 'intro':
             return (
                 <div className="flex flex-col-reverse md:flex-row h-full justify-between gap-4 items-center md:items-stretch">
-                    <div className="flex flex-col gap-2 w-full md:w-[60%] h-full justify-between text-base md:text-lg text-center md:text-left">
+                    <div className="flex flex-col gap-2 w-full md:w-[60%] h-full justify-between text-sm md:text-base text-center md:text-left">
                         <div className="font-light text-pretty">
                             <p dangerouslySetInnerHTML={{ __html: card.data.text }} />
                             <p className="mt-2">My interest lies in:</p>
@@ -43,7 +43,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                             </ul>
                         </div>
                     </div>
-                    <div className="flex justify-center items-center w-full md:w-[40%] lg:w-[50%] h-full">
+                    <div className="flex justify-center items-center w-full md:w-[40%] lg:w-[50%] h-full lg:aspect-square lg:self-center">
                         <img
                             src={images[card.data.image].src}
                             width={images[card.data.image].width}
@@ -52,14 +52,14 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                             loading={card.type === 'intro' ? "eager" : "lazy"}
                             fetchPriority={card.type === 'intro' ? "high" : "auto"}
                             decoding="async"
-                            className="w-auto border rounded-full max-h-[150px] lg:max-h-[300px] select-none object-cover profile-image-border border-white dark:border-white/20"
+                            className="w-auto max-h-[150px] md:w-full md:h-auto md:max-h-full lg:w-full lg:h-full lg:object-cover border rounded-full select-none object-cover profile-image-border border-white dark:border-white/20"
                         />
                     </div>
                 </div>
             );
         case 'education':
             return (
-                <div className="flex flex-col md:flex-row h-full items-center justify-center md:justify-between gap-4 text-sm md:text-base text-center md:text-right">
+                <div className="flex flex-col md:flex-row h-full items-center justify-center md:justify-between gap-4 text-center md:text-right">
                     <div className="w-full md:w-[20%] flex justify-center items-center">
                         <img
                             src={images[card.data.image].src}
@@ -68,19 +68,19 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                             alt="logo"
                             loading="lazy"
                             decoding="async"
-                            className="select-none transition-all transform duration-200 h-[80px] w-auto object-contain"
+                            className="select-none transition-all transform duration-200 w-[120px] md:w-[180px] h-auto object-contain"
                         />
                     </div>
-                    <div className="font-light w-full md:w-[80%]">
+                    <div className="font-light w-full md:w-[80%] text-sm md:text-base">
                         <p className="font-medium">{card.data.school}</p>
-                        <p className="italic text-xs md:text-sm" dangerouslySetInnerHTML={{ __html: card.data.degree }} />
-                        <p className="italic text-xs md:text-sm">{card.data.date}</p>
+                        <p className="italic" dangerouslySetInnerHTML={{ __html: card.data.degree }} />
+                        <p className="italic">{card.data.date}</p>
                     </div>
                 </div>
             );
         case 'extracurr':
             return (
-                <div className="flex flex-col gap-4 text-sm md:text-base">
+                <div className="flex flex-col justify-between h-full text-sm md:text-base">
                     {card.data.items.map((item: any, i: number) => (
                         <div key={i} className="flex">
                             <div className="w-[20%] flex justify-center items-center">
@@ -95,10 +95,10 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                                 />
                             </div>
                             <div className="w-[80%] flex flex-col items-end text-right">
-                                <p className="font-medium text-sm md:text-base">{item.title}</p>
-                                <p className="text-xs md:text-sm font-light italic">{item.subtitle}</p>
-                                <p className="text-xs md:text-sm font-light">{item.role}</p>
-                                <p className="text-xs md:text-sm font-light italic">{item.date}</p>
+                                <p className="font-medium">{item.title}</p>
+                                <p className="font-light italic">{item.subtitle}</p>
+                                <p className="font-light">{item.role}</p>
+                                <p className="font-light italic">{item.date}</p>
                             </div>
                         </div>
                     ))}
@@ -106,32 +106,32 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
             );
         case 'location':
             return (
-                <div className="flex flex-col md:flex-row justify-between items-center w-full h-full gap-2 md:gap-0">
-                    <div className="flex flex-col w-full md:w-[60%] h-full justify-center items-center md:items-start md:pl-6">
-                        <div className="flex justify-center md:justify-start items-center mb-2">
-                            <MapPin className="w-6 h-6 md:w-[1.125rem] md:h-[1.125rem] mr-2" />
-                            <p className="text-sm md:text-base mt-2 font-medium text-center md:text-left">Mumbai, India</p>
+                <div className="flex flex-col justify-center items-center w-full h-full gap-3 p-2 text-sm md:text-2xl">
+                    <div className="flex flex-col w-full justify-center items-center">
+                        <div className="flex justify-center items-center gap-1 md:gap-2">
+                            <MapPin className="w-5 h-5 lg:w-7 lg:h-7" />
+                            <p className="font-medium text-center text-base md:text-2xl text-nowrap">Mumbai, India</p>
                         </div>
-                        <div className="flex justify-center md:justify-start items-center w-full md:w-auto scale-75 md:scale-100 origin-center md:origin-left">
+                        <div className="flex justify-center items-center w-full scale-[0.8] md:scale-110 origin-center mt-1">
                             <Clock />
                         </div>
                     </div>
-                    <div className="flex justify-center items-center gap-4 md:gap-6 w-full md:w-[40%]">
-                        <a href={card.data.links.github} target="_blank" rel="noopener noreferrer" aria-label="Visit Nikshaan's GitHub profile" data-title="Github" className="tooltip-trigger relative">
-                            <Github className="w-6 h-6 md:w-10 md:h-10 cursor-pointer hover:scale-90 transition-transform" />
+                    <div className="flex justify-center items-center gap-3 md:gap-4 w-full">
+                        <a href={card.data.links.github} target="_blank" rel="noopener noreferrer" aria-label="Visit Nikshaan's GitHub profile" data-title="GitHub" className="tooltip-trigger relative">
+                            <Github className="w-5 h-5 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
                         </a>
                         <a href={card.data.links.linkedin} target="_blank" rel="noopener noreferrer" aria-label="Connect with Nikshaan on LinkedIn" data-title="LinkedIn" className="tooltip-trigger relative">
-                            <Linkedin className="w-6 h-6 md:w-10 md:h-10 cursor-pointer hover:scale-90 transition-transform" />
+                            <Linkedin className="w-5 h-5 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
                         </a>
-                        <a href={card.data.links.email} aria-label="Send an email to Nikshaan" data-title="Gmail" className="tooltip-trigger relative">
-                            <Mail className="w-6 h-6 md:w-10 md:h-10 cursor-pointer hover:scale-90 transition-transform" />
+                        <a href={card.data.links.email} aria-label="Send an email to Nikshaan" data-title="Email" className="tooltip-trigger relative">
+                            <Mail className="w-5 h-5 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
                         </a>
                     </div>
                 </div>
             );
         case 'win':
             return (
-                <div className="flex justify-center items-center w-full h-full">
+                <div className="flex justify-center items-center w-fit h-fit mx-auto my-auto">
                     <img
                         src={images[card.data.image].src}
                         width={images[card.data.image].width}
@@ -139,7 +139,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                         alt="win"
                         loading="lazy"
                         decoding="async"
-                        className="select-none w-full h-full object-contain"
+                        className="select-none w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[100px] md:h-[100px] lg:w-[120px] lg:h-[120px] object-contain"
                     />
                 </div>
             );
@@ -160,14 +160,14 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                                 />
                             </div>
                             <div className="w-[80%] flex flex-col items-end text-right">
-                                <p className="font-medium text-sm md:text-base">{item.title}</p>
-                                <p className="text-xs md:text-sm">{item.company}</p>
-                                <p className="text-xs md:text-sm font-light italic">{item.date}</p>
+                                <p className="font-medium">{item.title}</p>
+                                <p>{item.company}</p>
+                                <p className="font-light italic">{item.date}</p>
                             </div>
                         </div>
                     ))}
-                    <div className="text-xs md:text-sm text-right mt-2">
-                        <p className="italic text-sm md:text-base mb-1 font-bold text-left">certification</p>
+                    <div className="text-right mt-2">
+                        <p className="italic mb-1 font-bold text-left">certification</p>
                         <p className="font-light text-left"><span className="font-medium">{card.data.certification.title}</span> - {card.data.certification.issuer}</p>
                     </div>
                 </div>
@@ -208,9 +208,11 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index = 0, s
                 layoutId={shouldAnimate ? `card-${card.id}` : undefined}
                 onClick={() => card.isExpandable && setSelectedId(card.id)}
                 className={cn(
-                    "relative p-5 rounded-3xl border overflow-hidden h-full flex flex-col justify-between group transition-colors me-card-hover",
+                    "relative rounded-3xl border flex flex-col group transition-colors me-card-hover",
+                    card.id === 'win' ? "p-3 justify-center items-center h-fit w-fit mx-auto" : "p-5 justify-between h-full",
                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
                     "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]",
+                    card.id === 'intro' || card.id === 'win' ? "overflow-hidden" : "overflow-visible",
                     card.isExpandable && !selectedId ? "cursor-pointer" : ""
                 )}
                 whileHover={card.isExpandable && !selectedId ? { scale: 1.02 } : {}}
@@ -278,7 +280,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                 {introCard && <CardWrapper card={introCard} index={0} className="col-span-2 lg:col-span-2 lg:row-span-2 min-h-[300px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 {educationCard && <CardWrapper card={educationCard} index={1} className="col-span-2 lg:col-span-2 lg:row-span-1 min-h-[150px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 {locationCard && <CardWrapper card={locationCard} index={3} className="col-span-1 lg:col-span-1 lg:row-span-1 min-h-[140px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
-                {winCard && <CardWrapper card={winCard} index={4} className="col-span-1 lg:col-span-1 lg:row-span-1 min-h-[140px] !p-0" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
+                {winCard && <CardWrapper card={winCard} index={4} className="h-full lg:row-span-1 min-h-[140px] !p-0" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 {extracurrCard && <CardWrapper card={extracurrCard} index={2} className="col-span-2 lg:col-span-2 lg:row-span-2 h-auto" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 {experienceCard && <CardWrapper card={experienceCard} index={5} className="col-span-2 lg:col-span-2 lg:row-span-2 h-auto" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
             </div>
