@@ -93,7 +93,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index, selec
                                 const icon = techstackIcons[tech];
                                 return (
                                     <div key={i} data-title={tech} className={cn(
-                                        "flex items-center justify-center p-2 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12 tooltip-trigger relative",
+                                        "flex items-center justify-center p-2 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12 min-[500px]:max-md:h-9 tooltip-trigger relative",
                                         needsWhiteBg ? "bg-white special-badge" : "bg-neutral-100 dark:bg-neutral-800"
                                     )}>
                                         {icon && <img src={icon.src} width={icon.width} height={icon.height} alt={tech} className="w-full h-full object-contain" loading="lazy" decoding="async" />}

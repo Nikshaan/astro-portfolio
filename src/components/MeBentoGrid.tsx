@@ -35,10 +35,10 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                     <div className="flex flex-col gap-2 w-full md:w-[60%] h-full justify-between text-sm md:text-base text-center md:text-left">
                         <div className="font-light text-pretty">
                             <p dangerouslySetInnerHTML={{ __html: card.data.text }} />
-                            <p className="mt-2">My interest lies in:</p>
-                            <ul className="list-disc list-inside inline-block text-left md:block">
+                            <p className="my-2">My interest lies in:</p>
+                            <ul className="list-disc list-inside text-left inline-block min-[440px]:grid min-[440px]:grid-cols-2 min-[440px]:gap-x-4 min-[440px]:w-fit min-[440px]:mx-auto md:block md:w-full md:mx-0">
                                 {card.data.interests.map((interest: string, i: number) => (
-                                    <li key={i}>{interest}</li>
+                                    <li className='text-left' key={i}>{interest}</li>
                                 ))}
                             </ul>
                         </div>
@@ -80,7 +80,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
             );
         case 'extracurr':
             return (
-                <div className="flex flex-col justify-between h-full text-sm md:text-base">
+                <div className="flex flex-col justify-center lg:justify-between gap-4 lg:gap-0 h-full text-sm md:text-base">
                     {card.data.items.map((item: any, i: number) => (
                         <div key={i} className="flex">
                             <div className="w-[20%] flex justify-center items-center">
@@ -106,17 +106,17 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
             );
         case 'location':
             return (
-                <div className="flex flex-col justify-center items-center w-full h-full gap-3 p-2 text-sm md:text-2xl">
-                    <div className="flex flex-col w-full justify-center items-center">
+                <div className="flex flex-col min-[425px]:flex-row lg:flex-col xl:flex-row justify-evenly items-center w-full h-full gap-3 p-2 text-sm md:text-2xl">
+                    <div className="flex flex-col sm:contents lg:flex lg:flex-col w-full min-[425px]:w-auto lg:w-auto justify-center items-center lg:gap-1">
                         <div className="flex justify-center items-center gap-1 md:gap-2">
                             <MapPin className="w-5 h-5 lg:w-7 lg:h-7" />
                             <p className="font-medium text-center text-base md:text-2xl text-nowrap">Mumbai, India</p>
                         </div>
-                        <div className="flex justify-center items-center w-full scale-[0.8] md:scale-110 origin-center mt-1">
+                        <div className="flex justify-center items-center w-full md:w-auto scale-[0.8] md:scale-110 origin-center mt-1 md:mt-0">
                             <Clock />
                         </div>
                     </div>
-                    <div className="flex justify-center items-center gap-3 md:gap-4 w-full">
+                    <div className="flex justify-center items-center gap-3 md:gap-4 w-full min-[425px]:w-auto">
                         <a href={card.data.links.github} target="_blank" rel="noopener noreferrer" aria-label="Visit Nikshaan's GitHub profile" data-title="GitHub" className="tooltip-trigger relative">
                             <Github className="w-5 h-5 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
                         </a>
@@ -131,17 +131,15 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
             );
         case 'win':
             return (
-                <div className="flex justify-center items-center w-fit h-fit mx-auto my-auto">
-                    <img
-                        src={images[card.data.image].src}
-                        width={images[card.data.image].width}
-                        height={images[card.data.image].height}
-                        alt="win"
-                        loading="lazy"
-                        decoding="async"
-                        className="select-none w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[100px] md:h-[100px] lg:w-[120px] lg:h-[120px] object-contain"
-                    />
-                </div>
+                <img
+                    src={images[card.data.image].src}
+                    width={images[card.data.image].width}
+                    height={images[card.data.image].height}
+                    alt="win"
+                    loading="lazy"
+                    decoding="async"
+                    className="select-none w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[100px] md:h-[100px] lg:w-[120px] lg:h-[120px] object-contain"
+                />
             );
         case 'experience':
             return (
@@ -209,7 +207,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index = 0, s
                 onClick={() => card.isExpandable && setSelectedId(card.id)}
                 className={cn(
                     "relative rounded-3xl border flex flex-col group transition-colors me-card-hover",
-                    card.id === 'win' ? "p-3 justify-center items-center h-fit w-fit mx-auto" : "p-5 justify-between h-full",
+                    card.id === 'win' ? "justify-center items-center h-full w-fit" : "p-5 justify-between h-full",
                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
                     "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]",
                     card.id === 'intro' || card.id === 'win' ? "overflow-hidden" : "overflow-visible",
@@ -279,8 +277,10 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full auto-rows-auto">
                 {introCard && <CardWrapper card={introCard} index={0} className="col-span-2 lg:col-span-2 lg:row-span-2 min-h-[300px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 {educationCard && <CardWrapper card={educationCard} index={1} className="col-span-2 lg:col-span-2 lg:row-span-1 min-h-[150px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
-                {locationCard && <CardWrapper card={locationCard} index={3} className="col-span-1 lg:col-span-1 lg:row-span-1 min-h-[140px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
-                {winCard && <CardWrapper card={winCard} index={4} className="h-full lg:row-span-1 min-h-[140px] !p-0" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
+                <div className="col-span-2 lg:col-span-2 flex gap-4 w-full">
+                    {locationCard && <CardWrapper card={locationCard} index={3} className="flex-1 w-auto min-w-0" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
+                    {winCard && <CardWrapper card={winCard} index={4} className="w-fit shrink-0" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
+                </div>
                 {extracurrCard && <CardWrapper card={extracurrCard} index={2} className="col-span-2 lg:col-span-2 lg:row-span-2 h-auto" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 {experienceCard && <CardWrapper card={experienceCard} index={5} className="col-span-2 lg:col-span-2 lg:row-span-2 h-auto" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
             </div>

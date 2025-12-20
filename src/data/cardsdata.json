@@ -7,9 +7,11 @@
         "theme": "dark",
         "data": {
             "title": "About Me",
-            "text": "Hi, I'm <span class=\"font-medium text-lg\">Nikshaan Shetty</span>, a 19 years old AI/ML student.",
+            "text": "Hi, I'm <span class=\"font-medium text-lg\">Nikshaan Shetty</span>, a 19 years old student.",
             "interests": [
-                "Machine Learning & Deep Learning",
+                "Artificial Intelligence",
+                "Machine Learning",
+                "Deep Learning",
                 "Web development",
                 "Music",
                 "Photography"
