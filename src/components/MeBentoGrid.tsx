@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Maximize2, MapPin, Github, Linkedin, Mail } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { m, motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { X, Maximize2, MapPin, Github as GithubIcon, Linkedin as LinkedinIcon, Mail } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -11,7 +11,7 @@ import aryaLogo from '../data/arya.avif';
 import codeAIlogo from '../data/codeai.avif';
 import varakLogo from '../data/varak.avif';
 import gssocLogo from '../data/gssoc.avif';
-import winIcon from '../data/winIcon.png';
+import winIcon from '../data/winIcon.avif';
 
 const defaultImages: Record<string, any> = {
     beeImage: beeImage,
@@ -46,8 +46,10 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                     <div className="flex justify-center items-center w-full md:w-[40%] lg:w-[50%] h-full lg:aspect-square lg:self-center">
                         <img
                             src={images[card.data.image].src}
-                            width={images[card.data.image].width}
-                            height={images[card.data.image].height}
+                            srcSet={images[card.data.image].attributes?.srcset}
+                            sizes={images[card.data.image].attributes?.sizes || "(max-width: 768px) 100vw, 50vw"}
+                            width={images[card.data.image].attributes?.width || images[card.data.image].width}
+                            height={images[card.data.image].attributes?.height || images[card.data.image].height}
                             alt="profile"
                             loading={card.type === 'intro' ? "eager" : "lazy"}
                             fetchPriority={card.type === 'intro' ? "high" : "auto"}
@@ -72,9 +74,9 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                         />
                     </div>
                     <div className="font-light w-full md:w-[80%] text-sm md:text-base">
-                        <p className="font-medium">{card.data.school}</p>
-                        <p className="italic" dangerouslySetInnerHTML={{ __html: card.data.degree }} />
-                        <p className="italic">{card.data.date}</p>
+                        <p className="font-bold text-base">{card.data.school}</p>
+                        <p className="font-light text-sm" dangerouslySetInnerHTML={{ __html: card.data.degree }} />
+                        <p className="font-light text-sm">{card.data.date}</p>
                     </div>
                 </div>
             );
@@ -95,10 +97,10 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                                 />
                             </div>
                             <div className="w-[80%] flex flex-col items-end text-right">
-                                <p className="font-medium">{item.title}</p>
-                                <p className="font-light italic">{item.subtitle}</p>
-                                <p className="font-light">{item.role}</p>
-                                <p className="font-light italic">{item.date}</p>
+                                <p className="font-bold text-base">{item.title}</p>
+                                <p className="font-light text-sm">{item.subtitle}</p>
+                                <p className="font-light text-sm">{item.role}</p>
+                                <p className="font-light text-sm">{item.date}</p>
                             </div>
                         </div>
                     ))}
@@ -106,11 +108,11 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
             );
         case 'location':
             return (
-                <div className="flex flex-col min-[425px]:flex-row lg:flex-col xl:flex-row justify-evenly items-center w-full h-full gap-3 p-2 text-sm md:text-2xl">
+                <div className="flex flex-col min-[425px]:flex-row lg:flex-col min-[1150px]:!flex-row justify-evenly items-center w-full h-full gap-3 p-2 text-sm md:text-base">
                     <div className="flex flex-col sm:contents lg:flex lg:flex-col w-full min-[425px]:w-auto lg:w-auto justify-center items-center lg:gap-1">
                         <div className="flex justify-center items-center gap-1 md:gap-2">
-                            <MapPin className="w-5 h-5 lg:w-7 lg:h-7" />
-                            <p className="font-medium text-center text-base md:text-2xl text-nowrap">Mumbai, India</p>
+                            <MapPin className="w-5 h-5 mb-1 lg:w-6 lg:h-6" />
+                            <p className="font-bold text-center text-lg text-nowrap">Mumbai, India</p>
                         </div>
                         <div className="flex justify-center items-center w-full md:w-auto scale-[0.8] md:scale-110 origin-center mt-1 md:mt-0">
                             <Clock />
@@ -118,13 +120,13 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                     </div>
                     <div className="flex justify-center items-center gap-3 md:gap-4 w-full min-[425px]:w-auto">
                         <a href={card.data.links.github} target="_blank" rel="noopener noreferrer" aria-label="Visit Nikshaan's GitHub profile" data-title="GitHub" className="tooltip-trigger relative">
-                            <Github className="w-5 h-5 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
+                            <GithubIcon className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
                         </a>
                         <a href={card.data.links.linkedin} target="_blank" rel="noopener noreferrer" aria-label="Connect with Nikshaan on LinkedIn" data-title="LinkedIn" className="tooltip-trigger relative">
-                            <Linkedin className="w-5 h-5 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
+                            <LinkedinIcon className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
                         </a>
                         <a href={card.data.links.email} aria-label="Send an email to Nikshaan" data-title="Email" className="tooltip-trigger relative">
-                            <Mail className="w-5 h-5 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
+                            <Mail className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
                         </a>
                     </div>
                 </div>
@@ -138,7 +140,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                     alt="win"
                     loading="lazy"
                     decoding="async"
-                    className="select-none w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[100px] md:h-[100px] lg:w-[120px] lg:h-[120px] object-contain"
+                    className="select-none w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[100px] md:h-[100px] lg:w-[100px] lg:h-[100px] object-contain"
                 />
             );
         case 'experience':
@@ -158,15 +160,15 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                                 />
                             </div>
                             <div className="w-[80%] flex flex-col items-end text-right">
-                                <p className="font-medium">{item.title}</p>
-                                <p>{item.company}</p>
-                                <p className="font-light italic">{item.date}</p>
+                                <p className="font-bold text-base">{item.title}</p>
+                                <p className='text-sm'>{item.company}</p>
+                                <p className="font-light text-sm">{item.date}</p>
                             </div>
                         </div>
                     ))}
                     <div className="text-right mt-2">
-                        <p className="italic mb-1 font-bold text-left">certification</p>
-                        <p className="font-light text-left"><span className="font-medium">{card.data.certification.title}</span> - {card.data.certification.issuer}</p>
+                        <p className="mb-1 font-bold text-left">certification</p>
+                        <p className="font-light text-left"><span className="font-bold">{card.data.certification.title}</span> - {card.data.certification.issuer}</p>
                     </div>
                 </div>
             );
@@ -188,7 +190,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index = 0, s
     const shouldAnimate = selectedId === null || selectedId === card.id;
 
     return (
-        <motion.div
+        <m.div
             className={cn("h-full w-full", className)}
             initial={{ opacity: 0, y: 50 }}
             whileInView={{
@@ -226,7 +228,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index = 0, s
                     </div>
                 )}
             </motion.div>
-        </motion.div>
+        </m.div>
     );
 };
 
@@ -254,7 +256,6 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
         };
 
         if (selectedId) {
-            // Use CSS custom property instead of calculating scrollbar width
             document.documentElement.style.setProperty('--scrollbar-width', `${window.innerWidth - document.documentElement.clientWidth}px`);
             document.body.style.overflow = 'hidden';
             document.body.style.paddingRight = 'var(--scrollbar-width, 0px)';
@@ -263,6 +264,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
         }
+
         return () => {
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
@@ -273,7 +275,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
 
 
     return (
-        <>
+        <LazyMotion features={domAnimation}>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full auto-rows-auto">
                 {introCard && <CardWrapper card={introCard} index={0} className="col-span-2 lg:col-span-2 lg:row-span-2 min-h-[300px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 {educationCard && <CardWrapper card={educationCard} index={1} className="col-span-2 lg:col-span-2 lg:row-span-1 min-h-[150px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
@@ -288,7 +290,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
             <AnimatePresence>
                 {selectedId && selectedItem && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -323,18 +325,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                     </div>
                 )}
             </AnimatePresence>
-            <style>{`
-                [data-theme="light"] .me-card-hover:hover {
-                    border-color: #3b82f6 !important;
-                }
-                .me-card-hover:hover {
-                    border-color: #c084fc !important;
-                }
-                [data-theme="light"] .profile-image-border {
-                    border-color: #1e3a8a !important;
-                }
-            `}</style>
-        </>
+        </LazyMotion>
     );
 };
 

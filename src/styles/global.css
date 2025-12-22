@@ -15,7 +15,7 @@ body {
 }
 
 html {
-  font-size: 18px;
+  font-size: 16px;
   scroll-behavior: smooth;
   background-color: #080808;
 }
@@ -359,6 +359,20 @@ html.lenis body {
 }
 
 [data-theme="light"] .github-contributions-card:hover {
+  border-color: #1e3a8a !important;
+}
+
+
+
+.me-card-hover:hover {
+  border-color: #c084fc !important;
+}
+
+[data-theme="light"] .me-card-hover:hover {
+  border-color: #3b82f6 !important;
+}
+
+[data-theme="light"] .profile-image-border {
   border-color: #1e3a8a !important;
 }
 

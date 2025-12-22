@@ -45,6 +45,12 @@ export default function MusicStatsClient({ apiKey, username }: { apiKey: string;
         };
 
         loadData();
+
+
+
+        const interval = setInterval(loadData, 10 * 60 * 1000);
+
+        return () => clearInterval(interval);
     }, []);
 
     if (loading) {

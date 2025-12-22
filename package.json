@@ -6,10 +6,12 @@
     "dev": "astro dev",
     "build": "astro check && astro build",
     "build:prod": "astro build",
+    "build:optimized": "./build-optimized.sh",
     "build:fast": "astro build --no-minify",
     "preview": "astro preview",
     "astro": "astro",
-    "purge-css": "purgecss --css dist/**/*.css --content dist/**/*.html --output dist/assets/"
+    "purge-css": "purgecss --css dist/**/*.css --content dist/**/*.html --output dist/assets/",
+    "analyze": "astro build --mode=analyze"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
@@ -24,18 +26,20 @@
     "astro-icon": "^1.1.5",
     "astro-seo": "^0.8.4",
     "astro-tooltips": "^0.6.2",
+    "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.25",
     "lenis": "^1.3.11",
     "lucide-react": "^0.555.0",
     "react": "^19.1.1",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.1.1",
-    "recharts": "^3.2.1",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.13"
   },
   "devDependencies": {
     "baseline-browser-mapping": "^2.9.2",
+    "svgo": "^4.0.0",
     "terser": "^5.44.0"
   }
 }

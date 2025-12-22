@@ -1,6 +1,26 @@
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Line } from 'react-chartjs-2';
 import { useState, useEffect } from 'react';
-import CustomTooltip from './CustomTooltip';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Filler,
+    type TooltipItem
+} from 'chart.js';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Filler
+);
 
 interface ChartData {
     name?: string;
@@ -36,38 +56,87 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
     }
 
     const strokeColor = isLightTheme ? '#3b82f6' : '#ac46fd';
-    const fillColor = isLightTheme ? '#93c5fd' : '#571388';
+    const fillColor = isLightTheme ? 'rgba(147, 197, 253, 0.6)' : 'rgba(87, 19, 136, 0.6)';
     const gridColor = isLightTheme ? '#bfdbfe' : '#374151';
     const textColor = isLightTheme ? '#1e3a8a' : '#ffffff';
 
+    const chartData = {
+        labels: data.map(item => item.name || ''),
+        datasets: [
+            {
+                label: 'Scrobbles',
+                data: data.map(item => item.scrobbles || 0),
+                borderColor: strokeColor,
+                backgroundColor: fillColor,
+                fill: true,
+                tension: 0.4,
+
+                pointRadius: 0,
+
+                pointHoverRadius: 4,
+                pointHoverBackgroundColor: strokeColor,
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2,
+            },
+        ],
+    };
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+            mode: 'index' as const,
+            intersect: false,
+        },
+        plugins: {
+            legend: {
+                display: false,
+            },
+            tooltip: {
+                enabled: true,
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: strokeColor,
+                borderWidth: 1,
+                padding: 10,
+                displayColors: false,
+                callbacks: {
+                    label: function (context: TooltipItem<'line'>) {
+                        return `Scrobbles: ${context.parsed.y}`;
+                    }
+                }
+            },
+        },
+        scales: {
+            x: {
+                grid: {
+                    color: gridColor,
+                    drawBorder: false,
+                },
+                ticks: {
+                    color: textColor,
+                },
+            },
+            y: {
+                grid: {
+                    color: gridColor,
+                    drawBorder: false,
+                },
+                ticks: {
+                    color: textColor,
+                },
+                beginAtZero: true,
+            },
+        },
+        animation: {
+            duration: 0,
+        },
+    };
+
     return (
-        <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-                data={data}
-                margin={{
-                    top: 10,
-                    right: 30,
-                    left: 0,
-                    bottom: 0,
-                }}
-            >
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                <XAxis dataKey="name" stroke={textColor} />
-                <YAxis stroke={textColor} />
-                <Tooltip
-                    content={<CustomTooltip />}
-                    wrapperStyle={{ outline: 'none' }}
-                    cursor={{ fill: 'transparent' }}
-                />
-                <Area
-                    type="monotone"
-                    dataKey="scrobbles"
-                    stroke={strokeColor}
-                    fill={fillColor}
-                    fillOpacity={0.6}
-                    isAnimationActive={false}
-                />
-            </AreaChart>
-        </ResponsiveContainer>
+        <div className="w-full h-full">
+            <Line data={chartData} options={options} />
+        </div>
     );
 }

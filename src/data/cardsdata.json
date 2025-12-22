@@ -7,7 +7,7 @@
         "theme": "dark",
         "data": {
             "title": "About Me",
-            "text": "Hi, I'm <span class=\"font-medium text-lg\">Nikshaan Shetty</span>, a 19 years old student.",
+            "text": "Hi, I'm <span class=\"font-bold text-lg\">Nikshaan Shetty</span>, a 19 years old student.",
             "interests": [
                 "Artificial Intelligence",
                 "Machine Learning",
@@ -32,7 +32,7 @@
                 {
                     "image": "aryaLogo",
                     "title": "DJS ARYA",
-                    "subtitle": "Canister satellite team of DJSCOE",
+                    "subtitle": "CanSat team of DJSCOE",
                     "role": "Software Team Member",
                     "date": "march 2025 - present"
                 },

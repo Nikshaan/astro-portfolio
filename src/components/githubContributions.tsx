@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import styles from './githubContributions.module.css';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -92,6 +93,10 @@ export default function GithubContributions({ initialData }: GithubContributions
     };
 
     fetchContributions();
+    
+    const interval = setInterval(fetchContributions, 15 * 60 * 1000);
+    
+    return () => clearInterval(interval);
   }, [initialData]);
 
   return (
@@ -114,20 +119,20 @@ export default function GithubContributions({ initialData }: GithubContributions
         }}
         viewport={{ once: true, margin: "-50px" }}
       >
-        <div className="header">
-          <h3>GitHub Contributions (Last 12 Months)</h3>
+        <div className={styles.header}>
+          <p className='text-lg font-medium'>GitHub Contributions (Last 12 Months)</p>
           {totalContributions > 0 && (
-            <span className="total">{totalContributions} contributions in the last year</span>
+            <span className={styles.total}>{totalContributions} contributions in the last year</span>
           )}
         </div>
         {loading ? (
-          <div className="loading">Loading contributions...</div>
+          <div className={styles.loading}>Loading contributions...</div>
         ) : error ? (
           <p style={{ color: 'red' }}>{error}</p>
         ) : weeks.length > 0 ? (
-          <div className="graph" ref={graphRef}>
+          <div className={styles.graph} ref={graphRef}>
             {weeks.map((week: ContributionWeek, weekIndex: number) => (
-              <div key={weekIndex} className="week">
+              <div key={weekIndex} className={styles.week}>
                 {week.contributionDays.map((day: ContributionDay, dayIndex: number) => {
                   const count = day.contributionCount;
                   let level = 0;
@@ -139,7 +144,7 @@ export default function GithubContributions({ initialData }: GithubContributions
                   return (
                     <div
                       key={dayIndex}
-                      className={`day contribution-level-${level}`}
+                      className={`${styles.day} ${styles[`contributionLevel${level}`]}`}
                       style={{ backgroundColor: day.color || '#161b22' }}
                       title={`${day.date}: ${day.contributionCount} contributions`}
                       data-tooltip-placement="bottom"
@@ -153,228 +158,6 @@ export default function GithubContributions({ initialData }: GithubContributions
         ) : (
           <p style={{ color: 'red' }}>No contribution data available</p>
         )}
-
-        <style>{`
-        .contributions-container {
-          margin-top: 0;
-          width: 100%;
-          padding: 0 1rem;
-        }
-
-        @media (min-width: 640px) {
-          .contributions-container {
-            margin-top: 0;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .contributions-container {
-            margin-top: 0;
-            padding: 0;
-          }
-        }
-        
-        .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-        }
-
-        .header h3 {
-          font-size: 1.25rem;
-          font-weight: 500;
-          margin: 0;
-          color: white;
-        }
-
-        [data-theme="light"] .header h3 {
-          color: black;
-        }
-
-        .header .total {
-          font-size: 0.875rem;
-          color: #8b949e;
-        }
-
-        [data-theme="light"] .header .total {
-          color: #57606a;
-        }
-
-        .loading {
-          color: #8b949e;
-          padding: 2rem 0;
-          text-align: center;
-        }
-
-        [data-theme="light"] .loading {
-          color: #57606a;
-        }
-
-        .graph {
-          display: flex;
-          gap: 2px;
-          overflow-x: auto;
-          padding: 0.5rem 0;
-          scrollbar-width: thin;
-          scrollbar-color: #30363d #0d1117;
-          width: 100%;
-          justify-content: flex-start;
-        }
-
-        @media (min-width: 768px) {
-          .graph {
-            justify-content: stretch;
-            overflow-x: visible;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .graph {
-            width: 100%;
-            gap: 2px;
-            overflow-x: hidden;
-          }
-        }
-
-        [data-theme="light"] .graph {
-          scrollbar-color: #d0d7de #ffffff;
-        }
-
-        .graph::-webkit-scrollbar {
-          height: 8px;
-          display: block; /* Ensure scrollbar is visible if needed, or hide if preferred but allow scroll */
-        }
-
-        .graph::-webkit-scrollbar-track {
-          background: #0d1117;
-        }
-
-        [data-theme="light"] .graph::-webkit-scrollbar-track {
-          background: #f6f8fa;
-        }
-
-        .graph::-webkit-scrollbar-thumb {
-          background: #30363d;
-          border-radius: 4px;
-        }
-
-        [data-theme="light"] .graph::-webkit-scrollbar-thumb {
-          background: #d0d7de;
-        }
-
-        /* Hide scrollbar for cleaner look but allow scroll */
-        .graph::-webkit-scrollbar {
-            height: 4px; /* Make it thin */
-        }
-        
-        @media (max-width: 768px) {
-            .graph {
-                scrollbar-width: none; /* Hide scrollbar on mobile */
-            }
-            .graph::-webkit-scrollbar {
-                display: none;
-            }
-        }
-
-        .week {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          flex: 0 0 auto;
-          min-width: 0;
-        }
-
-        @media (min-width: 1024px) {
-          .week {
-            flex: 1 1 0;
-            min-width: 0;
-          }
-        }
-
-        .day {
-          width: 100%;
-          aspect-ratio: 1;
-          min-height: 10px;
-          border-radius: 2px;
-          cursor: pointer;
-          transition: transform 0.2s;
-        }
-
-        .day:hover {
-          transform: scale(1.2);
-          outline: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        [data-theme="light"] .day:hover {
-          outline: 1px solid rgba(0, 0, 0, 0.2);
-        }
-
-        [data-theme="light"] .contribution-level-0 {
-          background-color: #eff6ff !important;
-        }
-
-        [data-theme="light"] .contribution-level-1 {
-          background-color: #bfdbfe !important;
-        }
-
-        [data-theme="light"] .contribution-level-2 {
-          background-color: #60a5fa !important;
-        }
-
-        [data-theme="light"] .contribution-level-3 {
-          background-color: #3b82f6 !important;
-        }
-
-        [data-theme="light"] .contribution-level-4 {
-          background-color: #1e40af !important;
-        }
-
-        @media (min-width: 640px) {
-          .graph {
-            gap: 2px;
-          }
-          
-          .week {
-            gap: 2px;
-          }
-
-          .day {
-            min-height: 11px;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .header h3 {
-            font-size: 1.5rem;
-          }
-
-          .header .total {
-            font-size: 1rem;
-          }
-
-          .graph {
-            gap: 3px;
-          }
-
-          .week {
-            gap: 3px;
-          }
-
-          .day {
-            min-height: 12px;
-          }
-        }
-
-        [data-theme="light"] .github-card-hover:hover {
-            border-color: #3b82f6 !important;
-        }
-        .github-card-hover:hover {
-            border-color: #c084fc !important;
-        }
-      `}</style>
       </m.div>
     </LazyMotion>
   );

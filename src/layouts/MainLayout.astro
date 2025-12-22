@@ -1,13 +1,5 @@
 ---
 import { Tooltips } from "astro-tooltips";
-import "@fontsource/instrument-sans/400.css";
-import "@fontsource/instrument-sans/500.css";
-import "@fontsource/instrument-sans/600.css";
-import "@fontsource/instrument-sans/700.css";
-import "@fontsource/jetbrains-mono/400.css";
-import "@fontsource/jetbrains-mono/500.css";
-import "@fontsource/jetbrains-mono/600.css";
-import "@fontsource/jetbrains-mono/700.css";
 
 interface Props {
     title: string;
@@ -25,7 +17,7 @@ const { title, description, preloadImage } = Astro.props;
         <link
             rel="icon"
             type="image/svg+xml"
-            href="/astro-portfolio/favicon.svg"
+            href="/astro-portfolio/public/favicon.svg"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="generator" content={Astro.generator} />
@@ -34,39 +26,112 @@ const { title, description, preloadImage } = Astro.props;
         <meta content={title} property="og:title" />
         <meta content={description} property="og:description" />
         <meta content="website" property="og:type" />
-        
-        <!-- Additional SEO meta tags -->
+
         <meta name="theme-color" content="#111111" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <link rel="canonical" href="https://Nikshaan.github.io/astro-portfolio/" />
+        <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent"
+        />
+        <link
+            rel="canonical"
+            href="https://Nikshaan.github.io/astro-portfolio/"
+        />
         <link rel="manifest" href="/astro-portfolio/manifest.json" />
-        
-        <!-- DNS prefetch only for external domains -->
+
+        <link
+            rel="preload"
+            href="/astro-portfolio/node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin
+        />
+        <link
+            rel="preload"
+            href="/astro-portfolio/node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-500-normal.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin
+        />
+
         <link rel="dns-prefetch" href="https://api.github.com" />
         <link rel="dns-prefetch" href="https://ws.audioscrobbler.com" />
-        
-        <!-- Preload critical image with fetchpriority -->
-        {preloadImage && (
-            <link 
-                rel="preload" 
-                as="image" 
-                href={preloadImage} 
-                fetchpriority="high"
-                type="image/avif"
-            />
-        )}
-        
+
+        {
+            preloadImage && (
+                <link
+                    rel="preload"
+                    as="image"
+                    href={preloadImage}
+                    fetchpriority="high"
+                    type="image/avif"
+                />
+            )
+        }
+
+        <style>
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-display: swap;
+                font-weight: 400;
+                src: url("/astro-portfolio/node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff2")
+                    format("woff2");
+                unicode-range:
+                    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+                    U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+                    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-display: swap;
+                font-weight: 500;
+                src: url("/astro-portfolio/node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-500-normal.woff2")
+                    format("woff2");
+                unicode-range:
+                    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+                    U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+                    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+            }
+            @font-face {
+                font-family: "JetBrains Mono";
+                font-style: normal;
+                font-display: swap;
+                font-weight: 400;
+                src: url("/astro-portfolio/node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2")
+                    format("woff2");
+                unicode-range:
+                    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+                    U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+                    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+            }
+            @font-face {
+                font-family: "JetBrains Mono";
+                font-style: normal;
+                font-display: swap;
+                font-weight: 500;
+                src: url("/astro-portfolio/node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2")
+                    format("woff2");
+                unicode-range:
+                    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+                    U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+                    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+            }
+        </style>
+
         <Tooltips interactive={false} delay={[0, 50]} />
 
-        <!-- Critical inline script for theme - must run before render -->
         <script is:inline>
             (function () {
                 try {
                     var theme = localStorage.getItem("theme");
                     if (theme === "light") {
-                        document.documentElement.setAttribute("data-theme", "light");
+                        document.documentElement.setAttribute(
+                            "data-theme",
+                            "light",
+                        );
                     }
                 } catch (e) {}
             })();
@@ -97,14 +162,13 @@ const { title, description, preloadImage } = Astro.props;
 </style>
 
 <script>
-    // Defer Lenis initialization until after page load
     let lenisInitialized = false;
 
     async function initLenis() {
         if (lenisInitialized) return;
-        
+
         const Lenis = (await import("lenis")).default;
-        
+
         const lenis = new Lenis({
             duration: 1.2,
             easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -133,10 +197,25 @@ const { title, description, preloadImage } = Astro.props;
         });
     }
 
-    // Initialize after page is fully loaded
-    if (document.readyState === 'complete') {
+    function initLenisOnInteraction() {
+        if (lenisInitialized) return;
         initLenis();
-    } else {
-        window.addEventListener('load', initLenis);
+
+        ["scroll", "wheel", "touchstart", "keydown"].forEach((event) => {
+            window.removeEventListener(event, initLenisOnInteraction);
+        });
     }
+
+    ["scroll", "wheel", "touchstart", "keydown"].forEach((event) => {
+        window.addEventListener(event, initLenisOnInteraction, {
+            passive: true,
+            once: true,
+        });
+    });
+
+    setTimeout(() => {
+        if (!lenisInitialized) {
+            initLenis();
+        }
+    }, 2000);
 </script>

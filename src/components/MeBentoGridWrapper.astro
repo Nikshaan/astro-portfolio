@@ -6,7 +6,7 @@ import aryaLogo from "../data/arya.avif";
 import codeAIlogo from "../data/codeai.avif";
 import varakLogo from "../data/varak.avif";
 import gssocLogo from "../data/gssoc.avif";
-import winIcon from "../data/winIcon.png";
+import winIcon from "../data/winIcon.avif";
 
 const { beeImage } = Astro.props;
 
@@ -16,37 +16,37 @@ const optimizedImages = {
         src: collegeLogo,
         format: "avif",
         width: 113,
-        quality: 100,
+        quality: 90,
     }),
     aryaLogo: await getImage({
         src: aryaLogo,
         format: "avif",
         width: 113,
-        quality: 100,
+        quality: 90,
     }),
     codeAIlogo: await getImage({
         src: codeAIlogo,
         format: "avif",
         width: 113,
-        quality: 100,
+        quality: 90,
     }),
     varakLogo: await getImage({
         src: varakLogo,
         format: "avif",
         width: 113,
-        quality: 100,
+        quality: 90,
     }),
     gssocLogo: await getImage({
         src: gssocLogo,
         format: "avif",
         width: 113,
-        quality: 100,
+        quality: 90,
     }),
     winIcon: await getImage({
         src: winIcon,
         format: "avif",
         width: 100,
-        quality: 100,
+        quality: 90,
     }),
 };
 ---

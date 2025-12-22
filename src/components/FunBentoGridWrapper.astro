@@ -132,21 +132,23 @@ const allImages = await Promise.all(
             const optimizedThumbnail = await getImage({
                 src: imageModule.default,
                 width: 380,
-                quality: 100,
+                quality: 80,
                 format: "avif",
             });
 
             const optimizedFull = await getImage({
                 src: imageModule.default,
                 width: 1200,
-                quality: 100,
+                quality: 85,
                 format: "avif",
             });
 
             return {
                 id: `photo-${photoNumber}`,
-                src: optimizedThumbnail.src, // Use thumbnail for grid
-                fullSrc: optimizedFull.src, // Use full size for lightbox
+                src: optimizedThumbnail.src,
+
+                fullSrc: optimizedFull.src,
+
                 width: optimizedThumbnail.attributes.width,
                 height: optimizedThumbnail.attributes.height,
                 title: photoTitles[photoNumber] || `Photo ${photoNumber}`,

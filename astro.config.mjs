@@ -10,58 +10,74 @@ export default defineConfig({
   trailingSlash: 'ignore',
   build: {
     assets: '_astro',
-    inlineStylesheets: 'always' // Inline critical CSS to prevent render blocking
+    inlineStylesheets: 'always',
+    format: 'directory',
   },
   vite: {
     plugins: [tailwindcss()],
     build: {
-      cssCodeSplit: true, // Split CSS for better caching
-      minify: 'esbuild', // Use esbuild - faster than terser
+      cssCodeSplit: true,
+      minify: 'esbuild',
+      chunkSizeWarningLimit: 1000,
+      cssMinify: 'esbuild',
+      reportCompressedSize: false,
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Aggressive code splitting to minimize unused JS
-            if (id.includes('node_modules')) {
-              // Keep React core + DOM together (essential)
-              if (id.includes('react/') || id.includes('react-dom/') || id.includes('scheduler')) {
-                return 'vendor-react';
-              }
-              // Recharts - lazy loaded ONLY when music section is visible
-              if (id.includes('recharts') || id.includes('d3-') || id.includes('victory-')) {
-                return 'vendor-recharts';
-              }
-              // Framer Motion - split per component
-              if (id.includes('framer-motion')) {
-                // Split motion for different sections
-                if (id.includes('MeBentoGrid') || id.includes('ProjectsBentoGrid')) {
-                  return 'vendor-framer-bento';
-                }
-                return 'vendor-framer';
-              }
-              // Fancybox - lazy loaded on user interaction
-              if (id.includes('@fancyapps')) {
-                return 'vendor-fancyapps';
-              }
-              // Lenis - deferred initialization
-              if (id.includes('lenis')) {
-                return 'vendor-lenis';
-              }
-              // Keep tooltips in main to avoid errors
-              if (id.includes('astro-tooltips') || id.includes('tippy') || id.includes('popper')) {
-                return undefined;
-              }
+            if (!id.includes('node_modules')) return undefined;
+            if (
+              id.includes('/react') ||
+              id.includes('/react-dom') ||
+              id.includes('/scheduler') ||
+              id.includes('node_modules/react/') ||
+              id.includes('node_modules/react-dom/') ||
+              id.includes('node_modules/scheduler/')
+            ) {
+              return 'vendor-react';
             }
+
+            if (id.includes('chart.js') || id.includes('react-chartjs-2')) {
+              return 'vendor-chartjs';
+            }
+
+            if (id.includes('framer-motion')) {
+              return 'vendor-framer';
+            }
+            if (id.includes('@fancyapps')) {
+              return 'vendor-fancyapps';
+            }
+
+            if (id.includes('lenis')) {
+              return 'vendor-lenis';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+
+            if (id.includes('clsx') || id.includes('tailwind-merge')) {
+              return 'vendor-utils';
+            }
+            if (id.includes('astro-tooltips') || id.includes('tippy') || id.includes('popper')) {
+              return undefined;
+            }
+
+            return undefined;
           },
-          // Optimize chunk naming and size
           chunkFileNames: (chunkInfo) => {
-            // Smaller chunks for better caching
             return '_astro/[name].[hash].js';
           },
           assetFileNames: '_astro/[name].[hash][extname]',
-          // Ensure optimal chunk size
-          experimentalMinChunkSize: 10000
+          experimentalMinChunkSize: 10000,
+          compact: true,
         }
       }
+    },
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'framer-motion', 'chart.js', 'react-chartjs-2', 'clsx', 'tailwind-merge'],
+      exclude: ['@fancyapps/ui']
+    },
+    server: {
+      preTransformRequests: true,
     }
   },
 
@@ -71,10 +87,8 @@ export default defineConfig({
     sitemap()
   ],
 
-  // Enable compression
   compressHTML: true,
 
-  // Prefetch settings for faster navigation
   prefetch: {
     prefetchAll: true,
     defaultStrategy: 'viewport'

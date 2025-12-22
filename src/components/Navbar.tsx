@@ -69,7 +69,8 @@ const Navbar: React.FC<NavbarProps> = ({
   }, [sections]);
 
   useEffect(() => {
-    const navbarHeight = 48; // Fixed height from CSS (3rem = 48px)
+    const navbarHeight = 48;
+
     let ticking = false;
 
     const handleScroll = () => {
