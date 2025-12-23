@@ -350,15 +350,15 @@ html.lenis body {
   line-height: 1.7;
 }
 
-.github-contributions-card {
+.github-card-hover {
   transition: border-color 0.3s ease-in-out !important;
 }
 
-.github-contributions-card:hover {
+.github-card-hover:hover {
   border-color: #c084fc !important;
 }
 
-[data-theme="light"] .github-contributions-card:hover {
+[data-theme="light"] .github-card-hover:hover {
   border-color: #1e3a8a !important;
 }
 

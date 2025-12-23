@@ -1,5 +1,5 @@
 import { Line } from 'react-chartjs-2';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -60,7 +60,7 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
     const gridColor = isLightTheme ? '#bfdbfe' : '#374151';
     const textColor = isLightTheme ? '#1e3a8a' : '#ffffff';
 
-    const chartData = {
+    const chartData = useMemo(() => ({
         labels: data.map(item => item.name || ''),
         datasets: [
             {
@@ -79,9 +79,18 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
                 pointHoverBorderWidth: 2,
             },
         ],
-    };
+    }), [data, strokeColor, fillColor]);
 
-    const options = {
+    const [initialAnimationComplete, setInitialAnimationComplete] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setInitialAnimationComplete(true);
+        }, 2200);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const options = useMemo(() => ({
         responsive: true,
         maintainAspectRatio: false,
         interaction: {
@@ -129,10 +138,14 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
                 beginAtZero: true,
             },
         },
-        animation: {
-            duration: 0,
+        animations: {
+            y: {
+                from: 0,
+                duration: initialAnimationComplete ? 0 : 2000,
+                easing: 'easeOutQuart' as const,
+            },
         },
-    };
+    }), [gridColor, textColor, strokeColor, initialAnimationComplete]);
 
     return (
         <div className="w-full h-full">

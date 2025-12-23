@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { m, motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { X, Maximize2, MapPin, Github as GithubIcon, Linkedin as LinkedinIcon, Mail } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';

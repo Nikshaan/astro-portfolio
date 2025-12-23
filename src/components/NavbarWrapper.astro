@@ -1,8 +1,8 @@
 ---
-import Navbar from './Navbar';
+import Navbar from "./Navbar";
 ---
 
-<Navbar client:idle />
+<Navbar client:load />
 
 <style is:global>
   .nav-link {
@@ -24,7 +24,7 @@ import Navbar from './Navbar';
     color: #a855f7 !important;
     opacity: 1;
   }
-  
+
   [data-theme="light"] .nav-link {
     color: #1e3a8a !important;
   }
@@ -46,7 +46,9 @@ import Navbar from './Navbar';
     background-color: rgba(255, 255, 255, 0.8) !important;
     backdrop-filter: blur(12px) !important;
     border-color: rgba(37, 99, 235, 0.2) !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
 
   [data-theme="light"] #theme-toggle:hover {
