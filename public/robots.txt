@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://Nikshaan.github.io/astro-portfolio/sitemap.xml
+Sitemap: https://nikshaan.vercel.app/sitemap-index.xml

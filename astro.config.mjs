@@ -3,16 +3,19 @@ import tailwindcss from '@tailwindcss/vite';
 import icon from 'astro-icon';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
+import vercel from '@astrojs/vercel';
 
 export default defineConfig({
-  site: 'https://Nikshaan.github.io',
-  base: '/astro-portfolio',
+  site: 'https://nikshaan.vercel.app', // Update this with your actual Vercel domain
+
   trailingSlash: 'ignore',
+
   build: {
     assets: '_astro',
     inlineStylesheets: 'always',
     format: 'directory',
   },
+
   vite: {
     plugins: [tailwindcss()],
     build: {
@@ -92,5 +95,11 @@ export default defineConfig({
   prefetch: {
     prefetchAll: true,
     defaultStrategy: 'viewport'
-  }
+  },
+
+  adapter: vercel({
+    webAnalytics: { enabled: true },
+    speedInsights: { enabled: true },
+    imageService: true,
+  })
 });
