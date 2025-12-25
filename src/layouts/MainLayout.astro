@@ -13,6 +13,7 @@ import "@fontsource/instrument-sans/400.css";
 import "@fontsource/instrument-sans/500.css";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
+import VercelAnalytics from "../components/VercelAnalytics.astro";
 
 const { title, description, preloadImage } = Astro.props;
 
@@ -44,10 +45,7 @@ const favicon = await getImage({
             name="apple-mobile-web-app-status-bar-style"
             content="black-translucent"
         />
-        <link
-            rel="canonical"
-            href="https://nikshaan.vercel.app/"
-        />
+        <link rel="canonical" href="https://nikshaan.vercel.app/" />
         <link rel="manifest" href="/manifest.json" />
 
         <link rel="dns-prefetch" href="https://api.github.com" />
@@ -87,6 +85,7 @@ const favicon = await getImage({
         class="h-full bg-black text-neutral-50 transition-colors duration-300"
     >
         <slot />
+        <VercelAnalytics />
     </body>
 </html>
 

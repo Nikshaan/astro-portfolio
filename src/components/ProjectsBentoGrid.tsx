@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { m, motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
-import { X, Maximize2, Github as GithubIcon, ExternalLink } from 'lucide-react';
+import { X, Maximize2, Github, ExternalLink } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -109,7 +109,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index, selec
                             )}
                             {card.data.github && (
                                 <a href={card.data.github} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="cursor-pointer hover:text-blue-500 transition-colors flex items-center gap-1" aria-label={`View source code of ${card.data.name} on GitHub`}>
-                                    <GithubIcon size={16} /> GitHub
+                                    <Github size={16} /> GitHub
                                 </a>
                             )}
                         </div>
@@ -244,7 +244,7 @@ const ProjectsBentoGrid: React.FC = () => {
                                                 )}
                                                 {selectedItem.data.github && (
                                                     <a href={selectedItem.data.github} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" aria-label={`View source code of ${selectedItem.data.name} on GitHub`} title="View on GitHub">
-                                                        <GithubIcon size={24} />
+                                                        <Github size={24} />
                                                     </a>
                                                 )}
                                             </div>

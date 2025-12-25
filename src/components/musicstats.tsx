@@ -17,7 +17,7 @@ interface MusicStatsData {
     artistsInfo: artistInfoType[];
 }
 
-export default function MusicStatsClient({ apiKey, username }: { apiKey: string; username: string }) {
+export default function MusicStatsClient() {
     const [data, setData] = useState<MusicStatsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export default function MusicStatsClient({ apiKey, username }: { apiKey: string;
 
 
 
-        const interval = setInterval(loadData, 10 * 60 * 1000);
+        const interval = setInterval(loadData, 2 * 60 * 1000);
 
         return () => clearInterval(interval);
     }, []);

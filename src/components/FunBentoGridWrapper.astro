@@ -2,16 +2,10 @@
 import FunBentoGrid from "./FunBentoGrid";
 import { getImage } from "astro:assets";
 
-interface Props {
-    apiKey: string;
-    username: string;
-}
-
-const { apiKey, username } = Astro.props;
-
 const photoModules = import.meta.glob("../data/photos/photo*.webp", {
     eager: true,
 });
+// ... (rest of the file until the component usage)
 const photoTitles: Record<number, string> = {
     1: "Manali",
     2: "Manali",
@@ -117,54 +111,49 @@ const photoTitles: Record<number, string> = {
     106: "Manali",
 };
 
-const allImages = await Promise.all(
-    Object.entries(photoModules)
-        .sort(([a], [b]) => {
-            const aNum = parseInt(a.match(/photo(\d+)/)?.[1] || "0");
-            const bNum = parseInt(b.match(/photo(\d+)/)?.[1] || "0");
-            return aNum - bNum;
-        })
-        .map(async ([path, module]) => {
-            const photoNumber = parseInt(path.match(/photo(\d+)/)?.[1] || "0");
-            const imageModule = module as any;
-            if (!imageModule.default) return null;
+const sortedModules = Object.entries(photoModules)
+    .sort(([a], [b]) => {
+        const aNum = parseInt(a.match(/photo(\d+)/)?.[1] || "0");
+        const bNum = parseInt(b.match(/photo(\d+)/)?.[1] || "0");
+        return aNum - bNum;
+    })
+    .slice(0, 8);
 
-            const optimizedThumbnail = await getImage({
-                src: imageModule.default,
-                width: 380,
-                quality: 80,
-                format: "avif",
-            });
+const gridImages = await Promise.all(
+    sortedModules.map(async ([path, module]) => {
+        const photoNumber = parseInt(path.match(/photo(\d+)/)?.[1] || "0");
+        const imageModule = module as any;
+        if (!imageModule.default) return null;
 
-            const optimizedFull = await getImage({
-                src: imageModule.default,
-                width: 1200,
-                quality: 85,
-                format: "avif",
-            });
+        const optimizedThumbnail = await getImage({
+            src: imageModule.default,
+            width: 380,
+            quality: 80,
+            format: "avif",
+        });
 
-            return {
-                id: `photo-${photoNumber}`,
-                src: optimizedThumbnail.src,
+        const optimizedFull = await getImage({
+            src: imageModule.default,
+            width: 1200,
+            quality: 85,
+            format: "avif",
+        });
 
-                fullSrc: optimizedFull.src,
-
-                width: optimizedThumbnail.attributes.width,
-                height: optimizedThumbnail.attributes.height,
-                title: photoTitles[photoNumber] || `Photo ${photoNumber}`,
-                alt: `Photography - ${photoTitles[photoNumber] || "Photo " + photoNumber}`,
-            };
-        }),
+        return {
+            id: `photo-${photoNumber}`,
+            src: optimizedThumbnail.src,
+            fullSrc: optimizedFull.src,
+            width: optimizedThumbnail.attributes.width,
+            height: optimizedThumbnail.attributes.height,
+            title: photoTitles[photoNumber] || `Photo ${photoNumber}`,
+            alt: `Photography - ${photoTitles[photoNumber] || "Photo " + photoNumber}`,
+        };
+    }),
 );
 
-const validImages = allImages.filter(Boolean);
-const gridImages = validImages.slice(0, 8);
+const validImages = gridImages.filter(
+    (img): img is NonNullable<typeof img> => img !== null,
+);
 ---
 
-<FunBentoGrid
-    client:visible
-    apiKey={apiKey}
-    username={username}
-    images={gridImages}
-    allImages={validImages}
-/>
+<FunBentoGrid client:visible images={validImages} />

@@ -61,8 +61,6 @@ export default function GithubContributions({ initialData }: GithubContributions
   }, [weeks, loading]);
 
   useEffect(() => {
-    if (initialData) return;
-
     const fetchContributions = async () => {
       try {
         const baseUrl = import.meta.env.BASE_URL || '/';
@@ -92,10 +90,12 @@ export default function GithubContributions({ initialData }: GithubContributions
       }
     };
 
-    fetchContributions();
-    
-    const interval = setInterval(fetchContributions, 15 * 60 * 1000);
-    
+    if (!initialData && !loading) {
+      fetchContributions();
+    }
+
+    const interval = setInterval(fetchContributions, 5 * 60 * 1000);
+
     return () => clearInterval(interval);
   }, [initialData]);
 

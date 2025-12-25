@@ -10,11 +10,18 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+interface Image {
+    id: string;
+    src: string;
+    width: number;
+    height: number;
+    title: string;
+    alt: string;
+}
+
 interface FunBentoGridProps {
-    apiKey: string;
-    username: string;
-    images: any[];
-    allImages?: any[];
+    images: Image[];
+    allImages?: Image[];
 }
 
 interface CardWrapperProps extends HTMLMotionProps<"div"> {
@@ -67,8 +74,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ children, className, isExpand
     );
 };
 
-const FunBentoGrid: React.FC<FunBentoGridProps> = ({ apiKey, username, images, allImages = [] }) => {
-
+const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
     useEffect(() => {
         let fancyboxLoaded = false;
 
@@ -76,7 +82,17 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ apiKey, username, images, a
             if (fancyboxLoaded) return;
 
             const { Fancybox } = await import('@fancyapps/ui');
-            const fancyboxCss = await import('@fancyapps/ui/dist/fancybox/fancybox.css');
+            await import('@fancyapps/ui/dist/fancybox/fancybox.css');
+
+            let galleryData = [];
+            try {
+                const response = await fetch('/api/gallery.json');
+                if (response.ok) {
+                    galleryData = await response.json();
+                }
+            } catch (error) {
+                console.error("Failed to load gallery data", error);
+            }
 
             Fancybox.bind('[data-fancybox="gallery"]', {
                 dragToClose: false,
@@ -90,18 +106,48 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ apiKey, username, images, a
                 Images: {
                     zoom: true,
                 },
+
+                on: {
+                    init: (fancybox: any) => {
+                        // Init logic if needed
+                    }
+                }
             } as any);
+
+            const gridItems = document.querySelectorAll('[data-fancybox-trigger="gallery"]');
+            gridItems.forEach((item, index) => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (galleryData.length > 0) {
+                        Fancybox.show(galleryData.map((img: any) => ({
+                            src: img.src,
+                            caption: img.caption || img.title,
+                            thumb: img.src
+                        })), {
+                            startIndex: index,
+                            dragToClose: false,
+                            Toolbar: {
+                                display: {
+                                    left: ["infobar"],
+                                    middle: [],
+                                    right: ["slideshow", "thumbs", "close"],
+                                },
+                            },
+                        } as any);
+                    } else {
+                    }
+                });
+            });
 
             fancyboxLoaded = true;
         };
 
-        const galleryItems = document.querySelectorAll('[data-fancybox="gallery"]');
+        const galleryItems = document.querySelectorAll('[data-fancybox-trigger="gallery"]');
 
         const loadOnInteraction = () => {
             initFancybox();
             galleryItems.forEach(item => {
                 item.removeEventListener('mouseenter', loadOnInteraction);
-                item.removeEventListener('click', loadOnInteraction);
             });
         };
 
@@ -113,7 +159,6 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ apiKey, username, images, a
         return () => {
             if (fancyboxLoaded) {
                 import('@fancyapps/ui').then(({ Fancybox }) => {
-                    Fancybox.unbind('[data-fancybox="gallery"]');
                     Fancybox.close();
                 });
             }
@@ -133,58 +178,40 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ apiKey, username, images, a
                             <h3 className="text-xl font-medium mb-4 p-5 md:p-6 pb-0">Music Stats</h3>
                             <div className="flex-1 overflow-y-auto custom-scrollbar px-2 w-full">
                                 <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Loading music stats...</div>}>
-                                    <MusicStatsClient apiKey={apiKey} username={username} />
+                                    <MusicStatsClient />
                                 </Suspense>
                             </div>
                         </div>
                     </CardWrapper>
 
-                    {(allImages && allImages.length > 0 ? allImages : images).map((image: any, i: number) => {
-                        if (i < 8) {
-                            return (
-                                <CardWrapper
-                                    key={image.id}
-                                    isExpandable={true}
-                                    className="col-span-1 row-span-1"
-                                    index={i + 1}
-                                >
-                                    <div
-                                        className="w-full h-full block relative group overflow-hidden rounded-3xl cursor-pointer"
-                                        data-fancybox="gallery"
-                                        data-src={image.fullSrc}
-                                        data-caption={image.title}
-                                        data-thumb={image.src}
-                                    >
-                                        <img
-                                            src={image.src}
-                                            width={image.width}
-                                            height={image.height}
-                                            alt={image.alt}
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                        />
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-end p-4">
-                                            <p className="!text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-medium truncate w-full drop-shadow-md">
-                                                {image.title}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </CardWrapper>
-                            );
-                        } else {
-                            return (
-                                <div
-                                    key={image.id}
-                                    style={{ display: 'none' }}
-                                    data-fancybox="gallery"
-                                    data-src={image.fullSrc}
-                                    data-caption={image.title}
-                                    data-thumb={image.src}
+                    {images.map((image: Image, i: number) => (
+                        <CardWrapper
+                            key={image.id}
+                            isExpandable={true}
+                            className="col-span-1 row-span-1"
+                            index={i + 1}
+                        >
+                            <div
+                                className="w-full h-full block relative group overflow-hidden rounded-3xl cursor-pointer"
+                                data-fancybox-trigger="gallery"
+                            >
+                                <img
+                                    src={image.src}
+                                    width={image.width}
+                                    height={image.height}
+                                    alt={image.alt}
+                                    loading="lazy"
+                                    decoding="async"
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                 />
-                            );
-                        }
-                    })}
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-end p-4">
+                                    <p className="!text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-medium truncate w-full drop-shadow-md">
+                                        {image.title}
+                                    </p>
+                                </div>
+                            </div>
+                        </CardWrapper>
+                    ))}
                 </m.div>
             </div>
         </LazyMotion>

@@ -6,7 +6,8 @@ import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 
 export default defineConfig({
-  site: 'https://nikshaan.vercel.app', // Update this with your actual Vercel domain
+  site: 'https://nikshaan.vercel.app',
+  output: 'server',
 
   trailingSlash: 'ignore',
 
@@ -98,8 +99,6 @@ export default defineConfig({
   },
 
   adapter: vercel({
-    webAnalytics: { enabled: true },
-    speedInsights: { enabled: true },
     imageService: true,
   })
 });

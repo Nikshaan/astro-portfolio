@@ -168,7 +168,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                     ))}
                     <div className="text-right mt-2">
                         <p className="mb-1 font-bold text-left">certification</p>
-                        <p className="font-light text-left"><span className="font-bold">{card.data.certification.title}</span> - {card.data.certification.issuer}</p>
+                        <p className="font-light text-left"><span className="font-medium">{card.data.certification.title}</span> - {card.data.certification.issuer}</p>
                     </div>
                 </div>
             );
