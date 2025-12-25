@@ -1,7 +1,5 @@
 import type { APIRoute } from 'astro';
 
-export const prerender = false;
-
 export const GET: APIRoute = async () => {
   const GH_TOKEN = import.meta.env.GH_TOKEN as string;
   const GH_USERNAME = import.meta.env.GH_USERNAME as string;

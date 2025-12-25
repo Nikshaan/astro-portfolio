@@ -4,8 +4,6 @@ const CACHE_DURATION = 60 * 1000;
 let cachedData: any = null;
 let lastFetchTime = 0;
 
-export const prerender = false;
-
 interface LastFmArtist {
   name: string;
   playcount: string;
