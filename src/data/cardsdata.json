@@ -9,10 +9,8 @@
             "title": "About Me",
             "text": "Hi, I'm <span class=\"font-bold text-lg\">Nikshaan Shetty</span>, a 19 years old student.",
             "interests": [
-                "Artificial Intelligence",
-                "Machine Learning",
-                "Deep Learning",
-                "Web development",
+                "Technologia",
+                "Gaming",
                 "Music",
                 "Photography"
             ],
@@ -34,14 +32,14 @@
                     "title": "DJS ARYA",
                     "subtitle": "CanSat team of DJSCOE",
                     "role": "Software Team Member",
-                    "date": "march 2025 - present"
+                    "date": "March 2025 - present"
                 },
                 {
                     "image": "codeAIlogo",
                     "title": "DJS CodeAI",
                     "subtitle": "AI/ML club of DJSCOE",
                     "role": "AI mentee",
-                    "date": "august 2025 - present"
+                    "date": "August 2025 - present"
                 }
             ]
         },
@@ -102,13 +100,13 @@
                     "image": "varakLogo",
                     "title": "Software developer intern",
                     "company": "Varak Welfare Society",
-                    "date": "september 2025 - present"
+                    "date": "September 2025 - January 2026"
                 },
                 {
                     "image": "gssocLogo",
                     "title": "Open source contributor",
                     "company": "GirlScript Summer of Code 2025",
-                    "date": "august 2025"
+                    "date": "August 2025"
                 }
             ],
             "certification": {
@@ -133,11 +131,11 @@
                 "FastAPI",
                 "PostgreSQL"
             ],
-            "summary": "World map to track places I have visited and store their photos.",
+            "summary": "World map to track places I have visited and store their photos. !DB down!",
             "github": "https://github.com/Nikshaan/LocalBee",
             "live": "https://local-bee.vercel.app/"
         },
-        "content": "<p>World map to track places I have visited and store their photos.</p>"
+        "content": "<p>World map to track places I have visited and store their photos. !DB down!</p>"
     },
     {
         "id": "project-pokedex",

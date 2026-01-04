@@ -140,7 +140,6 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
         },
         animations: {
             y: {
-                from: 0,
                 duration: initialAnimationComplete ? 0 : 2000,
                 easing: 'easeOutQuart' as const,
             },

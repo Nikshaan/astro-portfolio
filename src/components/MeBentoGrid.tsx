@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { m, motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
-import { X, Maximize2, MapPin, Github as GithubIcon, Linkedin as LinkedinIcon, Mail } from 'lucide-react';
+import { X, Maximize2, MapPin } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -12,6 +12,9 @@ import codeAIlogo from '../data/codeai.avif';
 import varakLogo from '../data/varak.avif';
 import gssocLogo from '../data/gssoc.avif';
 import winIcon from '../data/winIcon.avif';
+import githubColor from '../data/github-color.svg';
+import linkedinColor from '../data/linkedin-color.svg';
+import gmailColor from '../data/gmail-color.svg';
 
 const defaultImages: Record<string, any> = {
     beeImage: beeImage,
@@ -118,15 +121,15 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                             <Clock />
                         </div>
                     </div>
-                    <div className="flex justify-center items-center gap-3 md:gap-4 w-full min-[425px]:w-auto">
+                    <div className="flex justify-center items-center gap-4 md:gap-6 w-full min-[425px]:w-auto">
                         <a href={card.data.links.github} target="_blank" rel="noopener noreferrer" aria-label="Visit Nikshaan's GitHub profile" data-title="GitHub" className="tooltip-trigger relative">
-                            <GithubIcon className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
+                            <img src={githubColor.src} alt="GitHub" className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
                         </a>
                         <a href={card.data.links.linkedin} target="_blank" rel="noopener noreferrer" aria-label="Connect with Nikshaan on LinkedIn" data-title="LinkedIn" className="tooltip-trigger relative">
-                            <LinkedinIcon className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
+                            <img src={linkedinColor.src} alt="LinkedIn" className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
                         </a>
                         <a href={card.data.links.email} aria-label="Send an email to Nikshaan" data-title="Email" className="tooltip-trigger relative">
-                            <Mail className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
+                            <img src={gmailColor.src} alt="Email" className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
                         </a>
                     </div>
                 </div>

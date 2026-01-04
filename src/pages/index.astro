@@ -8,10 +8,7 @@ import FunBentoGridWrapper from "../components/FunBentoGridWrapper.astro";
 
 import MeBentoGridWrapper from "../components/MeBentoGridWrapper.astro";
 import beeImage from "../data/bee.avif";
-import { fetchGithubContributions } from "../lib/github";
 import { getImage } from "astro:assets";
-
-const githubData = await fetchGithubContributions();
 
 const optimizedBeeImage = await getImage({
   src: beeImage,
@@ -38,7 +35,7 @@ const optimizedBeeImage = await getImage({
   <main
     class="bg-black text-neutral-50 min-h-[100svh] w-full flex items-center flex-col"
   >
-    <div class="grid-bg w-full flex flex-col justify-start items-center">
+    <div class="grid-bg w-full flex flex-col justify-start items-center pb-10">
       <section
         id="me"
         class="w-full max-w-[1400px] p-4 pt-24"
@@ -48,7 +45,7 @@ const optimizedBeeImage = await getImage({
       </section>
       <section class="w-full flex flex-col gap-2 flex-1">
         <div class="w-full max-w-[1400px] mx-auto px-4 mb-8">
-          <GithubContributions client:visible initialData={githubData} />
+          <GithubContributions client:visible />
         </div>
         <div data-section="projects" id="projects" class="-mt-5">
           <ProjectsBentoGridWrapper />
@@ -64,6 +61,15 @@ const optimizedBeeImage = await getImage({
     </div>
   </main>
 </MainLayout>
+
+<head>
+  <link
+    rel="preload"
+    href="/api/github-contributions"
+    as="fetch"
+    crossorigin="anonymous"
+  />
+</head>
 
 <style>
   .grid-bg {

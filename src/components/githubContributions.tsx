@@ -65,7 +65,7 @@ export default function GithubContributions({ initialData }: GithubContributions
       try {
         const baseUrl = import.meta.env.BASE_URL || '/';
         const apiPath = baseUrl.endsWith('/') ? 'api/github-contributions' : '/api/github-contributions';
-        const response = await fetch(`${baseUrl}${apiPath}`);
+        const response = await fetch(`${baseUrl}${apiPath}`, { cache: 'no-cache' });
 
         if (!response.ok) {
           setError('Failed to load contributions');
@@ -90,11 +90,11 @@ export default function GithubContributions({ initialData }: GithubContributions
       }
     };
 
-    if (!initialData && !loading) {
+    if (!initialData) {
       fetchContributions();
     }
 
-    const interval = setInterval(fetchContributions, 5 * 60 * 1000);
+    const interval = setInterval(fetchContributions, 60 * 1000);
 
     return () => clearInterval(interval);
   }, [initialData]);

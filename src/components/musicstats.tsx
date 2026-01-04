@@ -28,7 +28,7 @@ export default function MusicStatsClient() {
                 setLoading(true);
                 const baseUrl = import.meta.env.BASE_URL || '/';
                 const apiPath = baseUrl.endsWith('/') ? 'api/music-stats' : '/api/music-stats';
-                const response = await fetch(`${baseUrl}${apiPath}`);
+                const response = await fetch(`${baseUrl}${apiPath}`, { cache: 'no-cache' });
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch music stats');
@@ -48,7 +48,7 @@ export default function MusicStatsClient() {
 
 
 
-        const interval = setInterval(loadData, 2 * 60 * 1000);
+        const interval = setInterval(loadData, 30 * 1000);
 
         return () => clearInterval(interval);
     }, []);

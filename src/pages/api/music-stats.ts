@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 
-const CACHE_DURATION = 60 * 1000;
+export const prerender = false;
+
+const CACHE_DURATION = 2 * 60 * 1000;
 let cachedData: any = null;
 let lastFetchTime = 0;
 
@@ -35,7 +37,8 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=30'
+        'Cache-Control': 'public, max-age=60, s-maxage=120, stale-while-revalidate=60',
+        'X-Cache-Status': 'HIT'
       }
     });
   }
@@ -150,11 +153,24 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=30'
+        'Cache-Control': 'public, max-age=60, s-maxage=120, stale-while-revalidate=60',
+        'X-Cache-Status': 'MISS'
       }
     });
   } catch (error: any) {
     console.error('API Route Error:', error);
+
+    if (cachedData) {
+      return new Response(JSON.stringify(cachedData), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=30, s-maxage=60, stale-while-revalidate=30',
+          'X-Cache-Status': 'STALE'
+        }
+      });
+    }
+
     return new Response(JSON.stringify({
       error: 'Failed to fetch music stats',
       details: error?.message || 'Unknown error',

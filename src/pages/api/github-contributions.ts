@@ -1,5 +1,11 @@
 import type { APIRoute } from 'astro';
 
+export const prerender = false;
+
+const CACHE_DURATION = 5 * 60 * 1000;
+let cachedData: any = null;
+let lastFetchTime = 0;
+
 export const GET: APIRoute = async () => {
   const GH_TOKEN = import.meta.env.GH_TOKEN as string;
   const GH_USERNAME = import.meta.env.GH_USERNAME as string;
@@ -10,6 +16,18 @@ export const GET: APIRoute = async () => {
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  const now = Date.now();
+  if (cachedData && (now - lastFetchTime) < CACHE_DURATION) {
+    return new Response(JSON.stringify(cachedData), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=120, s-maxage=300, stale-while-revalidate=120',
+        'X-Cache-Status': 'HIT'
+      }
     });
   }
 
@@ -58,14 +76,29 @@ export const GET: APIRoute = async () => {
 
     const data = await response.json();
 
+    cachedData = data;
+    lastFetchTime = now;
+
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=30'
+        'Cache-Control': 'public, max-age=120, s-maxage=300, stale-while-revalidate=120',
+        'X-Cache-Status': 'MISS'
       }
     });
   } catch (error) {
+    if (cachedData) {
+      return new Response(JSON.stringify(cachedData), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=60, s-maxage=120, stale-while-revalidate=60',
+          'X-Cache-Status': 'STALE'
+        }
+      });
+    }
+
     return new Response(JSON.stringify({
       error: 'Failed to fetch GitHub contributions'
     }), {
