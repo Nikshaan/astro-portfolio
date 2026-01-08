@@ -13,6 +13,7 @@ function cn(...inputs: ClassValue[]) {
 interface Image {
     id: string;
     src: string;
+    fullSrc?: string;
     width: number;
     height: number;
     title: string;
@@ -77,25 +78,69 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ children, className, isExpand
 const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
     useEffect(() => {
         let fancyboxLoaded = false;
+        let galleryData: any[] = [];
+        let initPromise: Promise<void> | null = null;
 
         const initFancybox = async () => {
-            if (fancyboxLoaded) return;
+            if (initPromise) return initPromise;
 
-            const { Fancybox } = await import('@fancyapps/ui');
-            await import('@fancyapps/ui/dist/fancybox/fancybox.css');
+            initPromise = (async () => {
+                const [_, css, response] = await Promise.all([
+                    import('@fancyapps/ui'),
+                    import('@fancyapps/ui/dist/fancybox/fancybox.css'),
+                    fetch('/api/gallery.json').then(res => res.ok ? res.json() : [])
+                ]);
+                galleryData = response;
+                fancyboxLoaded = true;
+            })();
 
-            let galleryData = [];
-            try {
-                const response = await fetch('/api/gallery.json');
-                if (response.ok) {
-                    galleryData = await response.json();
-                }
-            } catch (error) {
-                console.error("Failed to load gallery data", error);
+            return initPromise;
+        };
+
+        const galleryItems = document.querySelectorAll('[data-fancybox="gallery"]');
+
+        const loadOnInteraction = () => {
+            initFancybox();
+            galleryItems.forEach(item => {
+                item.removeEventListener('mouseenter', loadOnInteraction);
+                item.removeEventListener('focus', loadOnInteraction);
+            });
+        };
+
+        galleryItems.forEach(item => {
+            item.addEventListener('mouseenter', loadOnInteraction, { once: true });
+            item.addEventListener('focus', loadOnInteraction, { once: true });
+        });
+
+        const handleClick = async (e: Event) => {
+            e.preventDefault();
+            const target = e.currentTarget as HTMLAnchorElement;
+            const src = target.getAttribute('href');
+
+            if (!fancyboxLoaded) {
+                await initFancybox();
             }
 
-            Fancybox.bind('[data-fancybox="gallery"]', {
+            const { Fancybox } = await import('@fancyapps/ui');
+
+            const startIndex = galleryData.findIndex((img: any) => img.src === src);
+
+            Fancybox.show(galleryData.map((img: any) => ({
+                src: img.src,
+                thumb: img.src, 
+                caption: img.title || img.caption || '',
+                width: img.width,
+                height: img.height
+            })), {
+                startIndex: startIndex >= 0 ? startIndex : 0,
                 dragToClose: false,
+                origin: (_fancybox: any, slide: any) => {
+                    const link = document.querySelector(`a[href="${slide.src}"]`) as HTMLAnchorElement;
+                    if (link) {
+                        return link.querySelector('img') || link;
+                    }
+                    return null;
+                },
                 Toolbar: {
                     display: {
                         left: ["infobar"],
@@ -106,62 +151,16 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                 Images: {
                     zoom: true,
                 },
-
-                on: {
-                    init: (fancybox: any) => {
-                        // Init logic if needed
-                    }
-                }
             } as any);
-
-            const gridItems = document.querySelectorAll('[data-fancybox-trigger="gallery"]');
-            gridItems.forEach((item, index) => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (galleryData.length > 0) {
-                        Fancybox.show(galleryData.map((img: any) => ({
-                            src: img.src,
-                            caption: img.caption || img.title,
-                            thumb: img.src
-                        })), {
-                            startIndex: index,
-                            dragToClose: false,
-                            Toolbar: {
-                                display: {
-                                    left: ["infobar"],
-                                    middle: [],
-                                    right: ["slideshow", "thumbs", "close"],
-                                },
-                            },
-                        } as any);
-                    } else {
-                    }
-                });
-            });
-
-            fancyboxLoaded = true;
         };
 
-        const galleryItems = document.querySelectorAll('[data-fancybox-trigger="gallery"]');
-
-        const loadOnInteraction = () => {
-            initFancybox();
-            galleryItems.forEach(item => {
-                item.removeEventListener('mouseenter', loadOnInteraction);
-            });
-        };
-
-        galleryItems.forEach(item => {
-            item.addEventListener('mouseenter', loadOnInteraction, { once: true });
-            item.addEventListener('click', loadOnInteraction, { once: true });
-        });
+        galleryItems.forEach(item => item.addEventListener('click', handleClick));
 
         return () => {
-            if (fancyboxLoaded) {
-                import('@fancyapps/ui').then(({ Fancybox }) => {
-                    Fancybox.close();
-                });
-            }
+            import('@fancyapps/ui').then(({ Fancybox }) => {
+                Fancybox.close();
+            });
+            galleryItems.forEach(item => item.removeEventListener('click', handleClick));
         };
     }, []);
 
@@ -191,9 +190,11 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                             className="col-span-1 row-span-1"
                             index={i + 1}
                         >
-                            <div
+                            <a
+                                href={image.fullSrc || image.src}
                                 className="w-full h-full block relative group overflow-hidden rounded-3xl cursor-pointer"
-                                data-fancybox-trigger="gallery"
+                                data-fancybox="gallery"
+                                data-caption={image.title}
                             >
                                 <img
                                     src={image.src}
@@ -202,6 +203,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                                     alt={image.alt}
                                     loading="lazy"
                                     decoding="async"
+                                    sizes="(max-width: 1024px) 50vw, 25vw"
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                 />
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-end p-4">
@@ -209,7 +211,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                                         {image.title}
                                     </p>
                                 </div>
-                            </div>
+                            </a>
                         </CardWrapper>
                     ))}
                 </m.div>

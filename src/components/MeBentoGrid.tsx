@@ -49,8 +49,8 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                     <div className="flex justify-center items-center w-full md:w-[40%] lg:w-[50%] h-full lg:aspect-square lg:self-center">
                         <img
                             src={images[card.data.image].src}
-                            srcSet={images[card.data.image].attributes?.srcset}
-                            sizes={images[card.data.image].attributes?.sizes || "(max-width: 768px) 100vw, 50vw"}
+                            srcSet={images[card.data.image].srcSet?.attribute || images[card.data.image].attributes?.srcset}
+                            sizes={images[card.data.image].attributes?.sizes || "(max-width: 768px) 100vw, (max-width: 1280px) 40vw, 25vw"}
                             width={images[card.data.image].attributes?.width || images[card.data.image].width}
                             height={images[card.data.image].attributes?.height || images[card.data.image].height}
                             alt="profile"
@@ -68,6 +68,8 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                     <div className="w-full md:w-[20%] flex justify-center items-center">
                         <img
                             src={images[card.data.image].src}
+                            srcSet={images[card.data.image].srcSet?.attribute || images[card.data.image].attributes?.srcset}
+                            sizes="180px"
                             width={images[card.data.image].width}
                             height={images[card.data.image].height}
                             alt="logo"
@@ -91,6 +93,8 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                             <div className="w-[20%] flex justify-center items-center">
                                 <img
                                     src={images[item.image].src}
+                                    srcSet={images[item.image].srcSet?.attribute || images[item.image].attributes?.srcset}
+                                    sizes="90px"
                                     width={images[item.image].width}
                                     height={images[item.image].height}
                                     alt="logo"
@@ -138,6 +142,8 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
             return (
                 <img
                     src={images[card.data.image].src}
+                    srcSet={images[card.data.image].srcSet?.attribute || images[card.data.image].attributes?.srcset}
+                    sizes="100px"
                     width={images[card.data.image].width}
                     height={images[card.data.image].height}
                     alt="win"
@@ -154,6 +160,8 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                             <div className="w-[20%] flex justify-center items-center">
                                 <img
                                     src={images[item.image].src}
+                                    srcSet={images[item.image].srcSet?.attribute || images[item.image].attributes?.srcset}
+                                    sizes="70px"
                                     width={images[item.image].width}
                                     height={images[item.image].height}
                                     alt="logo"

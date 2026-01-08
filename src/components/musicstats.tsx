@@ -17,40 +17,63 @@ interface MusicStatsData {
     artistsInfo: artistInfoType[];
 }
 
+let cachedMusicData: MusicStatsData | null = null;
+let isFetching = false;
+let fetchPromise: Promise<MusicStatsData> | null = null;
+
 export default function MusicStatsClient() {
-    const [data, setData] = useState<MusicStatsData | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState<MusicStatsData | null>(cachedMusicData);
+    const [loading, setLoading] = useState(!cachedMusicData);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (cachedMusicData) {
+            setData(cachedMusicData);
+            setLoading(false);
+            return;
+        }
+
         const loadData = async () => {
+            if (fetchPromise) {
+                try {
+                    const musicData = await fetchPromise;
+                    setData(musicData);
+                } catch (err) {
+                    setError('Failed to load music stats');
+                } finally {
+                    setLoading(false);
+                }
+                return;
+            }
+
             try {
                 setLoading(true);
                 const baseUrl = import.meta.env.BASE_URL || '/';
                 const apiPath = baseUrl.endsWith('/') ? 'api/music-stats' : '/api/music-stats';
-                const response = await fetch(`${baseUrl}${apiPath}`, { cache: 'no-cache' });
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch music stats');
-                }
+                fetchPromise = fetch(`${baseUrl}${apiPath}`, { cache: 'no-cache' })
+                    .then(async (response) => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch music stats');
+                        }
+                        return response.json();
+                    });
 
-                const musicData = await response.json();
+                const musicData = await fetchPromise;
+                cachedMusicData = musicData;
                 setData(musicData);
                 setError(null);
             } catch (err) {
                 setError('Failed to load music stats');
+                fetchPromise = null;
             } finally {
                 setLoading(false);
+                fetchPromise = null;
             }
         };
 
         loadData();
 
-
-
-        const interval = setInterval(loadData, 30 * 1000);
-
-        return () => clearInterval(interval);
     }, []);
 
     if (loading) {
