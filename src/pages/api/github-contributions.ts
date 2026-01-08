@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-const CACHE_DURATION = 5 * 60 * 1000;
+const CACHE_DURATION = 15 * 1000;
 let cachedData: any = null;
 let lastFetchTime = 0;
 
@@ -25,7 +25,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=120, s-maxage=300, stale-while-revalidate=120',
+        'Cache-Control': 'public, max-age=5, s-maxage=10',
         'X-Cache-Status': 'HIT'
       }
     });
@@ -83,7 +83,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=120, s-maxage=300, stale-while-revalidate=120',
+        'Cache-Control': 'public, max-age=5, s-maxage=10',
         'X-Cache-Status': 'MISS'
       }
     });
@@ -93,7 +93,7 @@ export const GET: APIRoute = async () => {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=60, s-maxage=120, stale-while-revalidate=60',
+          'Cache-Control': 'public, max-age=5, s-maxage=10',
           'X-Cache-Status': 'STALE'
         }
       });

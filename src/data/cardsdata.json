@@ -239,6 +239,18 @@
         "content": "<p>Online plant nursery website.</p>"
     },
     {
+        "id": "resume",
+        "type": "resume",
+        "colSpan": "lg:col-span-0",
+        "isExpandable": true,
+        "theme": "dark",
+        "data": {
+            "title": "Resume",
+            "link": "/Nikshaan_shetty_resume.pdf"
+        },
+        "content": "<div class=\"flex flex-col items-center justify-center gap-4 h-full\"><h1 class=\"text-2xl font-bold font-sans\">Resume</h1><iframe src=\"/Nikshaan_shetty_resume.pdf\" class=\"w-full h-[45vh] rounded-lg border border-white/20\" title=\"Resume Preview\"></iframe><a href=\"/Nikshaan_shetty_resume.pdf\" target=\"_blank\" class=\"px-6 py-3 rounded-full font-semibold font-sans text-sm transition-all duration-300 bg-neutral-900 text-white hover:bg-neutral-800 hover:scale-105 hover:shadow-lg dark:bg-white  dark:hover:bg-neutral-200\">Open PDF</a></div>"
+    },
+    {
         "id": "project-productwizz",
         "type": "project",
         "category": "aiml",

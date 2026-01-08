@@ -143,6 +143,14 @@
   color: #ffffff !important;
 }
 
+[data-theme="light"] .bg-neutral-900.text-white {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .bg-neutral-800.text-white:hover {
+  color: #ffffff !important;
+}
+
 [data-theme="light"] .text-black {
   color: #0f172a !important;
 }

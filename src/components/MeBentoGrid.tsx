@@ -183,6 +183,14 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                     </div>
                 </div>
             );
+        case 'resume':
+            return (
+                <div className="flex justify-center items-center h-full w-full">
+                    <p className="text-4xl font-bold uppercase tracking-widest text-neutral-300 dark:text-neutral-600 [writing-mode:vertical-lr] rotate-180">
+                        resume
+                    </p>
+                </div>
+            );
         default:
             return null;
     }
@@ -220,10 +228,10 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index = 0, s
                 onClick={() => card.isExpandable && setSelectedId(card.id)}
                 className={cn(
                     "relative rounded-3xl border flex flex-col group transition-colors me-card-hover",
-                    card.id === 'win' ? "justify-center items-center h-full w-fit" : "p-5 justify-between h-full",
+                    card.id === 'win' ? "justify-center items-center h-full w-fit" : card.id === 'resume' ? "justify-center items-center h-full w-full" : "p-5 justify-between h-full",
                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
                     "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]",
-                    card.id === 'intro' || card.id === 'win' ? "overflow-hidden" : "overflow-visible",
+                    card.id === 'intro' || card.id === 'win' || card.id === 'resume' ? "overflow-hidden" : "overflow-visible",
                     card.isExpandable && !selectedId ? "cursor-pointer" : ""
                 )}
                 whileHover={card.isExpandable && !selectedId ? { scale: 1.02 } : {}}
@@ -258,6 +266,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
     const locationCard = cardsData.find(c => c.id === 'location');
     const winCard = cardsData.find(c => c.id === 'win');
     const experienceCard = cardsData.find(c => c.id === 'experience');
+    const resumeCard = cardsData.find(c => c.id === 'resume');
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -291,11 +300,28 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                 {introCard && <CardWrapper card={introCard} index={0} className="col-span-2 lg:col-span-2 lg:row-span-2 min-h-[300px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 {educationCard && <CardWrapper card={educationCard} index={1} className="col-span-2 lg:col-span-2 lg:row-span-1 min-h-[150px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 <div className="col-span-2 lg:col-span-2 flex gap-4 w-full">
-                    {locationCard && <CardWrapper card={locationCard} index={3} className="flex-1 w-auto min-w-0" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
-                    {winCard && <CardWrapper card={winCard} index={4} className="w-fit shrink-0" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
+                    {locationCard && <CardWrapper card={locationCard} index={2} className="flex-1 w-auto min-w-0" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
+                    {winCard && <CardWrapper card={winCard} index={3} className="w-fit shrink-0" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 </div>
-                {extracurrCard && <CardWrapper card={extracurrCard} index={2} className="col-span-2 lg:col-span-2 lg:row-span-2 h-auto" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
-                {experienceCard && <CardWrapper card={experienceCard} index={5} className="col-span-2 lg:col-span-2 lg:row-span-2 h-auto" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
+
+                <div className="col-span-2 lg:col-span-4 flex flex-col xl:flex-row gap-4 w-full h-auto">
+                    {resumeCard && (
+                        <div className="hidden xl:block h-full w-fit">
+                            <CardWrapper
+                                card={resumeCard}
+                                index={4}
+                                className="h-full w-[100px]"
+                                selectedId={selectedId}
+                                setSelectedId={setSelectedId}
+                                images={images}
+                            />
+                        </div>
+                    )}
+                    <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 w-full">
+                        {extracurrCard && <CardWrapper card={extracurrCard} index={5} className="col-span-2 lg:col-span-1 lg:row-span-2 h-auto" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
+                        {experienceCard && <CardWrapper card={experienceCard} index={6} className="col-span-2 lg:col-span-1 lg:row-span-2 h-auto" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
+                    </div>
+                </div>
             </div>
 
             <AnimatePresence>
@@ -312,7 +338,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                         <motion.div
                             layoutId={`card-${selectedId}`}
                             className={cn(
-                                "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col",
+                                "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col mt-12",
                                 "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
                                 "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]"
                             )}
