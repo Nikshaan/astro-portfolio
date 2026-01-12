@@ -5,6 +5,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 const MusicStatsClient = lazy(() => import('./musicstats'));
+const IndiaMapCard = lazy(() => import('./IndiaMapCard'));
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -127,7 +128,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
 
             Fancybox.show(galleryData.map((img: any) => ({
                 src: img.src,
-                thumb: img.src, 
+                thumb: img.src,
                 caption: img.title || img.caption || '',
                 width: img.width,
                 height: img.height
@@ -182,6 +183,41 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                             </div>
                         </div>
                     </CardWrapper>
+
+                    <Suspense fallback={
+                        <div className="col-span-1 row-span-1 h-[200px] md:h-auto rounded-3xl border bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 flex items-center justify-center">
+                            <div className="text-gray-400 text-sm">Loading map...</div>
+                        </div>
+                    }>
+                        <IndiaMapCard
+                            className="col-span-1 row-span-1 h-[200px] md:h-auto"
+                            visitedPlaces={[
+                                { name: "Mumbai", lat: 19.0760, lng: 72.8777 },
+                                { name: "Delhi", lat: 28.7041, lng: 77.1025 },
+                                { name: "Agra", lat: 27.1767, lng: 78.0081 },
+                                { name: "Manali", lat: 32.2432, lng: 77.1892 },
+                                { name: "Manikaran", lat: 32.0167, lng: 77.3500 },
+                                { name: "Goa", lat: 15.2993, lng: 74.1240 },
+                                { name: "Fort Kochi", lat: 9.9658, lng: 76.2427 },
+                                { name: "Ernakulam", lat: 9.9816, lng: 76.2999 },
+                                { name: "Kunnukara", lat: 10.3500, lng: 76.0833 },
+                                { name: "Udupi", lat: 13.3409, lng: 74.7421 },
+                                { name: "Mangaluru", lat: 12.9141, lng: 74.8560 },
+                                { name: "Mulki", lat: 13.0908, lng: 74.7941 },
+                                { name: "Padubidri", lat: 13.1333, lng: 74.7667 },
+                                { name: "Pune", lat: 18.5204, lng: 73.8567 },
+                                { name: "Wada", lat: 19.6800, lng: 73.2500 },
+                                { name: "Amritsar", lat: 31.6340, lng: 74.8723 },
+                                { name: "Chandigarh", lat: 30.7333, lng: 76.7794 },
+                                { name: "Udaipur", lat: 24.5854, lng: 73.7125 },
+                                { name: "Jaipur", lat: 26.9124, lng: 75.7873 },
+                                { name: "Ranthambore", lat: 26.0173, lng: 76.5026 },
+                                { name: "Ahmedabad", lat: 23.0225, lng: 72.5714 },
+                                { name: "Coorg", lat: 12.4244, lng: 75.7382 },
+                                { name: "Daman", lat: 20.4142, lng: 72.8328 }
+                            ]}
+                        />
+                    </Suspense>
 
                     {images.map((image: Image, i: number) => (
                         <CardWrapper

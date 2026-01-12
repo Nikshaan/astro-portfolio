@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-const CACHE_DURATION = 2 * 60 * 1000;
+const CACHE_DURATION = 30 * 1000;
 let cachedData: any = null;
 let lastFetchTime = 0;
 
@@ -46,7 +46,7 @@ export const GET: APIRoute = async () => {
   async function fetchWithRetry(url: string, retries = 3, delay = 500): Promise<Response> {
     for (let i = 0; i < retries; i++) {
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { cache: 'no-store' });
         if (res.ok) return res;
       } catch (err) {
         if (i === retries - 1) throw err;

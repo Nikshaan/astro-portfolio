@@ -2,10 +2,7 @@
 import FunBentoGrid from "./FunBentoGrid";
 import { getImage } from "astro:assets";
 
-const photoModules = import.meta.glob("../data/photos/photo*.webp", {
-    eager: true,
-});
-// ... (rest of the file until the component usage)
+const photoModules = import.meta.glob("../data/photos/photo*.webp");
 const photoTitles: Record<number, string> = {
     1: "Manali",
     2: "Manali",
@@ -117,12 +114,12 @@ const sortedModules = Object.entries(photoModules)
         const bNum = parseInt(b.match(/photo(\d+)/)?.[1] || "0");
         return aNum - bNum;
     })
-    .slice(0, 8);
+    .slice(0, 7);
 
 const gridImages = await Promise.all(
-    sortedModules.map(async ([path, module]) => {
+    sortedModules.map(async ([path, importFunc]) => {
         const photoNumber = parseInt(path.match(/photo(\d+)/)?.[1] || "0");
-        const imageModule = module as any;
+        const imageModule = (await importFunc()) as any;
         if (!imageModule.default) return null;
 
         const optimizedThumbnail = await getImage({

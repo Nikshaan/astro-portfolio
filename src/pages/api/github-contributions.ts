@@ -64,6 +64,7 @@ export const GET: APIRoute = async () => {
   try {
     const response = await fetch('https://api.github.com/graphql', {
       method: 'POST',
+      cache: 'no-store',
       headers: {
         'Authorization': `Bearer ${GH_TOKEN}`,
         'Content-Type': 'application/json',

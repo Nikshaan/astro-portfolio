@@ -4,71 +4,88 @@
 [data-theme="light"] .bg-\[\#171717\],
 [data-theme="light"] .bg-\[\#080808\] {
   background-color: #ffffff !important;
+  transition: background-color 0.3s ease !important;
 }
 
 [data-theme="light"] .bg-\[\#171717\] {
   background-color: #dbeafe !important;
+  transition: background-color 0.3s ease !important;
 }
 
 [data-theme="light"] .bg-neutral-50 {
   background-color: #dbeafe !important;
+  transition: background-color 0.3s ease !important;
 }
 
 [data-theme="light"] .bg-neutral-100 {
   background-color: #bfdbfe !important;
+  transition: background-color 0.3s ease !important;
 }
 
 [data-theme="light"] .bg-neutral-200 {
   background-color: #93c5fd !important;
+  transition: background-color 0.3s ease !important;
 }
 
 [data-theme="light"] .bg-neutral-700 {
   background-color: #2563eb !important;
+  transition: background-color 0.3s ease !important;
 }
 
 [data-theme="light"] .bg-neutral-800 {
   background-color: #1d4ed8 !important;
+  transition: background-color 0.3s ease !important;
 }
 
 [data-theme="light"] .bg-neutral-900 {
   background-color: #1e3a8a !important;
+  transition: background-color 0.3s ease !important;
 }
 
 [data-theme="light"] .text-white,
 [data-theme="light"] .text-neutral-50 {
   color: #000000 !important;
+  transition: color 0.3s ease !important;
 }
 
 [data-theme="light"] .text-neutral-100 {
   color: #1e293b !important;
+  transition: color 0.3s ease !important;
 }
 
 [data-theme="light"] .text-neutral-400 {
   color: #475569 !important;
+  transition: color 0.3s ease !important;
 }
 
 [data-theme="light"] .text-neutral-500 {
   color: #64748b !important;
+  transition: color 0.3s ease !important;
 }
 
 [data-theme="light"] .text-neutral-600 {
   color: #334155 !important;
+  transition: color 0.3s ease !important;
 }
 
 [data-theme="light"] .text-neutral-900 {
   color: #0f172a !important;
+  transition: color 0.3s ease !important;
 }
 
 [data-theme="light"] .border-slate-300 {
   border-color: #60a5fa !important;
+  transition: border-color 0.3s ease !important;
 }
 
 [data-theme="light"] .border-b {
   border-color: #60a5fa !important;
+  transition: border-color 0.3s ease !important;
 }
 
 [data-theme="light"] .border-l {
   border-color: #60a5fa !important;
+  transition: border-color 0.3s ease !important;
 }
 
 [data-theme="light"] .border-white {
@@ -114,20 +131,16 @@
   background-color: #ffffff !important;
   background-image:
     linear-gradient(to bottom, rgba(219, 234, 254, 0.6), rgb(255, 255, 255) 80%),
-    repeating-linear-gradient(
-      to right,
+    repeating-linear-gradient(to right,
       rgba(30, 58, 138, 0.4) 0px,
       rgba(30, 58, 138, 0.4) 1px,
       transparent 1px,
-      transparent 80px
-    ),
-    repeating-linear-gradient(
-      to bottom,
+      transparent 80px),
+    repeating-linear-gradient(to bottom,
       rgba(30, 58, 138, 0.4) 0px,
       rgba(30, 58, 138, 0.4) 1px,
       transparent 1px,
-      transparent 80px
-    ) !important;
+      transparent 80px) !important;
 }
 
 [data-theme="light"] a {
@@ -166,14 +179,17 @@
 [data-theme="light"] .recharts-area {
   fill: #93c5fd !important;
   stroke: #3b82f6 !important;
+  transition: fill 0.3s ease, stroke 0.3s ease !important;
 }
 
 [data-theme="light"] .recharts-cartesian-grid line {
   stroke: #dbeafe !important;
+  transition: stroke 0.3s ease !important;
 }
 
 [data-theme="light"] .recharts-text {
   fill: #1e40af !important;
+  transition: fill 0.3s ease !important;
 }
 
 [data-theme="light"] .text-gray-400 {
@@ -212,4 +228,59 @@
 [data-theme="light"] .special-badge {
   background-color: #BFDBFE !important;
   border-color: #60A5FA !important;
+}
+
+[data-theme="light"] svg .fill-purple-500,
+[data-theme="light"] svg .fill-purple-400 {
+  fill: #2563eb !important;
+}
+
+[data-theme="light"] svg .fill-neutral-200 {
+  fill: #bfdbfe !important;
+}
+
+[data-theme="light"] svg .fill-neutral-50 {
+  fill: #dbeafe !important;
+}
+
+[data-theme="light"] svg .fill-zinc-700,
+[data-theme="light"] svg .fill-zinc-800 {
+  fill: #dbeafe !important;
+}
+
+[data-theme="light"] svg .stroke-neutral-300 {
+  stroke: #93c5fd !important;
+}
+
+[data-theme="light"] svg .stroke-zinc-600,
+[data-theme="light"] svg .stroke-zinc-700 {
+  stroke: #93c5fd !important;
+}
+
+[data-theme="light"] svg path:hover.hover\:fill-blue-50 {
+  fill: #bfdbfe !important;
+}
+
+[data-theme="light"] svg .fill-neutral-900 {
+  fill: #1e3a8a !important;
+}
+
+[data-theme="light"] svg .fill-white {
+  fill: white !important;
+}
+
+[data-theme="light"] svg path,
+[data-theme="light"] svg circle,
+[data-theme="light"] svg rect,
+[data-theme="light"] svg line {
+  transition: fill 0.3s ease, stroke 0.3s ease !important;
+}
+
+[data-theme="light"] .recharts-area,
+[data-theme="light"] .recharts-line,
+[data-theme="light"] .recharts-bar,
+[data-theme="light"] .recharts-cartesian-grid line,
+[data-theme="light"] .recharts-text,
+[data-theme="light"] .text-gray-400 {
+  transition: fill 0.3s ease, stroke 0.3s ease, color 0.3s ease !important;
 }

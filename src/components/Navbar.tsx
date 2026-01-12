@@ -168,12 +168,25 @@ const Navbar: React.FC<NavbarProps> = ({
     const html = document.documentElement;
     const currentTheme = html.getAttribute('data-theme');
 
-    if (currentTheme === 'light') {
-      html.removeAttribute('data-theme');
-      localStorage.setItem('theme', 'default');
+    if ('startViewTransition' in document) {
+      (document as any).startViewTransition(() => {
+        if (currentTheme === 'light') {
+          html.removeAttribute('data-theme');
+          localStorage.setItem('theme', 'default');
+        } else {
+          html.setAttribute('data-theme', 'light');
+          localStorage.setItem('theme', 'light');
+        }
+      });
     } else {
-      html.setAttribute('data-theme', 'light');
-      localStorage.setItem('theme', 'light');
+
+      if (currentTheme === 'light') {
+        html.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'default');
+      } else {
+        html.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+      }
     }
   };
 
@@ -193,9 +206,11 @@ const Navbar: React.FC<NavbarProps> = ({
     <div
       ref={navbarRef}
       id="navbar"
-      className="bg-[#111111]/80 dark:bg-[#111111]/80 backdrop-blur-md text-white z-50 fixed left-1/2 transform -translate-x-1/2 h-12 w-[90%] max-w-[380px] border border-white/20 rounded-full flex justify-between px-6 items-center transition-all duration-300 shadow-lg nav-links"
+      className="bg-[#111111]/80 dark:bg-[#111111]/80 backdrop-blur-md text-white z-50 fixed left-1/2 h-12 w-[90%] max-w-[380px] border border-white/20 rounded-full flex justify-between px-6 items-center shadow-lg nav-links will-change-transform"
       style={{
-        top: isVisible ? '1rem' : '-5rem'
+        top: '1rem',
+        transform: isVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(-200%)',
+        transition: 'transform 0.5s cubic-bezier(0.32, 0.72, 0, 1)'
       }}
     >
       <div className="flex gap-1">
