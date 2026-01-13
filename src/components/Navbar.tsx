@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
   sections?: Array<{ id: string; label: string }>;
@@ -168,25 +169,12 @@ const Navbar: React.FC<NavbarProps> = ({
     const html = document.documentElement;
     const currentTheme = html.getAttribute('data-theme');
 
-    if ('startViewTransition' in document) {
-      (document as any).startViewTransition(() => {
-        if (currentTheme === 'light') {
-          html.removeAttribute('data-theme');
-          localStorage.setItem('theme', 'default');
-        } else {
-          html.setAttribute('data-theme', 'light');
-          localStorage.setItem('theme', 'light');
-        }
-      });
+    if (currentTheme === 'light') {
+      html.removeAttribute('data-theme');
+      localStorage.setItem('theme', 'default');
     } else {
-
-      if (currentTheme === 'light') {
-        html.removeAttribute('data-theme');
-        localStorage.setItem('theme', 'default');
-      } else {
-        html.setAttribute('data-theme', 'light');
-        localStorage.setItem('theme', 'light');
-      }
+      html.setAttribute('data-theme', 'light');
+      localStorage.setItem('theme', 'light');
     }
   };
 
@@ -203,14 +191,22 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <div
+    <motion.div
       ref={navbarRef}
       id="navbar"
-      className="bg-[#111111]/80 dark:bg-[#111111]/80 backdrop-blur-md text-white z-50 fixed left-1/2 h-12 w-[90%] max-w-[380px] border border-white/20 rounded-full flex justify-between px-6 items-center shadow-lg nav-links will-change-transform"
+      className="bg-[#111111]/80 dark:bg-[#111111]/80 backdrop-blur-md text-white z-50 fixed left-1/2 h-12 w-[90%] max-w-[380px] border border-white/20 rounded-full flex justify-between px-6 items-center shadow-lg nav-links"
+      initial={{ y: -100, x: "-50%", opacity: 0 }}
+      animate={{
+        y: isVisible ? 0 : -100,
+        x: "-50%",
+        opacity: isVisible ? 1 : 0
+      }}
+      transition={{
+        duration: 0.3,
+        ease: "easeInOut"
+      }}
       style={{
         top: '1rem',
-        transform: isVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(-200%)',
-        transition: 'transform 0.5s cubic-bezier(0.32, 0.72, 0, 1)'
       }}
     >
       <div className="flex gap-1">
@@ -260,7 +256,7 @@ const Navbar: React.FC<NavbarProps> = ({
           )}
         </svg>
       </button>
-    </div>
+    </motion.div>
   );
 };
 

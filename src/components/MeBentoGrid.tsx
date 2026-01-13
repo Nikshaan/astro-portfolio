@@ -115,17 +115,17 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
             );
         case 'location':
             return (
-                <div className="flex flex-col min-[425px]:flex-row lg:flex-col min-[1150px]:!flex-row justify-evenly items-center w-full h-full gap-3 p-2 text-sm md:text-base">
-                    <div className="flex flex-col sm:contents lg:flex lg:flex-col w-full min-[425px]:w-auto lg:w-auto justify-center items-center lg:gap-1">
+                <div className="flex flex-col min-[425px]:flex-row lg:flex-col min-[1150px]:!flex-row justify-center items-center w-full h-full gap-4 p-4 text-sm md:text-base">
+                    <div className="flex flex-col justify-center items-center w-full min-[425px]:flex-1 lg:w-full min-[1150px]:flex-1 gap-1 md:gap-2">
                         <div className="flex justify-center items-center gap-1 md:gap-2">
                             <MapPin className="w-5 h-5 mb-1 lg:w-6 lg:h-6" />
-                            <p className="font-bold text-center text-lg text-nowrap">Mumbai, India</p>
+                            <p className="font-bold text-center text-nowrap">Mumbai, India</p>
                         </div>
-                        <div className="flex justify-center items-center w-full md:w-auto scale-[0.8] md:scale-110 origin-center mt-1 md:mt-0">
+                        <div className="flex justify-center items-center w-full md:w-auto mt-1 md:mt-0">
                             <Clock />
                         </div>
                     </div>
-                    <div className="flex justify-center items-center gap-4 md:gap-6 w-full min-[425px]:w-auto">
+                    <div className="flex justify-center items-center gap-4 md:gap-6 w-full min-[425px]:flex-1 lg:w-full min-[1150px]:flex-1 h-full">
                         <a href={card.data.links.github} target="_blank" rel="noopener noreferrer" aria-label="Visit Nikshaan's GitHub profile" data-title="GitHub" className="tooltip-trigger relative">
                             <img src={githubColor.src} alt="GitHub" className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
                         </a>
@@ -186,11 +186,12 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
         case 'resume':
             return (
                 <div className="flex justify-center items-center h-full w-full">
-                    <p className="text-4xl font-bold uppercase tracking-widest text-neutral-300 dark:text-neutral-600 [writing-mode:vertical-lr] rotate-180">
+                    <p className="text-4xl font-bold uppercase tracking-widest text-neutral-300 dark:text-neutral-600 [writing-mode:vertical-lr] rotate-180 max-xl:rotate-0 max-xl:[writing-mode:horizontal-tb]">
                         resume
                     </p>
                 </div>
             );
+
         default:
             return null;
     }
@@ -227,7 +228,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index = 0, s
                 layoutId={shouldAnimate ? `card-${card.id}` : undefined}
                 onClick={() => card.isExpandable && setSelectedId(card.id)}
                 className={cn(
-                    "relative rounded-3xl border flex flex-col group transition-colors me-card-hover",
+                    "relative rounded-3xl border flex flex-col group me-card-hover",
                     card.id === 'win' ? "justify-center items-center h-full w-fit" : card.id === 'resume' ? "justify-center items-center h-full w-full" : "p-5 justify-between h-full",
                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
                     "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]",
@@ -306,11 +307,11 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
 
                 <div className="col-span-2 lg:col-span-4 flex flex-col xl:flex-row gap-4 w-full h-auto">
                     {resumeCard && (
-                        <div className="hidden xl:block h-full w-fit">
+                        <div className="block h-full w-full xl:w-fit col-span-2 xl:col-span-1">
                             <CardWrapper
                                 card={resumeCard}
                                 index={4}
-                                className="h-full w-[100px]"
+                                className="h-[100px] xl:h-full w-full xl:w-[100px]"
                                 selectedId={selectedId}
                                 setSelectedId={setSelectedId}
                                 images={images}

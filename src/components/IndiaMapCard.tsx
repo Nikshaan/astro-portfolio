@@ -31,6 +31,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     const [topology, setTopology] = useState<any>(cachedTopology);
     const [loading, setLoading] = useState(!cachedTopology);
     const containerRef = useRef<HTMLDivElement>(null);
+    const expandedContainerRef = useRef<HTMLDivElement>(null);
     const [collapsedDimensions, setCollapsedDimensions] = useState({ width: 0, height: 0 });
     const [expandedDimensions, setExpandedDimensions] = useState({ width: 0, height: 0 });
     const [hoveredPlace, setHoveredPlace] = useState<VisitedPlace | null>(null);
@@ -96,6 +97,26 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
         return () => window.removeEventListener("keydown", handleEscape);
     }, [expanded]);
 
+    useEffect(() => {
+        if (!expanded || !expandedContainerRef.current) return;
+
+        const updateExpandedDimensions = () => {
+            if (expandedContainerRef.current) {
+                const { width, height } = expandedContainerRef.current.getBoundingClientRect();
+                if (width > 0 && height > 0) {
+                    setExpandedDimensions({ width, height });
+                }
+            }
+        };
+
+        updateExpandedDimensions();
+
+        const resizeObserver = new ResizeObserver(updateExpandedDimensions);
+        resizeObserver.observe(expandedContainerRef.current);
+
+        return () => resizeObserver.disconnect();
+    }, [expanded]);
+
     const collapsedMap = useMemo(() => {
         if (!topology || collapsedDimensions.width === 0 || collapsedDimensions.height === 0) {
             return { pathGenerator: null, projection: null, features: [] };
@@ -137,7 +158,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
         const features = featureCollection.features;
 
         const proj = geoMercator();
-        const padding = 50;
+        const padding = 0;
 
         proj.fitExtent(
             [
@@ -163,9 +184,10 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
             <motion.div
                 layoutId="india-map-card"
                 className={cn(
-                    "relative h-full w-full rounded-3xl overflow-hidden cursor-pointer group border transition-colors",
+                    "relative h-full w-full rounded-3xl overflow-hidden cursor-pointer group border",
                     "bg-neutral-50 dark:bg-[#171717]",
                     "border-white dark:border-white/20",
+                    "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]",
                     expanded ? "opacity-0 pointer-events-none" : "opacity-100",
                     className
                 )}
@@ -204,7 +226,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                     <path
                                         key={`collapsed-${i}`}
                                         d={collapsedMap.pathGenerator!(feature) as string}
-                                        className="stroke-[0.5] transition-colors fill-neutral-200 dark:fill-zinc-700 stroke-neutral-300 dark:stroke-zinc-600"
+                                        className="stroke-[0.5] fill-neutral-200 dark:fill-zinc-700 stroke-neutral-300 dark:stroke-zinc-600"
                                     />
                                 ))}
                             </g>
@@ -214,9 +236,9 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                 if (!coords) return null;
                                 return (
                                     <g key={i} transform={`translate(${coords[0]}, ${coords[1]})`}>
-                                        <circle r="3" className="fill-purple-500 dark:fill-purple-400" />
+                                        <circle r="1.5" className="fill-purple-500 dark:fill-purple-400" />
                                         <circle
-                                            r="3"
+                                            r="1.5"
                                             className="fill-purple-500 dark:fill-purple-400 animate-ping opacity-75"
                                         />
                                     </g>
@@ -267,14 +289,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                 </p>
                             </div>
 
-                            <div className="flex-1 w-full h-full relative" ref={(el) => {
-                                if (el) {
-                                    const { width, height } = el.getBoundingClientRect();
-                                    if (Math.abs(width - expandedDimensions.width) > 5 || Math.abs(height - expandedDimensions.height) > 5) {
-                                        setExpandedDimensions({ width, height });
-                                    }
-                                }
-                            }}>
+                            <div className="flex-1 w-full h-full relative" ref={expandedContainerRef}>
                                 {!loading && expandedMap.pathGenerator && (
                                     <svg
                                         width="100%"
@@ -291,7 +306,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                                         initial={{ pathLength: 0, opacity: 0 }}
                                                         animate={{ pathLength: 1, opacity: 1 }}
                                                         transition={{ duration: 1, delay: i * 0.01 }}
-                                                        className="stroke-neutral-300 dark:stroke-zinc-700 stroke-1 transition-colors duration-300 fill-neutral-50 dark:fill-zinc-800 hover:fill-blue-50 dark:hover:fill-zinc-700 cursor-pointer"
+                                                        className="stroke-neutral-300 dark:stroke-zinc-700 stroke-1 fill-neutral-50 dark:fill-zinc-800 hover:fill-blue-50 dark:hover:fill-zinc-700 cursor-pointer"
                                                     />
                                                 );
                                             })}
@@ -312,26 +327,26 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                                     className="cursor-pointer"
                                                 >
                                                     <circle
-                                                        r={isHovered ? 8 : 4}
+                                                        r={isHovered ? 4 : 2}
                                                         className="fill-purple-500 dark:fill-purple-400 transition-all duration-300"
                                                     />
                                                     <circle
-                                                        r={isHovered ? 12 : 4}
+                                                        r={isHovered ? 6 : 2}
                                                         className="fill-purple-500 dark:fill-purple-400 opacity-30 animate-ping"
                                                     />
                                                     {isHovered && (
-                                                        <g transform={`translate(0, -15)`}>
+                                                        <g transform={`translate(0, -10)`}>
                                                             <rect
-                                                                x="-50" y="-25" width="100" height="25" rx="4"
+                                                                x="-40" y="-20" width="80" height="20" rx="3"
                                                                 className="fill-neutral-900 dark:fill-white"
                                                             />
                                                             <text
-                                                                textAnchor="middle" dy="-8"
-                                                                className="fill-white dark:fill-neutral-900 text-xs font-bold"
+                                                                textAnchor="middle" dy="-6"
+                                                                className="fill-white dark:fill-neutral-900 text-[9px] font-medium"
                                                             >
                                                                 {place.name}
                                                             </text>
-                                                            <path d="M -5 -0.5 L 0 5 L 5 -0.5 Z" className="fill-neutral-900 dark:fill-white" />
+                                                            <path d="M -4 -0.5 L 0 4 L 4 -0.5 Z" className="fill-neutral-900 dark:fill-white" />
                                                         </g>
                                                     )}
                                                 </g>

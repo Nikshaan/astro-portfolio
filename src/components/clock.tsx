@@ -34,7 +34,7 @@ const Clock = memo(function Clock() {
 
   return (
     <div className="font-light text-center my-1">
-      <p className="text-nowrap text-2xl md:text-lg" suppressHydrationWarning={true}>{currentTime}</p>
+      <p className="text-nowrap text-sm md:text-base" suppressHydrationWarning={true}>{currentTime}</p>
     </div>
   );
 });

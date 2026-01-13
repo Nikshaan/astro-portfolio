@@ -190,7 +190,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                         </div>
                     }>
                         <IndiaMapCard
-                            className="col-span-1 row-span-1 h-[200px] md:h-auto"
+                            className="col-span-1 row-span-1 h-full"
                             visitedPlaces={[
                                 { name: "Mumbai", lat: 19.0760, lng: 72.8777 },
                                 { name: "Delhi", lat: 28.7041, lng: 77.1025 },

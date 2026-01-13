@@ -18,7 +18,8 @@ interface MusicStatsData {
 }
 
 let cachedMusicData: MusicStatsData | null = null;
-let isFetching = false;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 5 * 60 * 1000;
 let fetchPromise: Promise<MusicStatsData> | null = null;
 
 export default function MusicStatsClient() {
@@ -27,7 +28,9 @@ export default function MusicStatsClient() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (cachedMusicData) {
+        const now = Date.now();
+
+        if (cachedMusicData && (now - cacheTimestamp) < CACHE_DURATION) {
             setData(cachedMusicData);
             setLoading(false);
             return;
@@ -38,6 +41,7 @@ export default function MusicStatsClient() {
                 try {
                     const musicData = await fetchPromise;
                     setData(musicData);
+                    setError(null);
                 } catch (err) {
                     setError('Failed to load music stats');
                 } finally {
@@ -51,21 +55,38 @@ export default function MusicStatsClient() {
                 const baseUrl = import.meta.env.BASE_URL || '/';
                 const apiPath = baseUrl.endsWith('/') ? 'api/music-stats' : '/api/music-stats';
 
-                fetchPromise = fetch(`${baseUrl}${apiPath}`, { cache: 'no-cache' })
+                fetchPromise = fetch(`${baseUrl}${apiPath}`, {
+                    cache: 'default',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
                     .then(async (response) => {
                         if (!response.ok) {
-                            throw new Error('Failed to fetch music stats');
+                            throw new Error(`HTTP ${response.status}: Failed to fetch music stats`);
                         }
                         return response.json();
+                    })
+                    .then((musicData) => {
+                        if (!musicData.weeklyScrobbles || !musicData.upperStatsArray || !musicData.artistsInfo) {
+                            throw new Error('Invalid data structure received');
+                        }
+                        return musicData;
                     });
 
                 const musicData = await fetchPromise;
                 cachedMusicData = musicData;
+                cacheTimestamp = Date.now();
                 setData(musicData);
                 setError(null);
-            } catch (err) {
-                setError('Failed to load music stats');
-                fetchPromise = null;
+            } catch (err: any) {
+                console.error('Failed to load music stats:', err);
+                setError(err.message || 'Failed to load music stats');
+
+                if (cachedMusicData) {
+                    setData(cachedMusicData);
+                    setError(null);
+                }
             } finally {
                 setLoading(false);
                 fetchPromise = null;
@@ -76,7 +97,7 @@ export default function MusicStatsClient() {
 
     }, []);
 
-    if (loading) {
+    if (loading && !data) {
         return (
             <div className="w-full h-full flex items-center justify-center">
                 <div className="text-gray-400 text-sm">Loading music stats...</div>
@@ -84,10 +105,18 @@ export default function MusicStatsClient() {
         );
     }
 
-    if (error || !data) {
+    if (error && !data) {
         return (
             <div className="w-full h-full flex items-center justify-center">
-                <div className="text-red-400 text-sm">{error || 'Failed to load data'}</div>
+                <div className="text-red-400 text-sm">{error}</div>
+            </div>
+        );
+    }
+
+    if (!data) {
+        return (
+            <div className="w-full h-full flex items-center justify-center">
+                <div className="text-gray-400 text-sm">No data available</div>
             </div>
         );
     }
