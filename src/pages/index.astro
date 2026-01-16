@@ -33,6 +33,8 @@ const optimizedBeeImage = await getImage({
 >
   <NavbarWrapper />
   <main
+    id="main-content"
+    role="main"
     class="bg-black text-neutral-50 min-h-[100svh] w-full flex items-center flex-col"
   >
     <div class="grid-bg w-full flex flex-col justify-start items-center pb-10">
@@ -61,15 +63,6 @@ const optimizedBeeImage = await getImage({
     </div>
   </main>
 </MainLayout>
-
-<head>
-  <link
-    rel="preload"
-    href="/api/github-contributions"
-    as="fetch"
-    crossorigin="anonymous"
-  />
-</head>
 
 <style>
   .grid-bg {

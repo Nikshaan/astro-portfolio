@@ -1,22 +1,22 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { motion } from 'framer-motion';
 
 interface NavbarProps {
   sections?: Array<{ id: string; label: string }>;
 }
 
-const Navbar: React.FC<NavbarProps> = ({
-  sections = [
-    { id: 'me', label: 'me' },
-    { id: 'projects', label: 'projects' },
-    { id: 'fun', label: 'fun' }
-  ]
+const DEFAULT_SECTIONS = [
+  { id: 'me', label: 'me' },
+  { id: 'projects', label: 'projects' },
+  { id: 'fun', label: 'fun' }
+];
+
+const Navbar: React.FC<NavbarProps> = memo(({
+  sections = DEFAULT_SECTIONS
 }) => {
 
   const [activeSection, setActiveSection] = useState<string>('me');
-
   const [theme, setTheme] = useState<string>('dark');
-
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
   const navbarRef = useRef<HTMLDivElement>(null);
@@ -135,7 +135,7 @@ const Navbar: React.FC<NavbarProps> = ({
     };
   }, []);
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
+  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
     e.preventDefault();
 
     const targetSection = document.getElementById(sectionId);
@@ -163,11 +163,19 @@ const Navbar: React.FC<NavbarProps> = ({
         }
       }, 10);
     }
-  };
+  }, []);
 
-  const handleThemeToggle = () => {
+  const handleThemeToggle = useCallback(() => {
     const html = document.documentElement;
+    
+    if (html.classList.contains('theme-transitioning')) {
+      html.classList.remove('theme-transitioning');
+      void html.offsetHeight;
+    }
+    
     const currentTheme = html.getAttribute('data-theme');
+
+    html.classList.add('theme-transitioning');
 
     if (currentTheme === 'light') {
       html.removeAttribute('data-theme');
@@ -176,11 +184,14 @@ const Navbar: React.FC<NavbarProps> = ({
       html.setAttribute('data-theme', 'light');
       localStorage.setItem('theme', 'light');
     }
-  };
 
-  const getLinkClasses = (sectionId: string) => {
+    setTimeout(() => {
+      html.classList.remove('theme-transitioning');
+    }, 400);
+  }, []);
+
+  const getLinkClasses = useCallback((sectionId: string) => {
     const isActive = activeSection === sectionId;
-
     const baseClasses = 'nav-link cursor-pointer px-3 py-1 rounded-md transition-all duration-200 font-medium text-sm md:text-base';
 
     if (isActive) {
@@ -188,7 +199,7 @@ const Navbar: React.FC<NavbarProps> = ({
     }
 
     return baseClasses;
-  };
+  }, [activeSection]);
 
   return (
     <motion.div
@@ -216,6 +227,7 @@ const Navbar: React.FC<NavbarProps> = ({
             href={`#${id}`}
             onClick={(e) => handleNavClick(e, id)}
             aria-label={`Navigate to ${label} section`}
+            aria-current={activeSection === id ? 'true' : undefined}
             className={getLinkClasses(id)}
             data-section={id}
           >
@@ -258,6 +270,8 @@ const Navbar: React.FC<NavbarProps> = ({
       </button>
     </motion.div>
   );
-};
+});
+
+Navbar.displayName = 'Navbar';
 
 export default Navbar;

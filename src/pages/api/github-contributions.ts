@@ -3,8 +3,55 @@ import type { APIRoute } from 'astro';
 export const prerender = false;
 
 const CACHE_DURATION = 15 * 1000;
-let cachedData: any = null;
+const REQUEST_TIMEOUT = 8000;
+let cachedData: GitHubResponse | null = null;
 let lastFetchTime = 0;
+
+interface ContributionDay {
+  contributionCount: number;
+  date: string;
+  color: string;
+}
+
+interface ContributionWeek {
+  contributionDays: ContributionDay[];
+}
+
+interface ContributionCalendar {
+  totalContributions: number;
+  weeks: ContributionWeek[];
+}
+
+interface GitHubResponse {
+  data?: {
+    user?: {
+      contributionsCollection?: {
+        contributionCalendar?: ContributionCalendar;
+      };
+    };
+  };
+  errors?: Array<{ message: string }>;
+}
+
+function isValidGitHubResponse(data: unknown): data is GitHubResponse {
+  if (typeof data !== 'object' || data === null) return false;
+  const response = data as GitHubResponse;
+  if (response.errors) return true;
+  return !!(response.data?.user?.contributionsCollection?.contributionCalendar);
+}
+
+const FALLBACK_DATA: GitHubResponse = {
+  data: {
+    user: {
+      contributionsCollection: {
+        contributionCalendar: {
+          totalContributions: 0,
+          weeks: []
+        }
+      }
+    }
+  }
+};
 
 export const GET: APIRoute = async () => {
   const GH_TOKEN = import.meta.env.GH_TOKEN as string;
@@ -62,9 +109,13 @@ export const GET: APIRoute = async () => {
   `;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
     const response = await fetch('https://api.github.com/graphql', {
       method: 'POST',
       cache: 'no-store',
+      signal: controller.signal,
       headers: {
         'Authorization': `Bearer ${GH_TOKEN}`,
         'Content-Type': 'application/json',
@@ -75,7 +126,13 @@ export const GET: APIRoute = async () => {
       })
     });
 
-    const data = await response.json();
+    clearTimeout(timeoutId);
+
+    const data: unknown = await response.json();
+
+    if (!isValidGitHubResponse(data)) {
+      throw new Error('Invalid API response structure');
+    }
 
     cachedData = data;
     lastFetchTime = now;
@@ -88,7 +145,7 @@ export const GET: APIRoute = async () => {
         'X-Cache-Status': 'MISS'
       }
     });
-  } catch (error) {
+  } catch {
     if (cachedData) {
       return new Response(JSON.stringify(cachedData), {
         status: 200,
@@ -100,11 +157,12 @@ export const GET: APIRoute = async () => {
       });
     }
 
-    return new Response(JSON.stringify({
-      error: 'Failed to fetch GitHub contributions'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+    return new Response(JSON.stringify(FALLBACK_DATA), {
+      status: 200,
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Cache-Status': 'FALLBACK'
+      }
     });
   }
 };

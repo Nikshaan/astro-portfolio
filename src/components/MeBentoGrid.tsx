@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { m, motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { X, Maximize2, MapPin } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
@@ -186,7 +186,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
         case 'resume':
             return (
                 <div className="flex justify-center items-center h-full w-full">
-                    <p className="text-4xl font-bold uppercase tracking-widest text-neutral-300 dark:text-neutral-600 [writing-mode:vertical-lr] rotate-180 max-xl:rotate-0 max-xl:[writing-mode:horizontal-tb]">
+                    <p className="text-4xl font-bold uppercase tracking-widest text-neutral-300 dark:text-neutral-600 [writing-mode:vertical-lr] rotate-180 max-lg:rotate-0 max-lg:[writing-mode:horizontal-tb]">
                         resume
                     </p>
                 </div>
@@ -206,37 +206,47 @@ interface CardWrapperProps {
     images: Record<string, any>;
 }
 
-const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index = 0, selectedId, setSelectedId, images }) => {
+const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index = 0, selectedId, setSelectedId, images }) => {
     const shouldAnimate = selectedId === null || selectedId === card.id;
+    const isResume = card.id === 'resume';
+
+    const handleClick = useCallback(() => {
+        if (isResume) {
+            window.open(card.data.link, '_blank');
+        } else if (card.isExpandable) {
+            setSelectedId(card.id);
+        }
+    }, [isResume, card.data.link, card.isExpandable, card.id, setSelectedId]);
 
     return (
         <m.div
             className={cn("h-full w-full", className)}
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 30, scale: 0.98 }}
             whileInView={{
                 opacity: 1,
                 y: 0,
+                scale: 1,
                 transition: {
                     duration: 0.5,
-                    ease: "easeOut",
-                    delay: index * 0.1
+                    ease: [0.25, 0.1, 0.25, 1],
+                    delay: index * 0.08,
                 }
             }}
-            viewport={{ once: true, margin: "-50px" }}
+            viewport={{ once: true, amount: 0.15 }}
         >
             <motion.div
                 layoutId={shouldAnimate ? `card-${card.id}` : undefined}
-                onClick={() => card.isExpandable && setSelectedId(card.id)}
+                onClick={handleClick}
                 className={cn(
                     "relative rounded-3xl border flex flex-col group me-card-hover",
                     card.id === 'win' ? "justify-center items-center h-full w-fit" : card.id === 'resume' ? "justify-center items-center h-full w-full" : "p-5 justify-between h-full",
                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
                     "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]",
                     card.id === 'intro' || card.id === 'win' || card.id === 'resume' ? "overflow-hidden" : "overflow-visible",
-                    card.isExpandable && !selectedId ? "cursor-pointer" : ""
+                    (card.isExpandable || isResume) && !selectedId ? "cursor-pointer" : ""
                 )}
-                whileHover={card.isExpandable && !selectedId ? { scale: 1.02 } : {}}
-                whileTap={card.isExpandable && !selectedId ? { scale: 0.98 } : {}}
+                whileHover={(card.isExpandable || isResume) && !selectedId ? { scale: 1.02 } : {}}
+                whileTap={(card.isExpandable || isResume) && !selectedId ? { scale: 0.98 } : {}}
             >
                 {renderCardContent(card, images)}
                 {card.isExpandable && (
@@ -250,7 +260,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index = 0, s
             </motion.div>
         </m.div>
     );
-};
+});
 
 interface MeBentoGridProps {
     optimizedImages?: Record<string, any>;
@@ -258,16 +268,24 @@ interface MeBentoGridProps {
 
 const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const selectedItem = cardsData.find((item) => item.id === selectedId);
-    const images = optimizedImages || defaultImages;
+    const images = useMemo(() => optimizedImages || defaultImages, [optimizedImages]);
+    
+    const selectedItem = useMemo(() => 
+        cardsData.find((item) => item.id === selectedId),
+        [selectedId]
+    );
 
-    const introCard = cardsData.find(c => c.id === 'intro');
-    const extracurrCard = cardsData.find(c => c.id === 'extracurr');
-    const educationCard = cardsData.find(c => c.id === 'education');
-    const locationCard = cardsData.find(c => c.id === 'location');
-    const winCard = cardsData.find(c => c.id === 'win');
-    const experienceCard = cardsData.find(c => c.id === 'experience');
-    const resumeCard = cardsData.find(c => c.id === 'resume');
+    const { introCard, extracurrCard, educationCard, locationCard, winCard, experienceCard, resumeCard } = useMemo(() => ({
+        introCard: cardsData.find(c => c.id === 'intro'),
+        extracurrCard: cardsData.find(c => c.id === 'extracurr'),
+        educationCard: cardsData.find(c => c.id === 'education'),
+        locationCard: cardsData.find(c => c.id === 'location'),
+        winCard: cardsData.find(c => c.id === 'win'),
+        experienceCard: cardsData.find(c => c.id === 'experience'),
+        resumeCard: cardsData.find(c => c.id === 'resume'),
+    }), []);
+
+    const handleClose = useCallback(() => setSelectedId(null), []);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -305,13 +323,13 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                     {winCard && <CardWrapper card={winCard} index={3} className="w-fit shrink-0" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 </div>
 
-                <div className="col-span-2 lg:col-span-4 flex flex-col xl:flex-row gap-4 w-full h-auto">
+                <div className="col-span-2 lg:col-span-4 flex flex-col lg:flex-row gap-4 w-full h-auto">
                     {resumeCard && (
-                        <div className="block h-full w-full xl:w-fit col-span-2 xl:col-span-1">
+                        <div className="block h-full w-full lg:w-fit col-span-2 lg:col-span-1">
                             <CardWrapper
                                 card={resumeCard}
                                 index={4}
-                                className="h-[100px] xl:h-full w-full xl:w-[100px]"
+                                className="h-[100px] lg:h-full w-full lg:w-[100px]"
                                 selectedId={selectedId}
                                 setSelectedId={setSelectedId}
                                 images={images}
@@ -332,7 +350,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setSelectedId(null)}
+                            onClick={handleClose}
                             className="absolute inset-0 bg-black/60 backdrop-blur-md"
                         />
 
@@ -347,11 +365,12 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    setSelectedId(null);
+                                    handleClose();
                                 }}
+                                aria-label="Close details"
                                 className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-20 cursor-pointer"
                             >
-                                <X size={20} />
+                                <X size={20} aria-hidden="true" />
                             </button>
 
                             <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import MusicCharts from './musiccharts';
 
 interface artistInfoType {
@@ -22,7 +22,7 @@ let cacheTimestamp = 0;
 const CACHE_DURATION = 5 * 60 * 1000;
 let fetchPromise: Promise<MusicStatsData> | null = null;
 
-export default function MusicStatsClient() {
+export default memo(function MusicStatsClient() {
     const [data, setData] = useState<MusicStatsData | null>(cachedMusicData);
     const [loading, setLoading] = useState(!cachedMusicData);
     const [error, setError] = useState<string | null>(null);
@@ -79,9 +79,9 @@ export default function MusicStatsClient() {
                 cacheTimestamp = Date.now();
                 setData(musicData);
                 setError(null);
-            } catch (err: any) {
-                console.error('Failed to load music stats:', err);
-                setError(err.message || 'Failed to load music stats');
+            } catch (err: unknown) {
+                const errorMessage = err instanceof Error ? err.message : 'Failed to load music stats';
+                setError(errorMessage);
 
                 if (cachedMusicData) {
                     setData(cachedMusicData);
@@ -162,4 +162,4 @@ export default function MusicStatsClient() {
             </div>
         </div>
     );
-}
+})

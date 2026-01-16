@@ -14,6 +14,7 @@ import "@fontsource/instrument-sans/500.css";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
 import VercelAnalytics from "../components/VercelAnalytics.astro";
+import Footer from "../components/Footer";
 
 const { title, description, preloadImage } = Astro.props;
 
@@ -37,14 +38,27 @@ const favicon = await getImage({
         <meta content={title} property="og:title" />
         <meta content={description} property="og:description" />
         <meta content="website" property="og:type" />
+        <meta content="https://nikshaan.vercel.app" property="og:url" />
+        <meta content="https://nikshaan.vercel.app/favicon.svg" property="og:image" />
+        <meta content="1200" property="og:image:width" />
+        <meta content="630" property="og:image:height" />
+        <meta content="Nikshaan Portfolio" property="og:site_name" />
 
-        <meta name="theme-color" content="#111111" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+
+        <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+        <meta name="color-scheme" content="dark light" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta
             name="apple-mobile-web-app-status-bar-style"
             content="black-translucent"
         />
+        <meta name="apple-mobile-web-app-title" content="Nikshaan" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="canonical" href="https://nikshaan.vercel.app/" />
         <link rel="manifest" href="/manifest.json" />
 
@@ -52,6 +66,13 @@ const favicon = await getImage({
         <link rel="preconnect" href="https://ws.audioscrobbler.com" />
         <link rel="dns-prefetch" href="https://api.github.com" />
         <link rel="dns-prefetch" href="https://ws.audioscrobbler.com" />
+
+        <link
+            rel="preload"
+            href="/api/github-contributions"
+            as="fetch"
+            crossorigin="anonymous"
+        />
 
         {
             preloadImage && (
@@ -65,7 +86,16 @@ const favicon = await getImage({
             )
         }
 
-        <style></style>
+        <style is:inline>
+            @font-face {
+                font-family: 'Instrument Sans';
+                font-display: swap;
+            }
+            @font-face {
+                font-family: 'JetBrains Mono';
+                font-display: swap;
+            }
+        </style>
 
         <Tooltips interactive={false} delay={[0, 50]} />
 
@@ -84,10 +114,24 @@ const favicon = await getImage({
         </script>
     </head>
     <body
-        class="h-full bg-black text-neutral-50 transition-colors duration-300"
+        class="h-full bg-black text-neutral-50"
     >
+        <a href="#me" class="skip-link">Skip to main content</a>
         <slot />
+        <Footer client:idle />
         <VercelAnalytics />
+        <script type="application/ld+json" set:html={JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": "Nikshaan Shetty",
+            "url": "https://nikshaan.vercel.app",
+            "jobTitle": "Developer",
+            "sameAs": [
+                "https://github.com/Nikshaan",
+                "https://www.linkedin.com/in/nikshaan-shetty/"
+            ],
+            "knowsAbout": ["Machine Learning", "Deep Learning", "Web Development", "React", "Next.js", "Python"]
+        })} />
     </body>
 </html>
 
@@ -109,11 +153,7 @@ const favicon = await getImage({
 </style>
 
 <script>
-    let lenisInitialized = false;
-
     async function initLenis() {
-        if (lenisInitialized) return;
-
         const Lenis = (await import("lenis")).default;
 
         const lenis = new Lenis({
@@ -125,44 +165,20 @@ const favicon = await getImage({
             wheelMultiplier: 1,
             touchMultiplier: 2,
             infinite: false,
+            autoRaf: true,
         });
 
         (window as any).lenis = lenis;
 
-        function raf(time: number) {
-            lenis.raf(time);
-            requestAnimationFrame(raf);
-        }
-
-        requestAnimationFrame(raf);
-        lenisInitialized = true;
-
         document.addEventListener("astro:before-swap", () => {
             lenis.destroy();
             delete (window as any).lenis;
-            lenisInitialized = false;
         });
     }
 
-    function initLenisOnInteraction() {
-        if (lenisInitialized) return;
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLenis);
+    } else {
         initLenis();
-
-        ["scroll", "wheel", "touchstart", "keydown"].forEach((event) => {
-            window.removeEventListener(event, initLenisOnInteraction);
-        });
     }
-
-    ["scroll", "wheel", "touchstart", "keydown"].forEach((event) => {
-        window.addEventListener(event, initLenisOnInteraction, {
-            passive: true,
-            once: true,
-        });
-    });
-
-    setTimeout(() => {
-        if (!lenisInitialized) {
-            initLenis();
-        }
-    }, 2000);
 </script>

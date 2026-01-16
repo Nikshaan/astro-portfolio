@@ -1,0 +1,82 @@
+html.theme-transitioning,
+html.theme-transitioning body,
+html.theme-transitioning #navbar,
+html.theme-transitioning #main-footer,
+html.theme-transitioning .footer-transition {
+    transition: background-color 0.35s ease,
+                color 0.35s ease,
+                border-color 0.35s ease,
+                box-shadow 0.35s ease !important;
+}
+
+html.theme-transitioning div[class*="rounded-3xl"],
+html.theme-transitioning div[class*="bg-neutral"],
+html.theme-transitioning div[class*="bg-[#171717]"],
+html.theme-transitioning div[class*="border"] {
+    transition: background-color 0.35s ease,
+                border-color 0.35s ease !important;
+}
+
+html.theme-transitioning h1,
+html.theme-transitioning h2,
+html.theme-transitioning h3,
+html.theme-transitioning p,
+html.theme-transitioning span,
+html.theme-transitioning a {
+    transition: color 0.35s ease !important;
+}
+
+html.theme-transitioning svg,
+html.theme-transitioning svg path,
+html.theme-transitioning svg circle {
+    transition: fill 0.35s ease,
+                stroke 0.35s ease !important;
+}
+
+html.theme-transitioning button,
+html.theme-transitioning input {
+    transition: background-color 0.35s ease,
+                color 0.35s ease,
+                border-color 0.35s ease !important;
+}
+
+html,
+body {
+    transition: background-color 0.35s ease;
+}
+
+#navbar {
+    transition: background-color 0.35s ease,
+                border-color 0.35s ease,
+                color 0.35s ease,
+                box-shadow 0.35s ease;
+    will-change: transform, opacity;
+}
+
+.footer-transition {
+    transition: background-color 0.35s ease,
+                border-color 0.35s ease,
+                color 0.35s ease;
+}
+
+.footer-transform-transition {
+    transition: transform 0.3s ease;
+}
+
+.me-card-hover {
+    transition: border-color 0.3s ease;
+}
+
+.github-card-hover {
+    transition: border-color 0.3s ease;
+}
+
+.will-change-transform {
+    will-change: transform;
+}
+
+.theme-transition {
+    transition: background-color 0.35s ease,
+                color 0.35s ease,
+                border-color 0.35s ease;
+}

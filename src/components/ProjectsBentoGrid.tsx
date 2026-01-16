@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { m, motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { X, Maximize2, Github, ExternalLink } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
@@ -45,38 +45,44 @@ function cn(...inputs: ClassValue[]) {
 interface CardWrapperProps {
     card: any;
     className?: string;
-    index: number;
+    index?: number;
     selectedId: string | null;
     setSelectedId: (id: string | null) => void;
 }
 
-const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index, selectedId, setSelectedId }) => {
+const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index = 0, selectedId, setSelectedId }) => {
     const shouldAnimate = selectedId === null || selectedId === card.id;
+
+    const handleClick = useCallback(() => {
+        if (card.isExpandable) {
+            setSelectedId(card.id);
+        }
+    }, [card.isExpandable, card.id, setSelectedId]);
 
     return (
         <m.div
             className={cn("h-full w-full", className)}
-            variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: {
-                    opacity: 1,
-                    y: 0,
-                    transition: {
-                        duration: 0.5,
-                        ease: "easeOut",
-                        delay: (index % 4) * 0.1
-                    }
+            initial={{ opacity: 0, y: 30, scale: 0.98 }}
+            whileInView={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: {
+                    duration: 0.5,
+                    ease: [0.25, 0.1, 0.25, 1],
+                    delay: index * 0.08,
                 }
             }}
+            viewport={{ once: true, amount: 0.15 }}
         >
             <motion.div
                 layoutId={shouldAnimate ? `card-${card.id}` : undefined}
-                onClick={() => card.isExpandable && setSelectedId(card.id)}
+                onClick={handleClick}
                 className={cn(
-                    "relative p-5 md:p-6 rounded-3xl border flex flex-col justify-between h-full transition-all duration-300 ease-in-out",
+                    "relative p-5 md:p-6 rounded-3xl border flex flex-col justify-between h-full",
                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
                     "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]",
-                    card.isExpandable && !selectedId ? "cursor-pointer group hover:border-neutral-600 transition-colors" : ""
+                    card.isExpandable && !selectedId ? "cursor-pointer group hover:border-neutral-600" : ""
                 )}
                 whileHover={card.isExpandable && !selectedId ? { scale: 1.02 } : {}}
                 whileTap={card.isExpandable && !selectedId ? { scale: 0.98 } : {}}
@@ -127,14 +133,25 @@ const CardWrapper: React.FC<CardWrapperProps> = ({ card, className, index, selec
             </motion.div>
         </m.div>
     );
-};
+});
 
 const ProjectsBentoGrid: React.FC = () => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [activeCategory, setActiveCategory] = useState<'web' | 'aiml'>('aiml');
-    const selectedItem = cardsData.find((item) => item.id === selectedId);
+    
+    const selectedItem = useMemo(() => 
+        cardsData.find((item) => item.id === selectedId),
+        [selectedId]
+    );
 
-    const projects = cardsData.filter(item => item.type === 'project' && item.category === activeCategory);
+    const projects = useMemo(() => 
+        cardsData.filter(item => item.type === 'project' && item.category === activeCategory),
+        [activeCategory]
+    );
+
+    const handleClose = useCallback(() => setSelectedId(null), []);
+    const handleSetAiml = useCallback(() => setActiveCategory('aiml'), []);
+    const handleSetWeb = useCallback(() => setActiveCategory('web'), []);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -165,9 +182,12 @@ const ProjectsBentoGrid: React.FC = () => {
             <div className="w-full max-w-[1400px] mx-auto p-4 pt-16">
                 <div className="flex justify-between items-end mb-8 px-2">
                     <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">Projects</h2>
-                    <div className="flex gap-1 bg-neutral-200 dark:bg-neutral-800 p-1 rounded-full">
+                    <div className="flex gap-1 bg-neutral-200 dark:bg-neutral-800 p-1 rounded-full" role="tablist" aria-label="Project categories">
                         <button
-                            onClick={() => setActiveCategory('aiml')}
+                            onClick={handleSetAiml}
+                            role="tab"
+                            aria-selected={activeCategory === 'aiml'}
+                            aria-label="Show AI and Machine Learning projects"
                             className={cn(
                                 "px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition-all",
                                 activeCategory === 'aiml'
@@ -178,7 +198,10 @@ const ProjectsBentoGrid: React.FC = () => {
                             AI/ML
                         </button>
                         <button
-                            onClick={() => setActiveCategory('web')}
+                            onClick={handleSetWeb}
+                            role="tab"
+                            aria-selected={activeCategory === 'web'}
+                            aria-label="Show Web Development projects"
                             className={cn(
                                 "px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition-all",
                                 activeCategory === 'web'
@@ -194,9 +217,6 @@ const ProjectsBentoGrid: React.FC = () => {
                 <m.div
                     key={activeCategory}
                     className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr"
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-50px" }}
                 >
                     {projects.map((project, i) => (
                         <CardWrapper key={project.id} card={project} index={i} className="col-span-2 md:col-span-1 lg:col-span-1 min-h-[250px]" selectedId={selectedId} setSelectedId={setSelectedId} />
@@ -210,7 +230,7 @@ const ProjectsBentoGrid: React.FC = () => {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                onClick={() => setSelectedId(null)}
+                                onClick={handleClose}
                                 className="absolute inset-0 bg-black/60 backdrop-blur-md"
                             />
 
@@ -225,11 +245,12 @@ const ProjectsBentoGrid: React.FC = () => {
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setSelectedId(null);
+                                        handleClose();
                                     }}
+                                    aria-label="Close project details"
                                     className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-20 cursor-pointer"
                                 >
-                                    <X size={20} />
+                                    <X size={20} aria-hidden="true" />
                                 </button>
 
                                 <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">

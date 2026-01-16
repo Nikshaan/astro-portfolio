@@ -1,5 +1,5 @@
 import { Line } from 'react-chartjs-2';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -27,7 +27,7 @@ interface ChartData {
     scrobbles?: number;
 }
 
-export default function MusicCharts({ data }: { data: ChartData[] }) {
+export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
     const [isLightTheme, setIsLightTheme] = useState(false);
 
     useEffect(() => {
@@ -151,4 +151,4 @@ export default function MusicCharts({ data }: { data: ChartData[] }) {
             <Line data={chartData} options={options} />
         </div>
     );
-}
+})

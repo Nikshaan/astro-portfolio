@@ -2,10 +2,20 @@
 
 ---
 
-<script>
-    import { inject } from "@vercel/analytics";
-    import { injectSpeedInsights } from "@vercel/speed-insights";
+<script type="text/partytown">
+    (function() {
+        var script = document.createElement('script');
+        script.src = '/_vercel/insights/script.js';
+        script.defer = true;
+        document.head.appendChild(script);
+    })();
+</script>
 
-    inject();
-    injectSpeedInsights();
+<script type="text/partytown">
+    (function() {
+        var script = document.createElement('script');
+        script.src = '/_vercel/speed-insights/script.js';
+        script.defer = true;
+        document.head.appendChild(script);
+    })();
 </script>

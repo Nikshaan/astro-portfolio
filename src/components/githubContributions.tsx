@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback, memo } from 'react';
 import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -42,7 +42,7 @@ interface GithubContributionsProps {
   initialData?: GitHubAPIResponse;
 }
 
-export default function GithubContributions({ initialData }: GithubContributionsProps) {
+export default memo(function GithubContributions({ initialData }: GithubContributionsProps) {
   const [weeks, setWeeks] = useState<ContributionWeek[]>(
     initialData?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || []
   );
@@ -103,21 +103,21 @@ export default function GithubContributions({ initialData }: GithubContributions
     <LazyMotion features={domAnimation}>
       <m.div
         className={cn(
-          "relative p-6 rounded-3xl border overflow-hidden w-full flex flex-col justify-between group transition-colors github-card-hover",
+          "relative p-6 rounded-3xl border overflow-hidden w-full flex flex-col justify-between group github-card-hover",
           "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
           "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]"
         )}
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: 30, scale: 0.98 }}
         whileInView={{
           opacity: 1,
           y: 0,
+          scale: 1,
           transition: {
-            duration: 0.4,
-            ease: "easeOut",
-            delay: 0.1
+            duration: 0.5,
+            ease: [0.25, 0.1, 0.25, 1],
           }
         }}
-        viewport={{ once: true, margin: "-50px" }}
+        viewport={{ once: true, amount: 0.15 }}
       >
         <div className={styles.header}>
           <p className='text-lg font-medium'>GitHub Contributions (Last 12 Months)</p>
@@ -161,4 +161,4 @@ export default function GithubContributions({ initialData }: GithubContributions
       </m.div>
     </LazyMotion>
   );
-}
+})

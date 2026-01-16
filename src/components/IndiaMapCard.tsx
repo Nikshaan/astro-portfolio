@@ -50,8 +50,8 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                 const data = await response.json();
                 cachedTopology = data;
                 setTopology(data);
-            } catch (error) {
-                console.error("Error fetching India TopoJSON:", error);
+            } catch {
+                setTopology(null);
             } finally {
                 setLoading(false);
             }
@@ -179,12 +179,19 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
         }
     };
 
+    const sortedPlaces = useMemo(() => {
+        if (!hoveredPlace) return visitedPlaces;
+
+        const otherPlaces = visitedPlaces.filter(p => p.name !== hoveredPlace.name);
+        return [...otherPlaces, hoveredPlace];
+    }, [visitedPlaces, hoveredPlace]);
+
     return (
         <>
             <motion.div
                 layoutId="india-map-card"
                 className={cn(
-                    "relative h-full w-full rounded-3xl overflow-hidden cursor-pointer group border",
+                    "relative h-full w-full rounded-3xl overflow-hidden cursor-pointer group border transition-colors duration-300 ease-in-out",
                     "bg-neutral-50 dark:bg-[#171717]",
                     "border-white dark:border-white/20",
                     "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]",
@@ -226,7 +233,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                     <path
                                         key={`collapsed-${i}`}
                                         d={collapsedMap.pathGenerator!(feature) as string}
-                                        className="stroke-[0.5] fill-neutral-200 dark:fill-zinc-700 stroke-neutral-300 dark:stroke-zinc-600"
+                                        className="stroke-[0.5] fill-neutral-200 dark:fill-zinc-700 stroke-neutral-300 dark:stroke-zinc-600 transition-colors duration-300"
                                     />
                                 ))}
                             </g>
@@ -276,9 +283,10 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                             <div className="absolute top-6 right-6 z-20 flex gap-2">
                                 <button
                                     onClick={() => setExpanded(false)}
+                                    aria-label="Close map view"
                                     className="p-2 cursor-pointer rounded-full bg-neutral-100 dark:bg-zinc-800 hover:bg-neutral-200 dark:hover:bg-zinc-700 transition-colors"
                                 >
-                                    <X className="w-5 h-5 text-neutral-900 dark:text-white cursor-pointer" />
+                                    <X className="w-5 h-5 text-neutral-900 dark:text-white cursor-pointer" aria-hidden="true" />
                                 </button>
                             </div>
 
@@ -306,13 +314,13 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                                         initial={{ pathLength: 0, opacity: 0 }}
                                                         animate={{ pathLength: 1, opacity: 1 }}
                                                         transition={{ duration: 1, delay: i * 0.01 }}
-                                                        className="stroke-neutral-300 dark:stroke-zinc-700 stroke-1 fill-neutral-50 dark:fill-zinc-800 hover:fill-blue-50 dark:hover:fill-zinc-700 cursor-pointer"
+                                                        className="stroke-neutral-300 dark:stroke-zinc-700 stroke-1 fill-neutral-50 dark:fill-zinc-800 hover:fill-blue-50 dark:hover:fill-zinc-700 cursor-pointer transition-colors duration-300"
                                                     />
                                                 );
                                             })}
                                         </g>
 
-                                        {visitedPlaces.map((place, i) => {
+                                        {sortedPlaces.map((place) => {
                                             const coords = expandedMap.projection!([place.lng, place.lat]);
                                             if (!coords) return null;
 
@@ -320,7 +328,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 
                                             return (
                                                 <g
-                                                    key={i}
+                                                    key={place.name}
                                                     transform={`translate(${coords[0]}, ${coords[1]})`}
                                                     onMouseEnter={() => setHoveredPlace(place)}
                                                     onMouseLeave={() => setHoveredPlace(null)}
