@@ -32,7 +32,7 @@ const Footer = () => {
     };
 
     return (
-        <footer className="w-full p-4 pt-0 text-neutral-600 dark:text-neutral-400 font-sans">
+        <footer className="w-full p-4 pt-0 text-neutral-600 dark:text-neutral-400 font-sans bg-black">
             <motion.div
                 id="main-footer"
                 variants={containerVariants}

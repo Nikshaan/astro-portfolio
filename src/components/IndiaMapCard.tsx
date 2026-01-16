@@ -19,6 +19,7 @@ export interface VisitedPlace {
 interface IndiaMapCardProps {
     visitedPlaces?: VisitedPlace[];
     className?: string;
+    index?: number;
 }
 
 let cachedTopology: any = null;
@@ -26,8 +27,10 @@ let cachedTopology: any = null;
 const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     visitedPlaces = [],
     className,
+    index = 0,
 }) => {
     const [expanded, setExpanded] = useState(false);
+    const staggerDelay = index * 0.025;
     const [topology, setTopology] = useState<any>(cachedTopology);
     const [loading, setLoading] = useState(!cachedTopology);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -189,71 +192,86 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     return (
         <>
             <motion.div
-                layoutId="india-map-card"
-                className={cn(
-                    "relative h-full w-full rounded-3xl overflow-hidden cursor-pointer group border transition-colors duration-300 ease-in-out",
-                    "bg-neutral-50 dark:bg-[#171717]",
-                    "border-white dark:border-white/20",
-                    "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]",
-                    expanded ? "opacity-0 pointer-events-none" : "opacity-100",
-                    className
-                )}
-                onClick={handleCardClick}
-                ref={containerRef}
+                className={cn("h-full w-full", className)}
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                whileInView={{
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    transition: {
+                        duration: 0.4,
+                        ease: [0.25, 0.1, 0.25, 1],
+                        delay: staggerDelay,
+                    }
+                }}
+                viewport={{ once: true, amount: 0.1 }}
             >
-                {loading && (
-                    <div className="absolute inset-0 flex items-center justify-center text-neutral-400">
-                        <Loader2 className="animate-spin w-5 h-5" />
-                    </div>
-                )}
-
-                {!loading && collapsedMap.pathGenerator && (
-                    <div className="w-full h-full p-4 flex flex-col items-center justify-center pointer-events-none">
-                        <div className="absolute top-4 left-4 z-10">
-                            <span className={cn(
-                                "text-sm font-medium uppercase tracking-wider",
-                                "text-neutral-500 dark:text-neutral-400"
-                            )}>
-                                Travels
-                            </span>
+                <motion.div
+                    layoutId="india-map-card"
+                    className={cn(
+                        "relative h-full w-full rounded-3xl overflow-hidden cursor-pointer group border transition-colors duration-300 ease-in-out",
+                        "bg-neutral-50 dark:bg-[#171717]",
+                        "border-white dark:border-white/20",
+                        "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]",
+                        expanded ? "opacity-0 pointer-events-none" : "opacity-100"
+                    )}
+                    onClick={handleCardClick}
+                    ref={containerRef}
+                >
+                    {loading && (
+                        <div className="absolute inset-0 flex items-center justify-center text-neutral-400">
+                            <Loader2 className="animate-spin w-5 h-5" />
                         </div>
+                    )}
 
-                        <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Maximize2 className="w-4 h-4 text-neutral-400" />
-                        </div>
+                    {!loading && collapsedMap.pathGenerator && (
+                        <div className="w-full h-full p-4 flex flex-col items-center justify-center pointer-events-none">
+                            <div className="absolute top-4 left-4 z-10">
+                                <span className={cn(
+                                    "text-sm font-medium uppercase tracking-wider",
+                                    "text-neutral-500 dark:text-neutral-400"
+                                )}>
+                                    Travels
+                                </span>
+                            </div>
 
-                        <svg
-                            width="100%"
-                            height="100%"
-                            viewBox={`0 0 ${collapsedDimensions.width} ${collapsedDimensions.height}`}
-                            className="overflow-visible"
-                        >
-                            <g className="opacity-50 dark:opacity-30">
-                                {collapsedMap.features.map((feature: any, i: number) => (
-                                    <path
-                                        key={`collapsed-${i}`}
-                                        d={collapsedMap.pathGenerator!(feature) as string}
-                                        className="stroke-[0.5] fill-neutral-200 dark:fill-zinc-700 stroke-neutral-300 dark:stroke-zinc-600 transition-colors duration-300"
-                                    />
-                                ))}
-                            </g>
+                            <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Maximize2 className="w-4 h-4 text-neutral-400" />
+                            </div>
 
-                            {visitedPlaces.map((place, i) => {
-                                const coords = collapsedMap.projection!([place.lng, place.lat]);
-                                if (!coords) return null;
-                                return (
-                                    <g key={i} transform={`translate(${coords[0]}, ${coords[1]})`}>
-                                        <circle r="1.5" className="fill-purple-500 dark:fill-purple-400" />
-                                        <circle
-                                            r="1.5"
-                                            className="fill-purple-500 dark:fill-purple-400 animate-ping opacity-75"
+                            <svg
+                                width="100%"
+                                height="100%"
+                                viewBox={`0 0 ${collapsedDimensions.width} ${collapsedDimensions.height}`}
+                                className="overflow-visible"
+                            >
+                                <g className="opacity-50 dark:opacity-30">
+                                    {collapsedMap.features.map((feature: any, i: number) => (
+                                        <path
+                                            key={`collapsed-${i}`}
+                                            d={collapsedMap.pathGenerator!(feature) as string}
+                                            className="stroke-[0.5] fill-neutral-200 dark:fill-zinc-700 stroke-neutral-300 dark:stroke-zinc-600 transition-colors duration-300"
                                         />
-                                    </g>
-                                );
-                            })}
-                        </svg>
-                    </div>
-                )}
+                                    ))}
+                                </g>
+
+                                {visitedPlaces.map((place, i) => {
+                                    const coords = collapsedMap.projection!([place.lng, place.lat]);
+                                    if (!coords) return null;
+                                    return (
+                                        <g key={i} transform={`translate(${coords[0]}, ${coords[1]})`}>
+                                            <circle r="1.5" className="fill-purple-500 dark:fill-purple-400" />
+                                            <circle
+                                                r="1.5"
+                                                className="fill-purple-500 dark:fill-purple-400 animate-ping opacity-75"
+                                            />
+                                        </g>
+                                    );
+                                })}
+                            </svg>
+                        </div>
+                    )}
+                </motion.div>
             </motion.div>
 
             <AnimatePresence>

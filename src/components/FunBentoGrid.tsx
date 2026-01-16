@@ -34,8 +34,8 @@ interface CardWrapperProps extends HTMLMotionProps<"div"> {
 }
 
 const CardWrapper: React.FC<CardWrapperProps> = memo(({ children, className, isExpandable = false, index = 0, onClick, ...props }) => {
-    const staggerDelay = Math.min((index % 4) * 0.05, 0.15);
-    
+    const staggerDelay = index * 0.025;
+
     return (
         <div className={cn("h-full w-full", className)}>
             <m.div
@@ -221,6 +221,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                         <IndiaMapCard
                             className="col-span-1 row-span-1 h-full"
                             visitedPlaces={VISITED_PLACES}
+                            index={1}
                         />
                     </Suspense>
 
@@ -228,7 +229,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                         <CardWrapper
                             key={image.id}
                             isExpandable={true}
-                            index={i + 1}
+                            index={i + 2}
                             className="col-span-1 row-span-1"
                         >
                             <a
