@@ -19,6 +19,10 @@ import tailwindcss from '../data/tailwind.svg';
 import langchain from '../data/LangChain_Logo.svg';
 import huggingface from '../data/huggingface.svg';
 import chromadb from '../data/chroma.svg';
+import pytorch from '../data/PyTorch.svg';
+import python from '../data/python.svg';
+import pandas from '../data/Pandas.svg';
+import matplotlib from '../data/Matplotlib.svg';
 
 const techstackIcons: Record<string, any> = {
     'ReactJS': reactjs,
@@ -36,6 +40,10 @@ const techstackIcons: Record<string, any> = {
     'Langchain': langchain,
     'HuggingFace': huggingface,
     'ChromaDB': chromadb,
+    'PyTorch': pytorch,
+    'Python': python,
+    'Pandas': pandas,
+    'Matplotlib': matplotlib,
 };
 
 function cn(...inputs: ClassValue[]) {

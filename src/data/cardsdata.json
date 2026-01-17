@@ -270,5 +270,25 @@
             "github": "https://github.com/Nikshaan/ProductWizz"
         },
         "content": "<p>An AI-powered shopping assistant browser extension for amazon.in & flipkart.com.</p>"
+    },
+    {
+    "id": "project-llm-from-scratch",
+    "type": "project",
+    "category": "aiml",
+    "colSpan": 1,
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+        "name": "LLM from scratch",
+        "techstack": [
+        "PyTorch",
+        "Python",
+        "Pandas",
+        "Matplotlib"
+        ],
+        "summary": "A complete implementation of GPT model like LLM from scratch with attention, training, fine-tuning and text classification capabilities.",
+        "github": "https://github.com/Nikshaan/llm-from-scratch"
+    },
+    "content": "<p>A complete implementation of GPT-2 (124M) from scratch with attention, training, fine-tuning and text classification capabilities. Features include multi-head attention mechanisms, transformer blocks, custom training loops, and fine-tuning pipelines for instruction-following and SMS spam classification tasks. Followed implementation from 'Build a LLM from Scratch' by Sebastian Raschka.</p>"
     }
 ]

@@ -228,7 +228,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                         <div className="w-full h-full p-4 flex flex-col items-center justify-center pointer-events-none">
                             <div className="absolute top-4 left-4 z-10">
                                 <span className={cn(
-                                    "text-sm font-medium uppercase tracking-wider",
+                                    "text-base md:text-lg font-bold",
                                     "text-neutral-500 dark:text-neutral-400"
                                 )}>
                                     Travels
@@ -258,11 +258,13 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                 {visitedPlaces.map((place, i) => {
                                     const coords = collapsedMap.projection!([place.lng, place.lat]);
                                     if (!coords) return null;
+                                    const scaleFactor = Math.min(collapsedDimensions.width, collapsedDimensions.height) / 200;
+                                    const pinRadius = Math.max(1.5, Math.min(3, scaleFactor * 2.5));
                                     return (
                                         <g key={i} transform={`translate(${coords[0]}, ${coords[1]})`}>
-                                            <circle r="1.5" className="fill-purple-500 dark:fill-purple-400" />
+                                            <circle r={pinRadius} className="fill-purple-500 dark:fill-purple-400" />
                                             <circle
-                                                r="1.5"
+                                                r={pinRadius}
                                                 className="fill-purple-500 dark:fill-purple-400 animate-ping opacity-75"
                                             />
                                         </g>
@@ -343,6 +345,15 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                             if (!coords) return null;
 
                                             const isHovered = hoveredPlace?.name === place.name;
+                                            const scaleFactor = Math.min(expandedDimensions.width, expandedDimensions.height) / 500;
+                                            const baseRadius = Math.max(2, Math.min(4, scaleFactor * 3));
+                                            const hoverRadius = baseRadius * 1.5;
+                                            const pingRadius = baseRadius * 1.8;
+                                            const tapTargetRadius = baseRadius * 4;
+                                            const labelWidth = Math.max(60, Math.min(100, scaleFactor * 80));
+                                            const labelHeight = Math.max(16, Math.min(24, scaleFactor * 20));
+                                            const labelFontSize = Math.max(8, Math.min(12, scaleFactor * 10));
+                                            const labelOffsetY = baseRadius + labelHeight / 2 + 4;
 
                                             return (
                                                 <g
@@ -350,29 +361,40 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                                     transform={`translate(${coords[0]}, ${coords[1]})`}
                                                     onMouseEnter={() => setHoveredPlace(place)}
                                                     onMouseLeave={() => setHoveredPlace(null)}
+                                                    onClick={() => setHoveredPlace(hoveredPlace?.name === place.name ? null : place)}
                                                     className="cursor-pointer"
                                                 >
+                                                    <circle r={tapTargetRadius} className="fill-transparent" />
                                                     <circle
-                                                        r={isHovered ? 4 : 2}
+                                                        r={isHovered ? hoverRadius : baseRadius}
                                                         className="fill-purple-500 dark:fill-purple-400 transition-all duration-300"
                                                     />
                                                     <circle
-                                                        r={isHovered ? 6 : 2}
+                                                        r={isHovered ? pingRadius : baseRadius}
                                                         className="fill-purple-500 dark:fill-purple-400 opacity-30 animate-ping"
                                                     />
                                                     {isHovered && (
-                                                        <g transform={`translate(0, -10)`}>
+                                                        <g transform={`translate(0, ${-labelOffsetY})`}>
                                                             <rect
-                                                                x="-40" y="-20" width="80" height="20" rx="3"
+                                                                x={-labelWidth / 2} 
+                                                                y={-labelHeight} 
+                                                                width={labelWidth} 
+                                                                height={labelHeight} 
+                                                                rx="3"
                                                                 className="fill-neutral-900 dark:fill-white"
                                                             />
                                                             <text
-                                                                textAnchor="middle" dy="-6"
-                                                                className="fill-white dark:fill-neutral-900 text-[9px] font-medium"
+                                                                textAnchor="middle" 
+                                                                dy={-labelHeight / 3}
+                                                                style={{ fontSize: `${labelFontSize}px` }}
+                                                                className="fill-white dark:fill-neutral-900 font-medium"
                                                             >
                                                                 {place.name}
                                                             </text>
-                                                            <path d="M -4 -0.5 L 0 4 L 4 -0.5 Z" className="fill-neutral-900 dark:fill-white" />
+                                                            <path 
+                                                                d={`M -4 0 L 0 5 L 4 0 Z`} 
+                                                                className="fill-neutral-900 dark:fill-white" 
+                                                            />
                                                         </g>
                                                     )}
                                                 </g>
