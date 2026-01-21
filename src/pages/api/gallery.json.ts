@@ -79,7 +79,10 @@ export const GET: APIRoute = async () => {
         64: "Mumbai, Maharashtra",
         66: "Pune, Maharashtra",
         67: "Pune, Maharashtra",
-        71: "Padubidri beach, Udupi",
+        68: "Mumbai, Maharashtra",
+        69: "Goa",
+        70: "Basilica of bom jesus, Goa",
+        71: "Manali",
         72: "Manali",
         73: "Marine Drive, Mumbai",
         74: "Marine Drive, Mumbai",
@@ -111,10 +114,15 @@ export const GET: APIRoute = async () => {
         100: "Mangluru",
         101: "Mangluru",
         102: "Padubidri beach, Udupi",
-        103: "Mumbai, Maharashtra",
-        104: "Goa",
-        105: "Basilica of bom jesus, Goa",
-        106: "Manali",
+        103: "Daman, India",
+        104: "Daman, India",
+        105: "Birds Aviary, Daman",
+        106: "Birds Aviary, Daman",
+        107: "Daman, India",
+        108: "Moti Daman Fort, Daman",
+        109: "Moti Daman Fort, Daman",
+        110: "Moti Daman Fort, Daman",
+        111: "Moti Daman Fort, Daman"
     };
 
     const allImages = await Promise.all(
