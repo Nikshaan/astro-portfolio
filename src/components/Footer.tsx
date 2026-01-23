@@ -52,10 +52,10 @@ const Footer = () => {
                     <motion.div variants={itemVariants} className="p-8 md:p-12 flex flex-col justify-between gap-8 border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] overflow-hidden footer-transition">
                         <div>
                             <a
-                                href="mailto:nikshaan06@gmail.com"
+                                href="mailto:nikshaanshetty06@gmail.com"
                                 className="group flex items-center gap-2 md:gap-4 text-base min-[370px]:text-lg sm:text-xl md:text-2xl font-bold text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-300 whitespace-nowrap footer-transition"
                             >
-                                nikshaan06@gmail.com
+                                nikshaanshetty06@gmail.com
                                 <span className="bg-neutral-900 dark:bg-white text-white dark:text-black p-2 rounded-full group-hover:rotate-[-45deg] footer-transform-transition flex-shrink-0 footer-transition">
                                     <MoveRight className="w-3 h-3 md:w-5 md:h-5" />
                                 </span>
@@ -82,7 +82,7 @@ const Footer = () => {
                                 <Linkedin className="w-5 h-5 text-neutral-900 dark:text-white" aria-hidden="true" />
                             </a>
                             <a
-                                href="mailto:nikshaan06@gmail.com"
+                                href="mailto:nikshaanshetty06@gmail.com"
                                 aria-label="Send an email to Nikshaan"
                                 className="p-4 rounded-full border border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] hover:bg-neutral-200 dark:hover:bg-white/10 data-[theme=light]:hover:bg-blue-100 footer-transition"
                             >
