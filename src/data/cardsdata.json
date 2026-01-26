@@ -114,7 +114,7 @@
                 "issuer": "University of Columbia"
             }
         },
-        "content": "<p>test data</p>"
+        "content": "<div><div class=\"mb-8\"><h3 class=\"text-2xl font-bold mb-1\">Software developer intern</h3><p class=\"text-lg font-medium mb-1\">Varak Welfare Society</p><p class=\"text-sm text-neutral-500 dark:text-neutral-400 mb-4\">September 2025 - January 2026</p><p class=\"mb-4\">Worked with the CTO to architect a scalable subscription engine using Django, PostgreSQL, and Razorpay, building the entire interface using React.js and TailwindCSS. This system was built to handle all payment edge cases (even if the user is not logged in).</p><p class=\"mb-4\">Migrated the organization's homepage from Vue.js to React.js. This shift to a modern component architecture significantly improved mobile responsiveness and reduced initial load latency by 35%.</p><p class=\"mb-4\">Contributed to enhancing the user experience by building several key frontend components, including the FAQs section, individual campaign pages, and a donor information modal. I also coded a fully dynamic navbar that could be controlled directly from the Django backend. To support the internal team, I helped in developing the frontend and backend integration for an admin dashboard that visualized database results using custom stored queries.</p><p>Implemented a secure Google OAuth 2.0 authentication system with robust input validations and error handling for signup and login flows. Additionally, I guided four other developer interns through their onboarding setup and provided active debugging support.</p><div class=\"mt-6 flex flex-col sm:flex-row gap-4\"><div class=\"border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden w-full sm:w-1/2\"><img src=\"{{CERTIFICATE_IMAGE}}\" alt=\"Certificate\" class=\"w-full h-auto object-cover\" /><div class=\"p-3 bg-neutral-100 dark:bg-[#1f1f1f]\"><p class=\"text-sm font-medium\">Varak Welfare Society Internship Certificate</p></div></div><div class=\"border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden w-full sm:w-1/2\"><img src=\"{{LOR_IMAGE}}\" alt=\"LOR\" class=\"w-full h-auto object-cover\" /><div class=\"p-3 bg-neutral-100 dark:bg-[#1f1f1f]\"><p class=\"text-sm font-medium\">Letter of Recommendation</p></div></div></div></div><div><h3 class=\"text-2xl font-bold mb-1\">Open source contributor</h3><p class=\"text-lg font-medium mb-1\">GirlScript Summer of Code 2025</p><p class=\"text-sm text-neutral-500 dark:text-neutral-400 mb-4\">August 2025</p><p>Implemented validations and error handling for signin/login and components calling data from the backend to the frontend.</p><div class=\"mt-6\"><div class=\"border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden w-full sm:w-1/2\"><img src=\"{{BADGE_IMAGE}}\" alt=\"GSSoC Badge\" class=\"w-full h-auto object-cover\" /><div class=\"p-3 bg-neutral-100 dark:bg-[#1f1f1f]\"><p class=\"text-sm font-medium\">Contributor's Badge</p></div></div></div></div></div>"
     },
     {
         "id": "project-localbee",
@@ -272,23 +272,23 @@
         "content": "<p>An AI-powered shopping assistant browser extension for amazon.in & flipkart.com.</p>"
     },
     {
-    "id": "project-llm-from-scratch",
-    "type": "project",
-    "category": "aiml",
-    "colSpan": 1,
-    "isExpandable": true,
-    "theme": "dark",
-    "data": {
-        "name": "LLM from scratch",
-        "techstack": [
-        "PyTorch",
-        "Python",
-        "Pandas",
-        "Matplotlib"
-        ],
-        "summary": "A complete implementation of GPT model like LLM from scratch with attention, training, fine-tuning and text classification capabilities.",
-        "github": "https://github.com/Nikshaan/llm-from-scratch"
-    },
-    "content": "<p>A complete implementation of GPT-2 (124M) from scratch with attention, training, fine-tuning and text classification capabilities. Features include multi-head attention mechanisms, transformer blocks, custom training loops, and fine-tuning pipelines for instruction-following and SMS spam classification tasks. Followed implementation from 'Build a LLM from Scratch' by Sebastian Raschka.</p>"
+        "id": "project-llm-from-scratch",
+        "type": "project",
+        "category": "aiml",
+        "colSpan": 1,
+        "isExpandable": true,
+        "theme": "dark",
+        "data": {
+            "name": "LLM from scratch",
+            "techstack": [
+                "PyTorch",
+                "Python",
+                "Pandas",
+                "Matplotlib"
+            ],
+            "summary": "A complete implementation of GPT model like LLM from scratch with attention, training, fine-tuning and text classification capabilities.",
+            "github": "https://github.com/Nikshaan/llm-from-scratch"
+        },
+        "content": "<p>A complete implementation of GPT-2 (124M) from scratch with attention, training, fine-tuning and text classification capabilities. Features include multi-head attention mechanisms, transformer blocks, custom training loops, and fine-tuning pipelines for instruction-following and SMS spam classification tasks. Followed implementation from 'Build a LLM from Scratch' by Sebastian Raschka.</p>"
     }
 ]

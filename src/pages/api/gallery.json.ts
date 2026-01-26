@@ -115,14 +115,12 @@ export const GET: APIRoute = async () => {
         101: "Mangluru",
         102: "Padubidri beach, Udupi",
         103: "Daman, India",
-        104: "Daman, India",
+        104: "Birds Aviary, Daman",
         105: "Birds Aviary, Daman",
-        106: "Birds Aviary, Daman",
-        107: "Daman, India",
+        106: "Moti Daman Fort, Daman",
+        107: "Moti Daman Fort, Daman",
         108: "Moti Daman Fort, Daman",
         109: "Moti Daman Fort, Daman",
-        110: "Moti Daman Fort, Daman",
-        111: "Moti Daman Fort, Daman"
     };
 
     const allImages = await Promise.all(

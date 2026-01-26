@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo, memo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, memo, useRef } from 'react';
 import { m, motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { X, Maximize2, MapPin } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
@@ -16,6 +16,10 @@ import githubColor from '../data/github-color.svg';
 import linkedinColor from '../data/linkedin-color.svg';
 import gmailColor from '../data/gmail-color.svg';
 
+import certificateImg from '../data/Nikshaan Shetty Certificate.webp';
+import lorImg from '../data/Nikshaan Shetty LOR.webp';
+import badgeImg from "../data/Contributor's badge.webp";
+
 const defaultImages: Record<string, any> = {
     beeImage: beeImage,
     collegeLogo: collegeLogo,
@@ -29,6 +33,23 @@ const defaultImages: Record<string, any> = {
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
+
+const content_cache = new Map<string, string>();
+
+const getProcessedContent = (content: string) => {
+    if (content_cache.has(content)) {
+        return content_cache.get(content) || content;
+    }
+
+    let processed = content
+        .replace('{{CERTIFICATE_IMAGE}}', certificateImg.src)
+        .replace('{{LOR_IMAGE}}', lorImg.src)
+        .replace('{{BADGE_IMAGE}}', badgeImg.src);
+
+    content_cache.set(content, processed);
+    return processed;
+};
+
 
 const renderCardContent = (card: any, images: Record<string, any>) => {
     switch (card.type) {
@@ -269,8 +290,8 @@ interface MeBentoGridProps {
 const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const images = useMemo(() => optimizedImages || defaultImages, [optimizedImages]);
-    
-    const selectedItem = useMemo(() => 
+
+    const selectedItem = useMemo(() =>
         cardsData.find((item) => item.id === selectedId),
         [selectedId]
     );
@@ -287,7 +308,34 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
 
     const handleClose = useCallback(() => setSelectedId(null), []);
 
+    const wrapperRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
+        let localLenis: any;
+        let rafId: number;
+
+        const initLocalLenis = async () => {
+            if (selectedId && wrapperRef.current) {
+                const Lenis = (await import('lenis')).default;
+                localLenis = new Lenis({
+                    wrapper: wrapperRef.current,
+                    duration: 1.2,
+                    easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                    gestureOrientation: "vertical",
+                    smoothWheel: true,
+                    wheelMultiplier: 1,
+                    touchMultiplier: 2,
+                    infinite: false,
+                });
+
+                const raf = (time: number) => {
+                    localLenis.raf(time);
+                    rafId = requestAnimationFrame(raf);
+                };
+                rafId = requestAnimationFrame(raf);
+            }
+        };
+
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 setSelectedId(null);
@@ -299,15 +347,21 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
             document.body.style.overflow = 'hidden';
             document.body.style.paddingRight = 'var(--scrollbar-width, 0px)';
             window.addEventListener('keydown', handleKeyDown);
+            if ((window as any).lenis) (window as any).lenis.stop();
+            initLocalLenis();
         } else {
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
+            if ((window as any).lenis) (window as any).lenis.start();
         }
 
         return () => {
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
             window.removeEventListener('keydown', handleKeyDown);
+            if ((window as any).lenis) (window as any).lenis.start();
+            if (localLenis) localLenis.destroy();
+            if (rafId) cancelAnimationFrame(rafId);
         };
     }, [selectedId]);
 
@@ -373,9 +427,12 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                                 <X size={20} aria-hidden="true" />
                             </button>
 
-                            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                            <div
+                                ref={wrapperRef}
+                                className="flex-1 overflow-y-auto p-8 custom-scrollbar min-h-0"
+                            >
                                 <div className="prose prose-invert prose-lg max-w-none">
-                                    <div dangerouslySetInnerHTML={{ __html: selectedItem.content || '' }} />
+                                    <div dangerouslySetInnerHTML={{ __html: getProcessedContent(selectedItem.content || '') }} />
                                 </div>
                             </div>
                         </motion.div>
