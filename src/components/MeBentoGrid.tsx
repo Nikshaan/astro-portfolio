@@ -313,6 +313,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
     useEffect(() => {
         let localLenis: any;
         let rafId: number;
+        let resizeObserver: ResizeObserver | null = null;
 
         const initLocalLenis = async () => {
             if (selectedId && wrapperRef.current) {
@@ -333,6 +334,14 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                     rafId = requestAnimationFrame(raf);
                 };
                 rafId = requestAnimationFrame(raf);
+
+                const contentNode = wrapperRef.current.firstElementChild;
+                if (contentNode) {
+                    resizeObserver = new ResizeObserver(() => {
+                        localLenis.resize();
+                    });
+                    resizeObserver.observe(contentNode);
+                }
             }
         };
 
@@ -362,6 +371,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
             if ((window as any).lenis) (window as any).lenis.start();
             if (localLenis) localLenis.destroy();
             if (rafId) cancelAnimationFrame(rafId);
+            if (resizeObserver) resizeObserver.disconnect();
         };
     }, [selectedId]);
 
