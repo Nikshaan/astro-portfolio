@@ -273,9 +273,9 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
                 {card.isExpandable && (
                     <div className={cn(
                         "absolute bottom-4 right-4 transition-opacity duration-300",
-                        !selectedId ? "opacity-0 group-hover:opacity-100" : "opacity-0"
+                        !selectedId ? "opacity-100" : "opacity-0"
                     )}>
-                        <Maximize2 size={16} className={card.id === 'win' ? "text-white drop-shadow-md" : "text-neutral-400"} />
+                        <Maximize2 size={16} className="text-neutral-400" />
                     </div>
                 )}
             </motion.div>
