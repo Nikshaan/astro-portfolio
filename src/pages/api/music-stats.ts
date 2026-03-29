@@ -19,15 +19,27 @@ interface DailyScrobble {
   scrobbles: number;
 }
 
+export interface GenreEntry {
+  genre: string;
+  count: number;
+}
+
 interface MusicStatsResult {
   weeklyScrobbles: DailyScrobble[];
   upperStatsArray: number[];
   artistsInfo: ArtistInfo[];
+  topArtistImageUrl: string;
+  topArtistName: string;
+  listeningStreak: number;
+  genreData: GenreEntry[];
 }
 
 const CACHE_DURATION_MS = 5 * 60 * 1000;
 let cache: { data: MusicStatsResult; timestamp: number } | null = null;
 let pendingRequest: Promise<MusicStatsResult> | null = null;
+
+
+let spotifyToken: { value: string; expiresAt: number } | null = null;
 
 const CACHE_HEADERS = {
   'Content-Type': 'application/json',
@@ -141,10 +153,127 @@ async function fetchTopArtists(username: string, apiKey: string): Promise<Artist
   }
 }
 
-async function fetchMusicStats(username: string, apiKey: string): Promise<MusicStatsResult> {
-  const [userStats, topArtists, ...dailyScrobbles] = await Promise.all([
+async function getSpotifyToken(clientId: string, clientSecret: string): Promise<string> {
+  const now = Date.now();
+  if (spotifyToken && now < spotifyToken.expiresAt) return spotifyToken.value;
+
+  const creds = btoa(`${clientId}:${clientSecret}`);
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${creds}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: 'grant_type=client_credentials',
+  });
+
+  if (!res.ok) throw new Error('Failed to get Spotify token');
+  const json = await res.json();
+  spotifyToken = { value: json.access_token, expiresAt: now + (json.expires_in - 60) * 1000 };
+  return spotifyToken.value;
+}
+
+async function fetchSpotifyArtistImage(
+  artistName: string,
+  clientId: string,
+  clientSecret: string
+): Promise<string> {
+  try {
+    const token = await getSpotifyToken(clientId, clientSecret);
+    const q = encodeURIComponent(artistName);
+    const res = await fetch(`https://api.spotify.com/v1/search?q=${q}&type=artist&limit=1`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) return '';
+    const json = await res.json();
+    return json?.artists?.items?.[0]?.images?.[0]?.url ?? '';
+  } catch {
+    return cache?.data.topArtistImageUrl ?? '';
+  }
+}
+
+async function fetchListeningStreak(username: string, apiKey: string): Promise<number> {
+  try {
+    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&limit=200&api_key=${apiKey}&format=json`;
+    const response = await fetchWithRetry(url);
+    const data = await response.json();
+    const tracks: any[] = data?.recenttracks?.track ?? [];
+
+
+    const scrobbleDates = new Set<string>();
+    for (const track of tracks) {
+      const ts = track?.date?.uts;
+      if (!ts) continue;
+      const d = new Date(parseInt(ts, 10) * 1000);
+      scrobbleDates.add(d.toISOString().slice(0, 10));
+    }
+
+
+    let streak = 0;
+    const now = new Date();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(now);
+      d.setUTCDate(now.getUTCDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      if (scrobbleDates.has(dateStr)) {
+        streak++;
+      } else if (i === 0) {
+
+        continue;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  } catch {
+    return cache?.data.listeningStreak ?? 0;
+  }
+}
+
+async function fetchGenreData(artists: ArtistInfo[], apiKey: string): Promise<GenreEntry[]> {
+  if (!artists.length) return [];
+  try {
+    const tagResults = await Promise.all(
+      artists.slice(0, 5).map(async (artist) => {
+        try {
+          const url = `https://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&artist=${encodeURIComponent(artist.name)}&api_key=${apiKey}&format=json`;
+          const res = await fetchWithRetry(url);
+          const json = await res.json();
+          const tags: { name: string; count: number }[] = json?.toptags?.tag ?? [];
+          return tags.slice(0, 2);
+        } catch {
+          return [];
+        }
+      })
+    );
+
+    const aggregated = new Map<string, number>();
+    for (const tags of tagResults) {
+      for (const tag of tags) {
+        const name = tag.name.toLowerCase();
+        aggregated.set(name, (aggregated.get(name) ?? 0) + tag.count);
+      }
+    }
+
+    return Array.from(aggregated.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([genre, count]) => ({ genre, count }));
+  } catch {
+    return cache?.data.genreData ?? [];
+  }
+}
+
+async function fetchMusicStats(
+  username: string,
+  apiKey: string,
+  spotifyClientId: string,
+  spotifyClientSecret: string
+): Promise<MusicStatsResult> {
+  const [userStats, topArtists, listeningStreak, ...dailyScrobbles] = await Promise.all([
     fetchUserStats(username, apiKey),
     fetchTopArtists(username, apiKey),
+    fetchListeningStreak(username, apiKey),
     ...Array.from({ length: 7 }, (_, i) => {
       const daysAgo = 6 - i;
       const cachedValue = cache?.data.weeklyScrobbles[i]?.scrobbles;
@@ -152,16 +281,31 @@ async function fetchMusicStats(username: string, apiKey: string): Promise<MusicS
     })
   ]);
 
+  const topArtistName = topArtists[0]?.name ?? '';
+
+  const [topArtistImageUrl, genreData] = await Promise.all([
+    topArtistName && spotifyClientId && spotifyClientSecret
+      ? fetchSpotifyArtistImage(topArtistName, spotifyClientId, spotifyClientSecret)
+      : Promise.resolve(''),
+    fetchGenreData(topArtists, apiKey),
+  ]);
+
   return {
     weeklyScrobbles: dailyScrobbles,
     upperStatsArray: userStats,
-    artistsInfo: topArtists
+    artistsInfo: topArtists,
+    topArtistImageUrl: topArtistImageUrl || '',
+    topArtistName,
+    listeningStreak,
+    genreData,
   };
 }
 
 export const GET: APIRoute = async () => {
   const apiKey = (import.meta.env.PUBLIC_LASTFM_API_KEY || import.meta.env.PUBLIC__LASTFM_API_KEY) as string;
   const username = (import.meta.env.PUBLIC_LASTFM_USERNAME || import.meta.env.PUBLIC__LASTFM_USERNAME) as string;
+  const spotifyClientId = import.meta.env.SPOTIFY_CLIENT_ID as string;
+  const spotifyClientSecret = import.meta.env.SPOTIFY_CLIENT_SECRET as string;
 
   if (!apiKey || !username) {
     return jsonResponse({ error: 'Last.fm credentials not configured' }, 500, 'ERROR');
@@ -181,7 +325,7 @@ export const GET: APIRoute = async () => {
     }
   }
 
-  pendingRequest = fetchMusicStats(username, apiKey);
+  pendingRequest = fetchMusicStats(username, apiKey, spotifyClientId, spotifyClientSecret);
 
   try {
     const result = await pendingRequest;

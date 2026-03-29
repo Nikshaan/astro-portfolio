@@ -6,6 +6,8 @@ import { twMerge } from 'tailwind-merge';
 
 const MusicStatsClient = lazy(() => import('./musicstats'));
 const IndiaMapCard = lazy(() => import('./IndiaMapCard'));
+const ScrobbleHeatmap = lazy(() => import('./ScrobbleHeatmap'));
+const MusicExtrasCard = lazy(() => import('./MusicExtrasCard'));
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -212,6 +214,26 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                             </div>
                         </div>
                     </CardWrapper>
+
+                    <div className="col-span-2 lg:col-span-2 row-span-2 min-h-[400px]">
+                        <Suspense fallback={
+                            <div className="rounded-3xl border h-full bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 [.data-theme='light']:!bg-[#dbeafe] [.data-theme='light']:!border-[#1e3a8a] p-6 text-gray-400 text-sm text-center flex items-center justify-center">
+                                Loading…
+                            </div>
+                        }>
+                            <MusicExtrasCard />
+                        </Suspense>
+                    </div>
+
+                    <div className="col-span-2 lg:col-span-4">
+                        <Suspense fallback={
+                            <div className="rounded-3xl border bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 p-6 text-gray-400 text-sm text-center">
+                                Loading scrobble history…
+                            </div>
+                        }>
+                            <ScrobbleHeatmap />
+                        </Suspense>
+                    </div>
 
                     <Suspense fallback={
                         <div className="col-span-1 row-span-1 h-[200px] md:h-auto rounded-3xl border bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 flex items-center justify-center">
