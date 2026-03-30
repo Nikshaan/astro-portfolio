@@ -124,7 +124,7 @@ export default memo(function MusicStatsClient() {
         ? {
             backgroundImage: `linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url(${data.topArtistImageUrl})`,
             backgroundSize: 'cover',
-            backgroundPosition: 'center top',
+            backgroundPosition: 'center',
             borderRadius: '1.25rem',
             transition: 'background-image 0.4s ease',
         }

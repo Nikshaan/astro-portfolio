@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="97.5" height="28" aria-label="FRAMER"><title>FRAMER</title><path fill="#05f" d="M0 0h97.5v28H0z" shape-rendering="crispEdges"/><g fill="#fff" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="100" text-anchor="middle" text-rendering="geometricPrecision"><image width="14" height="14" x="9" y="7" href="data:image/svg+xml;base64,PHN2ZyBmaWxsPSJ3aGl0ZSIgcm9sZT0iaW1nIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHRpdGxlPkZyYW1lcjwvdGl0bGU+PHBhdGggZD0iTTQgMGgxNnY4aC04ek00IDhoOGw4IDhINHpNNCAxNmg4djh6Ii8+PC9zdmc+"/><text x="587.5" y="175" font-weight="bold" textLength="535" transform="scale(.1)">FRAMER</text></g></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Backward-compatibility shim: the project previously referenced `src/data/framer.svg`.
+     Keep this file to avoid build/runtime errors if any cached/built output still imports it.
+     Prefer using `Brand-Framer-Motion--Streamline-Tabler.svg` via `ProjectsBentoGrid.tsx`. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Framer Motion">
+  <rect width="24" height="24" rx="4" fill="#111111"/>
+  <path d="M7 6h10v4H12l5 6v2H7v-4h5l-5-6V6z" fill="#ffffff"/>
+</svg>

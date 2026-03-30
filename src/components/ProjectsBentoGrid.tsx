@@ -4,25 +4,31 @@ import { X, Maximize2, Github, ExternalLink } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import reactjs from '../data/react.svg';
-import nextjs from '../data/next.svg';
-import nodejs from '../data/node.svg';
-import fastapi from '../data/fastapi.svg';
-import redux from '../data/redux.svg';
-import expressjs from '../data/express.svg';
-import mongodb from '../data/mongodb.svg';
-import postgresql from '../data/postgresql.svg';
-import motionIcon from '../data/framer.svg';
-import chartjs from '../data/chartjs.svg';
-import typescript from '../data/typescript.svg';
-import tailwindcss from '../data/tailwind.svg';
-import langchain from '../data/LangChain_Logo.svg';
-import huggingface from '../data/huggingface.svg';
+import reactjs from '../data/React.svg';
+import nextjs from '../data/Next.js.svg';
+import nodejs from '../data/Node.js.svg';
+import fastapi from '../data/FastAPI.svg';
+import redux from '../data/Redux.svg';
+import expressjs from '../data/Express.svg';
+import mongodb from '../data/MongoDB.svg';
+import postgresql from '../data/PostgresSQL.svg';
+import motionIcon from '../data/Brand-Framer-Motion--Streamline-Tabler.svg';
+import chartjs from '../data/Chartjs.svg';
+import typescript from '../data/TypeScript.svg';
+import tailwindcss from '../data/Tailwind CSS.svg';
+import langchain from '../data/LangChain.svg';
+import huggingface from '../data/huggingface-color.svg';
 import chromadb from '../data/chroma.svg';
 import pytorch from '../data/PyTorch.svg';
 import python from '../data/python.svg';
 import pandas from '../data/Pandas.svg';
 import matplotlib from '../data/Matplotlib.svg';
+import langgraph from '../data/langgraph.svg';
+import sqlite from '../data/SQLite.svg';
+import docker from '../data/Docker.svg';
+import kubernetes from '../data/Kubernetes.svg';
+import prometheus from '../data/Prometheus.svg';
+import grafana from '../data/Grafana.svg';
 
 const techstackIcons: Record<string, any> = {
     'ReactJS': reactjs,
@@ -44,6 +50,12 @@ const techstackIcons: Record<string, any> = {
     'Python': python,
     'Pandas': pandas,
     'Matplotlib': matplotlib,
+    'LangGraph': langgraph,
+    'SQLite': sqlite,
+    'Docker': docker,
+    'Kubernetes': kubernetes,
+    'Prometheus': prometheus,
+    'Grafana': grafana,
 };
 
 function cn(...inputs: ClassValue[]) {
@@ -98,17 +110,19 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
                 <div className="flex flex-col h-full justify-between">
                     <div>
                         <h3 className="text-lg md:text-xl font-medium mb-2">{card.data.name}</h3>
-                        <p className="text-sm md:text-base font-light text-neutral-600 dark:text-neutral-400 text-pretty">{card.data.summary}</p>
+                        <p
+                            className="text-sm md:text-base font-light text-neutral-600 dark:text-neutral-400 text-pretty"
+                            dangerouslySetInnerHTML={{ __html: card.data.summary }}
+                        />
                     </div>
                     <div className="flex flex-col gap-4 mt-auto pt-4">
                         <div className="grid grid-cols-4 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full">
                             {card.data.techstack?.map((tech: string, i: number) => {
-                                const needsWhiteBg = ['Langchain', 'HuggingFace', 'ChromaDB'].includes(tech);
                                 const icon = techstackIcons[tech];
                                 return (
                                     <div key={i} data-title={tech} className={cn(
                                         "flex items-center justify-center p-1 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12 min-[500px]:max-md:h-9 tooltip-trigger relative",
-                                        needsWhiteBg ? "bg-white special-badge" : "bg-neutral-100 dark:bg-neutral-800"
+                                        "bg-neutral-100 dark:bg-neutral-800"
                                     )}>
                                         {icon && <img src={icon.src} width={icon.width} height={icon.height} alt={tech} className="w-full h-full object-contain" loading="lazy" decoding="async" />}
                                     </div>
@@ -281,12 +295,11 @@ const ProjectsBentoGrid: React.FC = () => {
 
                                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 w-full">
                                             {selectedItem.data.techstack?.map((tech: string, i: number) => {
-                                                const needsWhiteBg = ['Langchain', 'HuggingFace', 'ChromaDB'].includes(tech);
                                                 const icon = techstackIcons[tech];
                                                 return (
                                                     <div key={i} title={tech} data-tooltip-placement="bottom" className={cn(
                                                         "flex items-center justify-center p-1 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12",
-                                                        needsWhiteBg ? "bg-white special-badge" : "bg-neutral-100 dark:bg-neutral-800"
+                                                        "bg-neutral-100 dark:bg-neutral-800"
                                                     )}>
                                                         {icon && <img src={icon.src} width={icon.width} height={icon.height} alt={tech} className="w-full h-full object-contain" loading="lazy" decoding="async" />}
                                                     </div>
