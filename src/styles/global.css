@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./transitions.css";
 @import "./light-theme.css";
+@import "./project-links.css";
 
 @media (prefers-reduced-motion: reduce) {
   *,

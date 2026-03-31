@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { m, motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
-import { X, Maximize2, Github, ExternalLink } from 'lucide-react';
+import { X, Maximize2, GithubIcon, ExternalLink } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -131,13 +131,13 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
                         </div>
                         <div className="flex gap-4 text-sm md:text-base font-medium">
                             {card.data.live && (
-                                <a href={card.data.live} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="cursor-pointer hover:text-blue-500 transition-colors flex items-center gap-1" aria-label={`View live demo of ${card.data.name}`}>
+                                <a href={card.data.live} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="project-link cursor-pointer flex items-center gap-1" aria-label={`View live demo of ${card.data.name}`}>
                                     <ExternalLink size={16} /> Live
                                 </a>
                             )}
                             {card.data.github && (
-                                <a href={card.data.github} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="cursor-pointer hover:text-blue-500 transition-colors flex items-center gap-1" aria-label={`View source code of ${card.data.name} on GitHub`}>
-                                    <Github size={16} /> GitHub
+                                <a href={card.data.github} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="project-link cursor-pointer flex items-center gap-1" aria-label={`View source code of ${card.data.name} on GitHub`}>
+                                    <GithubIcon size={16} /> GitHub
                                 </a>
                             )}
                         </div>
@@ -287,7 +287,7 @@ const ProjectsBentoGrid: React.FC = () => {
                                                 )}
                                                 {selectedItem.data.github && (
                                                     <a href={selectedItem.data.github} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" aria-label={`View source code of ${selectedItem.data.name} on GitHub`} title="View on GitHub">
-                                                        <Github size={24} />
+                                                        <GithubIcon size={24} />
                                                     </a>
                                                 )}
                                             </div>

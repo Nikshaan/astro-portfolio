@@ -1,0 +1,13 @@
+/* Scoped styling for project card Live/GitHub links */
+
+.project-link {
+  transition: color 200ms ease;
+}
+
+html[data-theme='light'] .project-link:hover {
+  color: rgb(96 165 250); /* tailwind blue-400 */
+}
+
+html:not([data-theme='light']) .project-link:hover {
+  color: rgb(192 132 252); /* tailwind purple-400 */
+}

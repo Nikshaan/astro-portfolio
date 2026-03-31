@@ -5,6 +5,7 @@ import collegeLogo from "../data/djsce-logo.avif";
 import aryaLogo from "../data/arya.avif";
 import codeAIlogo from "../data/codeai.avif";
 import varakLogo from "../data/varak.avif";
+import mentoriaLogo from "../data/mentoria.avif";
 import gssocLogo from "../data/gssoc.avif";
 import winIcon from "../data/winIcon.avif";
 
@@ -35,6 +36,13 @@ const optimizedImages = {
     }),
     varakLogo: await getImage({
         src: varakLogo,
+        format: "avif",
+        widths: [60, 90, 120, 180],
+        width: 180,
+        quality: 90,
+    }),
+    mentoriaLogo: await getImage({
+        src: mentoriaLogo,
         format: "avif",
         widths: [60, 90, 120, 180],
         width: 180,

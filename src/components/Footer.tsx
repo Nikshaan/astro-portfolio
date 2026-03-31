@@ -1,5 +1,5 @@
 import React from "react";
-import { MoveRight, Github, Linkedin, Mail } from "lucide-react";
+import { MoveRight, Github, LinkedinIcon, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Footer = () => {
@@ -79,7 +79,7 @@ const Footer = () => {
                                 aria-label="Connect with Nikshaan on LinkedIn"
                                 className="p-4 rounded-full border border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] hover:bg-neutral-200 dark:hover:bg-white/10 data-[theme=light]:hover:bg-blue-100 footer-transition"
                             >
-                                <Linkedin className="w-5 h-5 text-neutral-900 dark:text-white" aria-hidden="true" />
+                                <LinkedinIcon className="w-5 h-5 text-neutral-900 dark:text-white" aria-hidden="true" />
                             </a>
                             <a
                                 href="mailto:nikshaanshetty06@gmail.com"

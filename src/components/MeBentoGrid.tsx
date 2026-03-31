@@ -10,6 +10,7 @@ import collegeLogo from '../data/djsce-logo.avif';
 import aryaLogo from '../data/arya.avif';
 import codeAIlogo from '../data/codeai.avif';
 import varakLogo from '../data/varak.avif';
+import mentoriaLogo from '../data/mentoria.avif';
 import gssocLogo from '../data/gssoc.avif';
 import winIcon from '../data/winIcon.avif';
 import githubColor from '../data/github-color.svg';
@@ -26,6 +27,7 @@ const defaultImages: Record<string, any> = {
     aryaLogo: aryaLogo,
     codeAIlogo: codeAIlogo,
     varakLogo: varakLogo,
+    mentoriaLogo: mentoriaLogo,
     gssocLogo: gssocLogo,
     winIcon: winIcon,
 };
@@ -124,7 +126,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                                     className="select-none transition-all transform duration-200 w-[60px] md:w-[90px]"
                                 />
                             </div>
-                            <div className="w-[80%] flex flex-col items-end text-right">
+                            <div className="w-[80%] flex flex-col items-end text-right my-2">
                                 <p className="font-bold text-base">{item.title}</p>
                                 <p className="font-light text-sm">{item.subtitle}</p>
                                 <p className="font-light text-sm">{item.role}</p>
@@ -132,6 +134,13 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                             </div>
                         </div>
                     ))}
+
+                    {card.data.certification && (
+                        <div className="text-right mt-4">
+                            <p className="mb-1 font-bold text-left">certification</p>
+                            <p className="font-light text-left"><span className="font-medium">{card.data.certification.title}</span> - {card.data.certification.issuer}</p>
+                        </div>
+                    )}
                 </div>
             );
         case 'location':
@@ -191,17 +200,13 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                                     className="select-none transition-all transform duration-200 rounded-full w-[50px] md:w-[70px]"
                                 />
                             </div>
-                            <div className="w-[80%] flex flex-col items-end text-right">
+                            <div className="w-[80%] flex flex-col items-end text-right my-1">
                                 <p className="font-bold text-base">{item.title}</p>
                                 <p className='text-sm'>{item.company}</p>
                                 <p className="font-light text-sm">{item.date}</p>
                             </div>
                         </div>
                     ))}
-                    <div className="text-right mt-2">
-                        <p className="mb-1 font-bold text-left">certification</p>
-                        <p className="font-light text-left"><span className="font-medium">{card.data.certification.title}</span> - {card.data.certification.issuer}</p>
-                    </div>
                 </div>
             );
         case 'resume':
