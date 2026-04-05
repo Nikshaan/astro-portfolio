@@ -7,7 +7,7 @@
         "theme": "dark",
         "data": {
             "title": "About Me",
-            "text": "Hi, I'm <span class=\"font-bold text-lg\">Nikshaan Shetty</span>, a 20 years old student.",
+            "text": "Hi, I'm <span class=\"font-bold text-lg\">Nikshaan Shetty</span>, a 20 year old student.",
             "interests": [
                 "Technologia",
                 "Gaming",

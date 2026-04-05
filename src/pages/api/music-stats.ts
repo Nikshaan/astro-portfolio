@@ -194,32 +194,45 @@ async function fetchSpotifyArtistImage(
 
 async function fetchListeningStreak(username: string, apiKey: string): Promise<number> {
   try {
-    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&limit=200&api_key=${apiKey}&format=json`;
-    const response = await fetchWithRetry(url);
-    const data = await response.json();
-    const tracks: any[] = data?.recenttracks?.track ?? [];
-
+    const now = new Date();
+    const fromDate = new Date(now);
+    fromDate.setUTCDate(fromDate.getUTCDate() - 30);
+    fromDate.setUTCHours(0, 0, 0, 0);
+    const from = Math.floor(fromDate.getTime() / 1000);
+    const to = Math.floor(now.getTime() / 1000);
 
     const scrobbleDates = new Set<string>();
-    for (const track of tracks) {
-      const ts = track?.date?.uts;
-      if (!ts) continue;
-      const d = new Date(parseInt(ts, 10) * 1000);
-      scrobbleDates.add(d.toISOString().slice(0, 10));
+    let page = 1;
+    const maxPages = 10;
+
+    while (page <= maxPages) {
+      const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&from=${from}&to=${to}&limit=200&page=${page}&api_key=${apiKey}&format=json`;
+      const response = await fetchWithRetry(url);
+      const data = await response.json();
+      const tracks: any[] = data?.recenttracks?.track ?? [];
+      const totalPages = parseInt(data?.recenttracks?.['@attr']?.totalPages ?? '1', 10);
+
+      for (const track of tracks) {
+        const ts = track?.date?.uts;
+        if (!ts) continue;
+        const d = new Date(parseInt(ts, 10) * 1000);
+        scrobbleDates.add(d.toISOString().slice(0, 10));
+      }
+
+      if (page >= totalPages) break;
+      page++;
     }
 
-
     let streak = 0;
-    const now = new Date();
-    for (let i = 0; i < 30; i++) {
+    const todayStr = now.toISOString().slice(0, 10);
+    const startOffset = scrobbleDates.has(todayStr) ? 0 : 1;
+
+    for (let i = startOffset; i < 31; i++) {
       const d = new Date(now);
       d.setUTCDate(now.getUTCDate() - i);
       const dateStr = d.toISOString().slice(0, 10);
       if (scrobbleDates.has(dateStr)) {
         streak++;
-      } else if (i === 0) {
-
-        continue;
       } else {
         break;
       }
