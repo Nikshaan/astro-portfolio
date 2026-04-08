@@ -6,7 +6,6 @@ import { twMerge } from 'tailwind-merge';
 
 const MusicStatsClient = lazy(() => import('./musicstats'));
 const IndiaMapCard = lazy(() => import('./IndiaMapCard'));
-const ScrobbleHeatmap = lazy(() => import('./ScrobbleHeatmap'));
 const MusicExtrasCard = lazy(() => import('./MusicExtrasCard'));
 
 function cn(...inputs: ClassValue[]) {
@@ -222,16 +221,6 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                             </div>
                         }>
                             <MusicExtrasCard />
-                        </Suspense>
-                    </div>
-
-                    <div className="col-span-2 lg:col-span-4">
-                        <Suspense fallback={
-                            <div className="rounded-3xl border bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 p-6 text-gray-400 text-sm text-center">
-                                Loading scrobble history…
-                            </div>
-                        }>
-                            <ScrobbleHeatmap />
                         </Suspense>
                     </div>
 
