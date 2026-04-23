@@ -43,8 +43,8 @@ let spotifyToken: { value: string; expiresAt: number } | null = null;
 
 const CACHE_HEADERS = {
   'Content-Type': 'application/json',
-  'Cache-Control': 'public, max-age=300, s-maxage=600, stale-while-revalidate=1800',
-  'CDN-Cache-Control': 'max-age=600'
+  'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=86400',
+  'CDN-Cache-Control': 'max-age=1800'
 } as const;
 
 const jsonResponse = (data: unknown, status: number, cacheStatus: string): Response =>
@@ -195,49 +195,94 @@ async function fetchSpotifyArtistImage(
 async function fetchListeningStreak(username: string, apiKey: string): Promise<number> {
   try {
     const now = new Date();
-    const fromDate = new Date(now);
-    fromDate.setUTCDate(fromDate.getUTCDate() - 30);
-    fromDate.setUTCHours(0, 0, 0, 0);
-    const from = Math.floor(fromDate.getTime() / 1000);
-    const to = Math.floor(now.getTime() / 1000);
-
     const scrobbleDates = new Set<string>();
+    
     let page = 1;
-    const maxPages = 10;
+    const limit = 200;
+    const batchSize = 10;
+    let totalPages = Infinity;
 
-    while (page <= maxPages) {
-      const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&from=${from}&to=${to}&limit=200&page=${page}&api_key=${apiKey}&format=json`;
-      const response = await fetchWithRetry(url);
-      const data = await response.json();
-      const tracks: any[] = data?.recenttracks?.track ?? [];
-      const totalPages = parseInt(data?.recenttracks?.['@attr']?.totalPages ?? '1', 10);
-
-      for (const track of tracks) {
-        const ts = track?.date?.uts;
-        if (!ts) continue;
-        const d = new Date(parseInt(ts, 10) * 1000);
-        scrobbleDates.add(d.toISOString().slice(0, 10));
-      }
-
-      if (page >= totalPages) break;
-      page++;
-    }
-
-    let streak = 0;
+    let totalStreak = 0;
+    let gapFound = false;
+    let isTodayChecked = false;
+    
     const todayStr = now.toISOString().slice(0, 10);
-    const startOffset = scrobbleDates.has(todayStr) ? 0 : 1;
+    let expectedDate = new Date(now);
+    let expectedDateStr = todayStr;
 
-    for (let i = startOffset; i < 31; i++) {
-      const d = new Date(now);
-      d.setUTCDate(now.getUTCDate() - i);
-      const dateStr = d.toISOString().slice(0, 10);
-      if (scrobbleDates.has(dateStr)) {
-        streak++;
-      } else {
+    const startTime = Date.now();
+
+    while (!gapFound && page <= totalPages) {
+      if (Date.now() - startTime > 8000) {
         break;
       }
+
+      const pagesToFetch = [];
+      for (let i = 0; i < batchSize && (page + i) <= totalPages; i++) {
+        pagesToFetch.push(page + i);
+      }
+
+      const promises = pagesToFetch.map(p => {
+        const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&limit=${limit}&page=${p}&api_key=${apiKey}&format=json`;
+        return fetchWithRetry(url).then(res => res.json()).catch(() => null);
+      });
+
+      const results = await Promise.all(promises);
+      let oldestDateStrInBatch = todayStr;
+
+      for (const data of results) {
+        if (!data) continue;
+
+        if (data?.recenttracks?.['@attr']?.totalPages) {
+          const tp = parseInt(data.recenttracks['@attr'].totalPages, 10);
+          if (tp !== Infinity) totalPages = tp;
+        }
+
+        const tracks: any[] = data?.recenttracks?.track ?? [];
+        
+        for (const track of tracks) {
+          const ts = track?.date?.uts;
+          if (ts) {
+            const d = new Date(parseInt(ts, 10) * 1000);
+            const dateStr = d.toISOString().slice(0, 10);
+            scrobbleDates.add(dateStr);
+            if (dateStr < oldestDateStrInBatch) {
+              oldestDateStrInBatch = dateStr;
+            }
+          } else {
+            scrobbleDates.add(todayStr);
+          }
+        }
+      }
+
+      const isLastBatch = (page + batchSize - 1) >= totalPages;
+
+      while (!gapFound) {
+        const isFullyFetched = (expectedDateStr > oldestDateStrInBatch) || isLastBatch;
+        if (!isFullyFetched) break;
+
+        if (!isTodayChecked && expectedDateStr === todayStr) {
+          isTodayChecked = true;
+          if (scrobbleDates.has(todayStr)) {
+            totalStreak++;
+          }
+          expectedDate.setUTCDate(expectedDate.getUTCDate() - 1);
+          expectedDateStr = expectedDate.toISOString().slice(0, 10);
+        } else {
+          if (scrobbleDates.has(expectedDateStr)) {
+            totalStreak++;
+            expectedDate.setUTCDate(expectedDate.getUTCDate() - 1);
+            expectedDateStr = expectedDate.toISOString().slice(0, 10);
+          } else {
+            gapFound = true;
+          }
+        }
+      }
+
+      page += batchSize;
     }
-    return streak;
+
+    return totalStreak;
   } catch {
     return cache?.data.listeningStreak ?? 0;
   }
@@ -315,8 +360,8 @@ async function fetchMusicStats(
 }
 
 export const GET: APIRoute = async () => {
-  const apiKey = (import.meta.env.PUBLIC_LASTFM_API_KEY || import.meta.env.PUBLIC__LASTFM_API_KEY) as string;
-  const username = (import.meta.env.PUBLIC_LASTFM_USERNAME || import.meta.env.PUBLIC__LASTFM_USERNAME) as string;
+  const apiKey = (import.meta.env.LASTFM_API_KEY || import.meta.env.PUBLIC_LASTFM_API_KEY) as string;
+  const username = (import.meta.env.LASTFM_USERNAME || import.meta.env.PUBLIC_LASTFM_USERNAME) as string;
   const spotifyClientId = import.meta.env.SPOTIFY_CLIENT_ID as string;
   const spotifyClientSecret = import.meta.env.SPOTIFY_CLIENT_SECRET as string;
 

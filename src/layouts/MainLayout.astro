@@ -13,6 +13,7 @@ import "@fontsource/instrument-sans/400.css";
 import "@fontsource/instrument-sans/500.css";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
+import instrumentSans400 from "@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff2";
 import VercelAnalytics from "../components/VercelAnalytics.astro";
 import Footer from "../components/Footer";
 
@@ -31,6 +32,7 @@ const favicon = await getImage({
     <head>
         <meta charset="utf-8" />
         <link rel="icon" type="image/png" href={favicon.src} />
+        <link rel="manifest" href="/manifest.json" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="generator" content={Astro.generator} />
         <title>{title}</title>
@@ -64,13 +66,16 @@ const favicon = await getImage({
 
         <link rel="preconnect" href="https://api.github.com" />
         <link rel="preconnect" href="https://ws.audioscrobbler.com" />
+        <link rel="preconnect" href="https://accounts.spotify.com" />
         <link rel="dns-prefetch" href="https://api.github.com" />
         <link rel="dns-prefetch" href="https://ws.audioscrobbler.com" />
+        <link rel="dns-prefetch" href="https://api.spotify.com" />
 
         <link
             rel="preload"
-            href="/api/github-contributions"
-            as="fetch"
+            as="font"
+            type="font/woff2"
+            href={instrumentSans400}
             crossorigin="anonymous"
         />
 
@@ -116,7 +121,6 @@ const favicon = await getImage({
     <body
         class="h-full bg-black text-neutral-50"
     >
-        <a href="#me" class="skip-link">Skip to main content</a>
         <slot />
         <Footer client:idle />
         <VercelAnalytics />

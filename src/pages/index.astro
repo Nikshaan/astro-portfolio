@@ -10,6 +10,8 @@ import MeBentoGridWrapper from "../components/MeBentoGridWrapper.astro";
 import beeImage from "../data/bee.avif";
 import { getImage } from "astro:assets";
 
+export const prerender = true;
+
 const optimizedBeeImage = await getImage({
   src: beeImage,
   format: "avif",

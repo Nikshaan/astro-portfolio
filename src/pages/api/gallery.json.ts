@@ -17,7 +17,7 @@ export const GET: APIRoute = async () => {
         2: "Manali",
         3: "Mulki Station, Karnataka",
         4: "Padubidri beach, Udupi",
-        5: "Marine drive, Mumbai",
+        5: "Manikaran",
         6: "Mall road, Manali",
         7: "Fort Kochi, Kerala",
         8: "Basilica of Bom Jesus, Goa",
@@ -89,7 +89,7 @@ export const GET: APIRoute = async () => {
         75: "Marine Drive, Mumbai",
         76: "Taj hotel, Mumbai",
         77: "Gurudwara Shri Manikaran Sahib, Manikaran",
-        78: "Manikaran",
+        78: "Marine Drive, Mumbai",
         79: "Manali",
         80: "Kunnukara, Kerala",
         81: "Manali",
@@ -157,7 +157,8 @@ export const GET: APIRoute = async () => {
 
     return new Response(JSON.stringify(validImages), {
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
         }
     });
 }

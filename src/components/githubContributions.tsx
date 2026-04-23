@@ -42,6 +42,26 @@ interface GithubContributionsProps {
   initialData?: GitHubAPIResponse;
 }
 
+function HeatmapSkeleton() {
+  return (
+    <div className={styles.skeleton} aria-hidden="true">
+      <div className={styles.skeletonHeader}>
+        <div className={styles.skeletonTitle} />
+        <div className={styles.skeletonSubtitle} />
+      </div>
+      <div className={styles.skeletonGraph}>
+        {Array.from({ length: 53 }).map((_, wi) => (
+          <div key={wi} className={styles.skeletonWeek}>
+            {Array.from({ length: 7 }).map((_, di) => (
+              <div key={di} className={styles.skeletonDay} />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default memo(function GithubContributions({ initialData }: GithubContributionsProps) {
   const [weeks, setWeeks] = useState<ContributionWeek[]>(
     initialData?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || []
@@ -65,7 +85,7 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
       try {
         const baseUrl = import.meta.env.BASE_URL || '/';
         const apiPath = baseUrl.endsWith('/') ? 'api/github-contributions' : '/api/github-contributions';
-        const response = await fetch(`${baseUrl}${apiPath}`, { cache: 'no-cache' });
+        const response = await fetch(`${baseUrl}${apiPath}`);
 
         if (!response.ok) {
           setError('Failed to load contributions');
@@ -94,7 +114,7 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
       fetchContributions();
     }
 
-    const interval = setInterval(fetchContributions, 60 * 1000);
+    const interval = setInterval(fetchContributions, 60 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [initialData]);
@@ -119,44 +139,56 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
         }}
         viewport={{ once: true, amount: 0.15 }}
       >
-        <div className={styles.header}>
-          <p className='text-lg font-medium'>GitHub Contributions (Last 12 Months)</p>
-          {totalContributions > 0 && (
-            <span className={styles.total}>{totalContributions} contributions in the last year</span>
-          )}
-        </div>
         {loading ? (
-          <div className={styles.loading}>Loading contributions...</div>
+          <HeatmapSkeleton />
         ) : error ? (
-          <p style={{ color: 'red' }}>{error}</p>
+          <>
+            <div className={styles.header}>
+              <p className='text-lg font-medium'>GitHub Contributions (Last 12 Months)</p>
+            </div>
+            <p className="text-sm text-neutral-400 text-center py-4">{error}</p>
+          </>
         ) : weeks.length > 0 ? (
-          <div className={styles.graph} ref={graphRef}>
-            {weeks.map((week: ContributionWeek, weekIndex: number) => (
-              <div key={weekIndex} className={styles.week}>
-                {week.contributionDays.map((day: ContributionDay, dayIndex: number) => {
-                  const count = day.contributionCount;
-                  let level = 0;
-                  if (count > 0 && count <= 3) level = 1;
-                  else if (count > 3 && count <= 6) level = 2;
-                  else if (count > 6 && count <= 9) level = 3;
-                  else if (count > 9) level = 4;
+          <>
+            <div className={styles.header}>
+              <p className='text-lg font-medium'>GitHub Contributions (Last 12 Months)</p>
+              {totalContributions > 0 && (
+                <span className={styles.total}>{totalContributions} contributions in the last year</span>
+              )}
+            </div>
+            <div className={styles.graph} ref={graphRef}>
+              {weeks.map((week: ContributionWeek, weekIndex: number) => (
+                <div key={weekIndex} className={styles.week}>
+                  {week.contributionDays.map((day: ContributionDay, dayIndex: number) => {
+                    const count = day.contributionCount;
+                    let level = 0;
+                    if (count > 0 && count <= 3) level = 1;
+                    else if (count > 3 && count <= 6) level = 2;
+                    else if (count > 6 && count <= 9) level = 3;
+                    else if (count > 9) level = 4;
 
-                  return (
-                    <div
-                      key={dayIndex}
-                      className={`${styles.day} ${styles[`contributionLevel${level}`]}`}
-                      style={{ backgroundColor: day.color || '#161b22' }}
-                      title={`${day.date}: ${day.contributionCount} contributions`}
-                      data-tooltip-placement="bottom"
-                      suppressHydrationWarning
-                    ></div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+                    return (
+                      <div
+                        key={dayIndex}
+                        className={`${styles.day} ${styles[`contributionLevel${level}`]}`}
+                        style={{ backgroundColor: day.color || '#161b22' }}
+                        title={`${day.date}: ${day.contributionCount} contributions`}
+                        data-tooltip-placement="bottom"
+                        suppressHydrationWarning
+                      ></div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
-          <p style={{ color: 'red' }}>No contribution data available</p>
+          <>
+            <div className={styles.header}>
+              <p className='text-lg font-medium'>GitHub Contributions (Last 12 Months)</p>
+            </div>
+            <p className="text-sm text-neutral-400 text-center py-4">No contribution data available</p>
+          </>
         )}
       </m.div>
     </LazyMotion>

@@ -93,8 +93,29 @@ export default memo(function MusicExtrasCard() {
 
                 <div className="flex-1 min-h-0 p-4">
                     {loading ? (
-                        <div className="w-full h-full flex items-center justify-center">
-                            <p className="text-neutral-400 text-sm">Loading genre data…</p>
+                        <div className="w-full h-full flex flex-col items-center justify-around" aria-hidden="true">
+                            
+                            <div style={{
+                                width: 120, height: 120, borderRadius: '50%',
+                                backgroundImage: 'linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%)',
+                                backgroundSize: '400px 100%',
+                                animation: 'genreShimmer 1.6s infinite linear'
+                            }} />
+                            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-3">
+                                {[70, 55, 80, 60, 50].map((w, i) => (
+                                    <div key={i} className="flex items-center gap-2">
+                                        <div style={{ width: 10, height: 10, borderRadius: 2, backgroundImage: 'linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%)', backgroundSize: '400px 100%', animation: 'genreShimmer 1.6s infinite linear' }} />
+                                        <div style={{ width: w, height: 12, borderRadius: 3, backgroundImage: 'linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%)', backgroundSize: '400px 100%', animation: 'genreShimmer 1.6s infinite linear' }} />
+                                    </div>
+                                ))}
+                            </div>
+                            <style>{`
+                                @keyframes genreShimmer {
+                                    0%   { background-position: -200px 0; }
+                                    100% { background-position: 200px 0; }
+                                }
+                                [data-theme="light"] * { --shimmer-from: #dbeafe; --shimmer-to: #eff6ff; }
+                            `}</style>
                         </div>
                     ) : (data?.genreData && data.genreData.length > 0) ? (
                         <Suspense fallback={
@@ -119,7 +140,7 @@ export default memo(function MusicExtrasCard() {
                 )}>
                     <Music2 size={13} className={cn("shrink-0 transition-colors duration-300", isLightTheme ? "text-slate-900" : "text-purple-400")} />
                     {loading ? (
-                        <span className={cn("text-xs transition-colors duration-300", isLightTheme ? "text-slate-900" : "text-neutral-400")}>Loading streak…</span>
+                        <div style={{ width: 140, height: 12, borderRadius: 3, backgroundImage: 'linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%)', backgroundSize: '400px 100%', animation: 'genreShimmer 1.6s infinite linear' }} aria-hidden="true" />
                     ) : streak > 0 ? (
                         <span className={cn("text-sm font-medium transition-colors duration-300", isLightTheme ? "text-slate-900" : "text-purple-300")}>
                             {streak} day listening streak

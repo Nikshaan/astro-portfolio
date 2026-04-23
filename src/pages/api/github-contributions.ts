@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-const CACHE_DURATION = 15 * 1000;
+const CACHE_DURATION = 60 * 60 * 1000;
 const REQUEST_TIMEOUT = 8000;
 let cachedData: GitHubResponse | null = null;
 let lastFetchTime = 0;
@@ -72,7 +72,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=5, s-maxage=10',
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
         'X-Cache-Status': 'HIT'
       }
     });
@@ -141,7 +141,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=5, s-maxage=10',
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
         'X-Cache-Status': 'MISS'
       }
     });
@@ -151,7 +151,7 @@ export const GET: APIRoute = async () => {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=5, s-maxage=10',
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
           'X-Cache-Status': 'STALE'
         }
       });

@@ -1,4 +1,5 @@
-import React, { useEffect, Suspense, lazy, memo } from 'react';
+import React, { useEffect, Suspense, lazy, memo, useState, useRef } from 'react';
+import { isSlowConnection } from '../utils/networkAware';
 import { m, type HTMLMotionProps, LazyMotion, domAnimation } from 'framer-motion';
 import { Maximize2 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
@@ -107,7 +108,39 @@ const VISITED_PLACES = [
 ];
 
 const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
+    const [visibleCount, setVisibleCount] = useState(12);
+    const sentinelRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
+        const batchSize = isSlowConnection() ? 6 : 12;
+        setVisibleCount(prev => Math.max(prev, batchSize));
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                setVisibleCount(prev => Math.min(prev + batchSize, images.length));
+            }
+        }, { rootMargin: isSlowConnection() ? '200px' : '400px' });
+
+        if (sentinelRef.current) observer.observe(sentinelRef.current);
+        return () => observer.disconnect();
+    }, [images.length]);
+
+    useEffect(() => {
+        if (!document.getElementById('gallery-shimmer-style')) {
+            const style = document.createElement('style');
+            style.id = 'gallery-shimmer-style';
+            style.textContent = `
+                @keyframes galleryShimmer {
+                    0%   { background-position: -600px 0; }
+                    100% { background-position: 600px 0; }
+                }
+                [data-theme="light"] .gallery-shimmer {
+                    background-image: linear-gradient(90deg, #dbeafe 25%, #eff6ff 50%, #dbeafe 75%) !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
         let fancyboxLoaded = false;
         let galleryData: any[] = [];
         let initPromise: Promise<void> | null = null;
@@ -216,8 +249,8 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
 
                     <div className="col-span-2 lg:col-span-2 row-span-2 min-h-[400px]">
                         <Suspense fallback={
-                            <div className="rounded-3xl border h-full bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 [.data-theme='light']:!bg-[#dbeafe] [.data-theme='light']:!border-[#1e3a8a] p-6 text-gray-400 text-sm text-center flex items-center justify-center">
-                                Loading…
+                            <div className="rounded-3xl border h-full bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 [.data-theme='light']:!bg-[#dbeafe] [.data-theme='light']:!border-[#1e3a8a] overflow-hidden relative" aria-hidden="true">
+                                <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(90deg, #1e1e1e 25%, #2d2d2d 50%, #1e1e1e 75%)', backgroundSize: '600px 100%', animation: 'galleryShimmer 1.6s infinite linear' }} />
                             </div>
                         }>
                             <MusicExtrasCard />
@@ -225,18 +258,18 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                     </div>
 
                     <Suspense fallback={
-                        <div className="col-span-1 row-span-1 h-[200px] md:h-auto rounded-3xl border bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 flex items-center justify-center">
-                            <div className="text-gray-400 text-sm">Loading map...</div>
+                        <div className="col-span-1 row-span-1 aspect-[4/3] w-full rounded-3xl border bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 overflow-hidden relative" aria-hidden="true">
+                            <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(90deg, #1e1e1e 25%, #2d2d2d 50%, #1e1e1e 75%)', backgroundSize: '600px 100%', animation: 'galleryShimmer 1.6s infinite linear' }} />
                         </div>
                     }>
                         <IndiaMapCard
-                            className="col-span-1 row-span-1 h-full"
+                            className="col-span-1 row-span-1 aspect-[4/3] w-full"
                             visitedPlaces={VISITED_PLACES}
                             index={1}
                         />
                     </Suspense>
 
-                    {images.map((image: Image, i: number) => (
+                    {images.slice(0, visibleCount).map((image: Image, i: number) => (
                         <CardWrapper
                             key={image.id}
                             isExpandable={true}
@@ -246,21 +279,36 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                             <a
                                 href={image.fullSrc || image.src}
                                 className="w-full h-full block relative group overflow-hidden rounded-3xl cursor-pointer"
+                                style={{ aspectRatio: '4/3', display: 'block' }}
                                 data-fancybox="gallery"
                                 data-caption={image.title}
                                 aria-label={`View photo: ${image.title}`}
                             >
+                                <div
+                                    className="absolute inset-0 rounded-3xl"
+                                    style={{
+                                        backgroundImage: 'linear-gradient(90deg, #1e1e1e 25%, #2d2d2d 50%, #1e1e1e 75%)',
+                                        backgroundSize: '600px 100%',
+                                        animation: 'galleryShimmer 1.6s infinite linear',
+                                    }}
+                                    aria-hidden="true"
+                                />
                                 <img
                                     src={image.src}
                                     width={image.width}
                                     height={image.height}
                                     alt={image.alt}
-                                    loading="lazy"
+                                    loading={i < 2 ? 'eager' : 'lazy'}
+                                    fetchPriority={i < 2 ? 'high' : 'auto'}
                                     decoding="async"
                                     sizes="(max-width: 1024px) 50vw, 25vw"
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 relative z-10"
+                                    onLoad={(e) => {
+                                        const shimmer = (e.currentTarget as HTMLImageElement).previousElementSibling as HTMLElement | null;
+                                        if (shimmer) shimmer.style.display = 'none';
+                                    }}
                                 />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-end p-4">
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-end p-4 z-20">
                                     <p className="!text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-medium truncate w-full drop-shadow-md">
                                         {image.title}
                                     </p>
@@ -268,6 +316,9 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                             </a>
                         </CardWrapper>
                     ))}
+                    {visibleCount < images.length && (
+                        <div ref={sentinelRef} className="col-span-full h-4" aria-hidden="true" />
+                    )}
                 </m.div>
             </div>
         </LazyMotion>

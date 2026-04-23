@@ -231,8 +231,14 @@
 }
 
 [data-theme="light"] svg .fill-purple-500,
-[data-theme="light"] svg .fill-purple-400 {
+[data-theme="light"] svg .fill-purple-400,
+[data-theme="light"] svg .fill-purple-600 {
   fill: #2563eb !important;
+
+}
+
+[data-theme="light"] svg .stroke-purple-600 {
+  stroke: #2563eb !important;
 }
 
 [data-theme="light"] svg .fill-neutral-200 {

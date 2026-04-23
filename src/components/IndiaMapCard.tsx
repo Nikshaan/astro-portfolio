@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { geoMercator, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
@@ -72,7 +73,8 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 
         const updateDimensions = () => {
             if (containerRef.current) {
-                const { width, height } = containerRef.current.getBoundingClientRect();
+                const width = containerRef.current.clientWidth;
+                const height = containerRef.current.clientHeight;
                 if (width > 0 && height > 0) {
                     setCollapsedDimensions({ width, height });
                 }
@@ -90,6 +92,11 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     useEffect(() => {
         if (!expanded) return;
 
+        document.body.style.overflow = "hidden";
+        if (typeof window !== "undefined" && (window as any).lenis) {
+            (window as any).lenis.stop();
+        }
+
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 setExpanded(false);
@@ -97,7 +104,13 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
         };
 
         window.addEventListener("keydown", handleEscape);
-        return () => window.removeEventListener("keydown", handleEscape);
+        return () => {
+            document.body.style.overflow = "";
+            if (typeof window !== "undefined" && (window as any).lenis) {
+                (window as any).lenis.start();
+            }
+            window.removeEventListener("keydown", handleEscape);
+        };
     }, [expanded]);
 
     useEffect(() => {
@@ -105,7 +118,8 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 
         const updateExpandedDimensions = () => {
             if (expandedContainerRef.current) {
-                const { width, height } = expandedContainerRef.current.getBoundingClientRect();
+                const width = expandedContainerRef.current.clientWidth;
+                const height = expandedContainerRef.current.clientHeight;
                 if (width > 0 && height > 0) {
                     setExpandedDimensions({ width, height });
                 }
@@ -183,11 +197,8 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     };
 
     const sortedPlaces = useMemo(() => {
-        if (!hoveredPlace) return visitedPlaces;
-
-        const otherPlaces = visitedPlaces.filter(p => p.name !== hoveredPlace.name);
-        return [...otherPlaces, hoveredPlace];
-    }, [visitedPlaces, hoveredPlace]);
+        return visitedPlaces;
+    }, [visitedPlaces]);
 
     return (
         <>
@@ -254,34 +265,32 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                         />
                                     ))}
                                 </g>
-
-                                {visitedPlaces.map((place, i) => {
-                                    const coords = collapsedMap.projection!([place.lng, place.lat]);
-                                    if (!coords) return null;
-                                    const scaleFactor = Math.min(collapsedDimensions.width, collapsedDimensions.height) / 200;
-                                    const pinRadius = Math.max(1.5, Math.min(3, scaleFactor * 2.5));
-                                    return (
-                                        <g key={i} transform={`translate(${coords[0]}, ${coords[1]})`}>
-                                            <circle r={pinRadius} className="fill-purple-500 dark:fill-purple-400" />
-                                            <circle
-                                                r={pinRadius}
-                                                className="fill-purple-500 dark:fill-purple-400 animate-ping opacity-75"
-                                            />
-                                        </g>
-                                    );
-                                })}
+                                <g>
+                                    {visitedPlaces.map((place, i) => {
+                                        const coords = collapsedMap.projection!([place.lng, place.lat]);
+                                        if (!coords) return null;
+                                        const pinRadius = Math.max(1.2, Math.min(3, collapsedDimensions.width / 150));
+                                        return (
+                                            <g key={i} transform={`translate(${coords[0]}, ${coords[1]})`}>
+                                                <circle r={pinRadius} className="fill-purple-500 dark:fill-purple-400" />
+                                                <circle r={pinRadius} className="fill-purple-500 dark:fill-purple-400 animate-ping opacity-75" />
+                                            </g>
+                                        );
+                                    })}
+                                </g>
                             </svg>
                         </div>
                     )}
                 </motion.div>
             </motion.div>
 
-            <AnimatePresence>
-                {expanded && (
-                    <motion.div
-                        layoutId="india-map-card"
-                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10 bg-white/0"
-                    >
+            {typeof document !== 'undefined' && createPortal(
+                <AnimatePresence>
+                    {expanded && (
+                        <motion.div
+                            layoutId="india-map-card"
+                            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-10 bg-white/0"
+                        >
                         <motion.div
                             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                             initial={{ opacity: 0 }}
@@ -339,74 +348,99 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                                 );
                                             })}
                                         </g>
+                                        
+                                        <g>
+                                            {visitedPlaces.map((place, index) => {
+                                                const coords = expandedMap.projection!([place.lng, place.lat]);
+                                                if (!coords) return null;
 
-                                        {sortedPlaces.map((place) => {
-                                            const coords = expandedMap.projection!([place.lng, place.lat]);
-                                            if (!coords) return null;
+                                                const isHovered = hoveredPlace?.name === place.name;
+                                                const baseRadius = Math.max(2.5, Math.min(5, expandedDimensions.width / 220));
+                                                const hoverRadius = baseRadius * 1.5;
+                                                const pingRadius = baseRadius * 2;
+                                                const tapTargetRadius = Math.max(15, baseRadius * 4);
 
-                                            const isHovered = hoveredPlace?.name === place.name;
-                                            const scaleFactor = Math.min(expandedDimensions.width, expandedDimensions.height) / 500;
-                                            const baseRadius = Math.max(2, Math.min(4, scaleFactor * 3));
-                                            const hoverRadius = baseRadius * 1.5;
-                                            const pingRadius = baseRadius * 1.8;
-                                            const tapTargetRadius = baseRadius * 4;
-                                            const labelWidth = Math.max(60, Math.min(100, scaleFactor * 80));
-                                            const labelHeight = Math.max(16, Math.min(24, scaleFactor * 20));
-                                            const labelFontSize = Math.max(8, Math.min(12, scaleFactor * 10));
-                                            const labelOffsetY = baseRadius + labelHeight / 2 + 4;
-
-                                            return (
-                                                <g
-                                                    key={place.name}
-                                                    transform={`translate(${coords[0]}, ${coords[1]})`}
-                                                    onMouseEnter={() => setHoveredPlace(place)}
-                                                    onMouseLeave={() => setHoveredPlace(null)}
-                                                    onClick={() => setHoveredPlace(hoveredPlace?.name === place.name ? null : place)}
-                                                    className="cursor-pointer"
-                                                >
-                                                    <circle r={tapTargetRadius} className="fill-transparent" />
-                                                    <circle
-                                                        r={isHovered ? hoverRadius : baseRadius}
-                                                        className="fill-purple-500 dark:fill-purple-400 transition-all duration-300"
-                                                    />
-                                                    <circle
-                                                        r={isHovered ? pingRadius : baseRadius}
-                                                        className="fill-purple-500 dark:fill-purple-400 opacity-30 animate-ping"
-                                                    />
-                                                    {isHovered && (
-                                                        <g transform={`translate(0, ${-labelOffsetY})`}>
-                                                            <rect
-                                                                x={-labelWidth / 2} 
-                                                                y={-labelHeight} 
-                                                                width={labelWidth} 
-                                                                height={labelHeight} 
-                                                                rx="3"
-                                                                className="fill-neutral-900 dark:fill-white"
+                                                return (
+                                                    <g key={place.name}>
+                                                        <circle
+                                                            cx={coords[0]}
+                                                            cy={coords[1]}
+                                                            r={tapTargetRadius}
+                                                            className="fill-transparent cursor-pointer"
+                                                            onMouseEnter={() => setHoveredPlace(place)}
+                                                            onMouseLeave={() => setHoveredPlace(null)}
+                                                            onClick={() => setHoveredPlace(hoveredPlace?.name === place.name ? null : place)}
+                                                        />
+                                                        
+                                                        <g transform={`translate(${coords[0]}, ${coords[1]})`}>
+                                                       
+                                                            <circle
+                                                                r={baseRadius}
+                                                                className="fill-purple-500 dark:fill-purple-400 opacity-30 animate-ping pointer-events-none"
                                                             />
-                                                            <text
-                                                                textAnchor="middle" 
-                                                                dy={-labelHeight / 3}
-                                                                style={{ fontSize: `${labelFontSize}px` }}
-                                                                className="fill-white dark:fill-neutral-900 font-medium"
-                                                            >
-                                                                {place.name}
-                                                            </text>
-                                                            <path 
-                                                                d={`M -4 0 L 0 5 L 4 0 Z`} 
-                                                                className="fill-neutral-900 dark:fill-white" 
+                                                            <circle
+                                                                r={isHovered ? hoverRadius : baseRadius}
+                                                                className={isHovered ? "fill-purple-600 dark:fill-purple-300 transition-all duration-300 pointer-events-none" : "fill-purple-500 dark:fill-purple-400 transition-all duration-300 pointer-events-none"}
                                                             />
+                                                            {isHovered && (
+                                                                <circle
+                                                                    r={hoverRadius + 2}
+                                                                    className="fill-none stroke-purple-600 dark:stroke-purple-300 stroke-2 pointer-events-none"
+                                                                />
+                                                            )}
                                                         </g>
-                                                    )}
-                                                </g>
-                                            );
-                                        })}
+                                                    </g>
+                                                );
+                                            })}
+                                        </g>
+                                        
+                                        <g>
+                                            {visitedPlaces.map((place) => {
+                                                const coords = expandedMap.projection!([place.lng, place.lat]);
+                                                if (!coords) return null;
+
+                                                const isHovered = hoveredPlace?.name === place.name;
+                                                const baseRadius = Math.max(2.5, Math.min(5, expandedDimensions.width / 220));
+
+                                                return (
+                                                    <g key={`tooltip-${place.name}`}>
+                                                        {isHovered && (
+                                                            <g transform={`translate(${coords[0]}, ${coords[1]})`}>
+                                                                <rect
+                                                                    x={-80}
+                                                                    y={-(baseRadius * 2 + 45)}
+                                                                    width={160}
+                                                                    height={40}
+                                                                    rx={4}
+                                                                    className="fill-neutral-900 dark:fill-white shadow-lg"
+                                                                />
+                                                                <text
+                                                                    x={0}
+                                                                    y={-(baseRadius * 2 + 22)}
+                                                                    textAnchor="middle"
+                                                                    className="fill-white dark:fill-neutral-900 text-[clamp(11px,1.5vw,15px)] font-medium pointer-events-none select-none"
+                                                                >
+                                                                    {place.name}
+                                                                </text>
+                                                                <path
+                                                                    d={`M0,${-(baseRadius * 2 + 5)} L-6,${-(baseRadius * 2 - 3)} L6,${-(baseRadius * 2 - 3)} Z`}
+                                                                    className="fill-neutral-900 dark:fill-white pointer-events-none"
+                                                                />
+                                                            </g>
+                                                        )}
+                                                    </g>
+                                                );
+                                            })}
+                                        </g>
                                     </svg>
                                 )}
                             </div>
                         </motion.div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>,
+            document.body
+        )}
         </>
     );
 };
