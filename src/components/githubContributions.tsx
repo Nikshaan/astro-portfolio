@@ -128,7 +128,7 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
           "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]"
         )}
         initial={{ opacity: 0, y: 30, scale: 0.98 }}
-        whileInView={{
+        animate={{
           opacity: 1,
           y: 0,
           scale: 1,
@@ -137,7 +137,6 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
             ease: [0.25, 0.1, 0.25, 1],
           }
         }}
-        viewport={{ once: true, amount: 0.15 }}
       >
         {loading ? (
           <HeatmapSkeleton />

@@ -1,9 +1,37 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { MoveRight, Github, LinkedinIcon, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Footer = () => {
     const currentYear = new Date().getFullYear();
+
+    const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
+        e.preventDefault();
+
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+            const lenis = (window as any).lenis;
+
+            if (lenis) {
+                lenis.scrollTo(targetSection, {
+                    offset: 0,
+                    duration: 1.2,
+                    immediate: false
+                });
+            } else {
+                targetSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+
+            setTimeout(() => {
+                if (window.location.hash) {
+                    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                }
+            }, 10);
+        }
+    }, []);
 
     const containerVariants = {
         hidden: { opacity: 0, y: 50, scale: 0.95 },
@@ -98,13 +126,14 @@ const Footer = () => {
                             </p>
                             <nav aria-label="Footer navigation" className="flex flex-wrap gap-2 md:gap-3">
                                 {[
-                                    { name: "me", href: "/#me" },
-                                    { name: "projects", href: "#projects" },
-                                    { name: "fun stuff", href: "/#fun" }
+                                    { name: "me", href: "me" },
+                                    { name: "projects", href: "projects" },
+                                    { name: "fun stuff", href: "fun" }
                                 ].map((link) => (
                                     <a
                                         key={link.name}
-                                        href={link.href}
+                                        href={`#${link.href}`}
+                                        onClick={(e) => handleNavClick(e, link.href)}
                                         aria-label={`Navigate to ${link.name} section`}
                                         className="px-4 md:px-6 py-2 rounded-full border border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] text-sm md:text-base text-neutral-900 dark:text-white font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-black data-[theme=light]:hover:bg-blue-600 data-[theme=light]:hover:text-white footer-transition"
                                     >
