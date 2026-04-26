@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback, useMemo, memo, useRef } from 'react';
 import { m, motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
-import { X, Maximize2, MapPin } from 'lucide-react';
+import { X, Maximize2, MapPin, Github } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import Clock from './clock';
 import beeImage from '../data/bee.avif';
+import nikshaanBg from '../data/NIKSHAAN.avif';
 import collegeLogo from '../data/djsce-logo.avif';
 import aryaLogo from '../data/arya.avif';
 import codeAIlogo from '../data/codeai.avif';
@@ -13,7 +14,6 @@ import varakLogo from '../data/varak.avif';
 import mentoriaLogo from '../data/mentoria.avif';
 import gssocLogo from '../data/gssoc.avif';
 import winIcon from '../data/winIcon.avif';
-import githubColor from '../data/github-color.svg';
 import linkedinColor from '../data/linkedin-color.svg';
 import gmailColor from '../data/gmail-color.svg';
 
@@ -30,6 +30,7 @@ const defaultImages: Record<string, any> = {
     mentoriaLogo: mentoriaLogo,
     gssocLogo: gssocLogo,
     winIcon: winIcon,
+    locationBg: { src: nikshaanBg.src, attributes: {} },
 };
 
 function cn(...inputs: ClassValue[]) {
@@ -143,31 +144,56 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                     )}
                 </div>
             );
-        case 'location':
+        case 'location': {
+            const bgSrc = images.locationBg?.src;
+            const bgSrcset = images.locationBg?.attributes?.srcset;
+            const bgImageStyle = bgSrcset
+                ? `image-set(${bgSrcset.split(',').map((s: string) => {
+                    const parts = s.trim().split(/\s+/);
+                    return `url('${parts[0]}') ${parts[1] || ''}`;
+                }).join(', ')})`
+                : bgSrc ? `url('${bgSrc}')` : undefined;
             return (
-                <div className="flex flex-col min-[425px]:flex-row lg:flex-col min-[1150px]:!flex-row justify-center items-center w-full h-full gap-4 p-4 text-sm md:text-base">
-                    <div className="flex flex-col justify-center items-center w-full min-[425px]:flex-1 lg:w-full min-[1150px]:flex-1 gap-1 md:gap-2">
+                <div
+                    className="relative flex flex-col min-[425px]:flex-row lg:flex-col min-[1150px]:!flex-row justify-center items-center w-full h-full gap-4 text-sm md:text-base"
+                    style={{ color: 'white' }}
+                >
+                    <div className="absolute -inset-5 rounded-3xl overflow-hidden pointer-events-none">
+                        {bgImageStyle && (
+                            <div
+                                className="absolute inset-0"
+                                style={{
+                                    backgroundImage: bgImageStyle,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                }}
+                            />
+                        )}
+                        <div className="absolute inset-0 bg-black/55" />
+                    </div>
+                    <div className="relative z-[2] flex flex-col justify-center items-center w-full min-[425px]:flex-1 lg:w-full min-[1150px]:flex-1 gap-1 md:gap-2">
                         <div className="flex justify-center items-center gap-1 md:gap-2">
-                            <MapPin className="w-5 h-5 mb-1 lg:w-6 lg:h-6" />
-                            <p className="font-bold text-center text-nowrap">Mumbai, India</p>
+                            <MapPin className="w-5 h-5 mb-1 lg:w-6 lg:h-6" style={{ color: 'white' }} />
+                            <p className="font-bold text-center text-nowrap" style={{ color: 'white' }}>Mumbai, India</p>
                         </div>
-                        <div className="flex justify-center items-center w-full md:w-auto mt-1 md:mt-0">
+                        <div className="flex justify-center items-center w-full md:w-auto mt-1 md:mt-0" style={{ color: 'white' }}>
                             <Clock />
                         </div>
                     </div>
-                    <div className="flex justify-center items-center gap-4 md:gap-6 w-full min-[425px]:flex-1 lg:w-full min-[1150px]:flex-1 h-full">
-                        <a href={card.data.links.github} target="_blank" rel="noopener noreferrer" aria-label="Visit Nikshaan's GitHub profile" data-title="GitHub" className="tooltip-trigger relative">
-                            <img src={githubColor.src} alt="GitHub" className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
+                    <div className="relative z-[2] flex justify-center items-center gap-2.5 w-full min-[425px]:flex-1 lg:w-full min-[1150px]:flex-1 h-full overflow-visible">
+                        <a href={card.data.links.github} target="_blank" rel="noopener noreferrer" aria-label="Visit Nikshaan's GitHub profile" data-title="GitHub" className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/80 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0">
+                            <Github className="w-5 h-5 md:w-6 md:h-6 text-black" strokeWidth={1.75} />
                         </a>
-                        <a href={card.data.links.linkedin} target="_blank" rel="noopener noreferrer" aria-label="Connect with Nikshaan on LinkedIn" data-title="LinkedIn" className="tooltip-trigger relative">
-                            <img src={linkedinColor.src} alt="LinkedIn" className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
+                        <a href={card.data.links.linkedin} target="_blank" rel="noopener noreferrer" aria-label="Connect with Nikshaan on LinkedIn" data-title="LinkedIn" className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/80 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0">
+                            <img src={linkedinColor.src} alt="LinkedIn" className="w-5 h-5 md:w-6 md:h-6" />
                         </a>
-                        <a href={card.data.links.email} aria-label="Send an email to Nikshaan" data-title="Email" className="tooltip-trigger relative">
-                            <img src={gmailColor.src} alt="Email" className="w-6 h-6 md:w-7 md:h-7 cursor-pointer hover:scale-90 transition-transform" />
+                        <a href={card.data.links.email} aria-label="Send an email to Nikshaan" data-title="Email" className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/80 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0">
+                            <img src={gmailColor.src} alt="Email" className="w-5 h-5 md:w-6 md:h-6" />
                         </a>
                     </div>
                 </div>
             );
+        }
         case 'win':
             return (
                 <img

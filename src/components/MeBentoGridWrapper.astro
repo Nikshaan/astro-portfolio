@@ -8,11 +8,21 @@ import varakLogo from "../data/varak.avif";
 import mentoriaLogo from "../data/mentoria.avif";
 import gssocLogo from "../data/gssoc.avif";
 import winIcon from "../data/winIcon.avif";
+import nikshaanRaw from "../data/NIKSHAAN.avif";
 
 const { beeImage } = Astro.props;
 
+const locationBg = await getImage({
+    src: nikshaanRaw,
+    format: "avif",
+    widths: [400, 640, 900, 1200],
+    width: 900,
+    quality: 80,
+});
+
 const optimizedImages = {
     beeImage: beeImage,
+    locationBg: locationBg,
     collegeLogo: await getImage({
         src: collegeLogo,
         format: "avif",
@@ -64,5 +74,13 @@ const optimizedImages = {
     }),
 };
 ---
+
+<link
+    rel="preload"
+    as="image"
+    href={locationBg.src}
+    imagesrcset={locationBg.attributes.srcset}
+    imagesizes="(max-width: 640px) 400px, 640px"
+/>
 
 <MeBentoGrid client:idle optimizedImages={optimizedImages} />
