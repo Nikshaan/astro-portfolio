@@ -202,21 +202,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 
     return (
         <>
-            <motion.div
-                className={cn("h-full w-full", className)}
-                initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                whileInView={{
-                    opacity: 1,
-                    y: 0,
-                    scale: 1,
-                    transition: {
-                        duration: 0.4,
-                        ease: [0.25, 0.1, 0.25, 1],
-                        delay: staggerDelay,
-                    }
-                }}
-                viewport={{ once: true, amount: 0.1 }}
-            >
+            <div className={cn("h-full w-full", className)}>
                 <motion.div
                     layoutId="india-map-card"
                     className={cn(
@@ -282,7 +268,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                         </div>
                     )}
                 </motion.div>
-            </motion.div>
+            </div>
 
             {typeof document !== 'undefined' && createPortal(
                 <AnimatePresence>

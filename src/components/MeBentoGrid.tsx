@@ -71,18 +71,21 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                         </div>
                     </div>
                     <div className="flex justify-center items-center w-full md:w-[40%] lg:w-[50%] h-full lg:aspect-square lg:self-center">
-                        <img
-                            src={images[card.data.image].src}
-                            srcSet={images[card.data.image].srcSet?.attribute || images[card.data.image].attributes?.srcset}
-                            sizes={images[card.data.image].attributes?.sizes || "(max-width: 768px) 100vw, (max-width: 1280px) 40vw, 25vw"}
-                            width={images[card.data.image].attributes?.width || images[card.data.image].width}
-                            height={images[card.data.image].attributes?.height || images[card.data.image].height}
-                            alt="profile"
-                            loading={card.type === 'intro' ? "eager" : "lazy"}
-                            fetchPriority={card.type === 'intro' ? "high" : "auto"}
-                            decoding="async"
-                            className="w-auto max-h-[150px] md:w-full md:h-auto md:max-h-full lg:w-full lg:h-full lg:object-cover border rounded-full select-none object-cover profile-image-border border-white dark:border-white/20"
-                        />
+                        <div className="relative w-full aspect-square max-w-[150px] md:max-w-none md:aspect-auto md:h-full">
+                            <img
+                                src={images[card.data.image].src}
+                                srcSet={images[card.data.image].srcSet?.attribute || images[card.data.image].attributes?.srcset}
+                                sizes={images[card.data.image].attributes?.sizes || "(max-width: 768px) 150px, (max-width: 1280px) 40vw, 25vw"}
+                                width={images[card.data.image].attributes?.width || images[card.data.image].width}
+                                height={images[card.data.image].attributes?.height || images[card.data.image].height}
+                                alt="profile"
+                                loading={card.type === 'intro' ? "eager" : "lazy"}
+                                fetchPriority={card.type === 'intro' ? "high" : "auto"}
+                                decoding="async"
+                                className="absolute inset-0 w-full h-full object-cover border rounded-full select-none profile-image-border border-white dark:border-white/20"
+                                style={{ backgroundColor: '#f3f4f6' }}
+                            />
+                        </div>
                     </div>
                 </div>
             );
@@ -181,13 +184,13 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                         </div>
                     </div>
                     <div className="relative z-[2] flex justify-center items-center gap-2.5 w-full min-[425px]:flex-1 lg:w-full min-[1150px]:flex-1 h-full overflow-visible">
-                        <a href={card.data.links.github} target="_blank" rel="noopener noreferrer" aria-label="Visit Nikshaan's GitHub profile" data-title="GitHub" className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/80 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0">
+                        <a href={card.data.links.github} target="_blank" rel="noopener noreferrer" aria-label="Visit Nikshaan's GitHub profile" data-title="GitHub" className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0">
                             <Github className="w-5 h-5 md:w-6 md:h-6 text-black" strokeWidth={1.75} />
                         </a>
-                        <a href={card.data.links.linkedin} target="_blank" rel="noopener noreferrer" aria-label="Connect with Nikshaan on LinkedIn" data-title="LinkedIn" className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/80 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0">
+                        <a href={card.data.links.linkedin} target="_blank" rel="noopener noreferrer" aria-label="Connect with Nikshaan on LinkedIn" data-title="LinkedIn" className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0">
                             <img src={linkedinColor.src} alt="LinkedIn" className="w-5 h-5 md:w-6 md:h-6" />
                         </a>
-                        <a href={card.data.links.email} aria-label="Send an email to Nikshaan" data-title="Email" className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/80 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0">
+                        <a href={card.data.links.email} aria-label="Send an email to Nikshaan" data-title="Email" className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0">
                             <img src={gmailColor.src} alt="Email" className="w-5 h-5 md:w-6 md:h-6" />
                         </a>
                     </div>
@@ -289,13 +292,15 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
             <motion.div
                 layoutId={shouldAnimate ? `card-${card.id}` : undefined}
                 onClick={handleClick}
+                data-card-id={card.id}
                 className={cn(
                     "relative rounded-3xl border flex flex-col group me-card-hover",
                     card.id === 'win' ? "justify-center items-center h-full w-fit" : card.id === 'resume' ? "justify-center items-center h-full w-full" : "p-5 justify-between h-full",
                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
                     "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]",
                     card.id === 'intro' || card.id === 'win' || card.id === 'resume' ? "overflow-hidden" : "overflow-visible",
-                    (card.isExpandable || isResume) && !selectedId ? "cursor-pointer" : ""
+                    (card.isExpandable || isResume) && !selectedId ? "cursor-pointer" : "",
+                    "min-h-[150px]"
                 )}
                 whileHover={(card.isExpandable || isResume) && !selectedId ? { scale: 1.02 } : {}}
                 whileTap={(card.isExpandable || isResume) && !selectedId ? { scale: 0.98 } : {}}
@@ -410,7 +415,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
 
     return (
         <LazyMotion features={domAnimation}>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full auto-rows-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full auto-rows-[minmax(150px,auto)]">
                 {introCard && <CardWrapper card={introCard} index={0} className="col-span-2 lg:col-span-2 lg:row-span-2 min-h-[300px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 {educationCard && <CardWrapper card={educationCard} index={1} className="col-span-2 lg:col-span-2 lg:row-span-1 min-h-[150px]" selectedId={selectedId} setSelectedId={setSelectedId} images={images} />}
                 <div className="col-span-2 lg:col-span-2 flex gap-4 w-full">

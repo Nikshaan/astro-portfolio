@@ -47,14 +47,17 @@ const optimizedBeeImage = await getImage({
       >
         <MeBentoGridWrapper beeImage={optimizedBeeImage} />
       </section>
+
+      <div class="w-full max-w-[1400px] mx-auto px-4 mb-8">
+        <GithubContributions client:idle />
+      </div>
+
       <section class="w-full flex flex-col gap-2 flex-1">
-        <div class="w-full max-w-[1400px] mx-auto px-4 mb-8">
-          <GithubContributions client:visible />
-        </div>
         <div data-section="projects" id="projects" class="-mt-5">
           <ProjectsBentoGridWrapper />
         </div>
       </section>
+
       <section
         id="fun"
         class="w-full flex flex-col lg:flex-row gap-2 flex-1"

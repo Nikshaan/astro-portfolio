@@ -53,6 +53,15 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.profile-image-border {
+  aspect-ratio: 1/1;
+  object-fit: cover;
+}
+
+.intro-card .profile-image-container {
+  contain: layout;
+}
+
 @supports (view-transition-name: none) {
 
   ::view-transition-old(root),

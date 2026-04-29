@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense, memo } from 'react';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { LazyMotion, domAnimation } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Music2 } from 'lucide-react';
@@ -77,15 +77,10 @@ export default memo(function MusicExtrasCard() {
 
     return (
         <LazyMotion features={domAnimation}>
-            <m.div
+            <div
                 className={cn(
-                    "relative rounded-3xl border flex flex-col h-full w-full overflow-hidden",
-                    "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
-                    "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]",
+                    "relative flex flex-col h-full w-full overflow-hidden",
                 )}
-                initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] } }}
-                viewport={{ once: true, amount: 0.1 }}
             >
                 <div className="px-5 pt-5 pb-0 shrink-0">
                     <h3 className="text-xl font-medium">Genre Breakdown</h3>
@@ -149,7 +144,7 @@ export default memo(function MusicExtrasCard() {
                         <span className={cn("text-xs transition-colors duration-300", isLightTheme ? "text-slate-900" : "text-neutral-400")}>No streak yet</span>
                     )}
                 </div>
-            </m.div>
+            </div>
         </LazyMotion>
     );
 });

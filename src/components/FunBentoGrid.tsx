@@ -6,8 +6,8 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 const MusicStatsClient = lazy(() => import('./musicstats'));
-const IndiaMapCard = lazy(() => import('./IndiaMapCard'));
-const MusicExtrasCard = lazy(() => import('./MusicExtrasCard'));
+import IndiaMapCard from './IndiaMapCard';
+import MusicExtrasCard from './MusicExtrasCard';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -247,27 +247,17 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                         </div>
                     </CardWrapper>
 
-                    <div className="col-span-2 lg:col-span-2 row-span-2 min-h-[400px]">
-                        <Suspense fallback={
-                            <div className="rounded-3xl border h-full bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 [.data-theme='light']:!bg-[#dbeafe] [.data-theme='light']:!border-[#1e3a8a] overflow-hidden relative" aria-hidden="true">
-                                <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(90deg, #1e1e1e 25%, #2d2d2d 50%, #1e1e1e 75%)', backgroundSize: '600px 100%', animation: 'galleryShimmer 1.6s infinite linear' }} />
-                            </div>
-                        }>
-                            <MusicExtrasCard />
-                        </Suspense>
-                    </div>
+                    <CardWrapper key="music-extras" index={1} className="col-span-2 lg:col-span-2 row-span-2 min-h-[400px]">
+                        <MusicExtrasCard />
+                    </CardWrapper>
 
-                    <Suspense fallback={
-                        <div className="col-span-1 row-span-1 aspect-[4/3] w-full rounded-3xl border bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 overflow-hidden relative" aria-hidden="true">
-                            <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(90deg, #1e1e1e 25%, #2d2d2d 50%, #1e1e1e 75%)', backgroundSize: '600px 100%', animation: 'galleryShimmer 1.6s infinite linear' }} />
-                        </div>
-                    }>
+                    <CardWrapper key="india-map" index={2} className="col-span-1 row-span-1 aspect-[4/3] w-full">
                         <IndiaMapCard
                             className="col-span-1 row-span-1 aspect-[4/3] w-full"
                             visitedPlaces={VISITED_PLACES}
-                            index={1}
+                            index={2}
                         />
-                    </Suspense>
+                    </CardWrapper>
 
                     {images.slice(0, visibleCount).map((image: Image, i: number) => (
                         <CardWrapper
