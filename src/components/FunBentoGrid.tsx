@@ -112,6 +112,7 @@ const VISITED_PLACES = [
 const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
     const [visibleCount, setVisibleCount] = useState(12);
     const sentinelRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const initPromiseRef = useRef<Promise<any> | null>(null);
     const galleryDataRef = useRef<any[]>([]);
     const fancyboxLoadedRef = useRef(false);
@@ -175,65 +176,83 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
     };
 
     useEffect(() => {
-        const galleryItems = document.querySelectorAll('[data-fancybox="gallery"]');
+        const container = containerRef.current;
+        if (!container) return;
+
+        const preloadObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                images.forEach((img) => {
+                    const url = img.fullSrc || img.src;
+                    if (!url) return;
+                    const link = document.createElement('link');
+                    link.rel = 'prefetch';
+                    link.as = 'image';
+                    link.href = url;
+                    document.head.appendChild(link);
+                });
+                preloadObserver.disconnect();
+            }
+        }, { rootMargin: '200px' });
+        preloadObserver.observe(container);
 
         const loadOnInteraction = () => {
             initFancybox();
-            galleryItems.forEach(item => {
-                item.removeEventListener('mouseenter', loadOnInteraction);
-                item.removeEventListener('focus', loadOnInteraction);
-            });
+            container.removeEventListener('mouseenter', loadOnInteraction, true);
+            container.removeEventListener('focus', loadOnInteraction, true);
         };
 
-        galleryItems.forEach(item => {
-                item.addEventListener('mouseenter', loadOnInteraction, { once: true });
-                item.addEventListener('focus', loadOnInteraction, { once: true });
+        container.addEventListener('mouseenter', loadOnInteraction, { once: true, capture: true });
+        container.addEventListener('focus', loadOnInteraction, { once: true, capture: true });
+
+        const handleClick = async (e: Event) => {
+            const target = (e.target as Element).closest('[data-fancybox="gallery"]') as HTMLAnchorElement;
+            if (!target) return;
+
+            e.preventDefault();
+            const src = target.getAttribute('href');
+
+            if (!fancyboxLoadedRef.current) {
+                await initFancybox();
+            }
+
+            const { Fancybox } = await import('@fancyapps/ui');
+
+            const startIndex = galleryDataRef.current.findIndex((img: any) => img.src === src);
+
+            Fancybox.show(galleryDataRef.current.map((img: any) => ({
+                src: img.src,
+                thumb: img.src,
+                caption: img.title || img.caption || '',
+                width: img.width,
+                height: img.height
+            })), {
+                startIndex: startIndex >= 0 ? startIndex : 0,
+                dragToClose: false,
+                origin: (_fancybox: any, slide: any) => {
+                    const link = document.querySelector(`a[href="${slide.src}"]`) as HTMLAnchorElement;
+                    return link;
+                },
+                Thumbs: {
+                    type: 'classic',
+                },
+                Images: {
+                    zoom: true,
+                },
+            } as any);
+        };
+
+        container.addEventListener('click', handleClick);
+
+        return () => {
+            import('@fancyapps/ui').then(({ Fancybox }) => {
+                Fancybox.close();
             });
-
-            const handleClick = async (e: Event) => {
-                e.preventDefault();
-                const target = e.currentTarget as HTMLAnchorElement;
-                const src = target.getAttribute('href');
-
-                if (!fancyboxLoadedRef.current) {
-                    await initFancybox();
-                }
-
-                const { Fancybox } = await import('@fancyapps/ui');
-
-                const startIndex = galleryDataRef.current.findIndex((img: any) => img.src === src);
-
-                Fancybox.show(galleryDataRef.current.map((img: any) => ({
-                    src: img.src,
-                    thumb: img.src,
-                    caption: img.title || img.caption || '',
-                    width: img.width,
-                    height: img.height
-                })), {
-                    startIndex: startIndex >= 0 ? startIndex : 0,
-                    dragToClose: false,
-                    origin: (_fancybox: any, slide: any) => {
-                        const link = document.querySelector(`a[href="${slide.src}"]`) as HTMLAnchorElement;
-                        return link;
-                    },
-                    Thumbs: {
-                        type: 'classic',
-                    },
-                    Images: {
-                        zoom: true,
-                    },
-                } as any);
-            };
-
-            galleryItems.forEach(item => item.addEventListener('click', handleClick));
-
-            return () => {
-                import('@fancyapps/ui').then(({ Fancybox }) => {
-                    Fancybox.close();
-                });
-                galleryItems.forEach(item => item.removeEventListener('click', handleClick));
-            };
-    }, []);
+            preloadObserver.disconnect();
+            container.removeEventListener('click', handleClick);
+            container.removeEventListener('mouseenter', loadOnInteraction, true);
+            container.removeEventListener('focus', loadOnInteraction, true);
+        };
+    }, [images]);
 
     return (
         <LazyMotion features={domAnimation}>
@@ -241,6 +260,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
                 <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight mb-8 px-2">Fun Stuff</h2>
 
                 <m.div
+                    ref={containerRef}
                     className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(200px,auto)]"
                 >
                     <CardWrapper key="music-stats" index={0} className="col-span-2 md:col-span-2 lg:col-span-2 row-span-2 min-h-[400px]">
@@ -284,9 +304,9 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
                                 aria-label={`View photo: ${image.title}`}
                             >
                                 <div
-                                    className="absolute inset-0 rounded-3xl"
+                                    className="absolute inset-0 rounded-3xl gallery-shimmer"
                                     style={{
-                                        backgroundImage: 'linear-gradient(90deg, #1e1e1e 25%, #2d2d2d 50%, #1e1e1e 75%)',
+                                        backgroundImage: 'linear-gradient(90deg, var(--shimmer-from, #1e1e1e) 25%, var(--shimmer-to, #2d2d2d) 50%, var(--shimmer-from, #1e1e1e) 75%)',
                                         backgroundSize: '600px 100%',
                                         animation: 'galleryShimmer 1.6s infinite linear',
                                     }}
@@ -315,7 +335,6 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
                                         
                                         img.style.filter = '';
                                         img.style.backgroundImage = '';
-                                        img.offsetHeight;
                                     }}
                                     onError={(e) => {
                                         const img = e.currentTarget as HTMLImageElement;

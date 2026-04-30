@@ -101,7 +101,7 @@ export default memo(function MusicStatsClient() {
             <div className="w-full h-full flex flex-col justify-around pb-4 animate-pulse" aria-hidden="true">
                 
                 <div className="flex flex-col md:flex-row justify-center md:justify-around items-center md:items-start gap-12 md:gap-4 px-4 pt-4 pb-4 w-full rounded-2xl"
-                    style={{ background: 'linear-gradient(90deg, #1f1f1f 25%, #2a2a2a 50%, #1f1f1f 75%)', backgroundSize: '800px 100%', animation: 'musicShimmer 1.6s infinite linear' }}>
+                    style={{ background: 'linear-gradient(90deg, var(--shimmer-from-1, #1f1f1f) 25%, var(--shimmer-to-1, #2a2a2a) 50%, var(--shimmer-from-1, #1f1f1f) 75%)', backgroundSize: '800px 100%', animation: 'musicShimmer 1.6s infinite linear' }}>
                   
                     <div className="w-full flex flex-col items-center gap-3">
                         <div className="h-4 w-36 rounded" style={{ background: 'rgba(255,255,255,0.12)' }} />
@@ -117,8 +117,8 @@ export default memo(function MusicStatsClient() {
                     </div>
                 </div>
                 <div className="flex flex-col w-full mt-8 lg:mt-4 h-[180px] lg:h-[250px]">
-                    <div className="h-4 w-40 rounded mx-auto mb-3" style={{ background: 'rgba(255,255,255,0.1)', animation: 'musicShimmer 1.6s infinite linear', backgroundImage: 'linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%)', backgroundSize: '800px 100%' }} />
-                    <div className="flex-1 rounded-xl" style={{ backgroundImage: 'linear-gradient(90deg, #1a1a1a 25%, #232323 50%, #1a1a1a 75%)', backgroundSize: '800px 100%', animation: 'musicShimmer 1.6s 0.1s infinite linear' }} />
+                    <div className="h-4 w-40 rounded mx-auto mb-3" style={{ background: 'rgba(255,255,255,0.1)', animation: 'musicShimmer 1.6s infinite linear', backgroundImage: 'linear-gradient(90deg, var(--shimmer-from, #2a2a2a) 25%, var(--shimmer-to, #3a3a3a) 50%, var(--shimmer-from, #2a2a2a) 75%)', backgroundSize: '800px 100%' }} />
+                    <div className="flex-1 rounded-xl" style={{ backgroundImage: 'linear-gradient(90deg, var(--shimmer-from-2, #1a1a1a) 25%, var(--shimmer-to-2, #232323) 50%, var(--shimmer-from-2, #1a1a1a) 75%)', backgroundSize: '800px 100%', animation: 'musicShimmer 1.6s 0.1s infinite linear' }} />
                 </div>
                 <style>{`
                     @keyframes musicShimmer {
@@ -127,6 +127,14 @@ export default memo(function MusicStatsClient() {
                     }
                     [data-theme="light"] .music-shimmer-bg {
                         background: linear-gradient(90deg, #dbeafe 25%, #eff6ff 50%, #dbeafe 75%) !important;
+                    }
+                    [data-theme="light"] * { 
+                        --shimmer-from: #dbeafe; 
+                        --shimmer-to: #eff6ff; 
+                        --shimmer-from-1: #e5e7eb; 
+                        --shimmer-to-1: #f3f4f6; 
+                        --shimmer-from-2: #e5e7eb; 
+                        --shimmer-to-2: #f3f4f6; 
                     }
                 `}</style>
             </div>

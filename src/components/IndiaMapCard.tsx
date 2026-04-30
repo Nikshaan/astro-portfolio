@@ -126,9 +126,8 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                 <motion.div
                     layoutId="india-map-card"
                     className={cn(
-                        "relative h-full w-full rounded-3xl overflow-hidden cursor-pointer group border transition-colors duration-300 ease-in-out",
-                        "bg-neutral-50 dark:bg-[#171717]",
-                        "border-white dark:border-white/20",
+                        "relative h-full w-full rounded-3xl overflow-hidden cursor-pointer group transition-colors duration-300 ease-in-out",
+                        "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
                         "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]",
                         expanded ? "opacity-0 pointer-events-none" : "opacity-100"
                     )}
@@ -178,7 +177,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                         return (
                                             <g key={i} transform={`translate(${coords[0]}, ${coords[1]})`}>
                                                 <circle r={7} className="fill-purple-500 dark:fill-purple-400" />
-                                                <circle r={7} className="fill-purple-500 dark:fill-purple-400 animate-ping opacity-75" />
+                                                <circle r={7} className="fill-purple-500 dark:fill-purple-400 animate-ping opacity-75" style={{ willChange: 'transform, opacity', backfaceVisibility: 'hidden' }} />
                                             </g>
                                         );
                                     })}
