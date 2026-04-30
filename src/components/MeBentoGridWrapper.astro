@@ -20,9 +20,18 @@ const locationBg = await getImage({
     quality: 80,
 });
 
+const optimizedProfileImage = await getImage({
+    src: nikshaanRaw,
+    format: "avif",
+    widths: [150, 300, 400],
+    width: 400,
+    quality: 85,
+});
+
 const optimizedImages = {
     beeImage: beeImage,
     locationBg: locationBg,
+    profileImage: optimizedProfileImage,
     collegeLogo: await getImage({
         src: collegeLogo,
         format: "avif",

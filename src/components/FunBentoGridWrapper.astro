@@ -133,6 +133,7 @@ const gridImages = await Promise.all(
             width: 380,
             quality: 80,
             format: "avif",
+            placeholder: "blur",
         });
 
         const optimizedFull = await getImage({
@@ -150,6 +151,10 @@ const gridImages = await Promise.all(
             height: optimizedThumbnail.attributes.height,
             title: photoTitles[photoNumber] || `Photo ${photoNumber}`,
             alt: `Photography - ${photoTitles[photoNumber] || "Photo " + photoNumber}`,
+            placeholderDataUrl: optimizedThumbnail.attributes.placeholder && 
+                optimizedThumbnail.attributes.placeholder.startsWith('data:') 
+                ? optimizedThumbnail.attributes.placeholder 
+                : undefined,
         };
     }),
 );

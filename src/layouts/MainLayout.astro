@@ -5,19 +5,15 @@ interface Props {
     title: string;
     description: string;
     preloadImage?: string;
+    profileImage?: string;
 }
 
 import beeImage from "../data/bee.avif";
 import { getImage } from "astro:assets";
-import "@fontsource/instrument-sans/400.css";
-import "@fontsource/instrument-sans/500.css";
-import "@fontsource/jetbrains-mono/400.css";
-import "@fontsource/jetbrains-mono/500.css";
-import instrumentSans400 from "@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff2";
 import VercelAnalytics from "../components/VercelAnalytics.astro";
 import Footer from "../components/Footer";
 
-const { title, description, preloadImage } = Astro.props;
+const { title, description, preloadImage, profileImage } = Astro.props;
 
 const favicon = await getImage({
     src: beeImage,
@@ -37,18 +33,24 @@ const favicon = await getImage({
         <meta name="generator" content={Astro.generator} />
         <title>{title}</title>
         <meta content={description} name="description" />
+        <meta content="Nikshaan Shetty" name="author" />
+        <meta content="index, follow" name="robots" />
+        <link rel="canonical" href="https://nikshaan.vercel.app/" />
+        
         <meta content={title} property="og:title" />
         <meta content={description} property="og:description" />
         <meta content="website" property="og:type" />
-        <meta content="https://nikshaan.vercel.app" property="og:url" />
+        <meta content="https://nikshaan.vercel.app/" property="og:url" />
         <meta content="https://nikshaan.vercel.app/favicon.svg" property="og:image" />
         <meta content="1200" property="og:image:width" />
         <meta content="630" property="og:image:height" />
-        <meta content="Nikshaan Portfolio" property="og:site_name" />
+        <meta content="en_IN" property="og:locale" />
+        <meta content="Nikshaan Shetty Portfolio" property="og:site_name" />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content="https://nikshaan.vercel.app/favicon.svg" />
 
         <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
         <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
@@ -64,20 +66,16 @@ const favicon = await getImage({
         <link rel="canonical" href="https://nikshaan.vercel.app/" />
         <link rel="manifest" href="/manifest.json" />
 
-        <link rel="preconnect" href="https://api.github.com" />
-        <link rel="preconnect" href="https://ws.audioscrobbler.com" />
-        <link rel="preconnect" href="https://accounts.spotify.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
         <link rel="dns-prefetch" href="https://api.github.com" />
         <link rel="dns-prefetch" href="https://ws.audioscrobbler.com" />
         <link rel="dns-prefetch" href="https://api.spotify.com" />
-
-        <link
-            rel="preload"
-            as="font"
-            type="font/woff2"
-            href={instrumentSans400}
-            crossorigin="anonymous"
-        />
+        <link rel="dns-prefetch" href="https://accounts.spotify.com" />
+        <link rel="dns-prefetch" href="https://www.linkedin.com" />
+        <link rel="dns-prefetch" href="https://github.com" />
+        <link rel="dns-prefetch" href="https://vitals.vercel-insights.com" />
 
         {
             preloadImage && (
@@ -90,17 +88,67 @@ const favicon = await getImage({
                 />
             )
         }
+        {
+            profileImage && (
+                <link
+                    rel="preload"
+                    as="image"
+                    href={profileImage}
+                    fetchpriority="high"
+                    type="image/avif"
+                />
+            )
+        }
 
+        
         <style is:inline>
             @font-face {
                 font-family: 'Instrument Sans';
+                font-style: normal;
+                font-weight: 400;
                 font-display: swap;
+                src: local('Instrument Sans Regular'), local('InstrumentSans-Regular');
+            }
+            @font-face {
+                font-family: 'Instrument Sans';
+                font-style: normal;
+                font-weight: 500;
+                font-display: swap;
+                src: local('Instrument Sans Medium'), local('InstrumentSans-Medium');
             }
             @font-face {
                 font-family: 'JetBrains Mono';
+                font-style: normal;
+                font-weight: 400;
                 font-display: swap;
+                src: local('JetBrains Mono Regular'), local('JetBrainsMono-Regular');
+            }
+            @font-face {
+                font-family: 'JetBrains Mono';
+                font-style: normal;
+                font-weight: 500;
+                font-display: swap;
+                src: local('JetBrains Mono Medium'), local('JetBrainsMono-Medium');
+            }
+            
+            body {
+                font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+            code, pre {
+                font-family: 'JetBrains Mono', 'Courier New', monospace;
             }
         </style>
+        
+        <script type="speculationrules">
+        {
+          "prefetch": [
+            {
+              "urls": ["https://nikshaan.vercel.app/"],
+              "eagerness": "moderate"
+            }
+          ]
+        }
+        </script>
 
         <Tooltips interactive={false} delay={[0, 50]} />
 
@@ -108,13 +156,14 @@ const favicon = await getImage({
             (function () {
                 try {
                     var theme = localStorage.getItem("theme");
-                    if (theme === "light") {
-                        document.documentElement.setAttribute(
-                            "data-theme",
-                            "light",
-                        );
+                    if (theme) {
+                        document.documentElement.setAttribute("data-theme", theme);
                     }
                 } catch (e) {}
+
+                if ('connection' in navigator && navigator.connection.saveData) {
+                    document.documentElement.classList.add('save-data');
+                }
             })();
         </script>
     </head>
@@ -129,12 +178,26 @@ const favicon = await getImage({
             "@type": "Person",
             "name": "Nikshaan Shetty",
             "url": "https://nikshaan.vercel.app",
-            "jobTitle": "Developer",
+            "image": "https://nikshaan.vercel.app/favicon.svg",
             "sameAs": [
-                "https://github.com/Nikshaan",
-                "https://www.linkedin.com/in/nikshaan-shetty/"
+                "https://www.linkedin.com/in/nikshaan-shetty/",
+                "https://github.com/Nikshaan"
             ],
-            "knowsAbout": ["Machine Learning", "Deep Learning", "Web Development", "React", "Next.js", "Python"]
+            "jobTitle": "AI/ML Student & Software Developer",
+            "worksFor": {
+                "@type": "Organization",
+                "name": "Mentoria"
+            },
+            "alumniOf": {
+                "@type": "CollegeOrUniversity",
+                "name": "Dwarkadas J. Sanghvi College of Engineering",
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Mumbai",
+                    "addressCountry": "IN"
+                }
+            },
+            "knowsAbout": ["Artificial Intelligence", "Machine Learning", "React", "Python", "LLM", "FastAPI"]
         })} />
     </body>
 </html>

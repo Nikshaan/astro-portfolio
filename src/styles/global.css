@@ -28,6 +28,17 @@
   top: -100%;
   left: 50%;
   transform: translateX(-50%);
+}
+
+.intro-card-image {
+  contain: layout style paint;
+}
+
+.intro-card-image img {
+  contain: layout style paint;
+}
+
+.skip-link {
   background: #171717;
   color: #ffffff;
   padding: 12px 24px;

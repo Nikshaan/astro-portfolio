@@ -71,19 +71,22 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                         </div>
                     </div>
                     <div className="flex justify-center items-center w-full md:w-[40%] lg:w-[50%] h-full lg:aspect-square lg:self-center">
-                        <div className="relative w-full aspect-square max-w-[150px] md:max-w-none md:aspect-auto md:h-full">
+                        <div className="intro-card-image relative w-[150px] h-[150px] md:w-[200px] md:h-[200px] lg:w-[250px] lg:h-[250px] flex-shrink-0">
                             <img
                                 src={images[card.data.image].src}
                                 srcSet={images[card.data.image].srcSet?.attribute || images[card.data.image].attributes?.srcset}
-                                sizes={images[card.data.image].attributes?.sizes || "(max-width: 768px) 150px, (max-width: 1280px) 40vw, 25vw"}
-                                width={images[card.data.image].attributes?.width || images[card.data.image].width}
-                                height={images[card.data.image].attributes?.height || images[card.data.image].height}
+                                sizes="(max-width: 768px) 150px, (max-width: 1024px) 200px, 250px"
+                                width={images[card.data.image].attributes?.width || 400}
+                                height={images[card.data.image].attributes?.height || 400}
                                 alt="profile"
                                 loading={card.type === 'intro' ? "eager" : "lazy"}
                                 fetchPriority={card.type === 'intro' ? "high" : "auto"}
                                 decoding="async"
                                 className="absolute inset-0 w-full h-full object-cover border rounded-full select-none profile-image-border border-white dark:border-white/20"
-                                style={{ backgroundColor: '#f3f4f6' }}
+                                style={{ 
+                                    backgroundColor: '#f3f4f6',
+                                    aspectRatio: '1/1'
+                                }}
                             />
                         </div>
                     </div>
@@ -188,10 +191,10 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                             <Github className="w-5 h-5 md:w-6 md:h-6 text-black" strokeWidth={1.75} />
                         </a>
                         <a href={card.data.links.linkedin} target="_blank" rel="noopener noreferrer" aria-label="Connect with Nikshaan on LinkedIn" data-title="LinkedIn" className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0">
-                            <img src={linkedinColor.src} alt="LinkedIn" className="w-5 h-5 md:w-6 md:h-6" />
+                            <img src={linkedinColor.src} alt="" aria-hidden="true" className="w-5 h-5 md:w-6 md:h-6" />
                         </a>
                         <a href={card.data.links.email} aria-label="Send an email to Nikshaan" data-title="Email" className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0">
-                            <img src={gmailColor.src} alt="Email" className="w-5 h-5 md:w-6 md:h-6" />
+                            <img src={gmailColor.src} alt="" aria-hidden="true" className="w-5 h-5 md:w-6 md:h-6" />
                         </a>
                     </div>
                 </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState, memo } from "react";
 
 const Clock = memo(function Clock() {
-  const [currentTime, setCurrentTime] = useState<string>('');
+  const [currentTime, setCurrentTime] = useState<string>("");
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -10,7 +10,7 @@ const Clock = memo(function Clock() {
     const updateTime = () => {
       const currentIST = new Date().toLocaleString("en-IN", {
         timeZone: "Asia/Kolkata",
-        timeStyle: 'medium'
+        timeStyle: "medium",
       });
       setCurrentTime(currentIST);
     };
@@ -24,17 +24,23 @@ const Clock = memo(function Clock() {
     return () => clearInterval(timer);
   }, []);
 
+  // Keep layout stable: match the exact typography used for the actual time.
   if (!isMounted) {
     return (
-      <div className="text-2xl my-5 font-light">
-        <p>Loading...</p>
+      <div className="font-light text-center my-1">
+        <p className="text-nowrap text-sm md:text-base">Loading...</p>
       </div>
     );
   }
 
   return (
     <div className="font-light text-center my-1">
-      <p className="text-nowrap text-sm md:text-base" suppressHydrationWarning={true}>{currentTime}</p>
+      <p
+        className="text-nowrap text-sm md:text-base"
+        suppressHydrationWarning={true}
+      >
+        {currentTime}
+      </p>
     </div>
   );
 });

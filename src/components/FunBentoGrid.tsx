@@ -8,6 +8,7 @@ import { twMerge } from 'tailwind-merge';
 const MusicStatsClient = lazy(() => import('./musicstats'));
 import IndiaMapCard from './IndiaMapCard';
 import MusicExtrasCard from './MusicExtrasCard';
+import ErrorBoundary from './ErrorBoundary';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -21,6 +22,7 @@ interface Image {
     height: number;
     title: string;
     alt: string;
+    placeholderDataUrl?: string;
 }
 
 interface FunBentoGridProps {
@@ -107,9 +109,12 @@ const VISITED_PLACES = [
     { name: "Daman", lat: 20.4142, lng: 72.8328 }
 ];
 
-const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
+const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
     const [visibleCount, setVisibleCount] = useState(12);
     const sentinelRef = useRef<HTMLDivElement>(null);
+    const initPromiseRef = useRef<Promise<any> | null>(null);
+    const galleryDataRef = useRef<any[]>([]);
+    const fancyboxLoadedRef = useRef(false);
 
     useEffect(() => {
         const batchSize = isSlowConnection() ? 6 : 12;
@@ -140,27 +145,36 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
             `;
             document.head.appendChild(style);
         }
+        const cleanupBlur = setTimeout(() => {
+            const galleryImages = document.querySelectorAll('.group-hover\\:scale-110');
+            galleryImages.forEach((img: any) => {
+                if (img.style.filter || img.style.backgroundImage) {
+                    img.style.filter = '';
+                    img.style.backgroundImage = '';
+                }
+            });
+        }, 3000);
 
-        let fancyboxLoaded = false;
-        let galleryData: any[] = [];
-        let initPromise: Promise<void> | null = null;
+        return () => clearTimeout(cleanupBlur);
+    }, []);
 
-        const initFancybox = async () => {
-            if (initPromise) return initPromise;
+    const initFancybox = async () => {
+        if (initPromiseRef.current) return initPromiseRef.current;
 
-            initPromise = (async () => {
-                const [, , response] = await Promise.all([
-                    import('@fancyapps/ui'),
-                    import('@fancyapps/ui/dist/fancybox/fancybox.css'),
-                    fetch('/api/gallery.json').then(res => res.ok ? res.json() : [])
-                ]);
-                galleryData = response;
-                fancyboxLoaded = true;
-            })();
+        initPromiseRef.current = (async () => {
+            const [, , response] = await Promise.all([
+                import('@fancyapps/ui'),
+                import('@fancyapps/ui/dist/fancybox/fancybox.css'),
+                fetch('/api/gallery.json').then(res => res.ok ? res.json() : [])
+            ]);
+            galleryDataRef.current = response;
+            fancyboxLoadedRef.current = true;
+        })();
 
-            return initPromise;
-        };
+        return initPromiseRef.current;
+    };
 
+    useEffect(() => {
         const galleryItems = document.querySelectorAll('[data-fancybox="gallery"]');
 
         const loadOnInteraction = () => {
@@ -172,60 +186,53 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
         };
 
         galleryItems.forEach(item => {
-            item.addEventListener('mouseenter', loadOnInteraction, { once: true });
-            item.addEventListener('focus', loadOnInteraction, { once: true });
-        });
-
-        const handleClick = async (e: Event) => {
-            e.preventDefault();
-            const target = e.currentTarget as HTMLAnchorElement;
-            const src = target.getAttribute('href');
-
-            if (!fancyboxLoaded) {
-                await initFancybox();
-            }
-
-            const { Fancybox } = await import('@fancyapps/ui');
-
-            const startIndex = galleryData.findIndex((img: any) => img.src === src);
-
-            Fancybox.show(galleryData.map((img: any) => ({
-                src: img.src,
-                thumb: img.src,
-                caption: img.title || img.caption || '',
-                width: img.width,
-                height: img.height
-            })), {
-                startIndex: startIndex >= 0 ? startIndex : 0,
-                dragToClose: false,
-                origin: (_fancybox: any, slide: any) => {
-                    const link = document.querySelector(`a[href="${slide.src}"]`) as HTMLAnchorElement;
-                    if (link) {
-                        return link.querySelector('img') || link;
-                    }
-                    return null;
-                },
-                Toolbar: {
-                    display: {
-                        left: ["infobar"],
-                        middle: [],
-                        right: ["slideshow", "thumbs", "close"],
-                    },
-                },
-                Images: {
-                    zoom: true,
-                },
-            } as any);
-        };
-
-        galleryItems.forEach(item => item.addEventListener('click', handleClick));
-
-        return () => {
-            import('@fancyapps/ui').then(({ Fancybox }) => {
-                Fancybox.close();
+                item.addEventListener('mouseenter', loadOnInteraction, { once: true });
+                item.addEventListener('focus', loadOnInteraction, { once: true });
             });
-            galleryItems.forEach(item => item.removeEventListener('click', handleClick));
-        };
+
+            const handleClick = async (e: Event) => {
+                e.preventDefault();
+                const target = e.currentTarget as HTMLAnchorElement;
+                const src = target.getAttribute('href');
+
+                if (!fancyboxLoadedRef.current) {
+                    await initFancybox();
+                }
+
+                const { Fancybox } = await import('@fancyapps/ui');
+
+                const startIndex = galleryDataRef.current.findIndex((img: any) => img.src === src);
+
+                Fancybox.show(galleryDataRef.current.map((img: any) => ({
+                    src: img.src,
+                    thumb: img.src,
+                    caption: img.title || img.caption || '',
+                    width: img.width,
+                    height: img.height
+                })), {
+                    startIndex: startIndex >= 0 ? startIndex : 0,
+                    dragToClose: false,
+                    origin: (_fancybox: any, slide: any) => {
+                        const link = document.querySelector(`a[href="${slide.src}"]`) as HTMLAnchorElement;
+                        return link;
+                    },
+                    Thumbs: {
+                        type: 'classic',
+                    },
+                    Images: {
+                        zoom: true,
+                    },
+                } as any);
+            };
+
+            galleryItems.forEach(item => item.addEventListener('click', handleClick));
+
+            return () => {
+                import('@fancyapps/ui').then(({ Fancybox }) => {
+                    Fancybox.close();
+                });
+                galleryItems.forEach(item => item.removeEventListener('click', handleClick));
+            };
     }, []);
 
     return (
@@ -241,7 +248,9 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                             <h3 className="text-xl font-medium mb-4 p-5 md:p-6 pb-0">Music Stats</h3>
                             <div className="flex-1 overflow-y-auto custom-scrollbar px-2 w-full">
                                 <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Loading music stats...</div>}>
-                                    <MusicStatsClient />
+                                    <ErrorBoundary>
+                                        <MusicStatsClient />
+                                    </ErrorBoundary>
                                 </Suspense>
                             </div>
                         </div>
@@ -293,9 +302,26 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                                     decoding="async"
                                     sizes="(max-width: 1024px) 50vw, 25vw"
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 relative z-10"
+                                    style={{
+                                        backgroundImage: image.placeholderDataUrl && image.placeholderDataUrl.startsWith('data:') ? `url(${image.placeholderDataUrl})` : undefined,
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
+                                        filter: image.placeholderDataUrl && image.placeholderDataUrl.startsWith('data:') ? 'blur(20px)' : undefined,
+                                    }}
                                     onLoad={(e) => {
-                                        const shimmer = (e.currentTarget as HTMLImageElement).previousElementSibling as HTMLElement | null;
+                                        const img = e.currentTarget as HTMLImageElement;
+                                        const shimmer = img.previousElementSibling as HTMLElement | null;
                                         if (shimmer) shimmer.style.display = 'none';
+                                        
+                                        img.style.filter = '';
+                                        img.style.backgroundImage = '';
+                                        img.offsetHeight;
+                                    }}
+                                    onError={(e) => {
+                                        const img = e.currentTarget as HTMLImageElement;
+                                        img.style.filter = '';
+                                        img.style.backgroundImage = '';
+                                        img.style.backgroundColor = '#f3f4f6';
                                     }}
                                 />
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-end p-4 z-20">

@@ -8,6 +8,7 @@ import FunBentoGridWrapper from "../components/FunBentoGridWrapper.astro";
 
 import MeBentoGridWrapper from "../components/MeBentoGridWrapper.astro";
 import beeImage from "../data/bee.avif";
+import nikshaanRaw from "../data/NIKSHAAN.avif";
 import { getImage } from "astro:assets";
 
 export const prerender = true;
@@ -18,6 +19,13 @@ const optimizedBeeImage = await getImage({
   widths: [320, 640, 768, 1024, 1280],
   width: 313,
   quality: 95,
+});
+
+const optimizedProfileImage = await getImage({
+  src: nikshaanRaw,
+  format: "avif",
+  width: 400,
+  quality: 85,
 });
 ---
 
@@ -32,7 +40,9 @@ const optimizedBeeImage = await getImage({
   title="Nikshaan | Portfolio"
   description="I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style."
   preloadImage={optimizedBeeImage.src}
+  profileImage={optimizedProfileImage.src}
 >
+  <a href="#main-content" class="skip-nav">Skip to main content</a>
   <NavbarWrapper />
   <main
     id="main-content"
@@ -44,7 +54,9 @@ const optimizedBeeImage = await getImage({
         id="me"
         class="w-full max-w-[1400px] p-4 pt-24"
         data-section="me"
+        aria-labelledby="me-heading"
       >
+        <h1 id="me-heading" class="sr-only">Nikshaan Shetty - About Me</h1>
         <MeBentoGridWrapper beeImage={optimizedBeeImage} />
       </section>
 
@@ -52,8 +64,9 @@ const optimizedBeeImage = await getImage({
         <GithubContributions client:idle />
       </div>
 
-      <section class="w-full flex flex-col gap-2 flex-1">
+      <section class="w-full flex flex-col gap-2 flex-1" aria-labelledby="projects-heading">
         <div data-section="projects" id="projects" class="-mt-5">
+          <h2 id="projects-heading" class="sr-only">Projects</h2>
           <ProjectsBentoGridWrapper />
         </div>
       </section>
@@ -62,7 +75,9 @@ const optimizedBeeImage = await getImage({
         id="fun"
         class="w-full flex flex-col lg:flex-row gap-2 flex-1"
         data-section="fun"
+        aria-labelledby="fun-heading"
       >
+        <h2 id="fun-heading" class="sr-only">Fun Stuff</h2>
         <FunBentoGridWrapper />
       </section>
     </div>
@@ -143,5 +158,99 @@ const optimizedBeeImage = await getImage({
       rgba(255, 255, 255, 1),
       rgba(255, 255, 255, 1) 60%
     );
+  }
+
+  .skip-nav {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: #fff;
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.2s;
+    text-decoration: none;
+    border-radius: 0 0 4px 0;
+  }
+
+  .skip-nav:focus {
+    top: 0;
+  }
+
+  [data-theme="light"] .skip-nav {
+    background: #fff;
+    color: #000;
+    border: 1px solid #000;
+  }
+
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid #a855f7;
+    outline-offset: 2px;
+  }
+
+  [data-theme="light"] button:focus-visible,
+  [data-theme="light"] a:focus-visible,
+  [data-theme="light"] input:focus-visible,
+  [data-theme="light"] textarea:focus-visible {
+    outline: 2px solid #1e40af;
+    outline-offset: 2px;
+  }
+
+  #projects,
+  #fun,
+  footer {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+  }
+
+  .save-data img {
+    image-rendering: auto;
+  }
+  .save-data video {
+    display: none;
+  }  .project-card {
+    contain: layout style;
+  }
+
+  .photo-grid-item {
+    contain: layout style paint;
+  }
+
+  .music-widget {
+    contain: layout style;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  nav a,
+  .project-filter-btn,
+  .social-icon a,
+  .photo-thumb {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .skeleton-hidden {
+    display: none;
   }
 </style>
