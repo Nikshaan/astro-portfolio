@@ -23,8 +23,7 @@ const Clock = memo(function Clock() {
 
     return () => clearInterval(timer);
   }, []);
-
-  // Keep layout stable: match the exact typography used for the actual time.
+  
   if (!isMounted) {
     return (
       <div className="font-light text-center my-1">

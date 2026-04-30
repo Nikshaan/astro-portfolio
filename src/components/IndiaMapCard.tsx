@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { geoMercator, geoPath } from "d3-geo";
@@ -31,17 +31,12 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     index = 0,
 }) => {
     const [expanded, setExpanded] = useState(false);
-    const staggerDelay = index * 0.025;
     const [topology, setTopology] = useState<any>(cachedTopology);
     const [loading, setLoading] = useState(!cachedTopology);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const expandedContainerRef = useRef<HTMLDivElement>(null);
-    const [collapsedDimensions, setCollapsedDimensions] = useState({ width: 0, height: 0 });
-    const [expandedDimensions, setExpandedDimensions] = useState({ width: 0, height: 0 });
     const [hoveredPlace, setHoveredPlace] = useState<VisitedPlace | null>(null);
 
     useEffect(() => {
-        if (cacheDataAvailable()) {
+        if (cachedTopology) {
             setTopology(cachedTopology);
             setLoading(false);
             return;
@@ -64,35 +59,13 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
         fetchData();
     }, []);
 
-    function cacheDataAvailable() {
-        return !!cachedTopology;
-    }
-
-    useEffect(() => {
-        if (!containerRef.current) return;
-
-        const updateDimensions = () => {
-            if (containerRef.current) {
-                const width = containerRef.current.clientWidth;
-                const height = containerRef.current.clientHeight;
-                if (width > 0 && height > 0) {
-                    setCollapsedDimensions({ width, height });
-                }
-            }
-        };
-
-        updateDimensions();
-
-        const resizeObserver = new ResizeObserver(updateDimensions);
-        resizeObserver.observe(containerRef.current);
-
-        return () => resizeObserver.disconnect();
-    }, []);
-
     useEffect(() => {
         if (!expanded) return;
 
+        document.documentElement.style.setProperty('--scrollbar-width', `${window.innerWidth - document.documentElement.clientWidth}px`);
         document.body.style.overflow = "hidden";
+        document.body.style.paddingRight = "var(--scrollbar-width, 0px)";
+
         if (typeof window !== "undefined" && (window as any).lenis) {
             (window as any).lenis.stop();
         }
@@ -106,6 +79,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
         window.addEventListener("keydown", handleEscape);
         return () => {
             document.body.style.overflow = "";
+            document.body.style.paddingRight = "";
             if (typeof window !== "undefined" && (window as any).lenis) {
                 (window as any).lenis.start();
             }
@@ -113,29 +87,8 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
         };
     }, [expanded]);
 
-    useEffect(() => {
-        if (!expanded || !expandedContainerRef.current) return;
-
-        const updateExpandedDimensions = () => {
-            if (expandedContainerRef.current) {
-                const width = expandedContainerRef.current.clientWidth;
-                const height = expandedContainerRef.current.clientHeight;
-                if (width > 0 && height > 0) {
-                    setExpandedDimensions({ width, height });
-                }
-            }
-        };
-
-        updateExpandedDimensions();
-
-        const resizeObserver = new ResizeObserver(updateExpandedDimensions);
-        resizeObserver.observe(expandedContainerRef.current);
-
-        return () => resizeObserver.disconnect();
-    }, [expanded]);
-
-    const collapsedMap = useMemo(() => {
-        if (!topology || collapsedDimensions.width === 0 || collapsedDimensions.height === 0) {
+    const baseMap = useMemo(() => {
+        if (!topology) {
             return { pathGenerator: null, projection: null, features: [] };
         }
 
@@ -147,12 +100,11 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
         const features = featureCollection.features;
 
         const proj = geoMercator();
-        const padding = 20;
-
+        
         proj.fitExtent(
             [
-                [padding, padding],
-                [collapsedDimensions.width - padding, collapsedDimensions.height - padding],
+                [10, 10],
+                [790, 790],
             ],
             featureCollection
         );
@@ -160,45 +112,13 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
         const pathGen = geoPath().projection(proj);
 
         return { pathGenerator: pathGen, projection: proj, features };
-    }, [topology, collapsedDimensions]);
-
-    const expandedMap = useMemo(() => {
-        if (!topology || expandedDimensions.width === 0 || expandedDimensions.height === 0) {
-            return { pathGenerator: null, projection: null, features: [] };
-        }
-
-        const objectKey = Object.keys(topology.objects)[0];
-        const featureCollection = feature(
-            topology,
-            topology.objects[objectKey]
-        ) as any;
-        const features = featureCollection.features;
-
-        const proj = geoMercator();
-        const padding = 0;
-
-        proj.fitExtent(
-            [
-                [padding, padding],
-                [expandedDimensions.width - padding, expandedDimensions.height - padding],
-            ],
-            featureCollection
-        );
-
-        const pathGen = geoPath().projection(proj);
-
-        return { pathGenerator: pathGen, projection: proj, features };
-    }, [topology, expandedDimensions]);
+    }, [topology]);
 
     const handleCardClick = () => {
         if (!expanded) {
             setExpanded(true);
         }
     };
-
-    const sortedPlaces = useMemo(() => {
-        return visitedPlaces;
-    }, [visitedPlaces]);
 
     return (
         <>
@@ -213,7 +133,6 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                         expanded ? "opacity-0 pointer-events-none" : "opacity-100"
                     )}
                     onClick={handleCardClick}
-                    ref={containerRef}
                 >
                     {loading && (
                         <div className="absolute inset-0 flex items-center justify-center text-neutral-400">
@@ -221,7 +140,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                         </div>
                     )}
 
-                    {!loading && collapsedMap.pathGenerator && (
+                    {!loading && baseMap.pathGenerator && (
                         <div className="w-full h-full p-4 flex flex-col items-center justify-center pointer-events-none">
                             <div className="absolute top-4 left-4 z-10">
                                 <span className={cn(
@@ -239,27 +158,27 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                             <svg
                                 width="100%"
                                 height="100%"
-                                viewBox={`0 0 ${collapsedDimensions.width} ${collapsedDimensions.height}`}
+                                viewBox="0 0 800 800"
+                                preserveAspectRatio="xMidYMid meet"
                                 className="overflow-visible"
                             >
                                 <g className="opacity-50 dark:opacity-30">
-                                    {collapsedMap.features.map((feature: any, i: number) => (
+                                    {baseMap.features.map((feature: any, i: number) => (
                                         <path
                                             key={`collapsed-${i}`}
-                                            d={collapsedMap.pathGenerator!(feature) as string}
-                                            className="stroke-[0.5] fill-neutral-200 dark:fill-zinc-700 stroke-neutral-300 dark:stroke-zinc-600 transition-colors duration-300"
+                                            d={baseMap.pathGenerator!(feature) as string}
+                                            className="stroke-[0.5] fill-neutral-200 dark:fill-zinc-700 stroke-black dark:stroke-zinc-600 transition-colors duration-300"
                                         />
                                     ))}
                                 </g>
                                 <g>
                                     {visitedPlaces.map((place, i) => {
-                                        const coords = collapsedMap.projection!([place.lng, place.lat]);
+                                        const coords = baseMap.projection!([place.lng, place.lat]);
                                         if (!coords) return null;
-                                        const pinRadius = Math.max(1.2, Math.min(3, collapsedDimensions.width / 150));
                                         return (
                                             <g key={i} transform={`translate(${coords[0]}, ${coords[1]})`}>
-                                                <circle r={pinRadius} className="fill-purple-500 dark:fill-purple-400" />
-                                                <circle r={pinRadius} className="fill-purple-500 dark:fill-purple-400 animate-ping opacity-75" />
+                                                <circle r={7} className="fill-purple-500 dark:fill-purple-400" />
+                                                <circle r={7} className="fill-purple-500 dark:fill-purple-400 animate-ping opacity-75" />
                                             </g>
                                         );
                                     })}
@@ -312,38 +231,39 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                 </p>
                             </div>
 
-                            <div className="flex-1 w-full h-full relative" ref={expandedContainerRef}>
-                                {!loading && expandedMap.pathGenerator && (
-                                    <svg
+                            <div className="flex-1 w-full h-full relative p-4">
+                                {!loading && baseMap.pathGenerator && (
+                                    <motion.svg
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.5, delay: 0.15 }}
                                         width="100%"
                                         height="100%"
-                                        viewBox={`0 0 ${expandedDimensions.width} ${expandedDimensions.height}`}
+                                        viewBox="0 0 800 800"
+                                        preserveAspectRatio="xMidYMid meet"
                                         className="w-full h-full touch-pan-x touch-pan-y"
                                     >
                                         <g>
-                                            {expandedMap.features.map((feature: any, i: number) => {
+                                            {baseMap.features.map((feature: any, i: number) => {
                                                 return (
-                                                    <motion.path
+                                                    <path
                                                         key={`expanded-${i}`}
-                                                        d={expandedMap.pathGenerator!(feature) as string}
-                                                        initial={{ pathLength: 0, opacity: 0 }}
-                                                        animate={{ pathLength: 1, opacity: 1 }}
-                                                        transition={{ duration: 1, delay: i * 0.01 }}
-                                                        className="stroke-neutral-300 dark:stroke-zinc-700 stroke-1 fill-neutral-50 dark:fill-zinc-800 hover:fill-blue-50 dark:hover:fill-zinc-700 cursor-pointer transition-colors duration-300"
+                                                        d={baseMap.pathGenerator!(feature) as string}
+                                                        strokeWidth={1}
+                                                        className="stroke-black dark:stroke-zinc-700 fill-neutral-50 dark:fill-zinc-800 hover:fill-blue-50 dark:hover:fill-zinc-700 cursor-pointer transition-colors duration-300"
                                                     />
                                                 );
                                             })}
                                         </g>
                                         
                                         <g>
-                                            {visitedPlaces.map((place, index) => {
-                                                const coords = expandedMap.projection!([place.lng, place.lat]);
+                                            {visitedPlaces.map((place) => {
+                                                const coords = baseMap.projection!([place.lng, place.lat]);
                                                 if (!coords) return null;
 
                                                 const isHovered = hoveredPlace?.name === place.name;
-                                                const baseRadius = Math.max(2.5, Math.min(5, expandedDimensions.width / 220));
+                                                const baseRadius = 6;
                                                 const hoverRadius = baseRadius * 1.5;
-                                                const pingRadius = baseRadius * 2;
                                                 const tapTargetRadius = Math.max(15, baseRadius * 4);
 
                                                 return (
@@ -352,14 +272,13 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                                             cx={coords[0]}
                                                             cy={coords[1]}
                                                             r={tapTargetRadius}
-                                                            className="fill-transparent cursor-pointer"
+                                                            className="fill-transparent cursor-pointer pointer-events-auto"
                                                             onMouseEnter={() => setHoveredPlace(place)}
                                                             onMouseLeave={() => setHoveredPlace(null)}
                                                             onClick={() => setHoveredPlace(hoveredPlace?.name === place.name ? null : place)}
                                                         />
                                                         
                                                         <g transform={`translate(${coords[0]}, ${coords[1]})`}>
-                                                       
                                                             <circle
                                                                 r={baseRadius}
                                                                 className="fill-purple-500 dark:fill-purple-400 opacity-30 animate-ping pointer-events-none"
@@ -380,36 +299,36 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                             })}
                                         </g>
                                         
-                                        <g>
+                                        <g className="pointer-events-none">
                                             {visitedPlaces.map((place) => {
-                                                const coords = expandedMap.projection!([place.lng, place.lat]);
+                                                const coords = baseMap.projection!([place.lng, place.lat]);
                                                 if (!coords) return null;
 
                                                 const isHovered = hoveredPlace?.name === place.name;
-                                                const baseRadius = Math.max(2.5, Math.min(5, expandedDimensions.width / 220));
+                                                const baseRadius = 6;
 
                                                 return (
                                                     <g key={`tooltip-${place.name}`}>
                                                         {isHovered && (
                                                             <g transform={`translate(${coords[0]}, ${coords[1]})`}>
                                                                 <rect
-                                                                    x={-80}
-                                                                    y={-(baseRadius * 2 + 45)}
-                                                                    width={160}
-                                                                    height={40}
+                                                                    x={-50}
+                                                                    y={-(baseRadius * 2 + 30)}
+                                                                    width={100}
+                                                                    height={25}
                                                                     rx={4}
-                                                                    className="fill-neutral-900 dark:fill-white shadow-lg"
+                                                                    className="fill-neutral-900 dark:fill-white shadow-lg pointer-events-none"
                                                                 />
                                                                 <text
                                                                     x={0}
-                                                                    y={-(baseRadius * 2 + 22)}
+                                                                    y={-(baseRadius * 2 + 13)}
                                                                     textAnchor="middle"
-                                                                    className="fill-white dark:fill-neutral-900 text-[clamp(11px,1.5vw,15px)] font-medium pointer-events-none select-none"
+                                                                    className="fill-white dark:fill-neutral-900 text-[12px] font-medium pointer-events-none"
                                                                 >
                                                                     {place.name}
                                                                 </text>
                                                                 <path
-                                                                    d={`M0,${-(baseRadius * 2 + 5)} L-6,${-(baseRadius * 2 - 3)} L6,${-(baseRadius * 2 - 3)} Z`}
+                                                                    d={`M0,${-(baseRadius * 2 + 5)} L-4,${-(baseRadius * 2)} L4,${-(baseRadius * 2)} Z`}
                                                                     className="fill-neutral-900 dark:fill-white pointer-events-none"
                                                                 />
                                                             </g>
@@ -418,7 +337,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                                 );
                                             })}
                                         </g>
-                                    </svg>
+                                    </motion.svg>
                                 )}
                             </div>
                         </motion.div>

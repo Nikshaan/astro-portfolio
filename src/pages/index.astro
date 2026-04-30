@@ -42,7 +42,6 @@ const optimizedProfileImage = await getImage({
   preloadImage={optimizedBeeImage.src}
   profileImage={optimizedProfileImage.src}
 >
-  <a href="#main-content" class="skip-nav">Skip to main content</a>
   <NavbarWrapper />
   <main
     id="main-content"
@@ -64,7 +63,10 @@ const optimizedProfileImage = await getImage({
         <GithubContributions client:idle />
       </div>
 
-      <section class="w-full flex flex-col gap-2 flex-1" aria-labelledby="projects-heading">
+      <section
+        class="w-full flex flex-col gap-2 flex-1"
+        aria-labelledby="projects-heading"
+      >
         <div data-section="projects" id="projects" class="-mt-5">
           <h2 id="projects-heading" class="sr-only">Projects</h2>
           <ProjectsBentoGridWrapper />
@@ -216,7 +218,8 @@ const optimizedProfileImage = await getImage({
   }
   .save-data video {
     display: none;
-  }  .project-card {
+  }
+  .project-card {
     contain: layout style;
   }
 

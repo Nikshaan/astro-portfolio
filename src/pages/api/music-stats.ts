@@ -43,8 +43,7 @@ let spotifyToken: { value: string; expiresAt: number } | null = null;
 
 const CACHE_HEADERS = {
   'Content-Type': 'application/json',
-  'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=86400',
-  'CDN-Cache-Control': 'max-age=1800'
+  'Cache-Control': 'no-store, max-age=0',
 } as const;
 
 const jsonResponse = (data: unknown, status: number, cacheStatus: string): Response =>

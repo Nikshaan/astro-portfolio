@@ -58,8 +58,8 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
     switch (card.type) {
         case 'intro':
             return (
-                <div className="flex flex-col-reverse md:flex-row h-full justify-between gap-4 items-center md:items-stretch">
-                    <div className="flex flex-col gap-2 w-full md:w-[60%] h-full justify-between text-sm md:text-base text-center md:text-left">
+                <div className="flex flex-col-reverse md:flex-row h-full justify-between gap-6 xl:gap-8 items-center md:items-stretch">
+                    <div className="flex flex-col gap-2 w-full md:flex-1 h-full justify-between text-sm md:text-base text-center md:text-left">
                         <div className="font-light text-pretty">
                             <p dangerouslySetInnerHTML={{ __html: card.data.text }} />
                             <p className="my-2">My interest lies in:</p>
@@ -70,12 +70,12 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                             </ul>
                         </div>
                     </div>
-                    <div className="flex justify-center items-center w-full md:w-[40%] lg:w-[50%] h-full lg:aspect-square lg:self-center">
-                        <div className="intro-card-image relative w-[150px] h-[150px] md:w-[200px] md:h-[200px] lg:w-[250px] lg:h-[250px] flex-shrink-0">
+                    <div className="flex justify-center items-center w-full md:w-auto h-full lg:self-center">
+                        <div className="intro-card-image relative w-[160px] sm:w-[180px] md:w-[220px] lg:w-[200px] xl:w-[240px] 2xl:w-[260px] aspect-square flex-shrink-0">
                             <img
                                 src={images[card.data.image].src}
                                 srcSet={images[card.data.image].srcSet?.attribute || images[card.data.image].attributes?.srcset}
-                                sizes="(max-width: 768px) 150px, (max-width: 1024px) 200px, 250px"
+                                sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 220px, (max-width: 1280px) 200px, 260px"
                                 width={images[card.data.image].attributes?.width || 400}
                                 height={images[card.data.image].attributes?.height || 400}
                                 alt="profile"
@@ -303,7 +303,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
                     "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]",
                     card.id === 'intro' || card.id === 'win' || card.id === 'resume' ? "overflow-hidden" : "overflow-visible",
                     (card.isExpandable || isResume) && !selectedId ? "cursor-pointer" : "",
-                    "min-h-[150px]"
+                    card.id === 'resume' ? "min-h-[100px] lg:min-h-[150px]" : "min-h-[150px]"
                 )}
                 whileHover={(card.isExpandable || isResume) && !selectedId ? { scale: 1.02 } : {}}
                 whileTap={(card.isExpandable || isResume) && !selectedId ? { scale: 0.98 } : {}}

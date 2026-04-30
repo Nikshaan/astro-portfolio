@@ -72,7 +72,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+        'Cache-Control': 'no-store, max-age=0',
         'X-Cache-Status': 'HIT'
       }
     });
@@ -141,7 +141,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+        'Cache-Control': 'no-store, max-age=0',
         'X-Cache-Status': 'MISS'
       }
     });
@@ -151,7 +151,7 @@ export const GET: APIRoute = async () => {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+          'Cache-Control': 'no-store, max-age=0',
           'X-Cache-Status': 'STALE'
         }
       });
