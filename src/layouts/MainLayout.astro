@@ -12,6 +12,7 @@ import beeImage from "../data/bee.avif";
 import { getImage } from "astro:assets";
 import VercelAnalytics from "../components/VercelAnalytics.astro";
 import Footer from "../components/Footer";
+import AsciiIntroWrapper from "../components/AsciiIntroWrapper.astro";
 
 const { title, description, preloadImage, profileImage } = Astro.props;
 
@@ -68,6 +69,9 @@ const favicon = await getImage({
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        
+        <link rel="preload" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+        <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" /></noscript>
 
         <link rel="dns-prefetch" href="https://api.github.com" />
         <link rel="dns-prefetch" href="https://ws.audioscrobbler.com" />
@@ -164,13 +168,48 @@ const favicon = await getImage({
                 if ('connection' in navigator && navigator.connection.saveData) {
                     document.documentElement.classList.add('save-data');
                 }
+                
+                window.showMainContent = function() {
+                    const mainContent = document.getElementById('main-content');
+                    if (mainContent) {
+                        mainContent.style.visibility = 'visible';
+                        mainContent.style.opacity = '0';
+                        setTimeout(() => {
+                            mainContent.style.transition = 'opacity 0.3s ease-in';
+                            mainContent.style.opacity = '1';
+                        }, 50);
+                    }
+                    window.asciiIntroComplete = true;
+                    window.asciiIntroActive = false;
+                };
             })();
         </script>
     </head>
     <body
         class="h-full bg-black text-neutral-50"
     >
-        <slot />
+        <AsciiIntroWrapper />
+        <div id="main-content" style="visibility: hidden;">
+            <slot />
+        </div>
+        <script>
+            const hasSeenIntro = sessionStorage.getItem('portfolio_intro_seen');
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            
+            if (hasSeenIntro === '1' || prefersReducedMotion) {
+                const mainContent = document.getElementById('main-content');
+                if (mainContent) {
+                    mainContent.style.visibility = 'visible';
+                    mainContent.style.opacity = '1';
+                }
+            } else {
+                const mainContent = document.getElementById('main-content');
+                if (mainContent) {
+                    mainContent.style.visibility = 'hidden';
+                    mainContent.style.opacity = '0';
+                }
+            }
+        </script>
         <Footer client:idle />
         <VercelAnalytics />
         <script type="application/ld+json" set:html={JSON.stringify({

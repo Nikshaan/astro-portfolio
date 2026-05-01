@@ -244,7 +244,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
         case 'resume':
             return (
                 <div className="flex justify-center items-center h-full w-full">
-                    <p className="text-4xl font-bold uppercase tracking-widest text-neutral-300 dark:text-neutral-600 [writing-mode:vertical-lr] rotate-180 max-lg:rotate-0 max-lg:[writing-mode:horizontal-tb]">
+                     <p className="text-4xl font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 [writing-mode:vertical-lr] rotate-180 max-lg:rotate-0 max-lg:[writing-mode:horizontal-tb]">
                         resume
                     </p>
                 </div>
