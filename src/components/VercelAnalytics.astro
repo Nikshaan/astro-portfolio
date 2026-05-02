@@ -1,12 +1,5 @@
 ---
-
+import Analytics from '@vercel/analytics/astro';
 ---
 
-<script type="text/partytown" is:inline>
-    (function() {
-        var script = document.createElement('script');
-        script.src = '/_vercel/insights/script.js';
-        script.defer = true;
-        document.head.appendChild(script);
-    })();
-</script>
+<Analytics />

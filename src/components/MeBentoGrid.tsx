@@ -83,7 +83,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                                 fetchPriority={card.type === 'intro' ? "high" : "auto"}
                                 decoding="async"
                                 className="absolute inset-0 w-full h-full object-cover border rounded-full select-none profile-image-border border-white dark:border-white/20"
-                                style={{ 
+                                style={{
                                     backgroundColor: '#f3f4f6',
                                     aspectRatio: '1/1'
                                 }}
@@ -244,7 +244,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
         case 'resume':
             return (
                 <div className="flex justify-center items-center h-full w-full">
-                     <p className="text-4xl font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 [writing-mode:vertical-lr] rotate-180 max-lg:rotate-0 max-lg:[writing-mode:horizontal-tb]">
+                    <p className="text-4xl font-bold uppercase tracking-widest text-neutral-100 dark:text-neutral-200 [writing-mode:vertical-lr] rotate-180 max-lg:rotate-0 max-lg:[writing-mode:horizontal-tb]">
                         resume
                     </p>
                 </div>

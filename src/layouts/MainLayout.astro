@@ -37,12 +37,15 @@ const favicon = await getImage({
         <meta content="Nikshaan Shetty" name="author" />
         <meta content="index, follow" name="robots" />
         <link rel="canonical" href="https://nikshaan.vercel.app/" />
-        
+
         <meta content={title} property="og:title" />
         <meta content={description} property="og:description" />
         <meta content="website" property="og:type" />
         <meta content="https://nikshaan.vercel.app/" property="og:url" />
-        <meta content="https://nikshaan.vercel.app/favicon.svg" property="og:image" />
+        <meta
+            content="https://nikshaan.vercel.app/favicon.svg"
+            property="og:image"
+        />
         <meta content="1200" property="og:image:width" />
         <meta content="630" property="og:image:height" />
         <meta content="en_IN" property="og:locale" />
@@ -51,10 +54,21 @@ const favicon = await getImage({
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content="https://nikshaan.vercel.app/favicon.svg" />
+        <meta
+            name="twitter:image"
+            content="https://nikshaan.vercel.app/favicon.svg"
+        />
 
-        <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
-        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+        <meta
+            name="theme-color"
+            content="#111111"
+            media="(prefers-color-scheme: dark)"
+        />
+        <meta
+            name="theme-color"
+            content="#ffffff"
+            media="(prefers-color-scheme: light)"
+        />
         <meta name="color-scheme" content="dark light" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -63,15 +77,29 @@ const favicon = await getImage({
             content="black-translucent"
         />
         <meta name="apple-mobile-web-app-title" content="Nikshaan" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            href="/apple-touch-icon.png"
+        />
         <link rel="canonical" href="https://nikshaan.vercel.app/" />
         <link rel="manifest" href="/manifest.json" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        
-        <link rel="preload" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-        <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" /></noscript>
+
+        <link
+            rel="preload"
+            href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+            as="style"
+            onload="this.onload=null;this.rel='stylesheet'"
+        />
+        <noscript
+            ><link
+                rel="stylesheet"
+                href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+            /></noscript
+        >
 
         <link rel="dns-prefetch" href="https://api.github.com" />
         <link rel="dns-prefetch" href="https://ws.audioscrobbler.com" />
@@ -104,54 +132,68 @@ const favicon = await getImage({
             )
         }
 
-        
         <style is:inline>
             @font-face {
-                font-family: 'Instrument Sans';
+                font-family: "Instrument Sans";
                 font-style: normal;
                 font-weight: 400;
                 font-display: swap;
-                src: local('Instrument Sans Regular'), local('InstrumentSans-Regular');
+                src:
+                    local("Instrument Sans Regular"),
+                    local("InstrumentSans-Regular");
             }
             @font-face {
-                font-family: 'Instrument Sans';
+                font-family: "Instrument Sans";
                 font-style: normal;
                 font-weight: 500;
                 font-display: swap;
-                src: local('Instrument Sans Medium'), local('InstrumentSans-Medium');
+                src:
+                    local("Instrument Sans Medium"),
+                    local("InstrumentSans-Medium");
             }
             @font-face {
-                font-family: 'JetBrains Mono';
+                font-family: "JetBrains Mono";
                 font-style: normal;
                 font-weight: 400;
                 font-display: swap;
-                src: local('JetBrains Mono Regular'), local('JetBrainsMono-Regular');
+                src:
+                    local("JetBrains Mono Regular"),
+                    local("JetBrainsMono-Regular");
             }
             @font-face {
-                font-family: 'JetBrains Mono';
+                font-family: "JetBrains Mono";
                 font-style: normal;
                 font-weight: 500;
                 font-display: swap;
-                src: local('JetBrains Mono Medium'), local('JetBrainsMono-Medium');
+                src:
+                    local("JetBrains Mono Medium"),
+                    local("JetBrainsMono-Medium");
             }
-            
+
             body {
-                font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-family:
+                    "Instrument Sans",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    sans-serif;
             }
-            code, pre {
-                font-family: 'JetBrains Mono', 'Courier New', monospace;
+            code,
+            pre {
+                font-family: "JetBrains Mono", "Courier New", monospace;
             }
         </style>
-        
+
         <script type="speculationrules">
-        {
-          "prefetch": [
             {
-              "urls": ["https://nikshaan.vercel.app/"],
-              "eagerness": "moderate"
+                "prefetch": [
+                    {
+                        "urls": ["https://nikshaan.vercel.app/"],
+                        "eagerness": "moderate"
+                    }
+                ]
             }
-          ]
-        }
         </script>
 
         <Tooltips interactive={false} delay={[0, 50]} />
@@ -161,83 +203,139 @@ const favicon = await getImage({
                 try {
                     var theme = localStorage.getItem("theme");
                     if (theme) {
-                        document.documentElement.setAttribute("data-theme", theme);
+                        document.documentElement.setAttribute(
+                            "data-theme",
+                            theme,
+                        );
                     }
                 } catch (e) {}
 
-                if ('connection' in navigator && navigator.connection.saveData) {
-                    document.documentElement.classList.add('save-data');
+                if (
+                    "connection" in navigator &&
+                    navigator.connection.saveData
+                ) {
+                    document.documentElement.classList.add("save-data");
                 }
-                
-                window.showMainContent = function() {
-                    const mainContent = document.getElementById('main-content');
+
+                window.showMainContent = function () {
+                    const mainContent = document.getElementById("main-content");
                     if (mainContent) {
-                        mainContent.style.visibility = 'visible';
-                        mainContent.style.opacity = '0';
+                        mainContent.style.visibility = "visible";
+                        mainContent.style.opacity = "0";
                         setTimeout(() => {
-                            mainContent.style.transition = 'opacity 0.3s ease-in';
-                            mainContent.style.opacity = '1';
+                            mainContent.style.transition =
+                                "opacity 0.3s ease-in";
+                            mainContent.style.opacity = "1";
                         }, 50);
                     }
                     window.asciiIntroComplete = true;
                     window.asciiIntroActive = false;
                 };
+
+                window.addEventListener("vite:preloadError", function (e) {
+                    const reloadKey = "vite_chunk_err_reload";
+                    const lastReload = sessionStorage.getItem(reloadKey);
+                    if (
+                        !lastReload ||
+                        Date.now() - parseInt(lastReload) > 10000
+                    ) {
+                        sessionStorage.setItem(
+                            reloadKey,
+                            Date.now().toString(),
+                        );
+                        window.location.reload();
+                    }
+                });
+
+                window.addEventListener("unhandledrejection", function (e) {
+                    if (
+                        e.reason &&
+                        e.reason.message &&
+                        e.reason.message.includes(
+                            "Failed to fetch dynamically imported module",
+                        )
+                    ) {
+                        e.preventDefault();
+                        const reloadKey = "import_chunk_err_reload";
+                        const lastReload = sessionStorage.getItem(reloadKey);
+                        if (
+                            !lastReload ||
+                            Date.now() - parseInt(lastReload) > 10000
+                        ) {
+                            sessionStorage.setItem(
+                                reloadKey,
+                                Date.now().toString(),
+                            );
+                            window.location.reload();
+                        }
+                    }
+                });
             })();
         </script>
     </head>
-    <body
-        class="h-full bg-black text-neutral-50"
-    >
+    <body class="h-full bg-black text-neutral-50">
         <AsciiIntroWrapper />
         <div id="main-content" style="visibility: hidden;">
             <slot />
         </div>
         <script>
-            const hasSeenIntro = sessionStorage.getItem('portfolio_intro_seen');
-            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            
-            if (hasSeenIntro === '1' || prefersReducedMotion) {
-                const mainContent = document.getElementById('main-content');
+            const hasSeenIntro = sessionStorage.getItem("portfolio_intro_seen");
+            const prefersReducedMotion = window.matchMedia(
+                "(prefers-reduced-motion: reduce)",
+            ).matches;
+
+            if (hasSeenIntro === "1" || prefersReducedMotion) {
+                const mainContent = document.getElementById("main-content");
                 if (mainContent) {
-                    mainContent.style.visibility = 'visible';
-                    mainContent.style.opacity = '1';
+                    mainContent.style.visibility = "visible";
+                    mainContent.style.opacity = "1";
                 }
             } else {
-                const mainContent = document.getElementById('main-content');
+                const mainContent = document.getElementById("main-content");
                 if (mainContent) {
-                    mainContent.style.visibility = 'hidden';
-                    mainContent.style.opacity = '0';
+                    mainContent.style.visibility = "hidden";
+                    mainContent.style.opacity = "0";
                 }
             }
         </script>
         <Footer client:idle />
         <VercelAnalytics />
-        <script type="application/ld+json" set:html={JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Person",
-            "name": "Nikshaan Shetty",
-            "url": "https://nikshaan.vercel.app",
-            "image": "https://nikshaan.vercel.app/favicon.svg",
-            "sameAs": [
-                "https://www.linkedin.com/in/nikshaan-shetty/",
-                "https://github.com/Nikshaan"
-            ],
-            "jobTitle": "AI/ML Student & Software Developer",
-            "worksFor": {
-                "@type": "Organization",
-                "name": "Mentoria"
-            },
-            "alumniOf": {
-                "@type": "CollegeOrUniversity",
-                "name": "Dwarkadas J. Sanghvi College of Engineering",
-                "address": {
-                    "@type": "PostalAddress",
-                    "addressLocality": "Mumbai",
-                    "addressCountry": "IN"
-                }
-            },
-            "knowsAbout": ["Artificial Intelligence", "Machine Learning", "React", "Python", "LLM", "FastAPI"]
-        })} />
+        <script
+            type="application/ld+json"
+            set:html={JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Person",
+                name: "Nikshaan Shetty",
+                url: "https://nikshaan.vercel.app",
+                image: "https://nikshaan.vercel.app/favicon.svg",
+                sameAs: [
+                    "https://www.linkedin.com/in/nikshaan-shetty/",
+                    "https://github.com/Nikshaan",
+                ],
+                jobTitle: "AI/ML Student & Software Developer",
+                worksFor: {
+                    "@type": "Organization",
+                    name: "Mentoria",
+                },
+                alumniOf: {
+                    "@type": "CollegeOrUniversity",
+                    name: "Dwarkadas J. Sanghvi College of Engineering",
+                    address: {
+                        "@type": "PostalAddress",
+                        addressLocality: "Mumbai",
+                        addressCountry: "IN",
+                    },
+                },
+                knowsAbout: [
+                    "Artificial Intelligence",
+                    "Machine Learning",
+                    "React",
+                    "Python",
+                    "LLM",
+                    "FastAPI",
+                ],
+            })}
+        />
     </body>
 </html>
 
@@ -282,8 +380,8 @@ const favicon = await getImage({
         });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initLenis);
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initLenis);
     } else {
         initLenis();
     }
