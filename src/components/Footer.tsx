@@ -1,9 +1,19 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useSyncExternalStore } from "react";
 import { MoveRight, Github, LinkedinIcon, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 
+const mobileQuery = typeof window !== 'undefined' ? window.matchMedia('(max-width: 1024px)') : null;
+function useIsMobile() {
+    return useSyncExternalStore(
+        (cb) => { mobileQuery?.addEventListener('change', cb); return () => mobileQuery?.removeEventListener('change', cb); },
+        () => mobileQuery?.matches ?? false,
+        () => false
+    );
+}
+
 const Footer = () => {
     const currentYear = new Date().getFullYear();
+    const isMobile = useIsMobile();
 
     const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
         e.preventDefault();
@@ -40,9 +50,9 @@ const Footer = () => {
             y: 0,
             scale: 1,
             transition: {
-                duration: 0.5,
+                duration: isMobile ? 0.3 : 0.5,
                 ease: [0.22, 1, 0.36, 1] as const,
-                staggerChildren: 0.1
+                staggerChildren: isMobile ? 0.05 : 0.1
             }
         }
     };
@@ -53,7 +63,7 @@ const Footer = () => {
             opacity: 1,
             y: 0,
             transition: {
-                duration: 0.5,
+                duration: isMobile ? 0.3 : 0.5,
                 ease: [0.22, 1, 0.36, 1] as const
             }
         }
@@ -66,7 +76,7 @@ const Footer = () => {
                 variants={containerVariants}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: true, margin: "-100px" }}
+                viewport={{ once: true, margin: isMobile ? "0px" : "-100px" }}
                 className="w-full max-w-[1400px] mx-auto rounded-3xl border bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 data-[theme=light]:!bg-[#dbeafe] data-[theme=light]:!border-[#93c5fd] overflow-hidden footer-transition"
             >
                 <motion.div variants={itemVariants} className="p-8 md:p-12 border-b border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] footer-transition">

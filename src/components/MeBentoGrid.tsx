@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo, memo, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, memo, useRef, useSyncExternalStore } from 'react';
 import { m, motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { X, Maximize2, MapPin, Github } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
@@ -36,6 +36,16 @@ const defaultImages: Record<string, any> = {
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
+
+const mobileQuery = typeof window !== 'undefined' ? window.matchMedia('(max-width: 1024px)') : null;
+function useIsMobile() {
+    return useSyncExternalStore(
+        (cb) => { mobileQuery?.addEventListener('change', cb); return () => mobileQuery?.removeEventListener('change', cb); },
+        () => mobileQuery?.matches ?? false,
+        () => false
+    );
+}
+
 
 const content_cache = new Map<string, string>();
 
@@ -82,7 +92,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                                 loading={card.type === 'intro' ? "eager" : "lazy"}
                                 fetchPriority={card.type === 'intro' ? "high" : "auto"}
                                 decoding="async"
-                                className="absolute inset-0 w-full h-full object-cover border rounded-full select-none profile-image-border border-white dark:border-white/20"
+                                className="absolute inset-0 w-full h-full object-cover border rounded-full select-none profile-image-border border-white dark:border-white/20 flex items-center justify-center text-center"
                                 style={{
                                     backgroundColor: '#f3f4f6',
                                     aspectRatio: '1/1'
@@ -105,7 +115,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                             alt="logo"
                             loading="lazy"
                             decoding="async"
-                            className="select-none transition-all transform duration-200 w-[120px] md:w-[180px] h-auto object-contain"
+                            className="select-none transition-all transform duration-200 w-[120px] md:w-[180px] h-auto object-contain flex items-center justify-center text-center"
                         />
                     </div>
                     <div className="font-light w-full md:w-[80%] text-sm md:text-base">
@@ -130,7 +140,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                                     alt="logo"
                                     loading="lazy"
                                     decoding="async"
-                                    className="select-none transition-all transform duration-200 w-[60px] md:w-[90px]"
+                                    className="select-none transition-all transform duration-200 w-[60px] md:w-[90px] flex items-center justify-center text-center"
                                 />
                             </div>
                             <div className="w-[80%] flex flex-col items-end text-right my-2">
@@ -211,7 +221,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                     alt="win"
                     loading="lazy"
                     decoding="async"
-                    className="select-none w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[100px] md:h-[100px] lg:w-[100px] lg:h-[100px] object-contain"
+                    className="select-none w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[100px] md:h-[100px] lg:w-[100px] lg:h-[100px] object-contain flex items-center justify-center text-center"
                 />
             );
         case 'experience':
@@ -229,7 +239,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                                     alt="logo"
                                     loading="lazy"
                                     decoding="async"
-                                    className="select-none transition-all transform duration-200 rounded-full w-[50px] md:w-[70px]"
+                                    className="select-none transition-all transform duration-200 rounded-full w-[50px] md:w-[70px] flex items-center justify-center text-center"
                                 />
                             </div>
                             <div className="w-[80%] flex flex-col items-end text-right my-1">
@@ -265,16 +275,17 @@ interface CardWrapperProps {
 }
 
 const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index = 0, selectedId, setSelectedId, images }) => {
+    const isMobile = useIsMobile();
     const shouldAnimate = selectedId === null || selectedId === card.id;
     const isResume = card.id === 'resume';
 
     const handleClick = useCallback(() => {
         if (isResume) {
-            window.open(card.data.link, '_blank');
-        } else if (card.isExpandable) {
-            setSelectedId(card.id);
+            window.open(card?.data?.link, '_blank');
+        } else if (card?.isExpandable) {
+            setSelectedId(card?.id);
         }
-    }, [isResume, card.data.link, card.isExpandable, card.id, setSelectedId]);
+    }, [isResume, card?.data?.link, card?.isExpandable, card?.id, setSelectedId]);
 
     return (
         <m.div
@@ -285,12 +296,12 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
                 y: 0,
                 scale: 1,
                 transition: {
-                    duration: 0.5,
+                    duration: isMobile ? 0.3 : 0.5,
                     ease: [0.25, 0.1, 0.25, 1],
-                    delay: index * 0.08,
+                    delay: isMobile ? 0 : index * 0.08,
                 }
             }}
-            viewport={{ once: true, amount: 0.15 }}
+            viewport={{ once: true, amount: isMobile ? 0 : 0.15 }}
         >
             <motion.div
                 layoutId={shouldAnimate ? `card-${card.id}` : undefined}
@@ -448,7 +459,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
 
             <AnimatePresence>
                 {selectedId && selectedItem && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
+                    <m.div key="modal-overlay" className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
                         <m.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -485,7 +496,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                                 </div>
                             </div>
                         </motion.div>
-                    </div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </LazyMotion>

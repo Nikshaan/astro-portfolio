@@ -220,6 +220,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                 <AnimatePresence>
                     {expanded && (
                         <motion.div
+                            key="india-map-modal"
                             layoutId="india-map-card"
                             className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-10 bg-white/0"
                         >

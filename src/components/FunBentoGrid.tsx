@@ -1,4 +1,4 @@
-import React, { useEffect, Suspense, lazy, memo, useState, useRef } from 'react';
+import React, { useEffect, Suspense, lazy, memo, useState, useRef, useSyncExternalStore } from 'react';
 import { isSlowConnection } from '../utils/networkAware';
 import { m, type HTMLMotionProps, LazyMotion, domAnimation } from 'framer-motion';
 import { Maximize2 } from 'lucide-react';
@@ -13,6 +13,16 @@ import ErrorBoundary from './ErrorBoundary';
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
+
+const mobileQuery = typeof window !== 'undefined' ? window.matchMedia('(max-width: 1024px)') : null;
+function useIsMobile() {
+    return useSyncExternalStore(
+        (cb) => { mobileQuery?.addEventListener('change', cb); return () => mobileQuery?.removeEventListener('change', cb); },
+        () => mobileQuery?.matches ?? false,
+        () => false
+    );
+}
+
 
 interface Image {
     id: string;
@@ -38,7 +48,8 @@ interface CardWrapperProps extends HTMLMotionProps<"div"> {
 }
 
 const CardWrapper: React.FC<CardWrapperProps> = memo(({ children, className, isExpandable = false, index = 0, onClick, ...props }) => {
-    const staggerDelay = index * 0.025;
+    const isMobile = useIsMobile();
+    const staggerDelay = isMobile ? 0 : index * 0.025;
 
     return (
         <div className={cn("h-full w-full", className)}>
@@ -55,12 +66,12 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ children, className, isE
                     y: 0,
                     scale: 1,
                     transition: {
-                        duration: 0.4,
+                        duration: isMobile ? 0.25 : 0.4,
                         ease: [0.25, 0.1, 0.25, 1],
                         delay: staggerDelay,
                     }
                 }}
-                viewport={{ once: true, amount: 0.1 }}
+                viewport={{ once: true, amount: isMobile ? 0 : 0.1 }}
                 whileHover={isExpandable ? {
                     scale: 1.02,
                     transition: { duration: 0.2, ease: "easeOut" }
@@ -321,7 +332,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
                                     fetchPriority={i < 2 ? 'high' : 'auto'}
                                     decoding="async"
                                     sizes="(max-width: 1024px) 50vw, 25vw"
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 relative z-10"
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 relative z-10 flex items-center justify-center text-center"
                                     style={{
                                         backgroundImage: image.placeholderDataUrl && image.placeholderDataUrl.startsWith('data:') ? `url(${image.placeholderDataUrl})` : undefined,
                                         backgroundSize: 'cover',

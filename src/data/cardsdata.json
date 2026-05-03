@@ -89,7 +89,7 @@
         "data": {
             "image": "winIcon"
         },
-        "content": "<ul><li><h1>CodeQuest (2025) - 1st Runner Up and 1st in AIML domain</h1><p>Developed <a href=\"https://github.com/Nikshaan/HACKCORS_Legal_CodeQuest\" target=\"_blank\" rel=\"noopener noreferrer\">Nyaysetu</a>, an AI legal assistant.</p></li><br><li><h1>HackOps (2025) - 2nd Runner Up and 1st in AIML domain</h1><p>Developed <a href=\"https://github.com/Nikshaan/HackOps_HackCORS\" target=\"_blank\" rel=\"noopener noreferrer\">JournalPal.ai</a>, a research journal-paper matcher.</p></li></ul>"
+        "content": "<ul><li><h1>CodeQuest (2025) - 1st Runner Up and 1st in AIML domain</h1><p>Developed <a href=\"https://github.com/Nikshaan/HACKCORS_Legal_CodeQuest\" target=\"_blank\" rel=\"noopener noreferrer\">Nyaysetu</a>, an AI legal assistant.</p></li><li class=\"mt-4\"><h1>HackOps (2025) - 2nd Runner Up and 1st in AIML domain</h1><p>Developed <a href=\"https://github.com/Nikshaan/HackOps_HackCORS\" target=\"_blank\" rel=\"noopener noreferrer\">JournalPal.ai</a>, a research journal-paper matcher.</p></li></ul>"
     },
     {
         "id": "experience",
@@ -137,7 +137,7 @@
                 "FastAPI",
                 "PostgreSQL"
             ],
-            "summary": "World map to track places I have visited and store their photos <span class=\"text-red-800 font-semibold\">(DB down)</span>.</p>",
+            "summary": "World map to track places I have visited and store their photos <span class=\"text-red-800 font-semibold\">(DB down)</span>.",
             "github": "https://github.com/Nikshaan/LocalBee",
             "live": "https://local-bee.vercel.app/"
         },

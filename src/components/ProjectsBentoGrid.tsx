@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo, useSyncExternalStore } from 'react';
 import { m, motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { X, Maximize2, GithubIcon, ExternalLink } from 'lucide-react';
 import cardsData from '../data/cardsdata.json';
@@ -62,6 +62,16 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+const mobileQuery = typeof window !== 'undefined' ? window.matchMedia('(max-width: 1024px)') : null;
+function useIsMobile() {
+    return useSyncExternalStore(
+        (cb) => { mobileQuery?.addEventListener('change', cb); return () => mobileQuery?.removeEventListener('change', cb); },
+        () => mobileQuery?.matches ?? false,
+        () => false
+    );
+}
+
+
 interface CardWrapperProps {
     card: any;
     className?: string;
@@ -71,6 +81,7 @@ interface CardWrapperProps {
 }
 
 const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index = 0, selectedId, setSelectedId }) => {
+    const isMobile = useIsMobile();
     const shouldAnimate = selectedId === null || selectedId === card.id;
 
     const handleClick = useCallback(() => {
@@ -88,12 +99,12 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
                 y: 0,
                 scale: 1,
                 transition: {
-                    duration: 0.5,
+                    duration: isMobile ? 0.3 : 0.5,
                     ease: [0.25, 0.1, 0.25, 1],
-                    delay: index < 4 ? index * 0.1 : 0,
+                    delay: isMobile ? 0 : (index < 4 ? index * 0.1 : 0),
                 }
             }}
-            viewport={{ once: true, amount: 0.15 }}
+            viewport={{ once: true, amount: isMobile ? 0 : 0.15 }}
         >
             <motion.div
                 layoutId={shouldAnimate ? `card-${card.id}` : undefined}
@@ -124,7 +135,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
                                         "flex items-center justify-center p-1 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12 min-[500px]:max-md:h-9 tooltip-trigger relative",
                                         "bg-neutral-100 dark:bg-neutral-800"
                                     )}>
-                                        {icon && <img src={icon.src} width={icon.width} height={icon.height} alt={tech} className="w-full h-full object-contain" loading="lazy" decoding="async" />}
+                                        {icon && <img src={icon.src} width={icon.width} height={icon.height} alt={tech} className="w-full h-full object-contain flex items-center justify-center text-center" loading="lazy" decoding="async" />}
                                     </div>
                                 );
                             })}
@@ -247,7 +258,7 @@ const ProjectsBentoGrid: React.FC = () => {
 
                 <AnimatePresence>
                     {selectedId && selectedItem && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
+                        <m.div key="modal-overlay" className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
                             <m.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -301,7 +312,7 @@ const ProjectsBentoGrid: React.FC = () => {
                                                         "flex items-center justify-center p-1 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12",
                                                         "bg-neutral-100 dark:bg-neutral-800"
                                                     )}>
-                                                        {icon && <img src={icon.src} width={icon.width} height={icon.height} alt={tech} className="w-full h-full object-contain" loading="lazy" decoding="async" />}
+                                                        {icon && <img src={icon.src} width={icon.width} height={icon.height} alt={tech} className="w-full h-full object-contain flex items-center justify-center text-center" loading="lazy" decoding="async" />}
                                                     </div>
                                                 );
                                             })}
@@ -313,7 +324,7 @@ const ProjectsBentoGrid: React.FC = () => {
                                     </div>
                                 </div>
                             </motion.div>
-                        </div>
+                        </m.div>
                     )}
                 </AnimatePresence>
             </div>
