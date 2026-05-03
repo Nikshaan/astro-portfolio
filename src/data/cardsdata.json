@@ -137,11 +137,11 @@
                 "FastAPI",
                 "PostgreSQL"
             ],
-            "summary": "World map to track places I have visited and store their photos. <span class=\"text-red-800 font-semibold\">DB down</span>",
+            "summary": "World map to track places I have visited and store their photos <span class=\"text-red-800 font-semibold\">(DB down)</span>.</p>",
             "github": "https://github.com/Nikshaan/LocalBee",
             "live": "https://local-bee.vercel.app/"
         },
-        "content": "<p>World map to track places I have visited and store their photos. <span class=\"text-red-800 font-semibold\">DB down</span></p>"
+        "content": "<p>World map to track places I have visited and store their photos <span class=\"text-red-800 font-semibold\">(DB down)</span>.</p>"
     },
     {
         "id": "project-pokedex",

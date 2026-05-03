@@ -244,7 +244,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
         case 'resume':
             return (
                 <div className="flex justify-center items-center h-full w-full">
-                    <p className="text-4xl font-bold uppercase tracking-widest text-neutral-100 dark:text-neutral-200 [writing-mode:vertical-lr] rotate-180 max-lg:rotate-0 max-lg:[writing-mode:horizontal-tb]">
+                    <p className="text-4xl font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-300 [writing-mode:vertical-lr] rotate-180 max-lg:rotate-0 max-lg:[writing-mode:horizontal-tb]">
                         resume
                     </p>
                 </div>
@@ -385,7 +385,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
         };
 
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
+            if (event.key === 'Escape' || event.code === 'Escape' || event.keyCode === 27) {
                 setSelectedId(null);
             }
         };

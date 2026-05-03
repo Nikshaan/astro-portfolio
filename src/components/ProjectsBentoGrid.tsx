@@ -90,7 +90,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
                 transition: {
                     duration: 0.5,
                     ease: [0.25, 0.1, 0.25, 1],
-                    delay: index * 0.08,
+                    delay: index < 4 ? index * 0.1 : 0,
                 }
             }}
             viewport={{ once: true, amount: 0.15 }}
@@ -177,7 +177,7 @@ const ProjectsBentoGrid: React.FC = () => {
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
+            if (event.key === 'Escape' || event.code === 'Escape' || event.keyCode === 27) {
                 setSelectedId(null);
             }
         };
