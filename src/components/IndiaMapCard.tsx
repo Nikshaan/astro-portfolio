@@ -34,7 +34,23 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     const [topology, setTopology] = useState<any>(cachedTopology);
     const [loading, setLoading] = useState(!cachedTopology);
     const [hoveredPlace, setHoveredPlace] = useState<VisitedPlace | null>(null);
-    const [tooltipPos, setTooltipPos] = useState<{x: number, y: number} | null>(null);
+    const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+
+    const [isLightTheme, setIsLightTheme] = useState(false);
+
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+
+        const readTheme = () => document.documentElement.getAttribute('data-theme') === 'light';
+        setIsLightTheme(readTheme());
+
+        const obs = new MutationObserver(() => {
+            setIsLightTheme(readTheme());
+        });
+
+        obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        return () => obs.disconnect();
+    }, []);
 
     useEffect(() => {
         if (cachedTopology) {
@@ -63,7 +79,10 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     useEffect(() => {
         if (!expanded) return;
 
-        document.documentElement.style.setProperty('--scrollbar-width', `${window.innerWidth - document.documentElement.clientWidth}px`);
+        document.documentElement.style.setProperty(
+            "--scrollbar-width",
+            `${window.innerWidth - document.documentElement.clientWidth}px`
+        );
         document.body.style.overflow = "hidden";
         document.body.style.paddingRight = "var(--scrollbar-width, 0px)";
 
@@ -89,28 +108,65 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     }, [expanded]);
 
     const baseMap = useMemo(() => {
-        if (!topology) {
-            return { pathGenerator: null, projection: null, features: [], viewBox: "0 0 800 800" };
+        if (!topology || !topology.objects) {
+            return {
+                pathGenerator: null as any,
+                projection: null as any,
+                features: [] as any[],
+                viewBox: "0 0 800 800",
+            };
         }
 
-        const objectKey = Object.keys(topology.objects)[0];
-        const featureCollection = feature(
-            topology,
-            topology.objects[objectKey]
-        ) as any;
-        const features = featureCollection.features;
+        const objectNames = Object.keys(topology.objects);
+        if (!objectNames.length) {
+            return {
+                pathGenerator: null as any,
+                projection: null as any,
+                features: [] as any[],
+                viewBox: "0 0 800 800",
+            };
+        }
+
+        const pickBestObjectKey = () => {
+            const lower = objectNames.map((k) => k.toLowerCase());
+            const preferred = [
+                /states?/, 
+                /admin/, 
+                /adm/, 
+                /india/, 
+                /subunits?/, 
+                /districts?/, 
+                /geometr(?:y|ies)/,
+            ];
+
+            for (const rx of preferred) {
+                const idx = lower.findIndex((k) => rx.test(k));
+                if (idx !== -1) return objectNames[idx];
+            }
+
+            return objectNames[0];
+        };
+
+        const objectKey = pickBestObjectKey();
+        const featureCollection = feature(topology, topology.objects[objectKey]) as any;
+        const features = Array.isArray(featureCollection?.features) ? featureCollection.features : [];
 
         const proj = geoMercator();
-        
         proj.fitSize([1000, 1000], featureCollection);
-        const tempPath = geoPath().projection(proj);
-        const bounds = tempPath.bounds(featureCollection);
+
+        const pathGen = geoPath().projection(proj);
+        const bounds = pathGen.bounds(featureCollection);
         const minX = bounds[0][0];
         const minY = bounds[0][1];
         const width = bounds[1][0] - minX;
         const height = bounds[1][1] - minY;
 
-        return { pathGenerator: tempPath, projection: proj, features, viewBox: `${minX} ${minY} ${width} ${height}` };
+        const safeViewBox =
+            isFinite(minX) && isFinite(minY) && isFinite(width) && isFinite(height) && width > 0 && height > 0
+                ? `${minX} ${minY} ${width} ${height}`
+                : "0 0 800 800";
+
+        return { pathGenerator: pathGen, projection: proj, features, viewBox: safeViewBox };
     }, [topology]);
 
     const svgRef = React.useRef<SVGSVGElement>(null);
@@ -118,26 +174,26 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 
     useEffect(() => {
         if (!svgRef.current || !baseMap.viewBox) return;
-        
+
         const observer = new ResizeObserver((entries) => {
             const entry = entries[0];
             const { width, height } = entry.contentRect;
             if (width === 0 || height === 0) return;
-            
-            const parts = baseMap.viewBox.split(' ');
+
+            const parts = baseMap.viewBox.split(" ");
             if (parts.length < 4) return;
             const vbWidth = parseFloat(parts[2]);
             const vbHeight = parseFloat(parts[3]);
-            
+
             const scaleX = width / vbWidth;
             const scaleY = height / vbHeight;
             const scale = Math.min(scaleX, scaleY);
-            
+
             if (scale > 0 && !isNaN(scale) && isFinite(scale)) {
                 setSvgScale(scale);
             }
         });
-        
+
         observer.observe(svgRef.current);
         return () => observer.disconnect();
     }, [baseMap.viewBox, expanded]);
@@ -189,14 +245,29 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                 preserveAspectRatio="xMidYMid meet"
                                 className="overflow-visible"
                             >
-                                <g className="opacity-50 dark:opacity-30">
-                                    {baseMap.features.map((feature: any, i: number) => (
-                                        <path
-                                            key={`collapsed-${i}`}
-                                            d={baseMap.pathGenerator!(feature) as string}
-                                            className="stroke-[0.5] fill-neutral-200 dark:fill-zinc-700 stroke-black dark:stroke-zinc-600 transition-colors duration-300"
-                                        />
-                                    ))}
+                                <defs>
+                                    <filter id="india-map-shadow" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
+                                        <feDropShadow dx="0" dy="1.25" stdDeviation="1.1" floodColor="#1e3a8a" floodOpacity="0.16" />
+                                    </filter>
+                                </defs>
+                                <g className={cn("dark:opacity-30", isLightTheme ? "opacity-100" : "opacity-100")} style={{ filter: isLightTheme ? 'url(#india-map-shadow)' : undefined }}>
+                                    {baseMap.features.map((feature: any, i: number) => {
+                                        const isLight = isLightTheme;
+                                        return (
+                                            <path
+                                                key={`collapsed-${i}`}
+                                                d={baseMap.pathGenerator!(feature) as string}
+                                                className="transition-colors duration-300"
+                                                fill={isLight ? "#bfdbfe" : "#27272a"}
+                                                stroke={isLight ? "rgba(30,58,138,0.45)" : "#3f3f46"}
+                                                style={
+                                                    isLight
+                                                        ? { filter: 'drop-shadow(0px 2px 3px rgba(2,6,23,0.22))' }
+                                                        : { filter: 'drop-shadow(0px 2px 3px rgba(0,0,0,0.35))' }
+                                                }
+                                            />
+                                        );
+                                    })}
                                 </g>
                                 <g>
                                     {visitedPlaces.map((place, i) => {
@@ -276,14 +347,53 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                             setTooltipPos(null);
                                         }}
                                     >
+                                        <defs>
+                                            <filter id="india-map-shadow-expanded" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
+                                                <feDropShadow dx="0" dy="1.25" stdDeviation="1.1" floodColor="#1e3a8a" floodOpacity="0.14" />
+                                            </filter>
+                                        </defs>
+                                        <g>
+                                            {typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light' &&
+                                                baseMap.features.map((feature: any, i: number) => (
+                                                    <path
+                                                        key={`expanded-shadow-light-${i}`}
+                                                        d={baseMap.pathGenerator!(feature) as string}
+                                                        strokeWidth={0}
+                                                        fill="#1e3a8a"
+                                                        opacity={0.14}
+                                                        transform={`translate(${1.5 / svgScale}, ${2.2 / svgScale})`}
+                                                        style={{ filter: `blur(${2.4 / svgScale}px)` }}
+                                                    />
+                                                ))}
+                                            {typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') !== 'light' &&
+                                                baseMap.features.map((feature: any, i: number) => (
+                                                    <path
+                                                        key={`expanded-shadow-dark-${i}`}
+                                                        d={baseMap.pathGenerator!(feature) as string}
+                                                        strokeWidth={0}
+                                                        fill="#000000"
+                                                        opacity={0.28}
+                                                        transform={`translate(${1.35 / svgScale}, ${2.1 / svgScale})`}
+                                                        style={{ filter: `blur(${2.6 / svgScale}px)` }}
+                                                    />
+                                                ))}
+                                        </g>
                                         <g>
                                             {baseMap.features.map((feature: any, i: number) => {
+                                                const isLight = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light';
                                                 return (
                                                     <path
                                                         key={`expanded-${i}`}
                                                         d={baseMap.pathGenerator!(feature) as string}
                                                         strokeWidth={1 / svgScale}
-                                                        className="stroke-black dark:stroke-zinc-700 fill-neutral-50 dark:fill-zinc-800 hover:fill-blue-50 dark:hover:fill-zinc-700 cursor-pointer transition-colors duration-300"
+                                                        className={isLight ? "transition-colors duration-300" : "cursor-pointer transition-colors duration-300"}
+                                                        fill={isLight ? "#bfdbfe" : "#27272a"}
+                                                        stroke={isLight ? "rgba(30,58,138,0.45)" : "#3f3f46"}
+                                                        style={
+                                                            isLight
+                                                                ? { filter: 'drop-shadow(0px 2px 3px rgba(2,6,23,0.22))' }
+                                                                : { filter: 'drop-shadow(0px 2px 3px rgba(0,0,0,0.35))' }
+                                                        }
                                                     />
                                                 );
                                             })}
@@ -362,7 +472,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                                 className="fixed z-[10000] pointer-events-none flex items-center justify-center transform -translate-x-1/2 -translate-y-full"
                                 style={{
                                     left: tooltipPos.x,
-                                    top: tooltipPos.y - 10,
+                                    top: tooltipPos.y - 4,
                                 }}
                             >
                                 <div className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-3 py-1.5 md:px-4 md:py-2 rounded-md shadow-lg text-sm md:text-base font-medium whitespace-nowrap">

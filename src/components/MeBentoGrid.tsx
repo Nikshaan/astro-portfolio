@@ -287,6 +287,8 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
         }
     }, [isResume, card?.data?.link, card?.isExpandable, card?.id, setSelectedId]);
 
+    const desktopDelay = 0;
+
     return (
         <m.div
             className={cn("h-full w-full", className)}
@@ -298,10 +300,10 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
                 transition: {
                     duration: isMobile ? 0.3 : 0.5,
                     ease: [0.25, 0.1, 0.25, 1],
-                    delay: isMobile ? 0 : index * 0.08,
+                    delay: isMobile ? 0 : desktopDelay,
                 }
             }}
-            viewport={{ once: true, amount: isMobile ? 0 : 0.15 }}
+            viewport={{ once: true, amount: isMobile ? 0 : 0.01 }}
         >
             <motion.div
                 layoutId={shouldAnimate ? `card-${card.id}` : undefined}

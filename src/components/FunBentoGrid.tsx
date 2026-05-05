@@ -49,7 +49,7 @@ interface CardWrapperProps extends HTMLMotionProps<"div"> {
 
 const CardWrapper: React.FC<CardWrapperProps> = memo(({ children, className, isExpandable = false, index = 0, onClick, ...props }) => {
     const isMobile = useIsMobile();
-    const staggerDelay = isMobile ? 0 : index * 0.025;
+    const staggerDelay = 0;
 
     return (
         <div className={cn("h-full w-full", className)}>
@@ -68,10 +68,10 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ children, className, isE
                     transition: {
                         duration: isMobile ? 0.25 : 0.4,
                         ease: [0.25, 0.1, 0.25, 1],
-                        delay: staggerDelay,
+                        delay: isMobile ? 0 : staggerDelay,
                     }
                 }}
-                viewport={{ once: true, amount: isMobile ? 0 : 0.1 }}
+                viewport={{ once: true, amount: isMobile ? 0 : 0.01 }}
                 whileHover={isExpandable ? {
                     scale: 1.02,
                     transition: { duration: 0.2, ease: "easeOut" }
