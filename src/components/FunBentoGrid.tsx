@@ -6,6 +6,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 const MusicStatsClient = lazy(() => import('./musicstats'));
+const YearlyArtistArc = lazy(() => import('./YearlyArtistArc'));
 import IndiaMapCard from './IndiaMapCard';
 import MusicExtrasCard from './MusicExtrasCard';
 import ErrorBoundary from './ErrorBoundary';
@@ -268,7 +269,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
     return (
         <LazyMotion features={domAnimation}>
             <div className="w-full max-w-[1400px] mx-auto p-4 pt-16">
-                <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight mb-8 px-2">Fun Stuff</h2>
+                <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight mb-8 px-2">F.U.N</h2>
 
                 <m.div
                     ref={containerRef}
@@ -291,7 +292,24 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
                         <MusicExtrasCard />
                     </CardWrapper>
 
-                    <CardWrapper key="india-map" index={2} className="col-span-1 row-span-1 aspect-[4/3] w-full">
+                    <CardWrapper key="yearly-arc" index={2} className="col-span-2 lg:col-span-4 min-h-[360px] sm:min-h-[420px] md:min-h-[440px]">
+                        <div className="h-full flex flex-col w-full">
+                            <h3 className="text-xl font-medium mb-2 p-5 md:p-6 pb-0 shrink-0">Yearly listening arc</h3>
+                            <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full max-w-full overflow-x-hidden pb-6 px-2 sm:px-4 md:px-6 pt-0">
+                                <Suspense fallback={
+                                    <div className="flex-1 min-h-[200px] flex items-center justify-center text-neutral-400 text-sm rounded-xl border border-transparent">
+                                        Loading listening arc...
+                                    </div>
+                                }>
+                                    <ErrorBoundary>
+                                        <YearlyArtistArc />
+                                    </ErrorBoundary>
+                                </Suspense>
+                            </div>
+                        </div>
+                    </CardWrapper>
+
+                    <CardWrapper key="india-map" index={3} className="col-span-1 row-span-1 aspect-[4/3] w-full">
                         <IndiaMapCard
                             className="col-span-1 row-span-1 aspect-[4/3] w-full"
                             visitedPlaces={VISITED_PLACES}

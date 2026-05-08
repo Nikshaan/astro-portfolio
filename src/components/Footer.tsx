@@ -138,7 +138,7 @@ const Footer = () => {
                                 {[
                                     { name: "me", href: "me" },
                                     { name: "projects", href: "projects" },
-                                    { name: "fun stuff", href: "fun" }
+                                    { name: "fun", href: "fun" }
                                 ].map((link) => (
                                     <a
                                         key={link.name}

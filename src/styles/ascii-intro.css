@@ -28,7 +28,7 @@ body:has(.ascii-overlay) {
 .ascii-overlay.phase-3-fade {
   will-change: opacity;
   opacity: 0;
-  transition: opacity 400ms ease-out;
+  transition: opacity 150ms ease-out;
   pointer-events: none;
 }
 

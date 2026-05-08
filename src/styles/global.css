@@ -465,3 +465,11 @@ html.lenis body {
 .fancybox__content {
   background: transparent !important;
 }
+
+.yearly-arc-root {
+  --yearly-accent: rgb(172, 70, 253);
+}
+
+[data-theme="light"] .yearly-arc-root {
+  --yearly-accent: rgb(59, 130, 246);
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, memo } from 'react';
 import MusicCharts from './musiccharts';
+import { scheduleMusicYearlyArcWarmup } from './musicYearlyArcWarmup';
 
 interface ArtistInfoType {
     name?: string;
@@ -79,6 +80,7 @@ export default memo(function MusicStatsClient() {
             cacheTimestamp = Date.now();
             setData(musicData);
             setError(null);
+            scheduleMusicYearlyArcWarmup();
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to load music stats';
             setError(errorMessage);

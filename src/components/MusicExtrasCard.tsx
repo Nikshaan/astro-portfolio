@@ -4,6 +4,8 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Music2 } from 'lucide-react';
 
+import { scheduleMusicYearlyArcWarmup } from './musicYearlyArcWarmup';
+
 const GenreDonut = lazy(() => import('./GenreDonut'));
 
 function cn(...inputs: ClassValue[]) {
@@ -67,6 +69,7 @@ export default memo(function MusicExtrasCard() {
                 cachedExtrasData = d;
                 cacheTimestamp = Date.now();
                 setData(d);
+                scheduleMusicYearlyArcWarmup();
             } catch {}
             finally { setLoading(false); fetchPromise = null; }
         };
@@ -83,7 +86,7 @@ export default memo(function MusicExtrasCard() {
                 )}
             >
                 <div className="px-5 pt-5 pb-0 shrink-0">
-                    <h3 className="text-xl font-medium">Genre Breakdown</h3>
+                    <h3 className="text-xl font-medium">Genre breakdown</h3>
                 </div>
 
                 <div className="flex-1 min-h-0 p-4">
