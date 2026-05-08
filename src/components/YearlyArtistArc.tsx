@@ -271,7 +271,7 @@ export default memo(function YearlyArtistArc() {
 
             {showSkeleton ? (
                 <div
-                    className="flex-1 w-full flex flex-col justify-center gap-2.5 sm:gap-3 py-5 px-3"
+                    className="yearly-arc-shimmer flex-1 w-full flex flex-col justify-center gap-2.5 sm:gap-3 py-5 px-3"
                     aria-hidden="true"
                 >
                     {[0, 1, 2, 3].map((i) => (
@@ -301,7 +301,12 @@ export default memo(function YearlyArtistArc() {
                             0% { background-position: -200px 0; }
                             100% { background-position: 200px 0; }
                         }
-                        [data-theme="light"] * { --shimmer-from: #dbeafe; --shimmer-to: #eff6ff; --shimmer-from-2: #e5e7eb; --shimmer-to-2: #f3f4f6; }
+                        [data-theme="light"] .yearly-arc-shimmer {
+                            --shimmer-from: #bfdbfe;
+                            --shimmer-to: #93c5fd;
+                            --shimmer-from-2: #dbeafe;
+                            --shimmer-to-2: #3b82f6;
+                        }
                     `}</style>
                 </div>
             ) : null}

@@ -247,7 +247,7 @@
 }
 
 [data-theme="light"] .skeletonTitle {
-    background: linear-gradient(90deg, #dbeafe 25%, #eff6ff 50%, #dbeafe 75%);
+    background: linear-gradient(90deg, #bfdbfe 25%, #93c5fd 50%, #bfdbfe 75%);
     background-size: 1200px 100%;
 }
 
@@ -262,7 +262,7 @@
 }
 
 [data-theme="light"] .skeletonSubtitle {
-    background: linear-gradient(90deg, #dbeafe 25%, #eff6ff 50%, #dbeafe 75%);
+    background: linear-gradient(90deg, #dbeafe 25%, #93c5fd 50%, #dbeafe 75%);
     background-size: 1200px 100%;
 }
 
@@ -292,7 +292,7 @@
 }
 
 [data-theme="light"] .skeletonDay {
-    background: linear-gradient(90deg, #dbeafe 25%, #eff6ff 50%, #dbeafe 75%);
+    background: linear-gradient(90deg, #bfdbfe 25%, #93c5fd 50%, #bfdbfe 75%);
     background-size: 1200px 100%;
 }
 

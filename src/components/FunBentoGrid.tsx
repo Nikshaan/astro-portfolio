@@ -153,7 +153,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
                     100% { background-position: 600px 0; }
                 }
                 [data-theme="light"] .gallery-shimmer {
-                    background-image: linear-gradient(90deg, #dbeafe 25%, #eff6ff 50%, #dbeafe 75%) !important;
+                    background-image: linear-gradient(90deg, #bfdbfe 25%, #93c5fd 50%, #bfdbfe 75%) !important;
                 }
             `;
             document.head.appendChild(style);
