@@ -200,15 +200,24 @@ const ProjectsBentoGrid: React.FC = () => {
             document.body.style.overflow = 'hidden';
             document.body.style.paddingRight = 'var(--scrollbar-width, 0px)';
             window.addEventListener('keydown', handleKeyDown);
+            if (typeof window !== 'undefined' && (window as any).lenis) {
+                (window as any).lenis.stop();
+            }
         } else {
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
+            if (typeof window !== 'undefined' && (window as any).lenis) {
+                (window as any).lenis.start();
+            }
         }
 
         return () => {
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
             window.removeEventListener('keydown', handleKeyDown);
+            if (typeof window !== 'undefined' && (window as any).lenis) {
+                (window as any).lenis.start();
+            }
         };
     }, [selectedId]);
 

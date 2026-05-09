@@ -2,19 +2,19 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-export interface YearlyArcWeek {
+export interface RadialHeatmapWeek {
   from: number;
   to: number;
 }
 
-export interface YearlyArcArtist {
+export interface RadialHeatmapArtist {
   name: string;
   plays: number[];
 }
 
-export interface YearlyArcResult {
-  weeks: YearlyArcWeek[];
-  artists: YearlyArcArtist[];
+export interface RadialHeatmapResult {
+  weeks: RadialHeatmapWeek[];
+  artists: RadialHeatmapArtist[];
 }
 
 interface WeeklyChartEntry {
@@ -24,15 +24,19 @@ interface WeeklyChartEntry {
 
 const SERVER_CACHE_MS = 90 * 1000;
 const ANCHOR_MATCH_SEC = 180;
+const SECONDS_PER_DAY = 86400;
+const ROLLING_DAYS = 365;
+const TOP_N = 10;
+const WEEK_FETCH_CONCURRENCY = 6;
 
 let cache:
   | {
       anchorSec: number;
-      data: YearlyArcResult;
+      data: RadialHeatmapResult;
       timestamp: number;
     }
   | null = null;
-const pendingByAnchor = new Map<number, Promise<YearlyArcResult>>();
+const pendingByAnchor = new Map<number, Promise<RadialHeatmapResult>>();
 
 function resolvedAnchorSec(serverSec: number, clientParam: string | null): number {
   if (clientParam == null || clientParam === '') return serverSec;
@@ -78,9 +82,9 @@ async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
       if (response.status >= 400 && response.status < 500) {
         throw new Error(`HTTP ${response.status}`);
       }
-    } catch (err: unknown) {
+    } catch {
       clearTimeout(timeoutId);
-      if (attempt === maxRetries - 1) throw err;
+      if (attempt === maxRetries - 1) throw new Error('Max retries exceeded');
     }
 
     await sleep(Math.min(1000 * Math.pow(2, attempt), 4000));
@@ -110,50 +114,42 @@ function normalizeChartList(raw: unknown): WeeklyChartEntry[] {
   return arr as WeeklyChartEntry[];
 }
 
-async function fetchYearRangeTopArtists(
+async function fetchRollingYearTopArtists(
   username: string,
   apiKey: string,
   fromSec: number,
   toSec: number
 ): Promise<{ name: string; plays: number }[]> {
-  try {
-    const url =
-      `https://ws.audioscrobbler.com/2.0/?method=user.getweeklyartistchart&user=${encodeURIComponent(username)}` +
-      `&from=${fromSec}&to=${toSec}&api_key=${apiKey}&format=json`;
-    const response = await fetchWithRetry(url);
-    const data = await response.json();
-    const list = normalizeWeeklyArtists(data);
-    list.sort((a, b) => b.plays - a.plays);
-    return list;
-  } catch {
-    return [];
-  }
+  const url =
+    `https://ws.audioscrobbler.com/2.0/?method=user.getweeklyartistchart&user=${encodeURIComponent(username)}` +
+    `&from=${fromSec}&to=${toSec}&api_key=${apiKey}&format=json&limit=1000`;
+  const response = await fetchWithRetry(url);
+  const data = await response.json();
+  const list = normalizeWeeklyArtists(data);
+  list.sort((a, b) => b.plays - a.plays);
+  return list.slice(0, TOP_N);
 }
 
-async function fetchWeeklyChartList(username: string, apiKey: string): Promise<YearlyArcWeek[]> {
-  try {
-    const url =
-      `https://ws.audioscrobbler.com/2.0/?method=user.getweeklychartlist&user=${encodeURIComponent(username)}` +
-      `&api_key=${apiKey}&format=json`;
-    const response = await fetchWithRetry(url);
-    const data = await response.json();
-    const entries = normalizeChartList(data)
-      .map((c) => ({
-        from: parseInt(String(c.from ?? '0'), 10),
-        to: parseInt(String(c.to ?? '0'), 10),
-      }))
-      .filter((w) => w.from > 0 && w.to > 0);
-    entries.sort((a, b) => a.from - b.from);
-    return entries;
-  } catch {
-    return [];
-  }
+async function fetchWeeklyChartList(username: string, apiKey: string): Promise<RadialHeatmapWeek[]> {
+  const url =
+    `https://ws.audioscrobbler.com/2.0/?method=user.getweeklychartlist&user=${encodeURIComponent(username)}` +
+    `&api_key=${apiKey}&format=json`;
+  const response = await fetchWithRetry(url);
+  const data = await response.json();
+  const entries = normalizeChartList(data)
+    .map((c) => ({
+      from: parseInt(String(c.from ?? '0'), 10),
+      to: parseInt(String(c.to ?? '0'), 10),
+    }))
+    .filter((w) => w.from > 0 && w.to > 0);
+  entries.sort((a, b) => a.from - b.from);
+  return entries;
 }
 
 async function fetchWeekArtists(username: string, apiKey: string, fromSec: number, toSec: number) {
   const url =
     `https://ws.audioscrobbler.com/2.0/?method=user.getweeklyartistchart&user=${encodeURIComponent(username)}` +
-    `&from=${fromSec}&to=${toSec}&api_key=${apiKey}&format=json`;
+    `&from=${fromSec}&to=${toSec}&api_key=${apiKey}&format=json&limit=1000`;
   const response = await fetchWithRetry(url);
   const data = await response.json();
   const map = new Map<string, number>();
@@ -180,13 +176,13 @@ async function concurrency<T, R>(items: T[], limit: number, run: (item: T) => Pr
   return out;
 }
 
-function overlapsRange(w: YearlyArcWeek, fromSec: number, toSec: number): boolean {
+function overlapsRange(w: RadialHeatmapWeek, fromSec: number, toSec: number): boolean {
   return w.to >= fromSec && w.from <= toSec;
 }
 
-function fallbackWeekSlices(fromSec: number, toSec: number): YearlyArcWeek[] {
+function fallbackWeekSlices(fromSec: number, toSec: number): RadialHeatmapWeek[] {
   const SEC_WEEK = 604800;
-  const out: YearlyArcWeek[] = [];
+  const out: RadialHeatmapWeek[] = [];
   let t = fromSec;
   while (t <= toSec) {
     const end = Math.min(t + SEC_WEEK - 1, toSec);
@@ -206,92 +202,96 @@ function mergeArtistLabels(rows: { labelByKey: Map<string, string> }[]): Map<str
   return merged;
 }
 
-function resolveArtistName(keyLc: string, rankedYear: { name: string }[], labels: Map<string, string>): string {
-  const fromYear = rankedYear.find((x) => x.name.toLowerCase() === keyLc)?.name;
-  return fromYear ?? labels.get(keyLc) ?? keyLc;
+function resolveArtistName(keyLc: string, topTen: { name: string }[], labels: Map<string, string>): string {
+  const fromTop = topTen.find((x) => x.name.toLowerCase() === keyLc)?.name;
+  return fromTop ?? labels.get(keyLc) ?? keyLc;
 }
 
-async function fetchYearlyArc(
+const TARGET_WEEKS = 52;
+
+function trimOrPadWeeks(
+  weeks: RadialHeatmapWeek[],
+  playsPerArtist: Map<string, number[]>,
+  fromSec: number
+): { weeks: RadialHeatmapWeek[]; playsPerArtist: Map<string, number[]> } {
+  let wk = [...weeks];
+  if (wk.length > TARGET_WEEKS) {
+    const drop = wk.length - TARGET_WEEKS;
+    wk = wk.slice(drop);
+    for (const [k, arr] of [...playsPerArtist.entries()]) {
+      playsPerArtist.set(k, arr.slice(drop));
+    }
+  } else if (wk.length < TARGET_WEEKS) {
+    const pad = TARGET_WEEKS - wk.length;
+    const firstFrom = wk[0]?.from ?? fromSec;
+    const paddedWeeks: RadialHeatmapWeek[] = [];
+    let cursor = firstFrom;
+    for (let i = 0; i < pad; i++) {
+      const start = cursor - 604800;
+      const end = cursor - 1;
+      paddedWeeks.unshift({ from: start, to: end });
+      cursor = start;
+    }
+    wk = [...paddedWeeks, ...wk];
+    for (const [k, arr] of [...playsPerArtist.entries()]) {
+      const zeros = Array.from({ length: pad }, () => 0);
+      playsPerArtist.set(k, [...zeros, ...arr]);
+    }
+  }
+  return { weeks: wk, playsPerArtist };
+}
+
+async function fetchRadialHeatmap(
   username: string,
   apiKey: string,
   anchorToSec: number
-): Promise<YearlyArcResult> {
-  const toMs = anchorToSec * 1000;
-  const d = new Date(toMs);
-  const fromMs = Date.UTC(
-    d.getUTCFullYear() - 1,
-    d.getUTCMonth(),
-    d.getUTCDate(),
-    d.getUTCHours(),
-    d.getUTCMinutes(),
-    d.getUTCSeconds(),
-    d.getUTCMilliseconds()
-  );
-  const fromSec = Math.floor(fromMs / 1000);
+): Promise<RadialHeatmapResult> {
   const toSec = anchorToSec;
+  const fromSec = toSec - ROLLING_DAYS * SECONDS_PER_DAY;
 
-  const rankedYear = await fetchYearRangeTopArtists(username, apiKey, fromSec, toSec);
+  const topTen = await fetchRollingYearTopArtists(username, apiKey, fromSec, toSec);
 
   const listFromApi = await fetchWeeklyChartList(username, apiKey);
   let weeks =
     listFromApi.length === 0
       ? fallbackWeekSlices(fromSec, toSec)
-      : listFromApi.filter((w) => overlapsRange(w, fromSec, toSec));
+      : listFromApi.filter((x) => overlapsRange(x, fromSec, toSec));
 
   if (!weeks.length) {
     weeks = fallbackWeekSlices(fromSec, toSec);
   }
 
-  const weeklyPayload = await concurrency(weeks, 4, (w) =>
-    fetchWeekArtists(username, apiKey, w.from, w.to)
-  );
-
-  const aggregate = new Map<string, number>();
-  for (const { map } of weeklyPayload) {
-    for (const [k, plays] of map) {
-      aggregate.set(k, (aggregate.get(k) ?? 0) + plays);
-    }
+  if (topTen.length === 0) {
+    const emptyPlays = new Map<string, number[]>();
+    const adjustedEmpty = trimOrPadWeeks(weeks, emptyPlays, fromSec);
+    return { weeks: adjustedEmpty.weeks, artists: [] };
   }
+
+  const topKeys = topTen.map((a) => a.name.toLowerCase());
+
+  const weeklyPayload = await concurrency(weeks, WEEK_FETCH_CONCURRENCY, (period) =>
+    fetchWeekArtists(username, apiKey, period.from, period.to)
+  );
 
   const labelsMerged = mergeArtistLabels(weeklyPayload);
 
-  const keyOrder: string[] = [];
-  const rankedSeen = new Set<string>();
-  for (const a of rankedYear) {
-    const k = a.name.toLowerCase();
-    if (rankedSeen.has(k)) continue;
-    rankedSeen.add(k);
-    keyOrder.push(k);
-    if (keyOrder.length >= 10) break;
+  const playsPerArtist = new Map<string, number[]>();
+  for (const key of topKeys) {
+    playsPerArtist.set(
+      key,
+      weeklyPayload.map(({ map }) => map.get(key) ?? 0)
+    );
   }
 
-  const seen = new Set(keyOrder);
-  if (keyOrder.length < 10) {
-    for (const [k] of [...aggregate.entries()].sort((a, b) => b[1] - a[1])) {
-      if (keyOrder.length >= 10) break;
-      if (!seen.has(k)) {
-        seen.add(k);
-        keyOrder.push(k);
-      }
-    }
-  }
+  const adjusted = trimOrPadWeeks(weeks, playsPerArtist, fromSec);
+  weeks = adjusted.weeks;
 
-  if (!keyOrder.length) {
-    for (const [k] of [...aggregate.entries()].sort((a, b) => b[1] - a[1])) {
-      keyOrder.push(k);
-      if (keyOrder.length >= 10) break;
-    }
-  }
+  const artists: RadialHeatmapArtist[] = topKeys.map((keyLc) => ({
+    name: resolveArtistName(keyLc, topTen, labelsMerged),
+    plays: playsPerArtist.get(keyLc) ?? Array.from({ length: weeks.length }, () => 0),
+  }));
 
-  keyOrder.sort((ka, kb) => (aggregate.get(kb) ?? 0) - (aggregate.get(ka) ?? 0));
-
-  return {
-    weeks,
-    artists: keyOrder.map((keyLc) => ({
-      name: resolveArtistName(keyLc, rankedYear, labelsMerged),
-      plays: weeklyPayload.map(({ map }) => map.get(keyLc) ?? 0),
-    })),
-  };
+  return { weeks, artists };
 }
 
 export const GET: APIRoute = async ({ request }) => {
@@ -318,7 +318,7 @@ export const GET: APIRoute = async ({ request }) => {
   let inflight = pendingByAnchor.get(anchorSec);
   const reusedPending = inflight !== undefined;
   if (!inflight) {
-    inflight = fetchYearlyArc(username, apiKey, anchorSec);
+    inflight = fetchRadialHeatmap(username, apiKey, anchorSec);
     pendingByAnchor.set(anchorSec, inflight);
     inflight.finally(() => {
       pendingByAnchor.delete(anchorSec);
@@ -336,7 +336,7 @@ export const GET: APIRoute = async ({ request }) => {
 
     return jsonResponse(
       {
-        error: 'Failed to fetch yearly arc',
+        error: 'Failed to fetch radial heatmap',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       500,

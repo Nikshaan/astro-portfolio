@@ -1,11 +1,11 @@
-import { prefetchYearlyArcPayload } from '../utils/yearlyArcClient';
+import { prefetchRadialHeatmapPayload } from '../utils/radialHeatmapClient';
 
 let started = false;
 
-export function scheduleMusicYearlyArcWarmup() {
+export function scheduleRadialHeatmapWarmup() {
     if (started) return;
     started = true;
-    const kick = () => prefetchYearlyArcPayload();
+    const kick = () => prefetchRadialHeatmapPayload();
     if (typeof requestIdleCallback !== 'undefined') {
         requestIdleCallback(kick, { timeout: 2800 });
     } else {

@@ -6,9 +6,9 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 const MusicStatsClient = lazy(() => import('./musicstats'));
-const YearlyArtistArc = lazy(() => import('./YearlyArtistArc'));
+const RadialArtistHeatmap = lazy(() => import('./RadialArtistHeatmap'));
+const MusicGenreStreakBar = lazy(() => import('./MusicGenreStreakBar'));
 import IndiaMapCard from './IndiaMapCard';
-import MusicExtrasCard from './MusicExtrasCard';
 import ErrorBoundary from './ErrorBoundary';
 
 function cn(...inputs: ClassValue[]) {
@@ -312,12 +312,12 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
 
                 <div
                     ref={containerRef}
-                    className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(200px,auto)] isolate contain-layout"
+                    className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(0,auto)] isolate contain-layout"
                 >
                     <CardWrapper key="music-stats" index={0} className="col-span-2 md:col-span-2 lg:col-span-2 row-span-2 min-h-[400px]">
-                        <div className="h-full flex flex-col w-full">
+                        <div className="flex h-full w-full flex-col">
                             <h3 className="text-xl font-medium mb-4 p-5 md:p-6 pb-0">Music Stats</h3>
-                            <div className="flex-1 overflow-y-auto overscroll-y-contain custom-scrollbar px-2 w-full">
+                            <div className="flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-x-hidden px-2 pb-5 pt-0 sm:px-4 md:px-6">
                                 <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Loading music stats...</div>}>
                                     <ErrorBoundary>
                                         <MusicStatsClient />
@@ -327,25 +327,37 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
                         </div>
                     </CardWrapper>
 
-                    <CardWrapper key="music-extras" index={1} className="col-span-2 lg:col-span-2 row-span-2 min-h-[400px]">
-                        <MusicExtrasCard />
-                    </CardWrapper>
-
-                    <CardWrapper key="yearly-arc" index={2} className="col-span-2 lg:col-span-4 min-h-[360px] sm:min-h-[420px] md:min-h-[440px]">
-                        <div className="h-full flex flex-col w-full">
-                            <h3 className="text-xl font-medium mb-2 p-5 md:p-6 pb-0 shrink-0">Yearly scrobbles (week-wise)</h3>
-                            <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full max-w-full overflow-x-hidden pb-6 px-2 sm:px-4 md:px-6 pt-0">
-                                <Suspense fallback={
-                                    <div className="flex-1 min-h-[200px] flex items-center justify-center text-neutral-400 text-sm rounded-xl border border-transparent">
-                                        Loading listening arc...
-                                    </div>
-                                }>
+                    <CardWrapper key="music-radial" index={1} className="col-span-2 lg:col-span-2 row-span-2 min-h-[400px]">
+                        <div className="flex h-full w-full flex-col">
+                            <h3 className="mb-2 shrink-0 p-5 pb-0 text-xl font-medium md:p-6 md:pb-0">Yearly scrobbles (week-wise)</h3>
+                            <div className="flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-x-hidden px-2 pb-5 pt-0 sm:px-4 md:px-6">
+                                <Suspense
+                                    fallback={
+                                        <div className="flex min-h-[200px] flex-1 items-center justify-center rounded-xl border border-transparent text-sm text-neutral-400">
+                                            Loading yearly scrobbles…
+                                        </div>
+                                    }
+                                >
                                     <ErrorBoundary>
-                                        <YearlyArtistArc />
+                                        <RadialArtistHeatmap />
                                     </ErrorBoundary>
                                 </Suspense>
                             </div>
                         </div>
+                    </CardWrapper>
+
+                    <CardWrapper key="music-genre-streak" index={2} className="col-span-2 lg:col-span-4 min-h-0 w-full">
+                        <Suspense
+                            fallback={
+                                <div className="flex min-h-[120px] w-full items-center justify-center rounded-2xl border border-transparent text-sm text-neutral-400">
+                                    Loading genre streak…
+                                </div>
+                            }
+                        >
+                            <ErrorBoundary>
+                                <MusicGenreStreakBar />
+                            </ErrorBoundary>
+                        </Suspense>
                     </CardWrapper>
 
                     <CardWrapper key="india-map" index={3} className="col-span-1 row-span-1 aspect-[4/3] w-full">

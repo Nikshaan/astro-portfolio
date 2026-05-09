@@ -1,96 +1,37 @@
 import { useEffect, useState, useCallback, memo } from 'react';
 import MusicCharts from './musiccharts';
-import { scheduleMusicYearlyArcWarmup } from './musicYearlyArcWarmup';
+import { loadMusicStatsData, readMusicStatsCache, type MusicStatsData } from '../utils/musicStatsClient';
 
-interface ArtistInfoType {
-    name?: string;
-    count?: string;
-}
-
-interface Daily {
-    name?: string;
-    scrobbles?: number;
-}
-
-export interface GenreEntry {
-    genre: string;
-    count: number;
-}
-
-interface MusicStatsData {
-    weeklyScrobbles: Daily[];
-    upperStatsArray: number[];
-    artistsInfo: ArtistInfoType[];
-    topArtistImageUrl?: string;
-    topArtistName?: string;
-    listeningStreak?: number;
-    genreData?: GenreEntry[];
-}
-
-let cachedMusicData: MusicStatsData | null = null;
-let cacheTimestamp = 0;
-const CACHE_DURATION = 5 * 60 * 1000;
-let fetchPromise: Promise<MusicStatsData> | null = null;
+export type { GenreEntry } from '../utils/musicStatsClient';
 
 export default memo(function MusicStatsClient() {
-    const [data, setData] = useState<MusicStatsData | null>(cachedMusicData);
-    const [loading, setLoading] = useState(!cachedMusicData);
+    const [data, setData] = useState<MusicStatsData | null>(null);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const loadData = useCallback(async () => {
-        const now = Date.now();
-        if (cachedMusicData && now - cacheTimestamp < CACHE_DURATION) {
-            setData(cachedMusicData);
+        const hit = readMusicStatsCache();
+        if (hit) {
+            setData(hit);
             setLoading(false);
-            return;
-        }
-
-        if (fetchPromise) {
-            try {
-                const musicData = await fetchPromise;
-                setData(musicData);
-                setError(null);
-            } catch {
-                setError('Failed to load music stats');
-            } finally {
-                setLoading(false);
-            }
             return;
         }
 
         try {
             setLoading(true);
-            const baseUrl = import.meta.env.BASE_URL || '/';
-            const apiPath = baseUrl.endsWith('/') ? 'api/music-stats' : '/api/music-stats';
-
-            fetchPromise = fetch(`${baseUrl}${apiPath}`, {
-                cache: 'default',
-                headers: { Accept: 'application/json' },
-            }).then(async (response) => {
-                if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to fetch music stats`);
-                const musicData = await response.json();
-                if (!musicData.weeklyScrobbles || !musicData.upperStatsArray || !musicData.artistsInfo) {
-                    throw new Error('Invalid data structure received');
-                }
-                return musicData as MusicStatsData;
-            });
-
-            const musicData = await fetchPromise;
-            cachedMusicData = musicData;
-            cacheTimestamp = Date.now();
+            const musicData = await loadMusicStatsData();
             setData(musicData);
             setError(null);
-            scheduleMusicYearlyArcWarmup();
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to load music stats';
             setError(errorMessage);
-            if (cachedMusicData) {
-                setData(cachedMusicData);
+            const fallback = readMusicStatsCache();
+            if (fallback) {
+                setData(fallback);
                 setError(null);
             }
         } finally {
             setLoading(false);
-            fetchPromise = null;
         }
     }, []);
 
@@ -187,7 +128,7 @@ export default memo(function MusicStatsClient() {
         : {};
 
     return (
-        <div className="flex flex-col h-full justify-around pb-4">
+        <div className="flex flex-col justify-around pb-4 touch-manipulation">
             <div
                 className="flex flex-col md:flex-row justify-center md:justify-around items-center md:items-start gap-12 md:gap-4 px-4 pt-4 pb-4 w-full"
                 style={bgStyle}

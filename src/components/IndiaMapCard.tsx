@@ -24,6 +24,24 @@ interface IndiaMapCardProps {
 }
 
 let cachedTopology: any = null;
+let topologyInflight: Promise<any> | null = null;
+
+async function loadIndiaTopology(): Promise<any> {
+    if (cachedTopology) return cachedTopology;
+    if (topologyInflight) return topologyInflight;
+    topologyInflight = (async () => {
+        const response = await fetch("/india-topo.json");
+        if (!response.ok) throw new Error("Failed to load map data");
+        const data = await response.json();
+        cachedTopology = data;
+        return data;
+    })();
+    try {
+        return await topologyInflight;
+    } finally {
+        topologyInflight = null;
+    }
+}
 
 const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     visitedPlaces = [],
@@ -64,10 +82,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 
         const fetchData = async () => {
             try {
-                const response = await fetch("/india-topo.json");
-                if (!response.ok) throw new Error("Failed to load map data");
-                const data = await response.json();
-                cachedTopology = data;
+                const data = await loadIndiaTopology();
                 setTopology(data);
             } catch {
                 setTopology(null);

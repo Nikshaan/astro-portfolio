@@ -9,7 +9,8 @@ import {
     Title,
     Tooltip,
     Filler,
-    type TooltipItem
+    type TooltipItem,
+    type ChartOptions,
 } from 'chart.js';
 
 ChartJS.register(
@@ -93,6 +94,7 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
     const options = useMemo(() => ({
         responsive: true,
         maintainAspectRatio: false,
+        events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchend'] as ChartOptions<'line'>['events'],
         interaction: {
             mode: 'index' as const,
             intersect: false,
@@ -147,7 +149,7 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
     }), [gridColor, textColor, strokeColor, initialAnimationComplete]);
 
     return (
-        <div className="w-full h-full">
+        <div className="h-full w-full touch-manipulation">
             <Line data={chartData} options={options} />
         </div>
     );

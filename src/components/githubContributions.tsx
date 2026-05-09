@@ -2,40 +2,16 @@ import { useEffect, useState, useRef, memo } from 'react';
 import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import {
+  fetchGithubContributionsData,
+  type ContributionDay,
+  type ContributionWeek,
+  type GitHubAPIResponse,
+} from '../utils/githubContributionsClient';
 import styles from './githubContributions.module.css';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-
-interface ContributionDay {
-  contributionCount: number;
-  date: string;
-  color: string;
-}
-
-interface ContributionWeek {
-  contributionDays: ContributionDay[];
-}
-
-interface ContributionCalendar {
-  totalContributions: number;
-  weeks: ContributionWeek[];
-}
-
-interface ContributionsCollection {
-  contributionCalendar: ContributionCalendar;
-}
-
-interface User {
-  contributionsCollection: ContributionsCollection;
-}
-
-interface GitHubAPIResponse {
-  data: {
-    user: User;
-  };
-  errors?: Array<{ message: string }>;
 }
 
 interface GithubContributionsProps {
@@ -83,17 +59,7 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
   useEffect(() => {
     const fetchContributions = async () => {
       try {
-        const baseUrl = import.meta.env.BASE_URL || '/';
-        const apiPath = baseUrl.endsWith('/') ? 'api/github-contributions' : '/api/github-contributions';
-        const response = await fetch(`${baseUrl}${apiPath}`);
-
-        if (!response.ok) {
-          setError('Failed to load contributions');
-          setLoading(false);
-          return;
-        }
-
-        const data: GitHubAPIResponse = await response.json();
+        const data = await fetchGithubContributionsData();
 
         if (data.errors) {
           setError('Failed to load contributions');
@@ -103,7 +69,7 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
         } else {
           setError('Unexpected API response');
         }
-      } catch (err) {
+      } catch {
         setError('Failed to load contributions');
       } finally {
         setLoading(false);
