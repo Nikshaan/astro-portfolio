@@ -215,7 +215,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                     className={cn(
                         "relative h-full w-full rounded-3xl overflow-hidden cursor-pointer group transition-colors duration-300 ease-in-out",
                         "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
-                        "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]",
+                        "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#93c5fd]",
                         expanded ? "opacity-0 pointer-events-none" : "opacity-100"
                     )}
                     onClick={handleCardClick}

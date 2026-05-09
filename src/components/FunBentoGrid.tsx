@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense, lazy, memo, useState, useRef, useSyncExternalStore } from 'react';
 import { isSlowConnection } from '../utils/networkAware';
-import { m, type HTMLMotionProps, LazyMotion, domAnimation } from 'framer-motion';
+import { m, type HTMLMotionProps, LazyMotion, domAnimation, useReducedMotion } from 'framer-motion';
 import { Maximize2 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -51,6 +51,7 @@ interface CardWrapperProps extends HTMLMotionProps<"div"> {
 const CardWrapper: React.FC<CardWrapperProps> = memo(({ children, className, isExpandable = false, index = 0, onClick, ...props }) => {
     const isMobile = useIsMobile();
     const staggerDelay = 0;
+    const reduceMotion = useReducedMotion();
 
     return (
         <div className={cn("h-full w-full", className)}>
@@ -58,26 +59,32 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ children, className, isE
                 className={cn(
                     "relative rounded-3xl border overflow-hidden h-full flex flex-col",
                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
-                    "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]",
+                    "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#93c5fd]",
                     isExpandable ? "cursor-pointer group hover:border-neutral-600" : ""
                 )}
-                initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                whileInView={{
-                    opacity: 1,
-                    y: 0,
-                    scale: 1,
-                    transition: {
-                        duration: isMobile ? 0.25 : 0.4,
-                        ease: [0.25, 0.1, 0.25, 1],
-                        delay: isMobile ? 0 : staggerDelay,
-                    }
-                }}
-                viewport={{ once: true, amount: isMobile ? 0 : 0.01 }}
-                whileHover={isExpandable ? {
-                    scale: 1.02,
-                    transition: { duration: 0.2, ease: "easeOut" }
-                } : {}}
-                whileTap={isExpandable ? { scale: 0.98 } : {}}
+                initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                whileInView={
+                    reduceMotion
+                        ? undefined
+                        : {
+                              opacity: 1,
+                              y: 0,
+                              transition: {
+                                  duration: isMobile ? 0.18 : 0.26,
+                                  ease: [0.25, 0.1, 0.25, 1],
+                                  delay: isMobile ? 0 : staggerDelay,
+                              },
+                          }
+                }
+                viewport={{ once: true, amount: isMobile ? 0 : 0.06 }}
+                whileHover={
+                    isExpandable && !reduceMotion
+                        ? {
+                              y: -2,
+                              transition: { duration: 0.15, ease: 'easeOut' as const },
+                          }
+                        : {}
+                }
                 onClick={onClick}
                 {...props}
             >
@@ -152,6 +159,12 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
                     0%   { background-position: -600px 0; }
                     100% { background-position: 600px 0; }
                 }
+                .gallery-shimmer {
+                    animation: galleryShimmer 1.6s infinite linear;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                  .gallery-shimmer { animation: none; }
+                }
                 [data-theme="light"] .gallery-shimmer {
                     background-image: linear-gradient(90deg, #bfdbfe 25%, #93c5fd 50%, #bfdbfe 75%) !important;
                 }
@@ -190,20 +203,46 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
+        const maxPrefetchImages = 48;
 
         const preloadObserver = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
-                images.forEach((img) => {
-                    const url = img.fullSrc || img.src;
-                    if (!url) return;
-                    const link = document.createElement('link');
-                    link.rel = 'prefetch';
-                    link.as = 'image';
-                    link.href = url;
-                    document.head.appendChild(link);
-                });
-                preloadObserver.disconnect();
-            }
+            if (!entries[0]?.isIntersecting) return;
+            preloadObserver.disconnect();
+
+            const scheduleBatch =
+                typeof requestIdleCallback === 'function'
+                    ? () =>
+                          requestIdleCallback(
+                              () => {
+                                  const n = Math.min(images.length, maxPrefetchImages);
+                                  for (let i = 0; i < n; i++) {
+                                      const img = images[i];
+                                      const url = img.fullSrc || img.src;
+                                      if (!url) continue;
+                                      const link = document.createElement('link');
+                                      link.rel = 'prefetch';
+                                      link.as = 'image';
+                                      link.href = url;
+                                      document.head.appendChild(link);
+                                  }
+                              },
+                              { timeout: 2400 },
+                          )
+                    : () =>
+                          queueMicrotask(() => {
+                              const n = Math.min(images.length, maxPrefetchImages);
+                              for (let i = 0; i < n; i++) {
+                                  const img = images[i];
+                                  const url = img.fullSrc || img.src;
+                                  if (!url) continue;
+                                  const link = document.createElement('link');
+                                  link.rel = 'prefetch';
+                                  link.as = 'image';
+                                  link.href = url;
+                                  document.head.appendChild(link);
+                              }
+                          });
+            scheduleBatch();
         }, { rootMargin: '200px' });
         preloadObserver.observe(container);
 
@@ -271,14 +310,14 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
             <div className="w-full max-w-[1400px] mx-auto p-4 pt-16">
                 <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight mb-8 px-2">F.U.N</h2>
 
-                <m.div
+                <div
                     ref={containerRef}
-                    className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(200px,auto)]"
+                    className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(200px,auto)] isolate contain-layout"
                 >
                     <CardWrapper key="music-stats" index={0} className="col-span-2 md:col-span-2 lg:col-span-2 row-span-2 min-h-[400px]">
                         <div className="h-full flex flex-col w-full">
                             <h3 className="text-xl font-medium mb-4 p-5 md:p-6 pb-0">Music Stats</h3>
-                            <div className="flex-1 overflow-y-auto custom-scrollbar px-2 w-full">
+                            <div className="flex-1 overflow-y-auto overscroll-y-contain custom-scrollbar px-2 w-full">
                                 <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Loading music stats...</div>}>
                                     <ErrorBoundary>
                                         <MusicStatsClient />
@@ -294,7 +333,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
 
                     <CardWrapper key="yearly-arc" index={2} className="col-span-2 lg:col-span-4 min-h-[360px] sm:min-h-[420px] md:min-h-[440px]">
                         <div className="h-full flex flex-col w-full">
-                            <h3 className="text-xl font-medium mb-2 p-5 md:p-6 pb-0 shrink-0">Yearly listening arc</h3>
+                            <h3 className="text-xl font-medium mb-2 p-5 md:p-6 pb-0 shrink-0">Yearly scrobbles (week-wise)</h3>
                             <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full max-w-full overflow-x-hidden pb-6 px-2 sm:px-4 md:px-6 pt-0">
                                 <Suspense fallback={
                                     <div className="flex-1 min-h-[200px] flex items-center justify-center text-neutral-400 text-sm rounded-xl border border-transparent">
@@ -337,7 +376,6 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
                                     style={{
                                         backgroundImage: 'linear-gradient(90deg, var(--shimmer-from, #1e1e1e) 25%, var(--shimmer-to, #2d2d2d) 50%, var(--shimmer-from, #1e1e1e) 75%)',
                                         backgroundSize: '600px 100%',
-                                        animation: 'galleryShimmer 1.6s infinite linear',
                                     }}
                                     aria-hidden="true"
                                 />
@@ -350,7 +388,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
                                     fetchPriority={i < 2 ? 'high' : 'auto'}
                                     decoding="async"
                                     sizes="(max-width: 1024px) 50vw, 25vw"
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 relative z-10 flex items-center justify-center text-center"
+                                    className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 relative z-10 flex items-center justify-center text-center"
                                     style={{
                                         backgroundImage: image.placeholderDataUrl && image.placeholderDataUrl.startsWith('data:') ? `url(${image.placeholderDataUrl})` : undefined,
                                         backgroundSize: 'cover',
@@ -383,7 +421,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images, allImages }) => {
                     {visibleCount < images.length && (
                         <div ref={sentinelRef} className="col-span-full h-4" aria-hidden="true" />
                     )}
-                </m.div>
+                </div>
             </div>
         </LazyMotion>
     );

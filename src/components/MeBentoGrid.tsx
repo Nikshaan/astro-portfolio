@@ -313,7 +313,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
                     "relative rounded-3xl border flex flex-col group me-card-hover",
                     card.id === 'win' ? "justify-center items-center h-full w-fit" : card.id === 'resume' ? "justify-center items-center h-full w-full" : "p-5 justify-between h-full",
                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
-                    "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]",
+                    "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#1e3a8a]",
                     card.id === 'intro' || card.id === 'win' || card.id === 'resume' ? "overflow-hidden" : "overflow-visible",
                     (card.isExpandable || isResume) && !selectedId ? "cursor-pointer" : "",
                     card.id === 'resume' ? "min-h-[100px] lg:min-h-[150px]" : "min-h-[150px]"
@@ -475,7 +475,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                             className={cn(
                                 "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col mt-12",
                                 "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
-                                "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]"
+                                "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#1e3a8a]"
                             )}
                         >
                             <button
@@ -493,7 +493,13 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                                 ref={wrapperRef}
                                 className="flex-1 overflow-y-auto p-8 custom-scrollbar min-h-0"
                             >
-                                <div className="prose prose-invert prose-lg max-w-none">
+                                <div
+                                    className={cn(
+                                        "prose prose-invert prose-lg max-w-none",
+                                        selectedItem.id === "win" &&
+                                            "[&_h3]:!text-base [&_h3]:sm:!text-lg [&_h3]:md:!text-xl [&_p]:!text-base [&_p]:leading-relaxed",
+                                    )}
+                                >
                                     <div dangerouslySetInnerHTML={{ __html: getProcessedContent(selectedItem.content || '') }} />
                                 </div>
                             </div>

@@ -86,7 +86,7 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
     useEffect(() => {
         const timer = setTimeout(() => {
             setInitialAnimationComplete(true);
-        }, 2200);
+        }, 950);
         return () => clearTimeout(timer);
     }, []);
 
@@ -140,7 +140,7 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
         },
         animations: {
             y: {
-                duration: initialAnimationComplete ? 0 : 2000,
+                duration: initialAnimationComplete ? 0 : 900,
                 easing: 'easeOutQuart' as const,
             },
         },

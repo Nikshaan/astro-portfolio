@@ -89,7 +89,7 @@
         "data": {
             "image": "winIcon"
         },
-        "content": "<ul><li><h1>CodeQuest (2025) - 1st Runner Up and 1st in AIML domain</h1><p>Developed <a href=\"https://github.com/Nikshaan/HACKCORS_Legal_CodeQuest\" target=\"_blank\" rel=\"noopener noreferrer\">Nyaysetu</a>, an AI legal assistant.</p></li><li class=\"mt-4\"><h1>HackOps (2025) - 2nd Runner Up and 1st in AIML domain</h1><p>Developed <a href=\"https://github.com/Nikshaan/HackOps_HackCORS\" target=\"_blank\" rel=\"noopener noreferrer\">JournalPal.ai</a>, a research journal-paper matcher.</p></li></ul>"
+        "content": "<div><div class=\"mb-8\"><h3 class=\"font-bold mb-1\">CodeQuest (2025) - 1st Runner Up and 1st in AIML domain</h3><p class=\"mb-0\">Developed <a href=\"https://github.com/Nikshaan/HACKCORS_Legal_CodeQuest\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline\">Nyaysetu</a>, an AI legal assistant.</p></div><div><h3 class=\"font-bold mb-1\">HackOps (2025) - 2nd Runner Up and 1st in AIML domain</h3><p class=\"mb-0\">Developed <a href=\"https://github.com/Nikshaan/HackOps_HackCORS\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline\">JournalPal.ai</a>, a research journal-paper matcher.</p></div></div>"
     },
     {
         "id": "experience",

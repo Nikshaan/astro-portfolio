@@ -11,6 +11,8 @@ export interface GenreEntry {
 
 const PURPLE_PALETTE = ['#7c3aed', '#9333ea', '#a855f7', '#c084fc', '#e879f9'];
 const BLUE_PALETTE = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
+const PURPLE_HOVER = ['#8b5cf6', '#a855f7', '#c084fc', '#ddd6fe', '#f0abfc'];
+const BLUE_HOVER = ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
 
 function capitalise(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -42,6 +44,7 @@ export default memo(function GenreDonut({ data }: { data: GenreEntry[] }) {
   const counts = data.map((d) => d.count);
 
   const palette = isLightTheme ? BLUE_PALETTE : PURPLE_PALETTE;
+  const hoverPalette = isLightTheme ? BLUE_HOVER : PURPLE_HOVER;
 
   const chartData = {
     labels,
@@ -49,6 +52,7 @@ export default memo(function GenreDonut({ data }: { data: GenreEntry[] }) {
       {
         data: counts,
         backgroundColor: palette,
+        hoverBackgroundColor: hoverPalette,
         borderColor: isLightTheme ? '#bfdbfe' : '#1a0529',
         borderWidth: 2,
         hoverOffset: 8,

@@ -193,7 +193,7 @@ export default memo(function MusicStatsClient() {
                 style={bgStyle}
             >
                 <div className="w-full text-center">
-                    <p className="mb-3 text-base md:text-lg text-center font-bold !text-white [.data-theme='light']_&:!text-white">Total music scrobbles</p>
+                    <p className="mb-3 text-base md:text-lg text-center font-bold !text-white [html[data-theme=light]_&]:!text-white">Total music scrobbles</p>
                     <div className="flex flex-col items-center w-full gap-2 text-sm md:text-base">
                         <p><span className='font-medium !text-white'>Play count:</span>{' '}
                             <span className="!text-white opacity-80">{data.upperStatsArray[0]?.toLocaleString()}</span>
@@ -211,7 +211,7 @@ export default memo(function MusicStatsClient() {
                 </div>
 
                 <div className="w-full text-center">
-                    <p className="mb-3 text-base md:text-lg text-center font-bold !text-white [.data-theme='light']_&:!text-white">Top artists of the week</p>
+                    <p className="mb-3 text-base md:text-lg text-center font-bold !text-white [html[data-theme=light]_&]:!text-white">Top artists of the week</p>
                     <div className="text-sm md:text-base">
                         {data.artistsInfo.length > 0 ? (
                             data.artistsInfo.map((artist, index) => (
@@ -232,7 +232,7 @@ export default memo(function MusicStatsClient() {
             </div>
 
             <div className="flex flex-col w-full mt-8 lg:mt-4 h-[180px] lg:h-[250px]">
-                <p className="mb-3 text-base md:text-lg text-center font-bold [.data-theme='light']_&:!text-black">Daily music scrobbles</p>
+                <p className="mb-3 text-base md:text-lg text-center font-bold [html[data-theme=light]_&]:!text-black">Daily music scrobbles</p>
                 <div className="w-full flex-1 select-none min-h-0">
                     <MusicCharts data={data.weeklyScrobbles} />
                 </div>

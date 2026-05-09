@@ -13,6 +13,17 @@ import { twMerge } from 'tailwind-merge';
 import type { YearlyArcPayload } from '../utils/yearlyArcClient';
 import { loadYearlyArcPayload, readYearlyArcCache } from '../utils/yearlyArcClient';
 
+function weekIndexFromPointerFrac(frac: number, nW: number): number {
+    const maxIx = Math.max(0, nW - 1);
+    if (nW <= 1) return 0;
+    const xPadStart = 0.55;
+    const xPadEnd = 0.55;
+    const xSpan = Math.max(1e-6, 100 - xPadStart - xPadEnd);
+    const xView = frac * 100;
+    const t = Math.min(1, Math.max(0, (xView - xPadStart) / xSpan));
+    return Math.min(maxIx, Math.max(0, Math.round(t * maxIx)));
+}
+
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
@@ -81,6 +92,22 @@ export default memo(function YearlyArtistArc() {
     const coarsePointer = useCoarsePointer();
     const rootObsRef = useRef<HTMLDivElement | null>(null);
     const interactionRef = useRef<HTMLDivElement | null>(null);
+    const bandHoverFrameRef = useRef<number | null>(null);
+    const bandHoverElRef = useRef<HTMLElement | null>(null);
+    const bandHoverClientXRef = useRef(0);
+    const bandHoverNWRef = useRef(0);
+
+    const flushBandHoverFromPointer = useCallback(() => {
+        bandHoverFrameRef.current = null;
+        const el = bandHoverElRef.current;
+        const nW = bandHoverNWRef.current;
+        if (!el || !nW) return;
+        const rect = el.getBoundingClientRect();
+        const x = bandHoverClientXRef.current - rect.left;
+        const frac = rect.width <= 0 ? 0 : x / rect.width;
+        const ix = weekIndexFromPointerFrac(frac, nW);
+        setHoverIx((prev) => (prev === ix ? prev : ix));
+    }, []);
 
     const bindRootEl = useCallback((el: HTMLDivElement | null) => {
         rootObsRef.current = el;
@@ -97,6 +124,15 @@ export default memo(function YearlyArtistArc() {
             attributeFilter: ['data-theme'],
         });
         return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (bandHoverFrameRef.current !== null) {
+                cancelAnimationFrame(bandHoverFrameRef.current);
+                bandHoverFrameRef.current = null;
+            }
+        };
     }, []);
 
     useEffect(() => {
@@ -222,16 +258,19 @@ export default memo(function YearlyArtistArc() {
         return { fromSec, rows };
     }, [hoverIx, data]);
 
-    const onBandMove = (e: React.PointerEvent<HTMLDivElement>) => {
-        if (coarsePointer) return;
-        if (!layout?.nW) return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const frac = rect.width <= 0 ? 0 : x / rect.width;
-        const maxIx = layout.nW - 1;
-        const ix = Math.min(maxIx, Math.max(0, Math.round(frac * maxIx)));
-        setHoverIx(ix);
-    };
+    const onBandMove = useCallback(
+        (e: React.PointerEvent<HTMLDivElement>) => {
+            if (coarsePointer) return;
+            const nW = layout?.nW;
+            if (!nW) return;
+            bandHoverNWRef.current = nW;
+            bandHoverElRef.current = e.currentTarget;
+            bandHoverClientXRef.current = e.clientX;
+            if (bandHoverFrameRef.current !== null) return;
+            bandHoverFrameRef.current = requestAnimationFrame(flushBandHoverFromPointer);
+        },
+        [coarsePointer, layout?.nW, flushBandHoverFromPointer],
+    );
 
     const onWeekColumnPointerDown = useCallback(
         (wi: number) => {
@@ -471,7 +510,7 @@ export default memo(function YearlyArtistArc() {
                                 role="presentation"
                                 className={cn(
                                     'absolute inset-0 flex flex-row touch-none z-[12]',
-                                    coarsePointer ? 'cursor-pointer' : 'cursor-crosshair',
+                                    coarsePointer ? 'cursor-pointer' : 'yearly-arc-crosshair',
                                 )}
                                 style={{ touchAction: coarsePointer ? 'manipulation' : 'none' }}
                                 onPointerEnter={onBandMove}
@@ -502,7 +541,9 @@ export default memo(function YearlyArtistArc() {
                                             }
                                         }}
                                         className={cn(
-                                            'flex-1 min-w-0 h-full transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[var(--yearly-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-transparent',
+                                            'flex-1 min-w-0 h-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--yearly-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-transparent',
+                                            !coarsePointer && 'pointer-events-none',
+                                            coarsePointer && 'transition-colors duration-150',
                                             hoverIx === wi
                                                 ? isLightTheme
                                                     ? 'bg-blue-600/[0.08]'

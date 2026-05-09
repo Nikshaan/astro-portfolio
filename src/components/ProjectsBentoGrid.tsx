@@ -114,7 +114,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
                 className={cn(
                     "relative p-5 md:p-6 rounded-3xl border flex flex-col justify-between h-full",
                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
-                    "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]",
+                    "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#93c5fd]",
                     card.isExpandable && !selectedId ? "cursor-pointer group hover:border-neutral-600" : ""
                 )}
                 whileHover={card.isExpandable && !selectedId ? { scale: 1.02 } : {}}
@@ -173,13 +173,13 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(({ card, className, index =
 const ProjectsBentoGrid: React.FC = () => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [activeCategory, setActiveCategory] = useState<'web' | 'aiml'>('aiml');
-    
-    const selectedItem = useMemo(() => 
+
+    const selectedItem = useMemo(() =>
         cardsData.find((item) => item.id === selectedId),
         [selectedId]
     );
 
-    const projects = useMemo(() => 
+    const projects = useMemo(() =>
         cardsData.filter(item => item.type === 'project' && item.category === activeCategory),
         [activeCategory]
     );
@@ -274,7 +274,7 @@ const ProjectsBentoGrid: React.FC = () => {
                                 className={cn(
                                     "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col",
                                     "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
-                                    "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#93c5fd]"
+                                    "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#93c5fd]"
                                 )}
                             >
                                 <button

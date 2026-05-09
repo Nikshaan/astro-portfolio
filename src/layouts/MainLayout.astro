@@ -12,7 +12,6 @@ import beeImage from "../data/bee.avif";
 import { getImage } from "astro:assets";
 import VercelAnalytics from "../components/VercelAnalytics.astro";
 import Footer from "../components/Footer";
-import AsciiIntroWrapper from "../components/AsciiIntroWrapper.astro";
 
 const { title, description, preloadImage, profileImage } = Astro.props;
 
@@ -90,16 +89,21 @@ const favicon = await getImage({
 
         <link
             rel="preload"
-            href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
             as="style"
-            onload="this.onload=null;this.rel='stylesheet'"
         />
-        <noscript
-            ><link
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+            rel="stylesheet"
+            media="print"
+            onload="this.media='all'"
+        />
+        <noscript>
+            <link
                 rel="stylesheet"
-                href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
-            /></noscript
-        >
+                href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+            />
+        </noscript>
 
         <link rel="dns-prefetch" href="https://api.github.com" />
         <link rel="dns-prefetch" href="https://ws.audioscrobbler.com" />
@@ -132,59 +136,6 @@ const favicon = await getImage({
             )
         }
 
-        <style is:inline>
-            @font-face {
-                font-family: "Instrument Sans";
-                font-style: normal;
-                font-weight: 400;
-                font-display: swap;
-                src:
-                    local("Instrument Sans Regular"),
-                    local("InstrumentSans-Regular");
-            }
-            @font-face {
-                font-family: "Instrument Sans";
-                font-style: normal;
-                font-weight: 500;
-                font-display: swap;
-                src:
-                    local("Instrument Sans Medium"),
-                    local("InstrumentSans-Medium");
-            }
-            @font-face {
-                font-family: "JetBrains Mono";
-                font-style: normal;
-                font-weight: 400;
-                font-display: swap;
-                src:
-                    local("JetBrains Mono Regular"),
-                    local("JetBrainsMono-Regular");
-            }
-            @font-face {
-                font-family: "JetBrains Mono";
-                font-style: normal;
-                font-weight: 500;
-                font-display: swap;
-                src:
-                    local("JetBrains Mono Medium"),
-                    local("JetBrainsMono-Medium");
-            }
-
-            body {
-                font-family:
-                    "Instrument Sans",
-                    -apple-system,
-                    BlinkMacSystemFont,
-                    "Segoe UI",
-                    Roboto,
-                    sans-serif;
-            }
-            code,
-            pre {
-                font-family: "JetBrains Mono", "Courier New", monospace;
-            }
-        </style>
-
         <script type="speculationrules">
             {
                 "prefetch": [
@@ -216,21 +167,6 @@ const favicon = await getImage({
                 ) {
                     document.documentElement.classList.add("save-data");
                 }
-
-                window.showMainContent = function () {
-                    const mainContent = document.getElementById("main-content");
-                    if (mainContent) {
-                        mainContent.style.visibility = "visible";
-                        mainContent.style.opacity = "0";
-                        setTimeout(() => {
-                            mainContent.style.transition =
-                                "opacity 0.3s ease-in";
-                            mainContent.style.opacity = "1";
-                        }, 50);
-                    }
-                    window.asciiIntroComplete = true;
-                    window.asciiIntroActive = false;
-                };
 
                 window.addEventListener("vite:preloadError", function (e) {
                     const reloadKey = "vite_chunk_err_reload";
@@ -274,30 +210,7 @@ const favicon = await getImage({
         </script>
     </head>
     <body class="h-full bg-black text-neutral-50">
-        <AsciiIntroWrapper />
-        <div id="main-content" style="visibility: hidden;">
-            <slot />
-        </div>
-        <script>
-            const hasSeenIntro = sessionStorage.getItem("portfolio_intro_seen");
-            const prefersReducedMotion = window.matchMedia(
-                "(prefers-reduced-motion: reduce)",
-            ).matches;
-
-            if (hasSeenIntro === "1" || prefersReducedMotion) {
-                const mainContent = document.getElementById("main-content");
-                if (mainContent) {
-                    mainContent.style.visibility = "visible";
-                    mainContent.style.opacity = "1";
-                }
-            } else {
-                const mainContent = document.getElementById("main-content");
-                if (mainContent) {
-                    mainContent.style.visibility = "hidden";
-                    mainContent.style.opacity = "0";
-                }
-            }
-        </script>
+        <slot />
         <Footer client:idle />
         <VercelAnalytics />
         <script

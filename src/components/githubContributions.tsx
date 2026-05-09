@@ -125,7 +125,7 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
         className={cn(
           "relative p-6 rounded-3xl border overflow-hidden w-full flex flex-col justify-between group github-card-hover",
           "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
-          "[.data-theme='light']_&:!bg-[#dbeafe] [.data-theme='light']_&:!border-[#1e3a8a]"
+          "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#1e3a8a]"
         )}
         initial={{ opacity: 0, y: 30, scale: 0.98 }}
         animate={{
