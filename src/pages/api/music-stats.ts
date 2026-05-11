@@ -1,4 +1,4 @@
-import type { APIRoute } from 'astro';
+import type { APIRoute } from "astro";
 
 export const prerender = false;
 
@@ -38,21 +38,24 @@ const CACHE_DURATION_MS = 5 * 60 * 1000;
 let cache: { data: MusicStatsResult; timestamp: number } | null = null;
 let pendingRequest: Promise<MusicStatsResult> | null = null;
 
-
 let spotifyToken: { value: string; expiresAt: number } | null = null;
 
 const CACHE_HEADERS = {
-  'Content-Type': 'application/json',
-  'Cache-Control': 'no-store, max-age=0',
+  "Content-Type": "application/json",
+  "Cache-Control": "no-store, max-age=0",
 } as const;
 
-const jsonResponse = (data: unknown, status: number, cacheStatus: string): Response =>
+const jsonResponse = (
+  data: unknown,
+  status: number,
+  cacheStatus: string,
+): Response =>
   new Response(JSON.stringify(data), {
     status,
-    headers: { ...CACHE_HEADERS, 'X-Cache-Status': cacheStatus }
+    headers: { ...CACHE_HEADERS, "X-Cache-Status": cacheStatus },
   });
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -62,13 +65,16 @@ async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
     try {
       const response = await fetch(url, {
         signal: controller.signal,
-        headers: { 'User-Agent': 'AstroPortfolio/1.0' }
+        headers: { "User-Agent": "AstroPortfolio/1.0" },
       });
 
       clearTimeout(timeoutId);
 
       if (response.status === 429) {
-        const retryAfter = parseInt(response.headers.get('Retry-After') || '3', 10);
+        const retryAfter = parseInt(
+          response.headers.get("Retry-After") || "3",
+          10,
+        );
         await sleep(retryAfter * 1000);
         continue;
       }
@@ -85,16 +91,16 @@ async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
     await sleep(Math.min(1000 * Math.pow(2, attempt), 4000));
   }
 
-  throw new Error('Max retries exceeded');
+  throw new Error("Max retries exceeded");
 }
 
 async function fetchDayScrobbles(
   username: string,
   apiKey: string,
   daysAgo: number,
-  cachedValue?: number
+  cachedValue?: number,
 ): Promise<DailyScrobble> {
-  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const date = new Date();
   date.setUTCDate(date.getUTCDate() - daysAgo);
   date.setUTCHours(0, 0, 0, 0);
@@ -108,14 +114,17 @@ async function fetchDayScrobbles(
     const response = await fetchWithRetry(url);
     const data = await response.json();
 
-    const total = data?.recenttracks?.['@attr']?.total;
+    const total = data?.recenttracks?.["@attr"]?.total;
     return { name: dayName, scrobbles: total ? parseInt(total, 10) : 0 };
   } catch {
     return { name: dayName, scrobbles: cachedValue ?? 0 };
   }
 }
 
-async function fetchUserStats(username: string, apiKey: string): Promise<number[]> {
+async function fetchUserStats(
+  username: string,
+  apiKey: string,
+): Promise<number[]> {
   try {
     const url = `https://ws.audioscrobbler.com/2.0/?method=user.getinfo&user=${username}&api_key=${apiKey}&format=json`;
     const response = await fetchWithRetry(url);
@@ -123,17 +132,20 @@ async function fetchUserStats(username: string, apiKey: string): Promise<number[
     const user = data?.user as LastFmUser | undefined;
 
     return [
-      parseInt(user?.playcount || '0', 10),
-      parseInt(user?.track_count || '0', 10),
-      parseInt(user?.artist_count || '0', 10),
-      parseInt(user?.album_count || '0', 10)
+      parseInt(user?.playcount || "0", 10),
+      parseInt(user?.track_count || "0", 10),
+      parseInt(user?.artist_count || "0", 10),
+      parseInt(user?.album_count || "0", 10),
     ];
   } catch {
     return cache?.data.upperStatsArray ?? [0, 0, 0, 0];
   }
 }
 
-async function fetchTopArtists(username: string, apiKey: string): Promise<ArtistInfo[]> {
+async function fetchTopArtists(
+  username: string,
+  apiKey: string,
+): Promise<ArtistInfo[]> {
   try {
     const url = `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${username}&period=7day&api_key=${apiKey}&format=json&limit=5`;
     const response = await fetchWithRetry(url);
@@ -143,59 +155,73 @@ async function fetchTopArtists(username: string, apiKey: string): Promise<Artist
     if (!artists) return [];
 
     const artistArray = Array.isArray(artists) ? artists : [artists];
-    return artistArray.slice(0, 5).map((a: { name?: string; playcount?: string }) => ({
-      name: a?.name || 'Unknown Artist',
-      count: a?.playcount || '0'
-    }));
+    return artistArray
+      .slice(0, 5)
+      .map((a: { name?: string; playcount?: string }) => ({
+        name: a?.name || "Unknown Artist",
+        count: a?.playcount || "0",
+      }));
   } catch {
     return cache?.data.artistsInfo ?? [];
   }
 }
 
-async function getSpotifyToken(clientId: string, clientSecret: string): Promise<string> {
+async function getSpotifyToken(
+  clientId: string,
+  clientSecret: string,
+): Promise<string> {
   const now = Date.now();
   if (spotifyToken && now < spotifyToken.expiresAt) return spotifyToken.value;
 
   const creds = btoa(`${clientId}:${clientSecret}`);
-  const res = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
+  const res = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
     headers: {
-      'Authorization': `Basic ${creds}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${creds}`,
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: 'grant_type=client_credentials',
+    body: "grant_type=client_credentials",
   });
 
-  if (!res.ok) throw new Error('Failed to get Spotify token');
+  if (!res.ok) throw new Error("Failed to get Spotify token");
   const json = await res.json();
-  spotifyToken = { value: json.access_token, expiresAt: now + (json.expires_in - 60) * 1000 };
+  spotifyToken = {
+    value: json.access_token,
+    expiresAt: now + (json.expires_in - 60) * 1000,
+  };
   return spotifyToken.value;
 }
 
 async function fetchSpotifyArtistImage(
   artistName: string,
   clientId: string,
-  clientSecret: string
+  clientSecret: string,
 ): Promise<string> {
   try {
     const token = await getSpotifyToken(clientId, clientSecret);
     const q = encodeURIComponent(artistName);
-    const res = await fetch(`https://api.spotify.com/v1/search?q=${q}&type=artist&limit=1`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    if (!res.ok) return '';
+    const res = await fetch(
+      `https://api.spotify.com/v1/search?q=${q}&type=artist&limit=1`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    if (!res.ok) return "";
     const json = await res.json();
-    return json?.artists?.items?.[0]?.images?.[0]?.url ?? '';
+    return json?.artists?.items?.[0]?.images?.[0]?.url ?? "";
   } catch {
-    return cache?.data.topArtistImageUrl ?? '';
+    return cache?.data.topArtistImageUrl ?? "";
   }
 }
 
-async function fetchListeningStreak(username: string, apiKey: string): Promise<number> {
+async function fetchListeningStreak(
+  username: string,
+  apiKey: string,
+): Promise<number> {
   try {
     const now = new Date();
     const scrobbleDates = new Set<string>();
-    
+
     let page = 1;
     const limit = 200;
     const batchSize = 10;
@@ -204,7 +230,7 @@ async function fetchListeningStreak(username: string, apiKey: string): Promise<n
     let totalStreak = 0;
     let gapFound = false;
     let isTodayChecked = false;
-    
+
     const todayStr = now.toISOString().slice(0, 10);
     let expectedDate = new Date(now);
     let expectedDateStr = todayStr;
@@ -217,13 +243,15 @@ async function fetchListeningStreak(username: string, apiKey: string): Promise<n
       }
 
       const pagesToFetch = [];
-      for (let i = 0; i < batchSize && (page + i) <= totalPages; i++) {
+      for (let i = 0; i < batchSize && page + i <= totalPages; i++) {
         pagesToFetch.push(page + i);
       }
 
-      const promises = pagesToFetch.map(p => {
+      const promises = pagesToFetch.map((p) => {
         const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&limit=${limit}&page=${p}&api_key=${apiKey}&format=json`;
-        return fetchWithRetry(url).then(res => res.json()).catch(() => null);
+        return fetchWithRetry(url)
+          .then((res) => res.json())
+          .catch(() => null);
       });
 
       const results = await Promise.all(promises);
@@ -232,13 +260,13 @@ async function fetchListeningStreak(username: string, apiKey: string): Promise<n
       for (const data of results) {
         if (!data) continue;
 
-        if (data?.recenttracks?.['@attr']?.totalPages) {
-          const tp = parseInt(data.recenttracks['@attr'].totalPages, 10);
+        if (data?.recenttracks?.["@attr"]?.totalPages) {
+          const tp = parseInt(data.recenttracks["@attr"].totalPages, 10);
           if (tp !== Infinity) totalPages = tp;
         }
 
         const tracks: any[] = data?.recenttracks?.track ?? [];
-        
+
         for (const track of tracks) {
           const ts = track?.date?.uts;
           if (ts) {
@@ -254,10 +282,11 @@ async function fetchListeningStreak(username: string, apiKey: string): Promise<n
         }
       }
 
-      const isLastBatch = (page + batchSize - 1) >= totalPages;
+      const isLastBatch = page + batchSize - 1 >= totalPages;
 
       while (!gapFound) {
-        const isFullyFetched = (expectedDateStr > oldestDateStrInBatch) || isLastBatch;
+        const isFullyFetched =
+          expectedDateStr > oldestDateStrInBatch || isLastBatch;
         if (!isFullyFetched) break;
 
         if (!isTodayChecked && expectedDateStr === todayStr) {
@@ -287,7 +316,10 @@ async function fetchListeningStreak(username: string, apiKey: string): Promise<n
   }
 }
 
-async function fetchGenreData(artists: ArtistInfo[], apiKey: string): Promise<GenreEntry[]> {
+async function fetchGenreData(
+  artists: ArtistInfo[],
+  apiKey: string,
+): Promise<GenreEntry[]> {
   if (!artists.length) return [];
   try {
     const tagResults = await Promise.all(
@@ -296,12 +328,13 @@ async function fetchGenreData(artists: ArtistInfo[], apiKey: string): Promise<Ge
           const url = `https://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&artist=${encodeURIComponent(artist.name)}&api_key=${apiKey}&format=json`;
           const res = await fetchWithRetry(url);
           const json = await res.json();
-          const tags: { name: string; count: number }[] = json?.toptags?.tag ?? [];
+          const tags: { name: string; count: number }[] =
+            json?.toptags?.tag ?? [];
           return tags.slice(0, 2);
         } catch {
           return [];
         }
-      })
+      }),
     );
 
     const aggregated = new Map<string, number>();
@@ -325,25 +358,30 @@ async function fetchMusicStats(
   username: string,
   apiKey: string,
   spotifyClientId: string,
-  spotifyClientSecret: string
+  spotifyClientSecret: string,
 ): Promise<MusicStatsResult> {
-  const [userStats, topArtists, listeningStreak, ...dailyScrobbles] = await Promise.all([
-    fetchUserStats(username, apiKey),
-    fetchTopArtists(username, apiKey),
-    fetchListeningStreak(username, apiKey),
-    ...Array.from({ length: 7 }, (_, i) => {
-      const daysAgo = 6 - i;
-      const cachedValue = cache?.data.weeklyScrobbles[i]?.scrobbles;
-      return fetchDayScrobbles(username, apiKey, daysAgo, cachedValue);
-    })
-  ]);
+  const [userStats, topArtists, listeningStreak, ...dailyScrobbles] =
+    await Promise.all([
+      fetchUserStats(username, apiKey),
+      fetchTopArtists(username, apiKey),
+      fetchListeningStreak(username, apiKey),
+      ...Array.from({ length: 7 }, (_, i) => {
+        const daysAgo = 6 - i;
+        const cachedValue = cache?.data.weeklyScrobbles[i]?.scrobbles;
+        return fetchDayScrobbles(username, apiKey, daysAgo, cachedValue);
+      }),
+    ]);
 
-  const topArtistName = topArtists[0]?.name ?? '';
+  const topArtistName = topArtists[0]?.name ?? "";
 
   const [topArtistImageUrl, genreData] = await Promise.all([
     topArtistName && spotifyClientId && spotifyClientSecret
-      ? fetchSpotifyArtistImage(topArtistName, spotifyClientId, spotifyClientSecret)
-      : Promise.resolve(''),
+      ? fetchSpotifyArtistImage(
+          topArtistName,
+          spotifyClientId,
+          spotifyClientSecret,
+        )
+      : Promise.resolve(""),
     fetchGenreData(topArtists, apiKey),
   ]);
 
@@ -351,7 +389,7 @@ async function fetchMusicStats(
     weeklyScrobbles: dailyScrobbles,
     upperStatsArray: userStats,
     artistsInfo: topArtists,
-    topArtistImageUrl: topArtistImageUrl || '',
+    topArtistImageUrl: topArtistImageUrl || "",
     topArtistName,
     listeningStreak,
     genreData,
@@ -359,46 +397,60 @@ async function fetchMusicStats(
 }
 
 export const GET: APIRoute = async () => {
-  const apiKey = (import.meta.env.LASTFM_API_KEY || import.meta.env.PUBLIC_LASTFM_API_KEY) as string;
-  const username = (import.meta.env.LASTFM_USERNAME || import.meta.env.PUBLIC_LASTFM_USERNAME) as string;
+  const apiKey = (import.meta.env.LASTFM_API_KEY ||
+    import.meta.env.PUBLIC_LASTFM_API_KEY) as string;
+  const username = (import.meta.env.LASTFM_USERNAME ||
+    import.meta.env.PUBLIC_LASTFM_USERNAME) as string;
   const spotifyClientId = import.meta.env.SPOTIFY_CLIENT_ID as string;
   const spotifyClientSecret = import.meta.env.SPOTIFY_CLIENT_SECRET as string;
 
   if (!apiKey || !username) {
-    return jsonResponse({ error: 'Last.fm credentials not configured' }, 500, 'ERROR');
+    return jsonResponse(
+      { error: "Last.fm credentials not configured" },
+      500,
+      "ERROR",
+    );
   }
 
   const now = Date.now();
 
-  if (cache && (now - cache.timestamp) < CACHE_DURATION_MS) {
-    return jsonResponse(cache.data, 200, 'HIT');
+  if (cache && now - cache.timestamp < CACHE_DURATION_MS) {
+    return jsonResponse(cache.data, 200, "HIT");
   }
 
   if (pendingRequest) {
     try {
       const result = await pendingRequest;
-      return jsonResponse(result, 200, 'DEDUPED');
-    } catch {
-    }
+      return jsonResponse(result, 200, "DEDUPED");
+    } catch {}
   }
 
-  pendingRequest = fetchMusicStats(username, apiKey, spotifyClientId, spotifyClientSecret);
+  pendingRequest = fetchMusicStats(
+    username,
+    apiKey,
+    spotifyClientId,
+    spotifyClientSecret,
+  );
 
   try {
     const result = await pendingRequest;
     cache = { data: result, timestamp: now };
     pendingRequest = null;
-    return jsonResponse(result, 200, 'MISS');
+    return jsonResponse(result, 200, "MISS");
   } catch (error) {
     pendingRequest = null;
 
     if (cache) {
-      return jsonResponse(cache.data, 200, 'STALE');
+      return jsonResponse(cache.data, 200, "STALE");
     }
 
-    return jsonResponse({
-      error: 'Failed to fetch music stats',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, 500, 'ERROR');
+    return jsonResponse(
+      {
+        error: "Failed to fetch music stats",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
+      "ERROR",
+    );
   }
 };

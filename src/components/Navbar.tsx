@@ -1,277 +1,302 @@
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef, useCallback, memo } from "react";
+import { motion } from "framer-motion";
 
 interface NavbarProps {
   sections?: Array<{ id: string; label: string }>;
 }
 
 const DEFAULT_SECTIONS = [
-  { id: 'me', label: 'me' },
-  { id: 'projects', label: 'projects' },
-  { id: 'fun', label: 'fun' }
+  { id: "me", label: "me" },
+  { id: "projects", label: "projects" },
+  { id: "fun", label: "fun" },
 ];
 
-const Navbar: React.FC<NavbarProps> = memo(({
-  sections = DEFAULT_SECTIONS
-}) => {
+const Navbar: React.FC<NavbarProps> = memo(
+  ({ sections = DEFAULT_SECTIONS }) => {
+    const [activeSection, setActiveSection] = useState<string>("me");
+    const [theme, setTheme] = useState<string>("dark");
+    const [isVisible, setIsVisible] = useState(true);
+    const lastScrollY = useRef(0);
+    const navbarRef = useRef<HTMLDivElement>(null);
 
-  const [activeSection, setActiveSection] = useState<string>('me');
-  const [theme, setTheme] = useState<string>('dark');
-  const [isVisible, setIsVisible] = useState(true);
-  const lastScrollY = useRef(0);
-  const navbarRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+      const observerOptions: IntersectionObserverInit = {
+        rootMargin: "-20% 0px -70% 0px",
+        threshold: 0,
+      };
 
-  useEffect(() => {
-    const observerOptions: IntersectionObserverInit = {
-      rootMargin: '-20% 0px -70% 0px',
-      threshold: 0,
-    };
+      const sectionVisibility = new Map<string, number>();
 
-    const sectionVisibility = new Map<string, number>();
+      const observerCallback: IntersectionObserverCallback = (entries) => {
+        entries.forEach((entry) => {
+          const sectionId = entry.target.id;
 
-    const observerCallback: IntersectionObserverCallback = (entries) => {
-      entries.forEach((entry) => {
-        const sectionId = entry.target.id;
-
-        if (entry.isIntersecting) {
-          sectionVisibility.set(sectionId, entry.intersectionRatio);
-        } else {
-          sectionVisibility.delete(sectionId);
-        }
-      });
-
-      let maxVisibility = 0;
-      let mostVisibleSection = 'me';
-
-      sectionVisibility.forEach((ratio, id) => {
-        if (ratio > maxVisibility) {
-          maxVisibility = ratio;
-          mostVisibleSection = id;
-        }
-      });
-
-      if (sectionVisibility.size > 0) {
-        setActiveSection(mostVisibleSection);
-      }
-    };
-
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
-
-    sections.forEach(({ id }) => {
-      const element = document.getElementById(id);
-      if (element) {
-        observer.observe(element);
-      }
-    });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [sections]);
-
-  useEffect(() => {
-    const navbarHeight = 48;
-
-    let ticking = false;
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-
-          if (currentScrollY > lastScrollY.current && currentScrollY > navbarHeight) {
-            setIsVisible(false);
+          if (entry.isIntersecting) {
+            sectionVisibility.set(sectionId, entry.intersectionRatio);
           } else {
-            setIsVisible(true);
+            sectionVisibility.delete(sectionId);
+          }
+        });
+
+        let maxVisibility = 0;
+        let mostVisibleSection = "me";
+
+        sectionVisibility.forEach((ratio, id) => {
+          if (ratio > maxVisibility) {
+            maxVisibility = ratio;
+            mostVisibleSection = id;
+          }
+        });
+
+        if (sectionVisibility.size > 0) {
+          setActiveSection(mostVisibleSection);
+        }
+      };
+
+      const observer = new IntersectionObserver(
+        observerCallback,
+        observerOptions,
+      );
+
+      sections.forEach(({ id }) => {
+        const element = document.getElementById(id);
+        if (element) {
+          observer.observe(element);
+        }
+      });
+
+      return () => {
+        observer.disconnect();
+      };
+    }, [sections]);
+
+    useEffect(() => {
+      const navbarHeight = 48;
+
+      let ticking = false;
+
+      const handleScroll = () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            const currentScrollY = window.scrollY;
+
+            if (
+              currentScrollY > lastScrollY.current &&
+              currentScrollY > navbarHeight
+            ) {
+              setIsVisible(false);
+            } else {
+              setIsVisible(true);
+            }
+
+            lastScrollY.current = currentScrollY <= 0 ? 0 : currentScrollY;
+            ticking = false;
+          });
+
+          ticking = true;
+        }
+      };
+
+      window.addEventListener("scroll", handleScroll, { passive: true });
+
+      return () => {
+        window.removeEventListener("scroll", handleScroll);
+      };
+    }, []);
+
+    useEffect(() => {
+      const updateTheme = () => {
+        const currentTheme =
+          document.documentElement.getAttribute("data-theme");
+        setTheme(currentTheme || "dark");
+      };
+
+      updateTheme();
+
+      const observer = new MutationObserver(updateTheme);
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"],
+      });
+
+      return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+      if (window.location.hash) {
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search,
+        );
+      }
+
+      const handleHashChange = () => {
+        if (window.location.hash) {
+          window.history.replaceState(
+            null,
+            "",
+            window.location.pathname + window.location.search,
+          );
+        }
+      };
+
+      window.addEventListener("hashchange", handleHashChange);
+
+      return () => {
+        window.removeEventListener("hashchange", handleHashChange);
+      };
+    }, []);
+
+    const handleNavClick = useCallback(
+      (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
+        e.preventDefault();
+
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+          const lenis = (window as any).lenis;
+
+          if (lenis) {
+            lenis.scrollTo(targetSection, {
+              offset: 0,
+              duration: 1.2,
+              immediate: false,
+            });
+          } else {
+            targetSection.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
           }
 
-          lastScrollY.current = currentScrollY <= 0 ? 0 : currentScrollY;
-          ticking = false;
-        });
+          setActiveSection(sectionId);
 
-        ticking = true;
+          setTimeout(() => {
+            if (window.location.hash) {
+              window.history.replaceState(
+                null,
+                "",
+                window.location.pathname + window.location.search,
+              );
+            }
+          }, 10);
+        }
+      },
+      [],
+    );
+
+    const handleThemeToggle = useCallback(() => {
+      const html = document.documentElement;
+
+      if (html.classList.contains("theme-transitioning")) {
+        html.classList.remove("theme-transitioning");
+        void html.offsetHeight;
       }
-    };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+      const currentTheme = html.getAttribute("data-theme");
 
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
+      html.classList.add("theme-transitioning");
 
-  useEffect(() => {
-    const updateTheme = () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      setTheme(currentTheme || 'dark');
-    };
-
-    updateTheme();
-
-    const observer = new MutationObserver(updateTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme']
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (window.location.hash) {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-    }
-
-    const handleHashChange = () => {
-      if (window.location.hash) {
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
-      }
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-    };
-  }, []);
-
-  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
-    e.preventDefault();
-
-    const targetSection = document.getElementById(sectionId);
-    if (targetSection) {
-      const lenis = (window as any).lenis;
-
-      if (lenis) {
-        lenis.scrollTo(targetSection, {
-          offset: 0,
-          duration: 1.2,
-          immediate: false
-        });
+      if (currentTheme === "light") {
+        html.removeAttribute("data-theme");
+        localStorage.setItem("theme", "default");
       } else {
-        targetSection.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
+        html.setAttribute("data-theme", "light");
+        localStorage.setItem("theme", "light");
       }
-
-      setActiveSection(sectionId);
 
       setTimeout(() => {
-        if (window.location.hash) {
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        html.classList.remove("theme-transitioning");
+      }, 400);
+    }, []);
+
+    const getLinkClasses = useCallback(
+      (sectionId: string) => {
+        const isActive = activeSection === sectionId;
+        const baseClasses =
+          "nav-link cursor-pointer px-3 py-1 rounded-md transition-all duration-200 font-medium text-sm md:text-base";
+
+        if (isActive) {
+          return `${baseClasses} active font-semibold`;
         }
-      }, 10);
-    }
-  }, []);
 
-  const handleThemeToggle = useCallback(() => {
-    const html = document.documentElement;
-    
-    if (html.classList.contains('theme-transitioning')) {
-      html.classList.remove('theme-transitioning');
-      void html.offsetHeight;
-    }
-    
-    const currentTheme = html.getAttribute('data-theme');
+        return baseClasses;
+      },
+      [activeSection],
+    );
 
-    html.classList.add('theme-transitioning');
-
-    if (currentTheme === 'light') {
-      html.removeAttribute('data-theme');
-      localStorage.setItem('theme', 'default');
-    } else {
-      html.setAttribute('data-theme', 'light');
-      localStorage.setItem('theme', 'light');
-    }
-
-    setTimeout(() => {
-      html.classList.remove('theme-transitioning');
-    }, 400);
-  }, []);
-
-  const getLinkClasses = useCallback((sectionId: string) => {
-    const isActive = activeSection === sectionId;
-    const baseClasses = 'nav-link cursor-pointer px-3 py-1 rounded-md transition-all duration-200 font-medium text-sm md:text-base';
-
-    if (isActive) {
-      return `${baseClasses} active font-semibold`;
-    }
-
-    return baseClasses;
-  }, [activeSection]);
-
-  return (
-    <motion.div
-      ref={navbarRef}
-      id="navbar"
-      className="bg-[#111111]/80 dark:bg-[#111111]/80 backdrop-blur-md text-white z-50 fixed left-1/2 h-12 w-[90%] max-w-[380px] border border-white/20 rounded-full flex justify-between px-6 items-center shadow-lg nav-links"
-      initial={{ y: -100, x: "-50%", opacity: 0 }}
-      animate={{
-        y: isVisible ? 0 : -100,
-        x: "-50%",
-        opacity: isVisible ? 1 : 0
-      }}
-      transition={{
-        duration: 0.3,
-        ease: "easeInOut"
-      }}
-      style={{
-        top: '1rem',
-      }}
-    >
-      <div className="flex gap-1">
-        {sections.map(({ id, label }) => (
-          <a
-            key={id}
-            href={`#${id}`}
-            onClick={(e) => handleNavClick(e, id)}
-            aria-label={`Navigate to ${label} section`}
-            aria-current={activeSection === id ? 'true' : undefined}
-            className={getLinkClasses(id)}
-            data-section={id}
-          >
-            {label}
-          </a>
-        ))}
-      </div>
-
-      <div className="h-6 w-[1px] bg-white/20 dark:bg-white/20 navbar-divider mx-2"></div>
-
-      <button
-        id="theme-toggle"
-        aria-label="toggle theme"
-        className="cursor-pointer p-1.5 rounded-full hover:bg-white/10 transition-all duration-200"
-        onClick={handleThemeToggle}
+    return (
+      <motion.div
+        ref={navbarRef}
+        id="navbar"
+        className="bg-[#111111]/80 dark:bg-[#111111]/80 backdrop-blur-md text-white z-50 fixed left-1/2 h-12 w-[90%] max-w-[380px] border border-white/20 rounded-full flex justify-between px-6 items-center shadow-lg nav-links"
+        initial={{ y: -100, x: "-50%", opacity: 0 }}
+        animate={{
+          y: isVisible ? 0 : -100,
+          x: "-50%",
+          opacity: isVisible ? 1 : 0,
+        }}
+        transition={{
+          duration: 0.3,
+          ease: "easeInOut",
+        }}
+        style={{
+          top: "1rem",
+        }}
       >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {theme === 'light' ? (
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-            />
-          ) : (
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-            />
-          )}
-        </svg>
-      </button>
-    </motion.div>
-  );
-});
+        <div className="flex gap-1">
+          {sections.map(({ id, label }) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              onClick={(e) => handleNavClick(e, id)}
+              aria-label={`Navigate to ${label} section`}
+              aria-current={activeSection === id ? "true" : undefined}
+              className={getLinkClasses(id)}
+              data-section={id}
+            >
+              {label}
+            </a>
+          ))}
+        </div>
 
-Navbar.displayName = 'Navbar';
+        <div className="h-6 w-[1px] bg-white/20 dark:bg-white/20 navbar-divider mx-2"></div>
+
+        <button
+          id="theme-toggle"
+          aria-label="toggle theme"
+          className="cursor-pointer p-1.5 rounded-full hover:bg-white/10 transition-all duration-200"
+          onClick={handleThemeToggle}
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {theme === "light" ? (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+              />
+            ) : (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            )}
+          </svg>
+        </button>
+      </motion.div>
+    );
+  },
+);
+
+Navbar.displayName = "Navbar";
 
 export default Navbar;

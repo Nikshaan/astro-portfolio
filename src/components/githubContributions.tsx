@@ -1,14 +1,14 @@
-import { useEffect, useState, useRef, memo } from 'react';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { useEffect, useState, useRef, memo } from "react";
+import { m, LazyMotion, domAnimation } from "framer-motion";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 import {
   fetchGithubContributionsData,
   type ContributionDay,
   type ContributionWeek,
   type GitHubAPIResponse,
-} from '../utils/githubContributionsClient';
-import styles from './githubContributions.module.css';
+} from "../utils/githubContributionsClient";
+import styles from "./githubContributions.module.css";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -38,12 +38,16 @@ function HeatmapSkeleton() {
   );
 }
 
-export default memo(function GithubContributions({ initialData }: GithubContributionsProps) {
+export default memo(function GithubContributions({
+  initialData,
+}: GithubContributionsProps) {
   const [weeks, setWeeks] = useState<ContributionWeek[]>(
-    initialData?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || []
+    initialData?.data?.user?.contributionsCollection?.contributionCalendar
+      ?.weeks || [],
   );
   const [totalContributions, setTotalContributions] = useState(
-    initialData?.data?.user?.contributionsCollection?.contributionCalendar?.totalContributions || 0
+    initialData?.data?.user?.contributionsCollection?.contributionCalendar
+      ?.totalContributions || 0,
   );
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
@@ -62,15 +66,22 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
         const data = await fetchGithubContributionsData();
 
         if (data.errors) {
-          setError('Failed to load contributions');
-        } else if (data.data?.user?.contributionsCollection?.contributionCalendar) {
-          setWeeks(data.data.user.contributionsCollection.contributionCalendar.weeks);
-          setTotalContributions(data.data.user.contributionsCollection.contributionCalendar.totalContributions);
+          setError("Failed to load contributions");
+        } else if (
+          data.data?.user?.contributionsCollection?.contributionCalendar
+        ) {
+          setWeeks(
+            data.data.user.contributionsCollection.contributionCalendar.weeks,
+          );
+          setTotalContributions(
+            data.data.user.contributionsCollection.contributionCalendar
+              .totalContributions,
+          );
         } else {
-          setError('Unexpected API response');
+          setError("Unexpected API response");
         }
       } catch {
-        setError('Failed to load contributions');
+        setError("Failed to load contributions");
       } finally {
         setLoading(false);
       }
@@ -91,7 +102,7 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
         className={cn(
           "relative p-6 rounded-3xl border overflow-hidden w-full flex flex-col justify-between group github-card-hover",
           "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
-          "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#1e3a8a]"
+          "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#1e3a8a]",
         )}
         initial={{ opacity: 0, y: 30, scale: 0.98 }}
         animate={{
@@ -101,7 +112,7 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
           transition: {
             duration: 0.5,
             ease: [0.25, 0.1, 0.25, 1],
-          }
+          },
         }}
       >
         {loading ? (
@@ -109,40 +120,48 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
         ) : error ? (
           <>
             <div className={styles.header}>
-              <p className='text-lg font-medium'>GitHub Contributions (Last 12 Months)</p>
+              <p className="text-lg font-medium">
+                GitHub Contributions (Last 12 Months)
+              </p>
             </div>
             <p className="text-sm text-neutral-400 text-center py-4">{error}</p>
           </>
         ) : weeks.length > 0 ? (
           <>
             <div className={styles.header}>
-              <p className='text-lg font-medium'>GitHub Contributions (Last 12 Months)</p>
+              <p className="text-lg font-medium">
+                GitHub Contributions (Last 12 Months)
+              </p>
               {totalContributions > 0 && (
-                <span className={styles.total}>{totalContributions} contributions in the last year</span>
+                <span className={styles.total}>
+                  {totalContributions} contributions in the last year
+                </span>
               )}
             </div>
             <div className={styles.graph} ref={graphRef}>
               {weeks.map((week: ContributionWeek, weekIndex: number) => (
                 <div key={weekIndex} className={styles.week}>
-                  {week.contributionDays.map((day: ContributionDay, dayIndex: number) => {
-                    const count = day.contributionCount;
-                    let level = 0;
-                    if (count > 0 && count <= 3) level = 1;
-                    else if (count > 3 && count <= 6) level = 2;
-                    else if (count > 6 && count <= 9) level = 3;
-                    else if (count > 9) level = 4;
+                  {week.contributionDays.map(
+                    (day: ContributionDay, dayIndex: number) => {
+                      const count = day.contributionCount;
+                      let level = 0;
+                      if (count > 0 && count <= 3) level = 1;
+                      else if (count > 3 && count <= 6) level = 2;
+                      else if (count > 6 && count <= 9) level = 3;
+                      else if (count > 9) level = 4;
 
-                    return (
-                      <div
-                        key={dayIndex}
-                        className={`${styles.day} ${styles[`contributionLevel${level}`]}`}
-                        style={{ backgroundColor: day.color || '#161b22' }}
-                        title={`${day.date}: ${day.contributionCount} contributions`}
-                        data-tooltip-placement="bottom"
-                        suppressHydrationWarning
-                      ></div>
-                    );
-                  })}
+                      return (
+                        <div
+                          key={dayIndex}
+                          className={`${styles.day} ${styles[`contributionLevel${level}`]}`}
+                          style={{ backgroundColor: day.color || "#161b22" }}
+                          title={`${day.date}: ${day.contributionCount} contributions`}
+                          data-tooltip-placement="bottom"
+                          suppressHydrationWarning
+                        ></div>
+                      );
+                    },
+                  )}
                 </div>
               ))}
             </div>
@@ -150,12 +169,16 @@ export default memo(function GithubContributions({ initialData }: GithubContribu
         ) : (
           <>
             <div className={styles.header}>
-              <p className='text-lg font-medium'>GitHub Contributions (Last 12 Months)</p>
+              <p className="text-lg font-medium">
+                GitHub Contributions (Last 12 Months)
+              </p>
             </div>
-            <p className="text-sm text-neutral-400 text-center py-4">No contribution data available</p>
+            <p className="text-sm text-neutral-400 text-center py-4">
+              No contribution data available
+            </p>
           </>
         )}
       </m.div>
     </LazyMotion>
   );
-})
+});

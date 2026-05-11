@@ -23,7 +23,7 @@ const Clock = memo(function Clock() {
 
     return () => clearInterval(timer);
   }, []);
-  
+
   if (!isMounted) {
     return (
       <div className="font-light text-center my-1">

@@ -4,7 +4,5 @@
   "theme_color": "#171717",
   "background_color": "#171717",
   "display": "browser",
-  "icons": [
-    { "src": "/favicon.ico", "sizes": "any", "type": "image/x-icon" }
-  ]
+  "icons": [{ "src": "/favicon.ico", "sizes": "any", "type": "image/x-icon" }]
 }

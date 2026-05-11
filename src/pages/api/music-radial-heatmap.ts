@@ -1,4 +1,4 @@
-import type { APIRoute } from 'astro';
+import type { APIRoute } from "astro";
 
 export const prerender = false;
 
@@ -29,17 +29,18 @@ const ROLLING_DAYS = 365;
 const TOP_N = 10;
 const WEEK_FETCH_CONCURRENCY = 6;
 
-let cache:
-  | {
-      anchorSec: number;
-      data: RadialHeatmapResult;
-      timestamp: number;
-    }
-  | null = null;
+let cache: {
+  anchorSec: number;
+  data: RadialHeatmapResult;
+  timestamp: number;
+} | null = null;
 const pendingByAnchor = new Map<number, Promise<RadialHeatmapResult>>();
 
-function resolvedAnchorSec(serverSec: number, clientParam: string | null): number {
-  if (clientParam == null || clientParam === '') return serverSec;
+function resolvedAnchorSec(
+  serverSec: number,
+  clientParam: string | null,
+): number {
+  if (clientParam == null || clientParam === "") return serverSec;
   const v = parseInt(clientParam, 10);
   if (!Number.isFinite(v) || v <= 0) return serverSec;
   if (Math.abs(serverSec - v) > 900) return serverSec;
@@ -47,14 +48,18 @@ function resolvedAnchorSec(serverSec: number, clientParam: string | null): numbe
 }
 
 const CACHE_HEADERS = {
-  'Content-Type': 'application/json',
-  'Cache-Control': 'no-store, max-age=0',
+  "Content-Type": "application/json",
+  "Cache-Control": "no-store, max-age=0",
 } as const;
 
-const jsonResponse = (data: unknown, status: number, cacheStatus: string): Response =>
+const jsonResponse = (
+  data: unknown,
+  status: number,
+  cacheStatus: string,
+): Response =>
   new Response(JSON.stringify(data), {
     status,
-    headers: { ...CACHE_HEADERS, 'X-Cache-Status': cacheStatus },
+    headers: { ...CACHE_HEADERS, "X-Cache-Status": cacheStatus },
   });
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -67,13 +72,16 @@ async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
     try {
       const response = await fetch(url, {
         signal: controller.signal,
-        headers: { 'User-Agent': 'AstroPortfolio/1.0' },
+        headers: { "User-Agent": "AstroPortfolio/1.0" },
       });
 
       clearTimeout(timeoutId);
 
       if (response.status === 429) {
-        const retryAfter = parseInt(response.headers.get('Retry-After') || '3', 10);
+        const retryAfter = parseInt(
+          response.headers.get("Retry-After") || "3",
+          10,
+        );
         await sleep(retryAfter * 1000);
         continue;
       }
@@ -84,16 +92,18 @@ async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
       }
     } catch {
       clearTimeout(timeoutId);
-      if (attempt === maxRetries - 1) throw new Error('Max retries exceeded');
+      if (attempt === maxRetries - 1) throw new Error("Max retries exceeded");
     }
 
     await sleep(Math.min(1000 * Math.pow(2, attempt), 4000));
   }
 
-  throw new Error('Max retries exceeded');
+  throw new Error("Max retries exceeded");
 }
 
-function normalizeWeeklyArtists(raw: unknown): { name: string; plays: number }[] {
+function normalizeWeeklyArtists(
+  raw: unknown,
+): { name: string; plays: number }[] {
   const root = raw as {
     weeklyartistchart?: {
       artist?: unknown;
@@ -102,8 +112,8 @@ function normalizeWeeklyArtists(raw: unknown): { name: string; plays: number }[]
   const artists = root?.weeklyartistchart?.artist;
   const arr = Array.isArray(artists) ? artists : artists ? [artists] : [];
   return arr.map((a: { name?: string; playcount?: string }) => ({
-    name: (a?.name ?? 'Unknown').trim(),
-    plays: parseInt(String(a?.playcount ?? '0'), 10) || 0,
+    name: (a?.name ?? "Unknown").trim(),
+    plays: parseInt(String(a?.playcount ?? "0"), 10) || 0,
   }));
 }
 
@@ -118,7 +128,7 @@ async function fetchRollingYearTopArtists(
   username: string,
   apiKey: string,
   fromSec: number,
-  toSec: number
+  toSec: number,
 ): Promise<{ name: string; plays: number }[]> {
   const url =
     `https://ws.audioscrobbler.com/2.0/?method=user.getweeklyartistchart&user=${encodeURIComponent(username)}` +
@@ -130,7 +140,10 @@ async function fetchRollingYearTopArtists(
   return list.slice(0, TOP_N);
 }
 
-async function fetchWeeklyChartList(username: string, apiKey: string): Promise<RadialHeatmapWeek[]> {
+async function fetchWeeklyChartList(
+  username: string,
+  apiKey: string,
+): Promise<RadialHeatmapWeek[]> {
   const url =
     `https://ws.audioscrobbler.com/2.0/?method=user.getweeklychartlist&user=${encodeURIComponent(username)}` +
     `&api_key=${apiKey}&format=json`;
@@ -138,15 +151,20 @@ async function fetchWeeklyChartList(username: string, apiKey: string): Promise<R
   const data = await response.json();
   const entries = normalizeChartList(data)
     .map((c) => ({
-      from: parseInt(String(c.from ?? '0'), 10),
-      to: parseInt(String(c.to ?? '0'), 10),
+      from: parseInt(String(c.from ?? "0"), 10),
+      to: parseInt(String(c.to ?? "0"), 10),
     }))
     .filter((w) => w.from > 0 && w.to > 0);
   entries.sort((a, b) => a.from - b.from);
   return entries;
 }
 
-async function fetchWeekArtists(username: string, apiKey: string, fromSec: number, toSec: number) {
+async function fetchWeekArtists(
+  username: string,
+  apiKey: string,
+  fromSec: number,
+  toSec: number,
+) {
   const url =
     `https://ws.audioscrobbler.com/2.0/?method=user.getweeklyartistchart&user=${encodeURIComponent(username)}` +
     `&from=${fromSec}&to=${toSec}&api_key=${apiKey}&format=json&limit=1000`;
@@ -162,25 +180,39 @@ async function fetchWeekArtists(username: string, apiKey: string, fromSec: numbe
   return { map, labelByKey };
 }
 
-async function concurrency<T, R>(items: T[], limit: number, run: (item: T) => Promise<R>): Promise<R[]> {
+async function concurrency<T, R>(
+  items: T[],
+  limit: number,
+  run: (item: T) => Promise<R>,
+): Promise<R[]> {
   let ix = 0;
   const out: R[] = new Array(items.length);
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (true) {
-      const j = ix++;
-      if (j >= items.length) break;
-      out[j] = await run(items[j]);
-    }
-  });
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    async () => {
+      while (true) {
+        const j = ix++;
+        if (j >= items.length) break;
+        out[j] = await run(items[j]);
+      }
+    },
+  );
   await Promise.all(workers);
   return out;
 }
 
-function overlapsRange(w: RadialHeatmapWeek, fromSec: number, toSec: number): boolean {
+function overlapsRange(
+  w: RadialHeatmapWeek,
+  fromSec: number,
+  toSec: number,
+): boolean {
   return w.to >= fromSec && w.from <= toSec;
 }
 
-function fallbackWeekSlices(fromSec: number, toSec: number): RadialHeatmapWeek[] {
+function fallbackWeekSlices(
+  fromSec: number,
+  toSec: number,
+): RadialHeatmapWeek[] {
   const SEC_WEEK = 604800;
   const out: RadialHeatmapWeek[] = [];
   let t = fromSec;
@@ -192,7 +224,9 @@ function fallbackWeekSlices(fromSec: number, toSec: number): RadialHeatmapWeek[]
   return out;
 }
 
-function mergeArtistLabels(rows: { labelByKey: Map<string, string> }[]): Map<string, string> {
+function mergeArtistLabels(
+  rows: { labelByKey: Map<string, string> }[],
+): Map<string, string> {
   const merged = new Map<string, string>();
   for (const row of rows) {
     for (const [k, label] of row.labelByKey) {
@@ -202,7 +236,11 @@ function mergeArtistLabels(rows: { labelByKey: Map<string, string> }[]): Map<str
   return merged;
 }
 
-function resolveArtistName(keyLc: string, topTen: { name: string }[], labels: Map<string, string>): string {
+function resolveArtistName(
+  keyLc: string,
+  topTen: { name: string }[],
+  labels: Map<string, string>,
+): string {
   const fromTop = topTen.find((x) => x.name.toLowerCase() === keyLc)?.name;
   return fromTop ?? labels.get(keyLc) ?? keyLc;
 }
@@ -212,7 +250,7 @@ const TARGET_WEEKS = 52;
 function trimOrPadWeeks(
   weeks: RadialHeatmapWeek[],
   playsPerArtist: Map<string, number[]>,
-  fromSec: number
+  fromSec: number,
 ): { weeks: RadialHeatmapWeek[]; playsPerArtist: Map<string, number[]> } {
   let wk = [...weeks];
   if (wk.length > TARGET_WEEKS) {
@@ -244,12 +282,17 @@ function trimOrPadWeeks(
 async function fetchRadialHeatmap(
   username: string,
   apiKey: string,
-  anchorToSec: number
+  anchorToSec: number,
 ): Promise<RadialHeatmapResult> {
   const toSec = anchorToSec;
   const fromSec = toSec - ROLLING_DAYS * SECONDS_PER_DAY;
 
-  const topTen = await fetchRollingYearTopArtists(username, apiKey, fromSec, toSec);
+  const topTen = await fetchRollingYearTopArtists(
+    username,
+    apiKey,
+    fromSec,
+    toSec,
+  );
 
   const listFromApi = await fetchWeeklyChartList(username, apiKey);
   let weeks =
@@ -269,8 +312,10 @@ async function fetchRadialHeatmap(
 
   const topKeys = topTen.map((a) => a.name.toLowerCase());
 
-  const weeklyPayload = await concurrency(weeks, WEEK_FETCH_CONCURRENCY, (period) =>
-    fetchWeekArtists(username, apiKey, period.from, period.to)
+  const weeklyPayload = await concurrency(
+    weeks,
+    WEEK_FETCH_CONCURRENCY,
+    (period) => fetchWeekArtists(username, apiKey, period.from, period.to),
   );
 
   const labelsMerged = mergeArtistLabels(weeklyPayload);
@@ -279,7 +324,7 @@ async function fetchRadialHeatmap(
   for (const key of topKeys) {
     playsPerArtist.set(
       key,
-      weeklyPayload.map(({ map }) => map.get(key) ?? 0)
+      weeklyPayload.map(({ map }) => map.get(key) ?? 0),
     );
   }
 
@@ -288,23 +333,31 @@ async function fetchRadialHeatmap(
 
   const artists: RadialHeatmapArtist[] = topKeys.map((keyLc) => ({
     name: resolveArtistName(keyLc, topTen, labelsMerged),
-    plays: playsPerArtist.get(keyLc) ?? Array.from({ length: weeks.length }, () => 0),
+    plays:
+      playsPerArtist.get(keyLc) ??
+      Array.from({ length: weeks.length }, () => 0),
   }));
 
   return { weeks, artists };
 }
 
 export const GET: APIRoute = async ({ request }) => {
-  const apiKey = (import.meta.env.LASTFM_API_KEY || import.meta.env.PUBLIC_LASTFM_API_KEY) as string;
-  const username = (import.meta.env.LASTFM_USERNAME || import.meta.env.PUBLIC_LASTFM_USERNAME) as string;
+  const apiKey = (import.meta.env.LASTFM_API_KEY ||
+    import.meta.env.PUBLIC_LASTFM_API_KEY) as string;
+  const username = (import.meta.env.LASTFM_USERNAME ||
+    import.meta.env.PUBLIC_LASTFM_USERNAME) as string;
 
   if (!apiKey || !username) {
-    return jsonResponse({ error: 'Last.fm credentials not configured' }, 500, 'ERROR');
+    return jsonResponse(
+      { error: "Last.fm credentials not configured" },
+      500,
+      "ERROR",
+    );
   }
 
   const serverSec = Math.floor(Date.now() / 1000);
   const url = new URL(request.url);
-  const anchorSec = resolvedAnchorSec(serverSec, url.searchParams.get('until'));
+  const anchorSec = resolvedAnchorSec(serverSec, url.searchParams.get("until"));
   const now = Date.now();
 
   if (
@@ -312,7 +365,7 @@ export const GET: APIRoute = async ({ request }) => {
     now - cache.timestamp < SERVER_CACHE_MS &&
     Math.abs(cache.anchorSec - anchorSec) <= ANCHOR_MATCH_SEC
   ) {
-    return jsonResponse(cache.data, 200, 'HIT');
+    return jsonResponse(cache.data, 200, "HIT");
   }
 
   let inflight = pendingByAnchor.get(anchorSec);
@@ -328,19 +381,19 @@ export const GET: APIRoute = async ({ request }) => {
   try {
     const result = await inflight;
     cache = { anchorSec, data: result, timestamp: Date.now() };
-    return jsonResponse(result, 200, reusedPending ? 'DEDUPED' : 'MISS');
+    return jsonResponse(result, 200, reusedPending ? "DEDUPED" : "MISS");
   } catch (error) {
     if (cache) {
-      return jsonResponse(cache.data, 200, 'STALE');
+      return jsonResponse(cache.data, 200, "STALE");
     }
 
     return jsonResponse(
       {
-        error: 'Failed to fetch radial heatmap',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to fetch radial heatmap",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       500,
-      'ERROR'
+      "ERROR",
     );
   }
 };

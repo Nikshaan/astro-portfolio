@@ -1,322 +1,285 @@
 [
-    {
-        "id": "intro",
-        "type": "intro",
-        "colSpan": "lg:col-span-1",
-        "isExpandable": false,
-        "theme": "dark",
-        "data": {
-            "title": "About Me",
-            "text": "Hi, I'm <span class=\"font-bold text-lg\">Nikshaan Shetty</span>, a 20 year old student.",
-            "interests": [
-                "Technologia",
-                "Gaming",
-                "Music",
-                "Photography"
-            ],
-            "image": "beeImage"
-        },
-        "content": ""
+  {
+    "id": "intro",
+    "type": "intro",
+    "colSpan": "lg:col-span-1",
+    "isExpandable": false,
+    "theme": "dark",
+    "data": {
+      "title": "About Me",
+      "text": "Hi, I'm <span class=\"font-bold text-lg\">Nikshaan Shetty</span>, a 20 year old student.",
+      "interests": ["Technologia", "Gaming", "Music", "Photography"],
+      "image": "beeImage"
     },
-    {
-        "id": "extracurr",
-        "type": "extracurr",
-        "colSpan": "lg:col-span-1",
-        "isExpandable": false,
-        "theme": "dark",
-        "data": {
-            "title": "extra curricular",
-            "items": [
-                {
-                    "image": "aryaLogo",
-                    "title": "DJS ARYA",
-                    "subtitle": "CanSat team of DJSCOE",
-                    "role": "Software Team Member",
-                    "date": "March 2025 - present"
-                },
-                {
-                    "image": "codeAIlogo",
-                    "title": "DJS CodeAI",
-                    "subtitle": "AI/ML club of DJSCOE",
-                    "role": "AI mentee",
-                    "date": "August 2025 - present"
-                }
-            ],
-            "certification": {
-                "title": "Machine Learning I",
-                "issuer": "University of Columbia"
-            }
+    "content": ""
+  },
+  {
+    "id": "extracurr",
+    "type": "extracurr",
+    "colSpan": "lg:col-span-1",
+    "isExpandable": false,
+    "theme": "dark",
+    "data": {
+      "title": "extra curricular",
+      "items": [
+        {
+          "image": "aryaLogo",
+          "title": "DJS ARYA",
+          "subtitle": "CanSat team of DJSCOE",
+          "role": "Software Team Member",
+          "date": "March 2025 - present"
         },
-        "content": ""
+        {
+          "image": "codeAIlogo",
+          "title": "DJS CodeAI",
+          "subtitle": "AI/ML club of DJSCOE",
+          "role": "AI mentee",
+          "date": "August 2025 - present"
+        }
+      ],
+      "certification": {
+        "title": "Machine Learning I",
+        "issuer": "University of Columbia"
+      }
     },
-    {
-        "id": "education",
-        "type": "education",
-        "colSpan": "lg:col-span-1",
-        "isExpandable": false,
-        "theme": "dark",
-        "data": {
-            "title": "education",
-            "image": "collegeLogo",
-            "school": "Dwarkadas J. Sanghvi College of Engineering",
-            "degree": "Bachelor of technology in <br> Artificial Intelligence and Machine Learning, <br> Honours in AI in Finance",
-            "date": "2024 - 2028"
-        },
-        "content": ""
+    "content": ""
+  },
+  {
+    "id": "education",
+    "type": "education",
+    "colSpan": "lg:col-span-1",
+    "isExpandable": false,
+    "theme": "dark",
+    "data": {
+      "title": "education",
+      "image": "collegeLogo",
+      "school": "Dwarkadas J. Sanghvi College of Engineering",
+      "degree": "Bachelor of technology in <br> Artificial Intelligence and Machine Learning, <br> Honours in AI in Finance",
+      "date": "2024 - 2028"
     },
-    {
-        "id": "location",
-        "type": "location",
-        "colSpan": "lg:col-span-1",
-        "isExpandable": false,
-        "theme": "dark",
-        "data": {
-            "location": "Mumbai, India",
-            "links": {
-                "github": "https://github.com/Nikshaan",
-                "linkedin": "https://www.linkedin.com/in/nikshaan-shetty/",
-                "email": "mailto:nikshaanshetty06@gmail.com"
-            }
-        },
-        "content": ""
+    "content": ""
+  },
+  {
+    "id": "location",
+    "type": "location",
+    "colSpan": "lg:col-span-1",
+    "isExpandable": false,
+    "theme": "dark",
+    "data": {
+      "location": "Mumbai, India",
+      "links": {
+        "github": "https://github.com/Nikshaan",
+        "linkedin": "https://www.linkedin.com/in/nikshaan-shetty/",
+        "email": "mailto:nikshaanshetty06@gmail.com"
+      }
     },
-    {
-        "id": "win",
-        "type": "win",
-        "colSpan": "lg:col-span-0",
-        "isExpandable": true,
-        "theme": "dark",
-        "data": {
-            "image": "winIcon"
-        },
-        "content": "<div><div class=\"mb-8\"><h3 class=\"font-bold mb-1\">CodeQuest (2025) - 1st Runner Up and 1st in AIML domain</h3><p class=\"mb-0\">Developed <a href=\"https://github.com/Nikshaan/HACKCORS_Legal_CodeQuest\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline\">Nyaysetu</a>, an AI legal assistant.</p></div><div><h3 class=\"font-bold mb-1\">HackOps (2025) - 2nd Runner Up and 1st in AIML domain</h3><p class=\"mb-0\">Developed <a href=\"https://github.com/Nikshaan/HackOps_HackCORS\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline\">JournalPal.ai</a>, a research journal-paper matcher.</p></div></div>"
+    "content": ""
+  },
+  {
+    "id": "win",
+    "type": "win",
+    "colSpan": "lg:col-span-0",
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+      "image": "winIcon"
     },
-    {
-        "id": "experience",
-        "type": "experience",
-        "colSpan": "lg:col-span-1",
-        "isExpandable": true,
-        "theme": "dark",
-        "data": {
-            "title": "experience",
-            "items": [
-                {
-                    "image": "mentoriaLogo",
-                    "title": "Software developer intern",
-                    "company": "Mentoria",
-                    "date": "April 2026 - present"
-                },
-                {
-                    "image": "varakLogo",
-                    "title": "Software developer intern",
-                    "company": "Varak Welfare Society",
-                    "date": "September 2025 - January 2026"
-                },
-                {
-                    "image": "gssocLogo",
-                    "title": "Open source contributor",
-                    "company": "GirlScript Summer of Code 2025",
-                    "date": "August 2025"
-                }
-            ]
+    "content": "<div><div class=\"mb-8\"><h3 class=\"font-bold mb-1\">CodeQuest (2025) - 1st Runner Up and 1st in AIML domain</h3><p class=\"mb-0\">Developed <a href=\"https://github.com/Nikshaan/HACKCORS_Legal_CodeQuest\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline\">Nyaysetu</a>, an AI legal assistant.</p></div><div><h3 class=\"font-bold mb-1\">HackOps (2025) - 2nd Runner Up and 1st in AIML domain</h3><p class=\"mb-0\">Developed <a href=\"https://github.com/Nikshaan/HackOps_HackCORS\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline\">JournalPal.ai</a>, a research journal-paper matcher.</p></div></div>"
+  },
+  {
+    "id": "experience",
+    "type": "experience",
+    "colSpan": "lg:col-span-1",
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+      "title": "experience",
+      "items": [
+        {
+          "image": "mentoriaLogo",
+          "title": "Software developer intern",
+          "company": "Mentoria",
+          "date": "April 2026 - present"
         },
-        "content": "<div><div class=\"mb-8\"><h3 class=\"text-2xl font-bold mb-1\">Software developer intern</h3><p class=\"text-lg font-medium mb-1\">Mentoria</p><p class=\"text-sm text-neutral-500 dark:text-neutral-400 mb-4\">April 2026 - present</p><p class=\"mb-4\">Building <a href=\"https://arya.mentoria.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline\">Arya by Mentoria</a>.</p></div><div class=\"mb-8\"><h3 class=\"text-2xl font-bold mb-1\">Software developer intern</h3><p class=\"text-lg font-medium mb-1\">Varak Welfare Society</p><p class=\"text-sm text-neutral-500 dark:text-neutral-400 mb-4\">September 2025 - January 2026</p><p class=\"mb-4\">Worked with the CTO to architect a scalable subscription engine using Django, PostgreSQL, and Razorpay, building the entire interface using React.js and TailwindCSS. This system was built to handle all payment edge cases (even if the user is not logged in).</p><p class=\"mb-4\">Migrated the organization's homepage from Vue.js to React.js. This shift to a modern component architecture significantly improved mobile responsiveness and reduced initial load latency by 35%.</p><p class=\"mb-4\">Contributed to enhancing the user experience by building several key frontend components, including the FAQs section, individual campaign pages, and a donor information modal. I also coded a fully dynamic navbar that could be controlled directly from the Django backend. To support the internal team, I helped in developing the frontend and backend integration for an admin dashboard that visualized database results using custom stored queries.</p><p>Implemented a secure Google OAuth 2.0 authentication system with robust input validations and error handling for signup and login flows. Additionally, I guided four other developer interns through their onboarding setup and provided active debugging support.</p><div class=\"mt-6 flex flex-col sm:flex-row gap-4\"><div class=\"border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden w-full sm:w-1/2\"><img src=\"{{LOR_IMAGE}}\" alt=\"LOR\" class=\"w-full h-auto object-cover\" /><div class=\"p-3 bg-neutral-100 dark:bg-[#1f1f1f]\"><p class=\"text-sm font-medium\">Letter of Recommendation</p></div></div><div class=\"border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden w-full sm:w-1/2\"><img src=\"{{CERTIFICATE_IMAGE}}\" alt=\"Certificate\" class=\"w-full h-auto object-cover\" /><div class=\"p-3 bg-neutral-100 dark:bg-[#1f1f1f]\"><p class=\"text-sm font-medium\">Varak Welfare Society Internship Certificate</p></div></div></div></div><div><h3 class=\"text-2xl font-bold mb-1\">Open source contributor</h3><p class=\"text-lg font-medium mb-1\">GirlScript Summer of Code 2025</p><p class=\"text-sm text-neutral-500 dark:text-neutral-400 mb-4\">August 2025</p><p>Implemented validations and error handling for signin/login and components calling data from the backend to the frontend.</p><div class=\"mt-6\"><div class=\"border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden w-full sm:w-1/2\"><img src=\"{{BADGE_IMAGE}}\" alt=\"GSSoC Badge\" class=\"w-full h-auto object-cover\" /><div class=\"p-3 bg-neutral-100 dark:bg-[#1f1f1f]\"><p class=\"text-sm font-medium\">Contributor's Badge</p></div></div></div></div></div>"
+        {
+          "image": "varakLogo",
+          "title": "Software developer intern",
+          "company": "Varak Welfare Society",
+          "date": "September 2025 - January 2026"
+        },
+        {
+          "image": "gssocLogo",
+          "title": "Open source contributor",
+          "company": "GirlScript Summer of Code 2025",
+          "date": "August 2025"
+        }
+      ]
     },
-    {
-        "id": "project-localbee",
-        "type": "project",
-        "category": "web",
-        "colSpan": 1,
-        "isExpandable": true,
-        "theme": "dark",
-        "data": {
-            "name": "LocalBee",
-            "techstack": [
-                "NextJS",
-                "TailwindCSS",
-                "FastAPI",
-                "PostgreSQL"
-            ],
-            "summary": "World map to track places I have visited and store their photos <span class=\"text-red-800 font-semibold\">(DB down)</span>.",
-            "github": "https://github.com/Nikshaan/LocalBee",
-            "live": "https://local-bee.vercel.app/"
-        },
-        "content": "<p>World map to track places I have visited and store their photos <span class=\"text-red-800 font-semibold\">(DB down)</span>.</p>"
+    "content": "<div><div class=\"mb-8\"><h3 class=\"text-2xl font-bold mb-1\">Software developer intern</h3><p class=\"text-lg font-medium mb-1\">Mentoria</p><p class=\"text-sm text-neutral-500 dark:text-neutral-400 mb-4\">April 2026 - present</p><p class=\"mb-4\">Building <a href=\"https://arya.mentoria.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline\">Arya by Mentoria</a>.</p></div><div class=\"mb-8\"><h3 class=\"text-2xl font-bold mb-1\">Software developer intern</h3><p class=\"text-lg font-medium mb-1\">Varak Welfare Society</p><p class=\"text-sm text-neutral-500 dark:text-neutral-400 mb-4\">September 2025 - January 2026</p><p class=\"mb-4\">Worked with the CTO to architect a scalable subscription engine using Django, PostgreSQL, and Razorpay, building the entire interface using React.js and TailwindCSS. This system was built to handle all payment edge cases (even if the user is not logged in).</p><p class=\"mb-4\">Migrated the organization's homepage from Vue.js to React.js. This shift to a modern component architecture significantly improved mobile responsiveness and reduced initial load latency by 35%.</p><p class=\"mb-4\">Contributed to enhancing the user experience by building several key frontend components, including the FAQs section, individual campaign pages, and a donor information modal. I also coded a fully dynamic navbar that could be controlled directly from the Django backend. To support the internal team, I helped in developing the frontend and backend integration for an admin dashboard that visualized database results using custom stored queries.</p><p>Implemented a secure Google OAuth 2.0 authentication system with robust input validations and error handling for signup and login flows. Additionally, I guided four other developer interns through their onboarding setup and provided active debugging support.</p><div class=\"mt-6 flex flex-col sm:flex-row gap-4\"><div class=\"border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden w-full sm:w-1/2\"><img src=\"{{LOR_IMAGE}}\" alt=\"LOR\" class=\"w-full h-auto object-cover\" /><div class=\"p-3 bg-neutral-100 dark:bg-[#1f1f1f]\"><p class=\"text-sm font-medium\">Letter of Recommendation</p></div></div><div class=\"border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden w-full sm:w-1/2\"><img src=\"{{CERTIFICATE_IMAGE}}\" alt=\"Certificate\" class=\"w-full h-auto object-cover\" /><div class=\"p-3 bg-neutral-100 dark:bg-[#1f1f1f]\"><p class=\"text-sm font-medium\">Varak Welfare Society Internship Certificate</p></div></div></div></div><div><h3 class=\"text-2xl font-bold mb-1\">Open source contributor</h3><p class=\"text-lg font-medium mb-1\">GirlScript Summer of Code 2025</p><p class=\"text-sm text-neutral-500 dark:text-neutral-400 mb-4\">August 2025</p><p>Implemented validations and error handling for signin/login and components calling data from the backend to the frontend.</p><div class=\"mt-6\"><div class=\"border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden w-full sm:w-1/2\"><img src=\"{{BADGE_IMAGE}}\" alt=\"GSSoC Badge\" class=\"w-full h-auto object-cover\" /><div class=\"p-3 bg-neutral-100 dark:bg-[#1f1f1f]\"><p class=\"text-sm font-medium\">Contributor's Badge</p></div></div></div></div></div>"
+  },
+  {
+    "id": "project-localbee",
+    "type": "project",
+    "category": "web",
+    "colSpan": 1,
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+      "name": "LocalBee",
+      "techstack": ["NextJS", "TailwindCSS", "FastAPI", "PostgreSQL"],
+      "summary": "World map to track places I have visited and store their photos <span class=\"text-red-800 font-semibold\">(DB down)</span>.",
+      "github": "https://github.com/Nikshaan/LocalBee",
+      "live": "https://local-bee.vercel.app/"
     },
-    {
-        "id": "project-pokedex",
-        "type": "project",
-        "category": "web",
-        "colSpan": 1,
-        "isExpandable": true,
-        "theme": "dark",
-        "data": {
-            "name": "Pokedex",
-            "techstack": [
-                "ReactJS",
-                "TailwindCSS",
-                "ChartJS",
-                "Motion"
-            ],
-            "summary": "Pokedex for 8 generations of pokemon using PokeAPI.",
-            "github": "https://github.com/Nikshaan/Pokedex",
-            "live": "https://nikshaan.github.io/Pokedex/"
-        },
-        "content": "<p>Pokedex for 8 generations of pokemon using PokeAPI.</p>"
+    "content": "<p>World map to track places I have visited and store their photos <span class=\"text-red-800 font-semibold\">(DB down)</span>.</p>"
+  },
+  {
+    "id": "project-pokedex",
+    "type": "project",
+    "category": "web",
+    "colSpan": 1,
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+      "name": "Pokedex",
+      "techstack": ["ReactJS", "TailwindCSS", "ChartJS", "Motion"],
+      "summary": "Pokedex for 8 generations of pokemon using PokeAPI.",
+      "github": "https://github.com/Nikshaan/Pokedex",
+      "live": "https://nikshaan.github.io/Pokedex/"
     },
-    {
-        "id": "project-cineverse",
-        "type": "project",
-        "category": "web",
-        "colSpan": 1,
-        "isExpandable": true,
-        "theme": "dark",
-        "data": {
-            "name": "Cineverse",
-            "techstack": [
-                "ReactJS",
-                "TailwindCSS",
-                "Redux"
-            ],
-            "summary": "Movie and series collection with rating, plot & cast information using OMDb API.",
-            "github": "https://github.com/Nikshaan/Cineverse",
-            "live": "https://nikshaan.github.io/Cineverse/"
-        },
-        "content": "<p>Movie and series collection with rating, plot & cast information using OMDb API.</p>"
+    "content": "<p>Pokedex for 8 generations of pokemon using PokeAPI.</p>"
+  },
+  {
+    "id": "project-cineverse",
+    "type": "project",
+    "category": "web",
+    "colSpan": 1,
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+      "name": "Cineverse",
+      "techstack": ["ReactJS", "TailwindCSS", "Redux"],
+      "summary": "Movie and series collection with rating, plot & cast information using OMDb API.",
+      "github": "https://github.com/Nikshaan/Cineverse",
+      "live": "https://nikshaan.github.io/Cineverse/"
     },
-    {
-        "id": "project-blogeez",
-        "type": "project",
-        "category": "web",
-        "colSpan": 1,
-        "isExpandable": true,
-        "theme": "dark",
-        "data": {
-            "name": "Blogeez",
-            "techstack": [
-                "ReactJS",
-                "TailwindCSS",
-                "NodeJS",
-                "ExpressJS",
-                "MongoDB"
-            ],
-            "summary": "Website to read, upload, edit & delete blogs with authentication.",
-            "github": "https://github.com/Nikshaan/Blogeez-backend"
-        },
-        "content": "<p>Website to read, upload, edit & delete blogs with authentication.</p>"
+    "content": "<p>Movie and series collection with rating, plot & cast information using OMDb API.</p>"
+  },
+  {
+    "id": "project-blogeez",
+    "type": "project",
+    "category": "web",
+    "colSpan": 1,
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+      "name": "Blogeez",
+      "techstack": ["ReactJS", "TailwindCSS", "NodeJS", "ExpressJS", "MongoDB"],
+      "summary": "Website to read, upload, edit & delete blogs with authentication.",
+      "github": "https://github.com/Nikshaan/Blogeez-backend"
     },
-    {
-        "id": "project-valorant",
-        "type": "project",
-        "category": "web",
-        "colSpan": 1,
-        "isExpandable": true,
-        "theme": "dark",
-        "data": {
-            "name": "Valorant tracker",
-            "techstack": [
-                "ReactJS",
-                "TailwindCSS",
-                "TypeScript"
-            ],
-            "summary": "Valorant match history and statistics tracker.",
-            "github": "https://github.com/Nikshaan/valorant-tracker",
-            "live": "https://valorant-tracker-alpha.vercel.app/"
-        },
-        "content": "<p>Valorant match history and statistics tracker.</p>"
+    "content": "<p>Website to read, upload, edit & delete blogs with authentication.</p>"
+  },
+  {
+    "id": "project-valorant",
+    "type": "project",
+    "category": "web",
+    "colSpan": 1,
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+      "name": "Valorant tracker",
+      "techstack": ["ReactJS", "TailwindCSS", "TypeScript"],
+      "summary": "Valorant match history and statistics tracker.",
+      "github": "https://github.com/Nikshaan/valorant-tracker",
+      "live": "https://valorant-tracker-alpha.vercel.app/"
     },
-    {
-        "id": "project-floraghar",
-        "type": "project",
-        "category": "web",
-        "colSpan": 1,
-        "isExpandable": true,
-        "theme": "dark",
-        "data": {
-            "name": "Floraghar",
-            "techstack": [
-                "ReactJS",
-                "TailwindCSS"
-            ],
-            "summary": "Online plant nursery website.",
-            "github": "https://github.com/Nikshaan/FloraGhar",
-            "live": "https://nikshaan.github.io/FloraGhar/"
-        },
-        "content": "<p>Online plant nursery website.</p>"
+    "content": "<p>Valorant match history and statistics tracker.</p>"
+  },
+  {
+    "id": "project-floraghar",
+    "type": "project",
+    "category": "web",
+    "colSpan": 1,
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+      "name": "Floraghar",
+      "techstack": ["ReactJS", "TailwindCSS"],
+      "summary": "Online plant nursery website.",
+      "github": "https://github.com/Nikshaan/FloraGhar",
+      "live": "https://nikshaan.github.io/FloraGhar/"
     },
-    {
-        "id": "resume",
-        "type": "resume",
-        "colSpan": "lg:col-span-0",
-        "isExpandable": false,
-        "theme": "dark",
-        "data": {
-            "title": "Resume",
-            "link": "/Nikshaan_Shetty_resume.pdf"
-        },
-        "content": ""
+    "content": "<p>Online plant nursery website.</p>"
+  },
+  {
+    "id": "resume",
+    "type": "resume",
+    "colSpan": "lg:col-span-0",
+    "isExpandable": false,
+    "theme": "dark",
+    "data": {
+      "title": "Resume",
+      "link": "/Nikshaan_Shetty_resume.pdf"
     },
-    {
-        "id": "project-productwizz",
-        "type": "project",
-        "category": "aiml",
-        "colSpan": 1,
-        "isExpandable": true,
-        "theme": "dark",
-        "data": {
-            "name": "ProductWizz",
-            "techstack": [
-                "Langchain",
-                "ChromaDB",
-                "HuggingFace",
-                "ReactJS",
-                "FastAPI"
-            ],
-            "summary": "An AI-powered shopping assistant browser extension for amazon.in & flipkart.com.",
-            "github": "https://github.com/Nikshaan/ProductWizz"
-        },
-        "content": "<p>An AI-powered shopping assistant browser extension for amazon.in & flipkart.com.</p>"
+    "content": ""
+  },
+  {
+    "id": "project-productwizz",
+    "type": "project",
+    "category": "aiml",
+    "colSpan": 1,
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+      "name": "ProductWizz",
+      "techstack": [
+        "Langchain",
+        "ChromaDB",
+        "HuggingFace",
+        "ReactJS",
+        "FastAPI"
+      ],
+      "summary": "An AI-powered shopping assistant browser extension for amazon.in & flipkart.com.",
+      "github": "https://github.com/Nikshaan/ProductWizz"
     },
-    {
-        "id": "project-llm-from-scratch",
-        "type": "project",
-        "category": "aiml",
-        "colSpan": 1,
-        "isExpandable": true,
-        "theme": "dark",
-        "data": {
-            "name": "LLM from scratch",
-            "techstack": [
-                "PyTorch",
-                "Python",
-                "Pandas",
-                "Matplotlib"
-            ],
-            "summary": "A complete implementation of GPT model like LLM from scratch with attention, training, fine-tuning and text classification capabilities.",
-            "github": "https://github.com/Nikshaan/llm-from-scratch"
-        },
-        "content": "<p>A complete implementation of GPT-2 (124M) from scratch with attention, training, fine-tuning and text classification capabilities. Features include multi-head attention mechanisms, transformer blocks, custom training loops, and fine-tuning pipelines for instruction-following and SMS spam classification tasks. Followed implementation from 'Build a LLM from Scratch' by Sebastian Raschka.</p>"
+    "content": "<p>An AI-powered shopping assistant browser extension for amazon.in & flipkart.com.</p>"
+  },
+  {
+    "id": "project-llm-from-scratch",
+    "type": "project",
+    "category": "aiml",
+    "colSpan": 1,
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+      "name": "LLM from scratch",
+      "techstack": ["PyTorch", "Python", "Pandas", "Matplotlib"],
+      "summary": "A complete implementation of GPT model like LLM from scratch with attention, training, fine-tuning and text classification capabilities.",
+      "github": "https://github.com/Nikshaan/llm-from-scratch"
     },
-    {
-        "id": "project-vocalops",
-        "type": "project",
-        "category": "aiml",
-        "colSpan": 1,
-        "isExpandable": true,
-        "theme": "dark",
-        "data": {
-            "name": "VocalOps",
-            "techstack": [
-                "LangGraph",
-                "SQLite",
-                "Docker",
-                "Kubernetes",
-                "Prometheus",
-                "Grafana"
-            ],
-            "summary": "An AI-powered voice & CLI interface for inventory (DB) management.",
-            "github": "https://github.com/Nikshaan/VocalOps"
-        },
-        "content": "<p>An AI-powered voice &amp; CLI interface for inventory (DB) management.</p><p>Built mainly to learn DevOps &amp; Agentic AI.</p>"
-    }
+    "content": "<p>A complete implementation of GPT-2 (124M) from scratch with attention, training, fine-tuning and text classification capabilities. Features include multi-head attention mechanisms, transformer blocks, custom training loops, and fine-tuning pipelines for instruction-following and SMS spam classification tasks. Followed implementation from 'Build a LLM from Scratch' by Sebastian Raschka.</p>"
+  },
+  {
+    "id": "project-vocalops",
+    "type": "project",
+    "category": "aiml",
+    "colSpan": 1,
+    "isExpandable": true,
+    "theme": "dark",
+    "data": {
+      "name": "VocalOps",
+      "techstack": [
+        "LangGraph",
+        "SQLite",
+        "Docker",
+        "Kubernetes",
+        "Prometheus",
+        "Grafana"
+      ],
+      "summary": "An AI-powered voice & CLI interface for inventory (DB) management.",
+      "github": "https://github.com/Nikshaan/VocalOps"
+    },
+    "content": "<p>An AI-powered voice &amp; CLI interface for inventory (DB) management.</p><p>Built mainly to learn DevOps &amp; Agentic AI.</p>"
+  }
 ]

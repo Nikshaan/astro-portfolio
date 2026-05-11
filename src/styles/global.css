@@ -4,8 +4,8 @@
 @import "./project-links.css";
 
 :root {
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-heading: "Space Grotesk", sans-serif;
+  --font-body: "DM Sans", sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -78,7 +78,6 @@
 }
 
 @supports (view-transition-name: none) {
-
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation-duration: 0.2s;
@@ -136,13 +135,36 @@
     font-family: var(--font-heading);
   }
 
-  h1 { font-size: 2.2rem; font-weight: 700; line-height: 1.1; }
-  h2 { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
-  h3 { font-size: 1.2rem; font-weight: 600; line-height: 1.3; }
-  nav a { font-weight: 500; font-size: 0.95rem; }
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  nav a {
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
 
-  p, span, label, button, input, textarea,
-  .tag, .badge, footer, .description {
+  p,
+  span,
+  label,
+  button,
+  input,
+  textarea,
+  .tag,
+  .badge,
+  footer,
+  .description {
     font-family: var(--font-body);
   }
 
@@ -157,7 +179,7 @@
 code,
 pre,
 .font-mono {
-  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
 }
 
 .f-carousel {
@@ -227,15 +249,15 @@ html.lenis body {
   transition-duration: 100ms !important;
 }
 
-.tippy-box[data-placement^='bottom'] {
+.tippy-box[data-placement^="bottom"] {
   margin-top: 8px !important;
 }
 
-.tippy-box[data-placement^='bottom']>.tippy-arrow {
+.tippy-box[data-placement^="bottom"] > .tippy-arrow {
   top: 0 !important;
 }
 
-.tippy-box[data-placement^='bottom']>.tippy-arrow:before {
+.tippy-box[data-placement^="bottom"] > .tippy-arrow:before {
   border-bottom-color: rgba(23, 23, 23, 0.95) !important;
   top: -7px !important;
 }
@@ -249,7 +271,9 @@ html.lenis body {
   color: #ffffff !important;
 }
 
-[data-theme="light"] .tippy-box[data-placement^='bottom']>.tippy-arrow:before {
+[data-theme="light"]
+  .tippy-box[data-placement^="bottom"]
+  > .tippy-arrow:before {
   border-bottom-color: rgba(30, 58, 138, 0.95) !important;
 }
 
@@ -286,7 +310,7 @@ html.lenis body {
 }
 
 .tooltip-trigger:hover::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 100%;
   left: 50%;
@@ -331,7 +355,8 @@ html.lenis body {
 
 .prose code,
 .prose pre {
-  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  font-family:
+    "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace !important;
 }
 
 .prose h1,
@@ -398,7 +423,7 @@ html.lenis body {
   margin-bottom: 0.75rem;
 }
 
-.prose ul>li {
+.prose ul > li {
   position: relative;
 }
 
@@ -458,8 +483,6 @@ html.lenis body {
 [data-theme="light"] .github-card-hover:hover {
   border-color: #1e3a8a !important;
 }
-
-
 
 .me-card-hover {
   transition: border-color 0.3s ease-in-out;
