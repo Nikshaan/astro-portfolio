@@ -220,6 +220,7 @@ export default memo(function RadialArtistHeatmap() {
   }, []);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const chartHostRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const chartGroupRef = useRef<SVGGElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -537,14 +538,15 @@ export default memo(function RadialArtistHeatmap() {
       const tip = tooltipRef.current;
       const titleEl = tooltipTitleRef.current;
       const listEl = tooltipListRef.current;
-      const host = rootRef.current;
+      const host = chartHostRef.current;
       const m = modelRef.current;
-      if (!tip || !titleEl || !listEl || !host || !m) return;
+      if (!tip || !titleEl || !listEl || !m) return;
       if (week === null) {
         tip.style.visibility = "hidden";
         tip.style.opacity = "0";
         return;
       }
+      if (!host) return;
       const fromSec = m.weeks[week]?.from;
       if (fromSec === undefined) return;
       titleEl.textContent = formatWeekOf(fromSec);
@@ -587,17 +589,30 @@ export default memo(function RadialArtistHeatmap() {
       }
       tip.style.visibility = "visible";
       tip.style.opacity = "1";
-      const rect = host.getBoundingClientRect();
-      const tipRect = tip.getBoundingClientRect();
-      const pad = 10;
-      let left = clientX - rect.left + pad;
-      let top = clientY - rect.top + pad;
-      const maxL = rect.width - tipRect.width - pad;
-      const maxT = rect.height - tipRect.height - pad;
-      left = Math.max(pad, Math.min(left, maxL));
-      top = Math.max(pad, Math.min(top, maxT));
-      tip.style.left = `${left}px`;
-      tip.style.top = `${top}px`;
+
+      const placeWithinHost = () => {
+        const h = chartHostRef.current;
+        const el = tooltipRef.current;
+        if (!h || !el || week === null) return;
+        const rect = h.getBoundingClientRect();
+        const pad = 8;
+        const tw = el.offsetWidth;
+        const th = el.offsetHeight;
+        const w = rect.width;
+        const hgt = rect.height;
+        let left = clientX - rect.left + pad;
+        let top = clientY - rect.top + pad;
+        const maxLeft = Math.max(pad, w - tw - pad);
+        const maxTop = Math.max(pad, hgt - th - pad);
+        left = Math.min(Math.max(pad, left), maxLeft);
+        top = Math.min(Math.max(pad, top), maxTop);
+        el.style.left = `${left}px`;
+        el.style.top = `${top}px`;
+      };
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(placeWithinHost);
+      });
     },
     [],
   );
@@ -730,7 +745,7 @@ export default memo(function RadialArtistHeatmap() {
         leading artists over the past year
       </h2>
       <div className="flex w-full flex-1 min-h-[180px] min-w-0 items-center justify-center overflow-hidden p-3 lg:min-h-[250px]">
-        <div className={chartInnerClass}>
+        <div ref={chartHostRef} className={chartInnerClass}>
           {showError ? (
             <div className="flex h-full w-full items-center justify-center px-3 text-center type-body-sm text-red-400">
               {error}
