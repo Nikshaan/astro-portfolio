@@ -15,6 +15,10 @@ import {
   loadRadialHeatmapPayload,
   readRadialHeatmapCache,
 } from "../utils/radialHeatmapClient";
+import {
+  YearlyScrobblesChartSkeletonInner,
+  YearlyScrobblesLegendSkeleton,
+} from "./musicStatsLoadingShell";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -349,21 +353,105 @@ export default memo(function RadialArtistHeatmap() {
   }, [shouldLoad]);
 
   useEffect(() => {
+    if (!shouldLoad) return;
+    let cancelled = false;
+    const lastPullAt = { t: 0 };
+    const pull = (minGapMs: number) => {
+      const n = Date.now();
+      if (minGapMs > 0 && n - lastPullAt.t < minGapMs) return;
+      lastPullAt.t = n;
+      void loadRadialHeatmapPayload({ force: true })
+        .then((payload) => {
+          if (!cancelled) {
+            setData(payload);
+            setError(null);
+          }
+        })
+        .catch(() => {});
+    };
+    const intervalId = window.setInterval(() => pull(0), 20 * 60 * 1000);
+    const onVis = () => pull(60_000);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [shouldLoad]);
+
+  useLayoutEffect(() => {
     if (shouldLoad) return;
     const el = rootRef.current;
     if (!el) return;
+
+    const vh = () => window.innerHeight || 0;
+    const marginTop = 400;
+    const marginBottom = 340;
+
+    const shouldStartFromGeometry = () => {
+      const node = rootRef.current;
+      if (!node) return false;
+      const r = node.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) return false;
+      if (r.bottom < 0) return true;
+      return r.bottom > -marginTop && r.top < vh() + marginBottom;
+    };
+
+    if (shouldStartFromGeometry()) {
+      setShouldLoad(true);
+      return;
+    }
+
+    let ro: ResizeObserver | undefined;
+
     const io = new IntersectionObserver(
       (entries) => {
-        const hit = entries.some((e) => e.isIntersecting);
-        if (hit) {
+        if (entries.some((e) => e.isIntersecting)) {
           setShouldLoad(true);
           io.disconnect();
+          ro?.disconnect();
         }
       },
       { root: null, rootMargin: "400px 0px 340px 0px", threshold: 0 },
     );
     io.observe(el);
-    return () => io.disconnect();
+    for (const entry of io.takeRecords()) {
+      if (entry.isIntersecting) {
+        setShouldLoad(true);
+        io.disconnect();
+        return;
+      }
+    }
+
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => {
+        if (shouldStartFromGeometry()) {
+          setShouldLoad(true);
+          io.disconnect();
+          ro?.disconnect();
+        }
+      });
+      ro.observe(el);
+    }
+
+    let rafOuter = 0;
+    let rafInner = 0;
+    rafOuter = requestAnimationFrame(() => {
+      rafInner = requestAnimationFrame(() => {
+        if (shouldStartFromGeometry()) {
+          setShouldLoad(true);
+          io.disconnect();
+          ro?.disconnect();
+        }
+      });
+    });
+
+    return () => {
+      io.disconnect();
+      ro?.disconnect();
+      cancelAnimationFrame(rafOuter);
+      cancelAnimationFrame(rafInner);
+    };
   }, [shouldLoad]);
 
   const model = useMemo((): BuiltModel | null => {
@@ -619,80 +707,63 @@ export default memo(function RadialArtistHeatmap() {
   );
 
   const chartReady = !!model && model.artists.some((a) => a.name.length > 0);
-  const showSkeleton = shouldLoad && loading && !chartReady;
   const showError = shouldLoad && !!error && !chartReady;
-  const showEmpty = shouldLoad && !loading && !showError && data && !chartReady;
+  const showEmpty =
+    shouldLoad && !loading && !showError && !!data && !chartReady;
+  const showSkeleton = !chartReady && !showError && !showEmpty;
+
+  const chartInnerClass =
+    "relative aspect-square h-full max-h-full w-auto max-w-full min-h-0 overflow-hidden [contain:paint]";
+  const legendSlotClass =
+    "flex flex-wrap content-start justify-center gap-x-4 gap-y-2 px-1";
 
   return (
     <div
       ref={bindRoot}
       className={cn(
-        "radial-heatmap-root relative flex w-full min-w-0 flex-1 flex-col gap-3 overflow-hidden pb-1 [contain:paint]",
-        "min-h-[min(280px,85vw)] sm:min-h-[300px]",
+        "radial-heatmap-root relative flex h-full min-h-0 w-full min-w-0 flex-col gap-3 overflow-hidden pb-1 [contain:paint]",
+        showSkeleton && "yearly-scrobbles-loading",
       )}
     >
       <h2 id="radial-heatmap-heading" className="sr-only">
         Yearly scrobbles (week-wise): weekly listening intensity for your
         leading artists over the past year
       </h2>
-      {showError ? (
-        <div className="flex flex-1 items-center justify-center px-3 py-6 text-sm text-red-400">
-          {error}
-        </div>
-      ) : null}
-      {showSkeleton ? (
-        <div
-          className="radial-heatmap-shimmer flex flex-1 flex-col justify-center gap-2.5 py-5 sm:gap-3"
-          aria-hidden="true"
-        >
-          <div
-            className="mx-auto h-[min(260px,72vw)] w-[min(260px,72vw)] max-w-full rounded-full sm:h-[280px] sm:w-[280px]"
-            style={{
-              backgroundImage:
-                "linear-gradient(90deg, var(--shimmer-from, #2a2a2a) 25%, var(--shimmer-to, #3a3a3a) 50%, var(--shimmer-from, #2a2a2a) 75%)",
-              backgroundSize: "400px 100%",
-              animation: "radialHeatmapShimmer 1.6s infinite linear",
-            }}
-          />
-          <style>{`
-                        @keyframes radialHeatmapShimmer {
-                            0% { background-position: -200px 0; }
-                            100% { background-position: 200px 0; }
-                        }
-                        [data-theme="light"] .radial-heatmap-shimmer {
-                            --shimmer-from: #bfdbfe;
-                            --shimmer-to: #93c5fd;
-                        }
-                    `}</style>
-        </div>
-      ) : null}
-      {showEmpty ? (
-        <div
-          className={cn(
-            "flex flex-1 items-center justify-center px-3 py-6 text-sm",
-            isLightTheme ? "text-slate-600" : "text-neutral-400",
-          )}
-        >
-          Not enough weekly listening history yet.
-        </div>
-      ) : null}
-      {chartReady && model ? (
-        <>
-          <div className="relative w-full max-w-full shrink-0">
-            <svg
-              ref={svgRef}
-              role="img"
-              viewBox="0 0 680 680"
-              width="100%"
-              aria-labelledby="radial-heatmap-heading"
-              shapeRendering="optimizeSpeed"
-              className="block max-h-[min(78vw,520px)] touch-manipulation"
-              onMouseMove={onSvgMouseMove}
-              onMouseLeave={onSvgMouseLeave}
-              onTouchMove={onSvgTouchMove}
-              onTouchEnd={onSvgTouchComplete}
-              onTouchCancel={onSvgTouchComplete}
+      <div className="flex w-full flex-1 min-h-[180px] min-w-0 items-center justify-center overflow-hidden p-3 lg:min-h-[250px]">
+        <div className={chartInnerClass}>
+          {showError ? (
+            <div className="flex h-full w-full items-center justify-center px-3 text-center type-body-sm text-red-400">
+              {error}
+            </div>
+          ) : null}
+          {showSkeleton ? <YearlyScrobblesChartSkeletonInner /> : null}
+          {showEmpty ? (
+            <div
+              className={cn(
+                "flex h-full w-full items-center justify-center px-3 text-center type-body-sm",
+                isLightTheme ? "text-slate-600" : "text-neutral-400",
+              )}
             >
+              Not enough weekly listening history yet.
+            </div>
+          ) : null}
+          {chartReady && model ? (
+            <>
+              <svg
+                ref={svgRef}
+                role="img"
+                viewBox="0 0 680 680"
+                width="100%"
+                height="100%"
+                aria-labelledby="radial-heatmap-heading"
+                shapeRendering="optimizeSpeed"
+                className="block h-full w-full touch-manipulation"
+                onMouseMove={onSvgMouseMove}
+                onMouseLeave={onSvgMouseLeave}
+                onTouchMove={onSvgTouchMove}
+                onTouchEnd={onSvgTouchComplete}
+                onTouchCancel={onSvgTouchComplete}
+              >
               <desc>
                 Yearly scrobbles shown week by week: ten concentric rings for
                 your most-played artists over the last year. Each ring is split
@@ -784,7 +855,7 @@ export default memo(function RadialArtistHeatmap() {
             <div
               ref={tooltipRef}
               className={cn(
-                "pointer-events-none absolute z-20 max-w-[min(100%-16px,18rem)] rounded-xl border p-3 text-xs shadow-lg transition-opacity",
+                "pointer-events-none absolute z-20 max-w-[min(100%-16px,18rem)] rounded-xl border p-3 type-caption shadow-lg transition-opacity",
                 "border-white/20 bg-neutral-50 text-neutral-900 dark:border-white/20 dark:bg-[#171717] dark:text-neutral-100",
                 "[html[data-theme=light]_&]:border-[#64748b]/30 [html[data-theme=light]_&]:!bg-white [html[data-theme=light]_&]:!text-slate-900 [html[data-theme=light]_&]:shadow-md",
               )}
@@ -796,39 +867,48 @@ export default memo(function RadialArtistHeatmap() {
                 className="m-0 max-h-48 list-none space-y-1 overflow-auto p-0"
               />
             </div>
-          </div>
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 px-1">
-            {model.artists.map((a, i) => {
-              if (!a.name) return null;
-              const pw = hoverWeek !== null ? (a.plays[hoverWeek] ?? 0) : -1;
-              const legendDim = hoverWeek !== null && pw <= 0;
-              return (
-                <div
-                  key={a.name}
+          </>
+        ) : null}
+        </div>
+      </div>
+      {chartReady && model ? (
+        <div className={cn(legendSlotClass, "shrink-0")}>
+          {model.artists.map((a, i) => {
+            if (!a.name) return null;
+            const pw = hoverWeek !== null ? (a.plays[hoverWeek] ?? 0) : -1;
+            const legendDim = hoverWeek !== null && pw <= 0;
+            return (
+              <div
+                key={a.name}
+                className={cn(
+                  "flex min-w-0 max-w-[11rem] items-center gap-2 type-caption transition-opacity duration-150",
+                  legendDim ? "opacity-35" : "opacity-100",
+                )}
+              >
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: model.colors[i] }}
+                />
+                <span
                   className={cn(
-                    "flex min-w-0 max-w-[11rem] items-center gap-2 text-xs transition-opacity duration-150",
-                    legendDim ? "opacity-35" : "opacity-100",
+                    "min-w-0 truncate",
+                    isLightTheme ? "text-neutral-900" : "text-neutral-100",
                   )}
+                  title={a.name}
                 >
-                  <span
-                    className="h-2 w-2 shrink-0 rounded-full"
-                    style={{ backgroundColor: model.colors[i] }}
-                  />
-                  <span
-                    className={cn(
-                      "min-w-0 truncate",
-                      isLightTheme ? "text-neutral-900" : "text-neutral-100",
-                    )}
-                    title={a.name}
-                  >
-                    {a.name}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      ) : null}
+                  {a.name}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      ) : showSkeleton ? (
+        <div className="shrink-0">
+          <YearlyScrobblesLegendSkeleton />
+        </div>
+      ) : (
+        <div className={cn(legendSlotClass, "shrink-0")} aria-hidden />
+      )}
     </div>
   );
 });

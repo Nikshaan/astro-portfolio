@@ -1,5 +1,6 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
+import "../styles/global.css";
 ---
 
 <MainLayout 
@@ -7,10 +8,10 @@ import MainLayout from "../layouts/MainLayout.astro";
     description="The page you're looking for doesn't exist. Return to homepage."
 >
     <div class="min-h-[100svh] w-full bg-[#111111] text-white flex flex-col justify-center items-center gap-4 p-4">
-        <h1 class="text-6xl md:text-9xl font-bold">404</h1>
-        <p class="text-xl md:text-2xl text-neutral-400">Page does not exist!</p>
+        <h1 class="type-hero-display">404</h1>
+        <p class="type-h4 font-normal text-neutral-400">Page does not exist!</p>
         <a 
-            class="cursor-pointer px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-full transition-colors text-lg font-medium" 
+            class="cursor-pointer px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-full transition-colors type-body font-medium" 
             href="/" 
             aria-label="Go back to homepage"
         >

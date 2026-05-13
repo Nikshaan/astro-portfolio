@@ -7,6 +7,7 @@ import React, {
   useRef,
 } from "react";
 import { isSlowConnection } from "../utils/networkAware";
+import { scheduleRadialHeatmapWarmup } from "./musicRadialHeatmapWarmup";
 import { Maximize2 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -16,10 +17,14 @@ const RadialArtistHeatmap = lazy(() => import("./RadialArtistHeatmap"));
 const MusicGenreStreakBar = lazy(() => import("./MusicGenreStreakBar"));
 import IndiaMapCard from "./IndiaMapCard";
 import ErrorBoundary from "./ErrorBoundary";
+import { MusicStatsLoadingShell, YearlyScrobblesLoadingShell } from "./musicStatsLoadingShell";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+const FUN_MUSIC_YEARLY_PAIR_BODY =
+  "flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-x-hidden px-2 pb-5 pt-0 sm:px-4 md:px-6";
 
 interface Image {
   id: string;
@@ -40,15 +45,26 @@ interface CardWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   isExpandable?: boolean;
+  fillHeight?: boolean;
 }
 
 const CardWrapper: React.FC<CardWrapperProps> = memo(
-  ({ children, className, isExpandable = false, onClick, ...props }) => {
+  ({
+    children,
+    className,
+    isExpandable = false,
+    fillHeight = true,
+    onClick,
+    ...props
+  }) => {
     return (
-      <div className={cn("h-full w-full", className)}>
+      <div
+        className={cn(fillHeight ? "h-full w-full" : "h-auto w-full", className)}
+      >
         <div
           className={cn(
-            "relative rounded-3xl border overflow-hidden h-full flex flex-col",
+            "relative rounded-3xl border overflow-hidden flex flex-col",
+            fillHeight ? "h-full" : "h-auto min-h-0",
             "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
             "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#93c5fd]",
             isExpandable ? "group/card cursor-pointer" : "",
@@ -108,6 +124,10 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
   const fancyboxLoadedRef = useRef(false);
 
   useEffect(() => {
+    scheduleRadialHeatmapWarmup();
+  }, []);
+
+  useEffect(() => {
     const batchSize = isSlowConnection() ? 6 : 12;
     setVisibleCount((prev) => Math.max(prev, batchSize));
 
@@ -123,6 +143,17 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
     if (sentinelRef.current) observer.observe(sentinelRef.current);
     return () => observer.disconnect();
   }, [images.length]);
+
+  useEffect(() => {
+    if (isSlowConnection()) return;
+    const prefetch = () => void import("./RadialArtistHeatmap");
+    if (typeof requestIdleCallback === "function") {
+      const id = requestIdleCallback(prefetch, { timeout: 2800 });
+      return () => cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(prefetch, 250);
+    return () => window.clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     document.getElementById("gallery-shimmer-style")?.remove();
@@ -292,7 +323,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
 
   return (
     <div className="w-full max-w-[1400px] mx-auto p-4 pt-16">
-      <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight mb-8 px-2">
+      <h2 className="text-neutral-900 dark:text-neutral-100 tracking-tight mb-8 px-2">
         F.U.N
       </h2>
 
@@ -302,19 +333,15 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
       >
         <CardWrapper
           key="music-stats"
-          className="col-span-2 md:col-span-2 lg:col-span-2 row-span-2 min-h-[min(580px,100%)]"
+          className="col-span-2 md:col-span-2 lg:col-span-2 row-span-2 h-full min-h-0 w-full"
         >
-          <div className="flex h-full w-full flex-col">
-            <h3 className="text-xl font-medium mb-4 p-5 md:p-6 pb-0">
+          <div className="flex h-full min-h-0 w-full flex-col">
+            <h3 className="mb-3 shrink-0 p-5 pb-0 md:p-6 md:pb-0">
               Music Stats
             </h3>
-            <div className="flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-x-hidden px-2 pb-5 pt-0 sm:px-4 md:px-6">
+            <div className={FUN_MUSIC_YEARLY_PAIR_BODY}>
               <Suspense
-                fallback={
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                    Loading music stats...
-                  </div>
-                }
+                fallback={<MusicStatsLoadingShell />}
               >
                 <ErrorBoundary>
                   <MusicStatsClient />
@@ -326,20 +353,14 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
 
         <CardWrapper
           key="music-radial"
-          className="col-span-2 lg:col-span-2 row-span-2 min-h-[400px]"
+          className="col-span-2 lg:col-span-2 row-span-2 h-full min-h-0 w-full"
         >
-          <div className="flex h-full w-full flex-col">
-            <h3 className="mb-2 shrink-0 p-5 pb-0 text-xl font-medium md:p-6 md:pb-0">
+          <div className="flex h-full min-h-0 w-full flex-col">
+            <h3 className="mb-3 shrink-0 p-5 pb-0 md:p-6 md:pb-0">
               Yearly scrobbles (week-wise)
             </h3>
-            <div className="flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-x-hidden px-2 pb-5 pt-0 sm:px-4 md:px-6">
-              <Suspense
-                fallback={
-                  <div className="flex min-h-[200px] flex-1 items-center justify-center rounded-xl border border-transparent text-sm text-neutral-400">
-                    Loading yearly scrobbles…
-                  </div>
-                }
-              >
+            <div className={FUN_MUSIC_YEARLY_PAIR_BODY}>
+              <Suspense fallback={<YearlyScrobblesLoadingShell />}>
                 <ErrorBoundary>
                   <RadialArtistHeatmap />
                 </ErrorBoundary>
@@ -354,7 +375,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
         >
           <Suspense
             fallback={
-              <div className="flex min-h-[120px] w-full items-center justify-center rounded-2xl border border-transparent text-sm text-neutral-400">
+              <div className="flex min-h-[120px] w-full items-center justify-center rounded-2xl border border-transparent type-caption text-neutral-400">
                 Loading genre streak…
               </div>
             }
@@ -433,7 +454,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
               <div className="pointer-events-none absolute inset-0 z-20 flex items-end bg-black/0 p-4 transition-colors duration-300 ease-out group-hover/photo:bg-black/20 motion-reduce:transition-none">
                 <p
                   className={cn(
-                    "w-full truncate text-sm font-medium !text-white opacity-0 transition-opacity duration-300 drop-shadow-md group-hover/photo:opacity-100",
+                    "w-full truncate type-body-sm font-medium !text-white opacity-0 transition-opacity duration-300 drop-shadow-md group-hover/photo:opacity-100",
                     "motion-reduce:transition-none motion-reduce:group-hover/photo:opacity-100",
                   )}
                 >

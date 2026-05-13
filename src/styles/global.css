@@ -6,6 +6,28 @@
 :root {
   --font-heading: "Space Grotesk", sans-serif;
   --font-body: "DM Sans", sans-serif;
+
+  --type-h1: clamp(1.75rem, 1.38rem + 1.15vw, 2.5rem);
+  --type-h2: clamp(1.4375rem, 1.22rem + 0.85vw, 1.875rem);
+  --type-h3: clamp(1.0625rem, 0.97rem + 0.35vw, 1.1875rem);
+  --type-h4: clamp(0.9375rem, 0.88rem + 0.22vw, 1.0625rem);
+  --type-h5: clamp(0.875rem, 0.82rem + 0.16vw, 0.9375rem);
+  --type-h6: clamp(0.8125rem, 0.78rem + 0.12vw, 0.875rem);
+  --type-body: clamp(0.9375rem, 0.91rem + 0.1vw, 1rem);
+  --type-body-sm: clamp(0.8125rem, 0.78rem + 0.1vw, 0.875rem);
+  --type-caption: clamp(0.75rem, 0.72rem + 0.06vw, 0.8125rem);
+  --type-nav: clamp(0.8125rem, 0.77rem + 0.12vw, 0.9375rem);
+  --type-ui: clamp(0.8125rem, 0.77rem + 0.08vw, 0.875rem);
+  --type-lead: clamp(1.03125rem, 0.94rem + 0.28vw, 1.125rem);
+  --type-content-title: clamp(1.125rem, 1.02rem + 0.38vw, 1.3125rem);
+  --type-content-subtitle: clamp(1rem, 0.94rem + 0.18vw, 1.0625rem);
+  --type-footer-display: clamp(1.375rem, 1.08rem + 0.95vw, 2rem);
+  --type-footer-contact: clamp(1rem, 0.86rem + 0.5vw, 1.375rem);
+  --type-decorative-word: clamp(1.625rem, 1.22rem + 1.15vw, 2.5rem);
+  --type-bento-eyebrow: clamp(0.9375rem, 0.88rem + 0.2vw, 1.0625rem);
+  --type-map-heading: clamp(1.1875rem, 1.02rem + 0.55vw, 1.5rem);
+  --type-stats-label: clamp(0.9375rem, 0.88rem + 0.22vw, 1.0625rem);
+  --type-hero-display: clamp(3rem, 1.85rem + 7vw, 9rem);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -87,7 +109,7 @@
 
 @layer base {
   html {
-    font-size: 16px;
+    font-size: clamp(15px, 0.3125vw + 14px, 18px);
     background-color: #080808;
     transition: background-color 0.35s ease;
     overscroll-behavior: none;
@@ -96,30 +118,12 @@
   body {
     margin: 0;
     font-family: var(--font-body);
-    font-size: inherit;
+    font-size: 1rem;
     line-height: 1.65;
     font-weight: 400;
     background-color: #080808;
     transition: background-color 0.35s ease;
     cursor: auto;
-  }
-
-  @media (min-width: 640px) {
-    html {
-      font-size: 19px;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    html {
-      font-size: 17px;
-    }
-  }
-
-  @media (min-width: 1536px) {
-    html {
-      font-size: 18px;
-    }
   }
 
   h1,
@@ -128,7 +132,6 @@
   h4,
   h5,
   h6,
-  nav a,
   .section-title,
   .project-title,
   .card-title {
@@ -136,23 +139,44 @@
   }
 
   h1 {
-    font-size: 2.2rem;
+    font-size: var(--type-h1);
     font-weight: 700;
-    line-height: 1.1;
+    line-height: 1.12;
+    letter-spacing: -0.03em;
   }
   h2 {
-    font-size: 1.6rem;
+    font-size: var(--type-h2);
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.18;
+    letter-spacing: -0.025em;
   }
   h3 {
-    font-size: 1.2rem;
+    font-size: var(--type-h3);
+    font-weight: 600;
+    line-height: 1.28;
+    letter-spacing: -0.02em;
+  }
+  h4 {
+    font-size: var(--type-h4);
     font-weight: 600;
     line-height: 1.3;
+    letter-spacing: -0.015em;
   }
+  h5 {
+    font-size: var(--type-h5);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  h6 {
+    font-size: var(--type-h6);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
   nav a {
+    font-family: var(--font-heading);
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: var(--type-nav);
   }
 
   p,
@@ -173,6 +197,119 @@
   .font-semibold,
   .font-bold {
     font-family: var(--font-body);
+  }
+}
+
+@layer components {
+  .type-body {
+    font-size: var(--type-body);
+    line-height: 1.65;
+  }
+  .type-body-sm {
+    font-size: var(--type-body-sm);
+    line-height: 1.58;
+  }
+  .type-caption {
+    font-size: var(--type-caption);
+    line-height: 1.45;
+  }
+  .type-ui {
+    font-size: var(--type-ui);
+    line-height: 1.4;
+  }
+  .type-lead {
+    font-size: var(--type-lead);
+    line-height: 1.35;
+    font-weight: 700;
+  }
+  .type-content-title {
+    font-family: var(--font-heading);
+    font-size: var(--type-content-title);
+    font-weight: 700;
+    line-height: 1.22;
+    letter-spacing: -0.02em;
+  }
+  .type-content-subtitle {
+    font-size: var(--type-content-subtitle);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .type-content-meta {
+    font-size: var(--type-body-sm);
+    line-height: 1.5;
+  }
+  .type-panel-title {
+    font-family: var(--font-body);
+    font-size: var(--type-h3);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .type-stats-label {
+    font-family: var(--font-heading);
+    font-size: var(--type-stats-label);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+  .type-h4 {
+    font-family: var(--font-heading);
+    font-size: var(--type-h4);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+  }
+  .type-footer-display {
+    font-family: var(--font-heading);
+    font-size: var(--type-footer-display);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+  }
+  .type-footer-contact {
+    font-family: var(--font-heading);
+    font-size: var(--type-footer-contact);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .type-bento-eyebrow {
+    font-family: var(--font-heading);
+    font-size: var(--type-bento-eyebrow);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  .type-map-heading {
+    font-family: var(--font-heading);
+    font-size: var(--type-map-heading);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+  .type-decorative-word {
+    font-family: var(--font-heading);
+    font-size: var(--type-decorative-word);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .type-hero-display {
+    font-family: var(--font-heading);
+    font-size: var(--type-hero-display);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  a.nav-link {
+    font-size: var(--type-nav);
+  }
+
+  .prose-content-compact h3 {
+    font-size: var(--type-h3) !important;
+    line-height: 1.28 !important;
+  }
+  .prose-content-compact p {
+    font-size: var(--type-body) !important;
+    line-height: 1.65 !important;
   }
 }
 
@@ -360,29 +497,77 @@ html.lenis body {
 }
 
 .prose h1,
-.prose h2,
-.prose h3,
-.prose h4,
-.prose h5,
-.prose h6,
-.prose-invert h1,
-.prose-invert h2,
-.prose-invert h3,
-.prose-invert h4,
-.prose-invert h5,
-.prose-invert h6 {
+.prose-invert h1 {
   font-family: var(--font-heading) !important;
-  font-weight: 600 !important;
+  font-size: var(--type-h1) !important;
+  font-weight: 700 !important;
   letter-spacing: -0.03em !important;
-  line-height: 1.2 !important;
+  line-height: 1.12 !important;
 }
 
-.prose strong,
-.prose b,
-.prose-invert strong,
-.prose-invert b {
-  font-family: var(--font-body) !important;
+.prose h2,
+.prose-invert h2 {
+  font-family: var(--font-heading) !important;
+  font-size: var(--type-h2) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.18 !important;
+}
+
+.prose h3,
+.prose-invert h3 {
+  font-family: var(--font-heading) !important;
+  font-size: var(--type-h3) !important;
   font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.28 !important;
+}
+
+.prose h4,
+.prose-invert h4 {
+  font-family: var(--font-heading) !important;
+  font-size: var(--type-h4) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.015em !important;
+  line-height: 1.3 !important;
+}
+
+.prose h5,
+.prose-invert h5 {
+  font-family: var(--font-heading) !important;
+  font-size: var(--type-h5) !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+}
+
+.prose h6,
+.prose-invert h6 {
+  font-family: var(--font-heading) !important;
+  font-size: var(--type-h6) !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+}
+
+.prose h3.type-content-title,
+.prose-invert h3.type-content-title {
+  font-size: var(--type-content-title) !important;
+  font-weight: 700 !important;
+}
+
+.prose p.type-content-subtitle,
+.prose-invert p.type-content-subtitle {
+  font-size: var(--type-content-subtitle) !important;
+  font-weight: 600 !important;
+}
+
+.prose p.type-content-meta,
+.prose-invert p.type-content-meta {
+  font-size: var(--type-body-sm) !important;
+}
+
+.prose p.type-caption,
+.prose-invert p.type-caption {
+  font-size: var(--type-caption) !important;
 }
 
 .prose-lg {
@@ -468,6 +653,7 @@ html.lenis body {
 
 .prose p,
 .prose-invert p {
+  font-size: var(--type-body) !important;
   font-weight: 300;
   line-height: 1.7;
 }
@@ -488,11 +674,15 @@ html.lenis body {
   transition: border-color 0.3s ease-in-out;
 }
 
-.me-card-hover:hover {
+.me-card-hover:hover,
+.me-card-hover:focus-visible {
   border-color: #c084fc !important;
 }
 
-[data-theme="light"] .me-card-hover:hover {
+html[data-theme="light"] .me-card-hover:hover,
+html[data-theme="light"] .me-card-hover:focus-visible,
+[data-theme="light"] .me-card-hover:hover,
+[data-theme="light"] .me-card-hover:focus-visible {
   border-color: #3b82f6 !important;
 }
 
@@ -515,4 +705,51 @@ html.lenis body {
 
 [data-theme="light"] .radial-heatmap-root {
   --radial-cell-highlight-stroke: #0f172a;
+}
+
+@keyframes musicShimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.music-stats-loading .music-stats-skel-strong,
+.yearly-scrobbles-loading .music-stats-skel-strong {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.music-stats-loading .music-stats-skel-soft,
+.yearly-scrobbles-loading .music-stats-skel-soft {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .music-stats-loading {
+  --shimmer-from: #bfdbfe;
+  --shimmer-to: #93c5fd;
+  --shimmer-from-1: #dbeafe;
+  --shimmer-to-1: #93c5fd;
+  --shimmer-from-2: #bfdbfe;
+  --shimmer-to-2: #3b82f6;
+}
+
+[data-theme="light"] .yearly-scrobbles-loading {
+  --shimmer-from-2: #bfdbfe;
+  --shimmer-to-2: #3b82f6;
+}
+
+[data-theme="light"] .music-stats-loading .music-stats-skel-strong,
+[data-theme="light"] .music-stats-loading .music-stats-skel-soft,
+[data-theme="light"] .yearly-scrobbles-loading .music-stats-skel-strong,
+[data-theme="light"] .yearly-scrobbles-loading .music-stats-skel-soft {
+  background-image: linear-gradient(
+    90deg,
+    #bfdbfe 25%,
+    #93c5fd 50%,
+    #bfdbfe 75%
+  );
+  background-size: 800px 100%;
+  animation: musicShimmer 1.6s infinite linear;
 }

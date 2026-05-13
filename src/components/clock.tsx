@@ -27,7 +27,7 @@ const Clock = memo(function Clock() {
   if (!isMounted) {
     return (
       <div className="font-light text-center my-1">
-        <p className="text-nowrap text-sm md:text-base">Loading...</p>
+        <p className="text-nowrap type-body-sm">Loading...</p>
       </div>
     );
   }
@@ -35,7 +35,7 @@ const Clock = memo(function Clock() {
   return (
     <div className="font-light text-center my-1">
       <p
-        className="text-nowrap text-sm md:text-base"
+        className="text-nowrap type-body-sm"
         suppressHydrationWarning={true}
       >
         {currentTime}

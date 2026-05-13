@@ -37,6 +37,8 @@ export function readMusicStatsCache(): MusicStatsData | null {
 }
 
 export async function loadMusicStatsData(): Promise<MusicStatsData> {
+  scheduleRadialHeatmapWarmup();
+
   const now = Date.now();
   if (cached && now - cacheTimestamp < CACHE_MS) return cached;
 
@@ -63,7 +65,6 @@ export async function loadMusicStatsData(): Promise<MusicStatsData> {
     }
     cached = musicData;
     cacheTimestamp = Date.now();
-    scheduleRadialHeatmapWarmup();
     return musicData;
   })();
 

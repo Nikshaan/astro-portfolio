@@ -5,14 +5,13 @@ import {
   readMusicStatsCache,
   type MusicStatsData,
 } from "../utils/musicStatsClient";
+import {
+  MUSIC_STATS_SHELL,
+  MUSIC_STATS_UPPER,
+  MusicStatsLoadingShell,
+} from "./musicStatsLoadingShell";
 
 export type { GenreEntry } from "../utils/musicStatsClient";
-
-const MUSIC_STATS_SHELL =
-  "relative box-border flex min-h-[540px] w-full touch-manipulation flex-col gap-8 pb-4 lg:min-h-[598px]";
-
-const MUSIC_STATS_UPPER =
-  "flex min-h-[272px] w-full flex-col gap-12 px-4 pt-4 pb-4 md:min-h-[248px] md:flex-row md:justify-around md:gap-4";
 
 export default memo(function MusicStatsClient() {
   const [data, setData] = useState<MusicStatsData | null>(null);
@@ -51,108 +50,21 @@ export default memo(function MusicStatsClient() {
   }, [loadData]);
 
   if (loading && !data) {
-    return (
-      <div
-        className={`music-stats-loading ${MUSIC_STATS_SHELL}`}
-        aria-hidden="true"
-      >
-        <div
-          className={`${MUSIC_STATS_UPPER} animate-pulse rounded-2xl`}
-          style={{
-            background:
-              "linear-gradient(90deg, var(--shimmer-from-1, #1f1f1f) 25%, var(--shimmer-to-1, #2a2a2a) 50%, var(--shimmer-from-1, #1f1f1f) 75%)",
-            backgroundSize: "800px 100%",
-            animation: "musicShimmer 1.6s infinite linear",
-          }}
-        >
-          <div className="flex w-full flex-col items-center gap-3">
-            <div className="music-stats-skel-strong h-4 w-36 rounded" />
-            {[120, 100, 110, 100].map((w, i) => (
-              <div
-                key={i}
-                className="music-stats-skel-soft h-[1.125rem] rounded-md"
-                style={{ width: w }}
-              />
-            ))}
-          </div>
-          <div className="flex w-full flex-col items-center gap-3">
-            <div className="music-stats-skel-strong h-4 w-44 rounded" />
-            {[140, 120, 110, 130, 100].map((w, i) => (
-              <div
-                key={i}
-                className="music-stats-skel-soft h-[1.125rem] rounded-md"
-                style={{ width: w }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="flex h-[180px] w-full flex-col lg:h-[250px]">
-          <div
-            className="mx-auto mb-3 h-4 w-40 animate-pulse rounded"
-            style={{
-              backgroundImage:
-                "linear-gradient(90deg, var(--shimmer-from, #2a2a2a) 25%, var(--shimmer-to, #3a3a3a) 50%, var(--shimmer-from, #2a2a2a) 75%)",
-              backgroundSize: "800px 100%",
-              animation: "musicShimmer 1.6s infinite linear",
-            }}
-          />
-          <div
-            className="min-h-0 flex-1 animate-pulse rounded-xl"
-            style={{
-              backgroundImage:
-                "linear-gradient(90deg, var(--shimmer-from-2, #1a1a1a) 25%, var(--shimmer-to-2, #232323) 50%, var(--shimmer-from-2, #1a1a1a) 75%)",
-              backgroundSize: "800px 100%",
-              animation: "musicShimmer 1.6s 0.1s infinite linear",
-            }}
-          />
-        </div>
-        <style>{`
-                    .music-stats-skel-strong {
-                        background: rgba(255, 255, 255, 0.12);
-                    }
-                    .music-stats-skel-soft {
-                        background: rgba(255, 255, 255, 0.08);
-                    }
-                    @keyframes musicShimmer {
-                        0%   { background-position: -400px 0; }
-                        100% { background-position: 400px 0; }
-                    }
-                    [data-theme="light"] .music-stats-loading {
-                        --shimmer-from: #bfdbfe;
-                        --shimmer-to: #93c5fd;
-                        --shimmer-from-1: #dbeafe;
-                        --shimmer-to-1: #93c5fd;
-                        --shimmer-from-2: #bfdbfe;
-                        --shimmer-to-2: #3b82f6;
-                    }
-                    [data-theme="light"] .music-stats-loading .music-stats-skel-strong,
-                    [data-theme="light"] .music-stats-loading .music-stats-skel-soft {
-                        background-image: linear-gradient(
-                            90deg,
-                            #bfdbfe 25%,
-                            #93c5fd 50%,
-                            #bfdbfe 75%
-                        );
-                        background-size: 800px 100%;
-                        animation: musicShimmer 1.6s infinite linear;
-                    }
-                `}</style>
-      </div>
-    );
+    return <MusicStatsLoadingShell />;
   }
 
   if (error && !data) {
     return (
-      <div className={`${MUSIC_STATS_SHELL} items-center justify-center`}>
-        <div className="text-sm text-red-400">{error}</div>
+      <div className={`${MUSIC_STATS_SHELL} shrink-0 items-center justify-center`}>
+        <div className="type-body-sm text-red-400">{error}</div>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className={`${MUSIC_STATS_SHELL} items-center justify-center`}>
-        <div className="text-sm text-gray-400">No data available</div>
+      <div className={`${MUSIC_STATS_SHELL} shrink-0 items-center justify-center`}>
+        <div className="type-body-sm text-gray-400">No data available</div>
       </div>
     );
   }
@@ -170,14 +82,14 @@ export default memo(function MusicStatsClient() {
   return (
     <div className={MUSIC_STATS_SHELL}>
       <div
-        className={`${MUSIC_STATS_UPPER} items-center md:items-start`}
+        className={`${MUSIC_STATS_UPPER} shrink-0 items-center md:items-start`}
         style={bgStyle}
       >
         <div className="w-full text-center">
-          <p className="mb-3 text-center text-base font-bold !text-white md:text-lg [html[data-theme=light]_&]:!text-white">
+          <p className="type-stats-label mb-3 text-center !text-white [html[data-theme=light]_&]:!text-white">
             Total music scrobbles
           </p>
-          <div className="flex w-full flex-col items-center gap-2 text-sm md:text-base">
+          <div className="flex w-full flex-col items-center gap-2 type-body-sm">
             <p>
               <span className="font-medium !text-white">Play count:</span>{" "}
               <span className="!text-white opacity-80">
@@ -206,10 +118,10 @@ export default memo(function MusicStatsClient() {
         </div>
 
         <div className="w-full text-center">
-          <p className="mb-3 text-center text-base font-bold !text-white md:text-lg [html[data-theme=light]_&]:!text-white">
+          <p className="type-stats-label mb-3 text-center !text-white [html[data-theme=light]_&]:!text-white">
             Top artists of the week
           </p>
-          <div className="text-sm md:text-base">
+          <div className="type-body-sm">
             {data.artistsInfo.length > 0 ? (
               data.artistsInfo.map((artist, index) => (
                 <div
@@ -226,7 +138,7 @@ export default memo(function MusicStatsClient() {
               ))
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="!text-white opacity-60 text-xs italic">
+                <p className="!text-white opacity-60 type-caption italic">
                   No recent listening data available
                 </p>
               </div>
@@ -235,8 +147,10 @@ export default memo(function MusicStatsClient() {
         </div>
       </div>
 
-      <div className="flex h-[180px] w-full flex-col lg:h-[250px]">
-        <p className="mb-3 text-center text-base font-bold md:text-lg [html[data-theme=light]_&]:!text-black">
+      <div className="min-h-0 flex-1" aria-hidden />
+
+      <div className="flex h-[180px] w-full shrink-0 flex-col lg:h-[250px]">
+        <p className="type-stats-label mb-3 text-center [html[data-theme=light]_&]:!text-black">
           Daily music scrobbles
         </p>
         <div className="min-h-0 w-full flex-1 select-none">

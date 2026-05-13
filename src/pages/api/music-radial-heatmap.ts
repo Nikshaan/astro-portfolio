@@ -22,12 +22,12 @@ interface WeeklyChartEntry {
   to?: string;
 }
 
-const SERVER_CACHE_MS = 90 * 1000;
+const SERVER_CACHE_MS = 3 * 60 * 1000;
 const ANCHOR_MATCH_SEC = 180;
 const SECONDS_PER_DAY = 86400;
 const ROLLING_DAYS = 365;
 const TOP_N = 10;
-const WEEK_FETCH_CONCURRENCY = 6;
+const WEEK_FETCH_CONCURRENCY = 10;
 
 let cache: {
   anchorSec: number;
@@ -49,7 +49,7 @@ function resolvedAnchorSec(
 
 const CACHE_HEADERS = {
   "Content-Type": "application/json",
-  "Cache-Control": "no-store, max-age=0",
+  "Cache-Control": "private, max-age=90",
 } as const;
 
 const jsonResponse = (
@@ -201,14 +201,6 @@ async function concurrency<T, R>(
   return out;
 }
 
-function overlapsRange(
-  w: RadialHeatmapWeek,
-  fromSec: number,
-  toSec: number,
-): boolean {
-  return w.to >= fromSec && w.from <= toSec;
-}
-
 function fallbackWeekSlices(
   fromSec: number,
   toSec: number,
@@ -246,6 +238,37 @@ function resolveArtistName(
 }
 
 const TARGET_WEEKS = 52;
+const SECONDS_PER_WEEK = 604800;
+
+function dedupeWeekBoundaryWeeks(weeks: RadialHeatmapWeek[]): RadialHeatmapWeek[] {
+  const seen = new Set<string>();
+  const out: RadialHeatmapWeek[] = [];
+  for (const w of weeks) {
+    const key = `${w.from}|${w.to}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(w);
+  }
+  return out;
+}
+
+function selectRollingLastFmWeeks(
+  listFromApi: RadialHeatmapWeek[],
+  anchorSec: number,
+): RadialHeatmapWeek[] {
+  if (listFromApi.length === 0) return [];
+  const sorted = dedupeWeekBoundaryWeeks(
+    listFromApi.filter((w) => w.from > 0 && w.to > 0),
+  ).sort((a, b) => a.from - b.from);
+  const earliestKeep =
+    anchorSec - (TARGET_WEEKS + 1) * SECONDS_PER_WEEK;
+  const overlapping = sorted.filter(
+    (w) => w.to >= earliestKeep && w.from <= anchorSec,
+  );
+  if (overlapping.length === 0) return [];
+  if (overlapping.length <= TARGET_WEEKS) return overlapping;
+  return overlapping.slice(-TARGET_WEEKS);
+}
 
 function trimOrPadWeeks(
   weeks: RadialHeatmapWeek[],
@@ -287,18 +310,14 @@ async function fetchRadialHeatmap(
   const toSec = anchorToSec;
   const fromSec = toSec - ROLLING_DAYS * SECONDS_PER_DAY;
 
-  const topTen = await fetchRollingYearTopArtists(
-    username,
-    apiKey,
-    fromSec,
-    toSec,
-  );
-
-  const listFromApi = await fetchWeeklyChartList(username, apiKey);
+  const [topTen, listFromApi] = await Promise.all([
+    fetchRollingYearTopArtists(username, apiKey, fromSec, toSec),
+    fetchWeeklyChartList(username, apiKey),
+  ]);
   let weeks =
     listFromApi.length === 0
       ? fallbackWeekSlices(fromSec, toSec)
-      : listFromApi.filter((x) => overlapsRange(x, fromSec, toSec));
+      : selectRollingLastFmWeeks(listFromApi, anchorToSec);
 
   if (!weeks.length) {
     weeks = fallbackWeekSlices(fromSec, toSec);

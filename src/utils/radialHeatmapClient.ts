@@ -13,11 +13,17 @@ export interface RadialHeatmapPayload {
   artists: RadialHeatmapArtistRow[];
 }
 
-const CLIENT_CACHE_MS = 60 * 1000;
+const CLIENT_CACHE_MS = 5 * 60 * 1000;
+const UNTIL_BUCKET_SEC = 120;
 
 let cached: RadialHeatmapPayload | null = null;
 let cachedAt = 0;
 let inflightPromise: Promise<RadialHeatmapPayload> | null = null;
+
+function anchorUntilSec(): number {
+  const s = Math.floor(Date.now() / 1000);
+  return Math.floor(s / UNTIL_BUCKET_SEC) * UNTIL_BUCKET_SEC;
+}
 
 function buildUrl(untilSec: number): string {
   const baseUrl = import.meta.env.BASE_URL || "/";
@@ -48,17 +54,20 @@ async function parsePayload(response: Response): Promise<RadialHeatmapPayload> {
   return parsed as unknown as RadialHeatmapPayload;
 }
 
-export async function loadRadialHeatmapPayload(): Promise<RadialHeatmapPayload> {
-  const untilSec = Math.floor(Date.now() / 1000);
+export async function loadRadialHeatmapPayload(
+  options?: { force?: boolean },
+): Promise<RadialHeatmapPayload> {
+  const force = options?.force === true;
+  const untilSec = anchorUntilSec();
   const now = Date.now();
 
-  if (cached && now - cachedAt < CLIENT_CACHE_MS) return cached;
+  if (!force && cached && now - cachedAt < CLIENT_CACHE_MS) return cached;
 
-  if (inflightPromise) return inflightPromise;
+  if (!force && inflightPromise) return inflightPromise;
 
-  inflightPromise = (async () => {
+  const run = async () => {
     const response = await fetch(buildUrl(untilSec), {
-      cache: "no-store",
+      cache: "default",
       headers: { Accept: "application/json" },
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -66,8 +75,13 @@ export async function loadRadialHeatmapPayload(): Promise<RadialHeatmapPayload> 
     cached = payload;
     cachedAt = Date.now();
     return payload;
-  })();
+  };
 
+  if (force) {
+    return run();
+  }
+
+  inflightPromise = run();
   try {
     return await inflightPromise;
   } finally {

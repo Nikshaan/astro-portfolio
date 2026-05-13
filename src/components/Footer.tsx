@@ -89,14 +89,14 @@ const Footer = () => {
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, margin: isMobile ? "0px" : "-100px" }}
+        viewport={{ once: true, amount: "some", margin: "0px 0px 200px 0px" }}
         className="w-full max-w-[1400px] mx-auto rounded-3xl border bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 data-[theme=light]:!bg-[#dbeafe] data-[theme=light]:!border-[#93c5fd] overflow-hidden footer-transition"
       >
         <motion.div
           variants={itemVariants}
           className="p-8 md:p-12 border-b border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] footer-transition"
         >
-          <h2 className="text-2xl md:text-4xl font-black tracking-tighter text-neutral-900 dark:text-white uppercase footer-transition whitespace-nowrap">
+          <h2 className="type-footer-display uppercase text-neutral-900 dark:text-white footer-transition whitespace-nowrap">
             Let's Connect
           </h2>
         </motion.div>
@@ -109,7 +109,7 @@ const Footer = () => {
             <div>
               <a
                 href="mailto:nikshaanshetty06@gmail.com"
-                className="group flex items-center gap-2 md:gap-4 text-base min-[370px]:text-lg sm:text-xl md:text-2xl font-bold text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-300 whitespace-nowrap footer-transition"
+                className="group flex items-center gap-2 md:gap-4 type-footer-contact text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-300 whitespace-nowrap footer-transition"
               >
                 nikshaanshetty06@gmail.com
                 <span className="bg-neutral-900 dark:bg-white text-white dark:text-black p-2 rounded-full group-hover:rotate-[-45deg] footer-transform-transition flex-shrink-0 footer-transition">
@@ -161,7 +161,7 @@ const Footer = () => {
             className="p-6 md:p-12 flex flex-col justify-between gap-8"
           >
             <div className="flex flex-col gap-2">
-              <p className="text-base font-medium text-neutral-600 dark:text-neutral-400 data-[theme=light]:text-blue-900/70 mb-2">
+              <p className="type-body font-medium text-neutral-600 dark:text-neutral-400 data-[theme=light]:text-blue-900/70 mb-2">
                 Navigation
               </p>
               <nav
@@ -178,7 +178,7 @@ const Footer = () => {
                     href={`#${link.href}`}
                     onClick={(e) => handleNavClick(e, link.href)}
                     aria-label={`Navigate to ${link.name} section`}
-                    className="px-4 md:px-6 py-2 rounded-full border border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] text-sm md:text-base text-neutral-900 dark:text-white font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-black data-[theme=light]:hover:bg-blue-600 data-[theme=light]:hover:text-white footer-transition"
+                    className="px-4 md:px-6 py-2 rounded-full border border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] type-ui text-neutral-900 dark:text-white font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-black data-[theme=light]:hover:bg-blue-600 data-[theme=light]:hover:text-white footer-transition"
                   >
                     {link.name}
                   </a>
@@ -187,10 +187,10 @@ const Footer = () => {
             </div>
 
             <div className="flex flex-row flex-wrap justify-between items-center gap-x-4 gap-y-2">
-              <p className="text-xs md:text-sm font-medium text-neutral-500 dark:text-neutral-500">
+              <p className="type-caption font-medium text-neutral-500 dark:text-neutral-500">
                 &copy; {currentYear} Nikshaan Shetty.
               </p>
-              <div className="text-xs md:text-sm font-medium text-neutral-500 dark:text-neutral-500 flex items-center gap-1">
+              <div className="type-caption font-medium text-neutral-500 dark:text-neutral-500 flex items-center gap-1">
                 <span>Built with</span>
                 <span className="text-neutral-900 dark:text-white">Astro</span>
                 <span className="text-neutral-300 dark:text-neutral-700">

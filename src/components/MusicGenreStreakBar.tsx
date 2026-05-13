@@ -114,7 +114,7 @@ export default memo(function MusicGenreStreakBar() {
               <span
                 key={d.genre}
                 className={cn(
-                  "inline-flex min-w-0 max-w-full items-baseline gap-1.5 text-sm",
+                  "inline-flex min-w-0 max-w-full items-baseline gap-1.5 type-body-sm",
                   isLightTheme ? "text-neutral-900" : "text-neutral-100",
                 )}
               >
@@ -135,7 +135,7 @@ export default memo(function MusicGenreStreakBar() {
         ) : (
           <span
             className={cn(
-              "text-sm",
+              "type-body-sm",
               isLightTheme ? "text-slate-600" : "text-neutral-400",
             )}
           >
@@ -158,7 +158,7 @@ export default memo(function MusicGenreStreakBar() {
       >
         <span
           className={cn(
-            "text-sm font-medium not-italic",
+            "type-body-sm font-medium not-italic",
             isLightTheme ? "text-neutral-900" : "text-neutral-100",
           )}
           aria-hidden="true"
@@ -179,7 +179,7 @@ export default memo(function MusicGenreStreakBar() {
         ) : streak > 0 ? (
           <span
             className={cn(
-              "text-sm font-medium",
+              "type-body-sm font-medium",
               isLightTheme ? "text-neutral-900" : "text-neutral-100",
             )}
           >
@@ -188,7 +188,7 @@ export default memo(function MusicGenreStreakBar() {
         ) : (
           <span
             className={cn(
-              "text-xs",
+              "type-caption",
               isLightTheme ? "text-slate-600" : "text-neutral-400",
             )}
           >

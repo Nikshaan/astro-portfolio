@@ -51,7 +51,7 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
   if (!data || data.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <div className="text-gray-400 text-sm">Chart data loading...</div>
+        <div className="text-gray-400 type-body-sm">Chart data loading...</div>
       </div>
     );
   }

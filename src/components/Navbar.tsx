@@ -214,7 +214,7 @@ const Navbar: React.FC<NavbarProps> = memo(
       (sectionId: string) => {
         const isActive = activeSection === sectionId;
         const baseClasses =
-          "nav-link cursor-pointer px-3 py-1 rounded-md transition-all duration-200 font-medium text-sm md:text-base";
+          "nav-link cursor-pointer px-3 py-1 rounded-md transition-all duration-200 font-medium";
 
         if (isActive) {
           return `${baseClasses} active font-semibold`;

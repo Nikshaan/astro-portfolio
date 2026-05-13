@@ -125,7 +125,11 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
             delay: isMobile ? 0 : desktopDelay,
           },
         }}
-        viewport={{ once: true, amount: isMobile ? 0 : 0.01 }}
+        viewport={{
+          once: true,
+          amount: "some",
+          margin: "80px 0px 320px 0px",
+        }}
       >
         <motion.div
           layoutId={shouldAnimate ? `card-${card.id}` : undefined}
@@ -133,21 +137,19 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
           className={cn(
             "relative p-5 md:p-6 rounded-3xl border flex flex-col justify-between h-full",
             "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
-            "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#93c5fd]",
+            "[html[data-theme=light]_&]:!bg-[#dbeafe]",
             card.isExpandable && !selectedId
-              ? "cursor-pointer group hover:border-neutral-600"
+              ? "cursor-pointer group me-card-hover"
               : "",
           )}
-          whileHover={card.isExpandable && !selectedId ? { scale: 1.02 } : {}}
-          whileTap={card.isExpandable && !selectedId ? { scale: 0.98 } : {}}
+          whileHover={card.isExpandable && !selectedId ? { scale: 1.01 } : {}}
+          whileTap={card.isExpandable && !selectedId ? { scale: 0.99 } : {}}
         >
           <div className="flex flex-col h-full justify-between">
             <div>
-              <h3 className="text-lg md:text-xl font-medium mb-2">
-                {card.data.name}
-              </h3>
+              <h3 className="font-medium mb-2">{card.data.name}</h3>
               <p
-                className="text-sm md:text-base font-light text-neutral-600 dark:text-neutral-400 text-pretty"
+                className="type-body-sm font-light text-neutral-600 dark:text-neutral-400 text-pretty"
                 dangerouslySetInnerHTML={{ __html: card.data.summary }}
               />
             </div>
@@ -179,7 +181,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
                   );
                 })}
               </div>
-              <div className="flex gap-4 text-sm md:text-base font-medium">
+              <div className="flex gap-4 type-body-sm font-medium">
                 {card.data.live && (
                   <a
                     href={card.data.live}
@@ -289,7 +291,7 @@ const ProjectsBentoGrid: React.FC = () => {
     <LazyMotion features={domAnimation}>
       <div className="w-full max-w-[1400px] mx-auto p-4 pt-16">
         <div className="flex justify-between items-end mb-8 px-2">
-          <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
+          <h2 className="text-neutral-900 dark:text-neutral-100 tracking-tight">
             Projects
           </h2>
           <div
@@ -303,7 +305,7 @@ const ProjectsBentoGrid: React.FC = () => {
               aria-selected={activeCategory === "aiml"}
               aria-label="Show AI and Machine Learning projects"
               className={cn(
-                "px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition-all",
+                "px-4 py-1.5 cursor-pointer rounded-full type-ui font-medium transition-all",
                 activeCategory === "aiml"
                   ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100"
                   : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100",
@@ -317,7 +319,7 @@ const ProjectsBentoGrid: React.FC = () => {
               aria-selected={activeCategory === "web"}
               aria-label="Show Web Development projects"
               className={cn(
-                "px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition-all",
+                "px-4 py-1.5 cursor-pointer rounded-full type-ui font-medium transition-all",
                 activeCategory === "web"
                   ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100"
                   : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100",
@@ -363,7 +365,7 @@ const ProjectsBentoGrid: React.FC = () => {
                 className={cn(
                   "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col",
                   "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
-                  "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#93c5fd]",
+                  "[html[data-theme=light]_&]:!bg-[#dbeafe]",
                 )}
               >
                 <button
@@ -380,9 +382,7 @@ const ProjectsBentoGrid: React.FC = () => {
                 <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                   <div className="flex flex-col gap-6">
                     <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0 md:pr-12">
-                      <h2 className="text-3xl font-bold">
-                        {selectedItem.data.name}
-                      </h2>
+                      <h2>{selectedItem.data.name}</h2>
                       <div className="flex gap-2">
                         {selectedItem.data.live && (
                           <a

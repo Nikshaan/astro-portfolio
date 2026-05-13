@@ -120,18 +120,18 @@ export default memo(function GithubContributions({
         ) : error ? (
           <>
             <div className={styles.header}>
-              <p className="text-lg font-medium">
+              <h3 className={cn("type-panel-title text-neutral-900 dark:text-neutral-100")}>
                 GitHub Contributions (Last 12 Months)
-              </p>
+              </h3>
             </div>
-            <p className="text-sm text-neutral-400 text-center py-4">{error}</p>
+            <p className="type-body-sm text-neutral-400 text-center py-4">{error}</p>
           </>
         ) : weeks.length > 0 ? (
           <>
             <div className={styles.header}>
-              <p className="text-lg font-medium">
+              <h3 className={cn("type-panel-title text-neutral-900 dark:text-neutral-100")}>
                 GitHub Contributions (Last 12 Months)
-              </p>
+              </h3>
               {totalContributions > 0 && (
                 <span className={styles.total}>
                   {totalContributions} contributions in the last year
@@ -169,11 +169,11 @@ export default memo(function GithubContributions({
         ) : (
           <>
             <div className={styles.header}>
-              <p className="text-lg font-medium">
+              <h3 className={cn("type-panel-title text-neutral-900 dark:text-neutral-100")}>
                 GitHub Contributions (Last 12 Months)
-              </p>
+              </h3>
             </div>
-            <p className="text-sm text-neutral-400 text-center py-4">
+            <p className="type-body-sm text-neutral-400 text-center py-4">
               No contribution data available
             </p>
           </>

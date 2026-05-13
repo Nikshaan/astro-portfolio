@@ -87,7 +87,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
     case "intro":
       return (
         <div className="flex flex-col-reverse md:flex-row h-full justify-between gap-6 xl:gap-8 items-center md:items-stretch">
-          <div className="flex flex-col gap-2 w-full md:flex-1 h-full justify-between text-sm md:text-base text-center md:text-left">
+          <div className="flex flex-col gap-2 w-full md:flex-1 h-full justify-between type-body text-center md:text-left">
             <div className="font-light text-pretty">
               <p dangerouslySetInnerHTML={{ __html: card.data.text }} />
               <p className="my-2">My interest lies in:</p>
@@ -144,19 +144,19 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
               className="select-none transition-all transform duration-200 w-[120px] md:w-[180px] h-auto object-contain flex items-center justify-center text-center"
             />
           </div>
-          <div className="font-light w-full md:w-[80%] text-sm md:text-base">
-            <p className="font-bold text-base">{card.data.school}</p>
+          <div className="font-light w-full md:w-[80%] type-body">
+            <p className="font-bold">{card.data.school}</p>
             <p
-              className="font-light text-sm"
+              className="font-light type-body-sm"
               dangerouslySetInnerHTML={{ __html: card.data.degree }}
             />
-            <p className="font-light text-sm">{card.data.date}</p>
+            <p className="font-light type-body-sm">{card.data.date}</p>
           </div>
         </div>
       );
     case "extracurr":
       return (
-        <div className="flex flex-col justify-center lg:justify-between gap-4 lg:gap-0 h-full text-sm md:text-base">
+        <div className="flex flex-col justify-center lg:justify-between gap-4 lg:gap-0 h-full type-body">
           {card.data.items.map((item: any, i: number) => (
             <div key={i} className="flex">
               <div className="w-[20%] flex justify-center items-center">
@@ -176,10 +176,10 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                 />
               </div>
               <div className="w-[80%] flex flex-col items-end text-right my-2">
-                <p className="font-bold text-base">{item.title}</p>
-                <p className="font-light text-sm">{item.subtitle}</p>
-                <p className="font-light text-sm">{item.role}</p>
-                <p className="font-light text-sm">{item.date}</p>
+                <p className="font-bold">{item.title}</p>
+                <p className="font-light type-body-sm">{item.subtitle}</p>
+                <p className="font-light type-body-sm">{item.role}</p>
+                <p className="font-light type-body-sm">{item.date}</p>
               </div>
             </div>
           ))}
@@ -213,7 +213,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
           : undefined;
       return (
         <div
-          className="relative flex flex-col min-[425px]:flex-row lg:flex-col min-[1150px]:!flex-row justify-center items-center w-full h-full gap-4 text-sm md:text-base"
+          className="relative flex flex-col min-[425px]:flex-row lg:flex-col min-[1150px]:!flex-row justify-center items-center w-full h-full gap-4 type-body"
           style={{ color: "white" }}
         >
           <div className="absolute -inset-5 rounded-3xl overflow-hidden pointer-events-none">
@@ -314,7 +314,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
       );
     case "experience":
       return (
-        <div className="flex flex-col gap-4 text-sm md:text-base">
+        <div className="flex flex-col gap-4 type-body">
           {card.data.items.map((item: any, i: number) => (
             <div key={i} className="flex">
               <div className="w-[20%] flex justify-center items-center">
@@ -334,9 +334,9 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                 />
               </div>
               <div className="w-[80%] flex flex-col items-end text-right my-1">
-                <p className="font-bold text-base">{item.title}</p>
-                <p className="text-sm">{item.company}</p>
-                <p className="font-light text-sm">{item.date}</p>
+                <p className="font-bold">{item.title}</p>
+                <p className="type-body-sm">{item.company}</p>
+                <p className="font-light type-body-sm">{item.date}</p>
               </div>
             </div>
           ))}
@@ -345,7 +345,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
     case "resume":
       return (
         <div className="flex justify-center items-center h-full w-full">
-          <p className="text-4xl font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-300 [writing-mode:vertical-lr] rotate-180 max-lg:rotate-0 max-lg:[writing-mode:horizontal-tb]">
+          <p className="type-decorative-word uppercase tracking-widest text-neutral-400 dark:text-neutral-300 [writing-mode:vertical-lr] rotate-180 max-lg:rotate-0 max-lg:[writing-mode:horizontal-tb]">
             resume
           </p>
         </div>
@@ -401,7 +401,11 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
             delay: isMobile ? 0 : desktopDelay,
           },
         }}
-        viewport={{ once: true, amount: isMobile ? 0 : 0.01 }}
+        viewport={{
+          once: true,
+          amount: "some",
+          margin: "80px 0px 320px 0px",
+        }}
       >
         <motion.div
           layoutId={shouldAnimate ? `card-${card.id}` : undefined}
@@ -415,7 +419,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
                 ? "justify-center items-center h-full w-full"
                 : "p-5 justify-between h-full",
             "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
-            "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#1e3a8a]",
+            "[html[data-theme=light]_&]:!bg-[#dbeafe]",
             card.id === "intro" || card.id === "win" || card.id === "resume"
               ? "overflow-hidden"
               : "overflow-visible",
@@ -428,12 +432,12 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
           )}
           whileHover={
             (card.isExpandable || isResume) && !selectedId
-              ? { scale: 1.02 }
+              ? { scale: 1.01 }
               : {}
           }
           whileTap={
             (card.isExpandable || isResume) && !selectedId
-              ? { scale: 0.98 }
+              ? { scale: 0.99 }
               : {}
           }
         >
@@ -670,7 +674,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
               className={cn(
                 "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col mt-12",
                 "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
-                "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#1e3a8a]",
+                "[html[data-theme=light]_&]:!bg-[#dbeafe]",
               )}
             >
               <button
@@ -691,8 +695,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                 <div
                   className={cn(
                     "prose prose-invert prose-lg max-w-none",
-                    selectedItem.id === "win" &&
-                      "[&_h3]:!text-base [&_h3]:sm:!text-lg [&_h3]:md:!text-xl [&_p]:!text-base [&_p]:leading-relaxed",
+                    selectedItem.id === "win" && "prose-content-compact",
                   )}
                 >
                   <div

@@ -26,19 +26,12 @@
   gap: 0.5rem;
 }
 
-.header h3 {
-  font-size: 1.25rem;
-  font-weight: 500;
+.header .type-panel-title {
   margin: 0;
-  color: white;
-}
-
-[data-theme="light"] .header h3 {
-  color: black;
 }
 
 .header .total {
-  font-size: 0.875rem;
+  font-size: var(--type-caption);
   color: #8b949e;
 }
 
@@ -190,14 +183,6 @@
 }
 
 @media (min-width: 1024px) {
-  .header h3 {
-    font-size: 1.5rem;
-  }
-
-  .header .total {
-    font-size: 1rem;
-  }
-
   .graph {
     gap: 3px;
   }

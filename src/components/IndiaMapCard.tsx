@@ -264,7 +264,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
               <div className="absolute top-4 left-4 z-10">
                 <span
                   className={cn(
-                    "text-base md:text-lg font-bold",
+                    "type-bento-eyebrow",
                     "text-neutral-500 dark:text-neutral-400",
                   )}
                 >
@@ -410,10 +410,10 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                   </div>
 
                   <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20 pointer-events-none">
-                    <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
+                    <h2 className="type-map-heading text-neutral-900 dark:text-white">
                       India
                     </h2>
-                    <p className="text-neutral-500 dark:text-neutral-400">
+                    <p className="type-body-sm text-neutral-500 dark:text-neutral-400">
                       {visitedPlaces.length} Cities Visited
                     </p>
                   </div>
@@ -591,7 +591,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                       top: tooltipPos.y - 16,
                     }}
                   >
-                    <div className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-3 py-1.5 md:px-4 md:py-2 rounded-md shadow-lg text-sm md:text-base font-medium whitespace-nowrap">
+                    <div className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-3 py-1.5 md:px-4 md:py-2 rounded-md shadow-lg type-body-sm font-medium whitespace-nowrap">
                       {hoveredPlace.name}
                     </div>
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-neutral-900 dark:border-t-white"></div>
