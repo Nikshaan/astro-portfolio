@@ -255,20 +255,52 @@
   display: flex;
   gap: 2px;
   width: 100%;
-  overflow: hidden;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  justify-content: flex-start;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d #0d1117;
+}
+
+[data-theme="light"] .skeletonGraph {
+  scrollbar-color: #d0d7de #ffffff;
+}
+
+@media (min-width: 768px) {
+  .skeletonGraph {
+    justify-content: stretch;
+    overflow-x: visible;
+  }
+}
+
+@media (min-width: 1024px) {
+  .skeletonGraph {
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 768px) {
+  .skeletonGraph {
+    scrollbar-width: none;
+  }
+
+  .skeletonGraph::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .skeletonWeek {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  flex: 1 1 0;
+  flex: 0 0 auto;
   min-width: 0;
 }
 
 .skeletonDay {
   width: 100%;
   aspect-ratio: 1;
+  min-width: 10px;
   min-height: 10px;
   border-radius: 2px;
   background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
@@ -283,6 +315,7 @@
 
 @media (min-width: 640px) {
   .skeletonDay {
+    min-width: 11px;
     min-height: 11px;
   }
 }
@@ -296,11 +329,13 @@
   }
   .skeletonDay {
     min-height: 12px;
+    min-width: 12px;
   }
   .skeletonGraph {
     gap: 3px;
   }
   .skeletonWeek {
+    flex: 1 1 0;
     gap: 3px;
   }
 }
