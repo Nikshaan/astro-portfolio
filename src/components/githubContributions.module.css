@@ -294,14 +294,11 @@
   flex-direction: column;
   gap: 2px;
   flex: 0 0 auto;
-  min-width: 0;
 }
 
 .skeletonDay {
-  width: 100%;
-  aspect-ratio: 1;
-  min-width: 10px;
-  min-height: 10px;
+  box-sizing: border-box;
+  flex-shrink: 0;
   border-radius: 2px;
   background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
   background-size: 1200px 100%;
@@ -313,8 +310,28 @@
   background-size: 1200px 100%;
 }
 
-@media (min-width: 640px) {
+@media (max-width: 1023px) {
+  .skeletonWeek {
+    min-width: auto;
+    width: 10px;
+  }
+
   .skeletonDay {
+    width: 10px;
+    height: 10px;
+    min-width: 10px;
+    min-height: 10px;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .skeletonWeek {
+    width: 11px;
+  }
+
+  .skeletonDay {
+    width: 11px;
+    height: 11px;
     min-width: 11px;
     min-height: 11px;
   }
@@ -327,15 +344,22 @@
   .skeletonSubtitle {
     height: 1rem;
   }
-  .skeletonDay {
-    min-height: 12px;
-    min-width: 12px;
-  }
-  .skeletonGraph {
-    gap: 3px;
-  }
+
   .skeletonWeek {
     flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    gap: 3px;
+  }
+
+  .skeletonDay {
+    width: 100%;
+    aspect-ratio: 1;
+    min-height: 12px;
+    min-width: 0;
+  }
+
+  .skeletonGraph {
     gap: 3px;
   }
 }
