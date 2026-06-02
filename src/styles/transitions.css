@@ -70,11 +70,21 @@ body {
 }
 
 .me-card-hover {
-  transition: border-color 0.3s ease;
+  --bento-rest-border: rgba(255, 255, 255, 0.2);
+  --bento-hover-border: #c084fc;
+  border-color: var(--bento-rest-border) !important;
+  transition: box-shadow 0.26s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.github-card-hover {
-  transition: border-color 0.3s ease;
+html[data-theme="light"] .me-card-hover,
+[data-theme="light"] .me-card-hover {
+  --bento-rest-border: #1e3a8a;
+  --bento-hover-border: #3b82f6;
+}
+
+.me-card-hover:hover:not([data-bento-frozen]),
+.me-card-hover:focus-visible:not([data-bento-frozen]) {
+  box-shadow: inset 0 0 0 1px var(--bento-hover-border);
 }
 
 .will-change-transform {

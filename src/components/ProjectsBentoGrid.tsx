@@ -23,6 +23,11 @@ import nodejs from "../data/Node.js.svg";
 import fastapi from "../data/FastAPI.svg";
 import redux from "../data/Redux.svg";
 import expressjs from "../data/Express.svg";
+import {
+  bentoCardHoverTransition,
+  getBentoCardHoverMotion,
+  getBentoCardTapMotion,
+} from "./bentoCardMotion";
 import mongodb from "../data/MongoDB.svg";
 import postgresql from "../data/PostgresSQL.svg";
 import motionIcon from "../data/Brand-Framer-Motion--Streamline-Tabler.svg";
@@ -110,6 +115,8 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
     }, [card.isExpandable, card.id, setSelectedId]);
 
     const desktopDelay = 0;
+    const isExpandableCard = card.isExpandable;
+    const isHoverable = isExpandableCard && !selectedId;
 
     return (
       <m.div
@@ -134,17 +141,21 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
         <motion.div
           layoutId={shouldAnimate ? `card-${card.id}` : undefined}
           onClick={handleClick}
+          data-bento-shell={isExpandableCard ? "" : undefined}
+          data-bento-frozen={selectedId === card.id ? "" : undefined}
           className={cn(
-            "relative p-5 md:p-6 rounded-3xl border flex flex-col justify-between h-full",
-            "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
+            "relative h-full w-full rounded-3xl border overflow-hidden me-card-hover group",
+            "bg-neutral-50 dark:bg-[#171717]",
+            isExpandableCard ? "" : "border-white dark:border-white/20",
             "[html[data-theme=light]_&]:!bg-[#dbeafe]",
-            card.isExpandable && !selectedId
-              ? "cursor-pointer group me-card-hover"
-              : "",
+            isExpandableCard && !selectedId ? "cursor-pointer" : "",
           )}
-          whileHover={card.isExpandable && !selectedId ? { scale: 1.01 } : {}}
-          whileTap={card.isExpandable && !selectedId ? { scale: 0.99 } : {}}
+          whileHover={isHoverable ? getBentoCardHoverMotion() : undefined}
+          whileTap={isHoverable ? getBentoCardTapMotion() : undefined}
+          transition={isHoverable ? bentoCardHoverTransition : undefined}
+          style={isHoverable ? { transformOrigin: "center center" } : undefined}
         >
+          <div className="relative flex flex-col justify-between h-full w-full p-5 md:p-6">
           <div className="flex flex-col h-full justify-between">
             <div>
               <h3 className="font-medium mb-2">{card.data.name}</h3>
@@ -188,10 +199,10 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="project-link cursor-pointer flex items-center gap-1"
+                    className="project-link"
                     aria-label={`View live demo of ${card.data.name}`}
                   >
-                    <ExternalLink size={16} /> Live
+                    <ExternalLink size={15} aria-hidden="true" /> Live
                   </a>
                 )}
                 {card.data.github && (
@@ -200,26 +211,27 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="project-link cursor-pointer flex items-center gap-1"
+                    className="project-link"
                     aria-label={`View source code of ${card.data.name} on GitHub`}
                   >
-                    <GithubIcon size={16} /> GitHub
+                    <GithubIcon size={15} aria-hidden="true" /> GitHub
                   </a>
                 )}
               </div>
             </div>
           </div>
 
-          {card.isExpandable && (
+          {isExpandableCard && (
             <div
               className={cn(
                 "absolute bottom-4 right-4 transition-opacity duration-300",
-                !selectedId ? "opacity-0 group-hover:opacity-100" : "opacity-0",
+                !selectedId ? "opacity-100" : "opacity-0",
               )}
             >
               <Maximize2 size={16} className="text-neutral-400" />
             </div>
           )}
+          </div>
         </motion.div>
       </m.div>
     );
@@ -362,9 +374,11 @@ const ProjectsBentoGrid: React.FC = () => {
 
               <motion.div
                 layoutId={`card-${selectedId}`}
+                data-bento-shell=""
+                data-bento-frozen=""
                 className={cn(
-                  "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col",
-                  "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
+                  "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col me-card-hover",
+                  "bg-neutral-50 dark:bg-[#171717]",
                   "[html[data-theme=light]_&]:!bg-[#dbeafe]",
                 )}
               >
@@ -389,11 +403,11 @@ const ProjectsBentoGrid: React.FC = () => {
                             href={selectedItem.data.live}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                            className="project-link-icon"
                             aria-label={`View live demo of ${selectedItem.data.name}`}
                             title="View Live Demo"
                           >
-                            <ExternalLink size={24} />
+                            <ExternalLink size={20} aria-hidden="true" />
                           </a>
                         )}
                         {selectedItem.data.github && (
@@ -401,11 +415,11 @@ const ProjectsBentoGrid: React.FC = () => {
                             href={selectedItem.data.github}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                            className="project-link-icon"
                             aria-label={`View source code of ${selectedItem.data.name} on GitHub`}
                             title="View on GitHub"
                           >
-                            <GithubIcon size={24} />
+                            <GithubIcon size={20} aria-hidden="true" />
                           </a>
                         )}
                       </div>

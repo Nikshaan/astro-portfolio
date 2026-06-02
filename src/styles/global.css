@@ -658,32 +658,22 @@ html.lenis body {
   line-height: 1.7;
 }
 
-.github-card-hover {
-  transition: border-color 0.3s ease-in-out !important;
-}
-
-.github-card-hover:hover {
-  border-color: #c084fc !important;
-}
-
-[data-theme="light"] .github-card-hover:hover {
-  border-color: #1e3a8a !important;
-}
-
 .me-card-hover {
-  transition: border-color 0.3s ease-in-out;
+  --bento-rest-border: rgba(255, 255, 255, 0.2);
+  --bento-hover-border: #c084fc;
+  border-color: var(--bento-rest-border) !important;
+  transition: box-shadow 0.26s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.me-card-hover:hover,
-.me-card-hover:focus-visible {
-  border-color: #c084fc !important;
+html[data-theme="light"] .me-card-hover,
+[data-theme="light"] .me-card-hover {
+  --bento-rest-border: #1e3a8a;
+  --bento-hover-border: #3b82f6;
 }
 
-html[data-theme="light"] .me-card-hover:hover,
-html[data-theme="light"] .me-card-hover:focus-visible,
-[data-theme="light"] .me-card-hover:hover,
-[data-theme="light"] .me-card-hover:focus-visible {
-  border-color: #3b82f6 !important;
+.me-card-hover:hover:not([data-bento-frozen]),
+.me-card-hover:focus-visible:not([data-bento-frozen]) {
+  box-shadow: inset 0 0 0 1px var(--bento-hover-border);
 }
 
 [data-theme="light"] .profile-image-border {

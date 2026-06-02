@@ -8,7 +8,13 @@ import React, {
 } from "react";
 import { isSlowConnection } from "../utils/networkAware";
 import { scheduleRadialHeatmapWarmup } from "./musicRadialHeatmapWarmup";
+import { motion } from "framer-motion";
 import { Maximize2 } from "lucide-react";
+import {
+  bentoCardHoverTransition,
+  getBentoCardHoverMotion,
+  getBentoCardTapMotion,
+} from "./bentoCardMotion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -41,11 +47,12 @@ interface FunBentoGridProps {
   images: Image[];
 }
 
-interface CardWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CardWrapperProps {
   children: React.ReactNode;
   className?: string;
   isExpandable?: boolean;
   fillHeight?: boolean;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
 }
 
 const CardWrapper: React.FC<CardWrapperProps> = memo(
@@ -55,35 +62,36 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
     isExpandable = false,
     fillHeight = true,
     onClick,
-    ...props
   }) => {
+    const isHoverable = isExpandable;
+
     return (
       <div
         className={cn(fillHeight ? "h-full w-full" : "h-auto w-full", className)}
       >
-        <div
+        <motion.div
+          data-bento-shell={isExpandable ? "" : undefined}
           className={cn(
-            "relative rounded-3xl border overflow-hidden flex flex-col",
+            "relative rounded-3xl border overflow-hidden flex flex-col me-card-hover group",
             fillHeight ? "h-full" : "h-auto min-h-0",
-            "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
-            "[html[data-theme=light]_&]:!bg-[#dbeafe] [html[data-theme=light]_&]:!border-[#93c5fd]",
-            isExpandable ? "group/card cursor-pointer" : "",
+            "bg-neutral-50 dark:bg-[#171717]",
+            isExpandable ? "" : "border-white dark:border-white/20",
+            "[html[data-theme=light]_&]:!bg-[#dbeafe]",
+            isExpandable ? "cursor-pointer" : "",
           )}
           onClick={onClick}
-          {...props}
+          whileHover={isHoverable ? getBentoCardHoverMotion() : undefined}
+          whileTap={isHoverable ? getBentoCardTapMotion() : undefined}
+          transition={isHoverable ? bentoCardHoverTransition : undefined}
+          style={isHoverable ? { transformOrigin: "center center" } : undefined}
         >
           {children}
           {isExpandable && (
-            <div
-              className={cn(
-                "absolute bottom-4 right-4 z-10 opacity-0 transition-opacity duration-300",
-                "group-hover/card:opacity-100",
-              )}
-            >
-              <Maximize2 size={16} className="!text-white drop-shadow-md" />
+            <div className="absolute bottom-4 right-4 z-10 transition-opacity duration-300 opacity-100">
+              <Maximize2 size={16} className="text-neutral-400" />
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     );
   },
@@ -386,16 +394,11 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
           </Suspense>
         </CardWrapper>
 
-        <CardWrapper
-          key="india-map"
+        <IndiaMapCard
           className="col-span-1 row-span-1 aspect-[4/3] w-full"
-        >
-          <IndiaMapCard
-            className="col-span-1 row-span-1 aspect-[4/3] w-full"
-            visitedPlaces={VISITED_PLACES}
-            index={2}
-          />
-        </CardWrapper>
+          visitedPlaces={VISITED_PLACES}
+          index={2}
+        />
 
         {images.slice(0, visibleCount).map((image: Image, i: number) => (
           <CardWrapper

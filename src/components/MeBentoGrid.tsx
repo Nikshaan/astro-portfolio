@@ -19,6 +19,11 @@ import cardsData from "../data/cardsdata.json";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import Clock from "./clock";
+import {
+  bentoCardHoverTransition,
+  getBentoCardHoverMotion,
+  getBentoCardTapMotion,
+} from "./bentoCardMotion";
 import beeImage from "../data/bee.avif";
 import nikshaanBg from "../data/NIKSHAAN.avif";
 import collegeLogo from "../data/djsce-logo.avif";
@@ -386,6 +391,10 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
     ]);
 
     const desktopDelay = 0;
+    const isExpandableCard = card.isExpandable;
+    const isHoverable = (isExpandableCard || isResume) && !selectedId;
+    const isCompactCard = card.id === "win";
+    const usesMotionBorder = isExpandableCard || isResume;
 
     return (
       <m.div
@@ -411,19 +420,18 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
           layoutId={shouldAnimate ? `card-${card.id}` : undefined}
           onClick={handleClick}
           data-card-id={card.id}
+          data-bento-shell={usesMotionBorder ? "" : undefined}
+          data-bento-frozen={selectedId === card.id ? "" : undefined}
           className={cn(
-            "relative rounded-3xl border flex flex-col group me-card-hover",
-            card.id === "win"
-              ? "justify-center items-center h-full w-fit"
-              : card.id === "resume"
-                ? "justify-center items-center h-full w-full"
-                : "p-5 justify-between h-full",
-            "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
+            "relative h-full rounded-3xl border overflow-hidden me-card-hover group",
+            card.id === "win" ? "w-fit" : "w-full",
+            "bg-neutral-50 dark:bg-[#171717]",
+            usesMotionBorder ? "" : "border-white dark:border-white/20",
             "[html[data-theme=light]_&]:!bg-[#dbeafe]",
             card.id === "intro" || card.id === "win" || card.id === "resume"
               ? "overflow-hidden"
               : "overflow-visible",
-            (card.isExpandable || isResume) && !selectedId
+            (isExpandableCard || isResume) && !selectedId
               ? "cursor-pointer"
               : "",
             card.id === "resume"
@@ -431,27 +439,40 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
               : "min-h-[150px]",
           )}
           whileHover={
-            (card.isExpandable || isResume) && !selectedId
-              ? { scale: 1.01 }
-              : {}
+            isHoverable
+              ? getBentoCardHoverMotion({ compact: isCompactCard })
+              : undefined
           }
           whileTap={
-            (card.isExpandable || isResume) && !selectedId
-              ? { scale: 0.99 }
-              : {}
+            isHoverable
+              ? getBentoCardTapMotion({ compact: isCompactCard })
+              : undefined
           }
+          transition={isHoverable ? bentoCardHoverTransition : undefined}
+          style={isHoverable ? { transformOrigin: "center center" } : undefined}
         >
-          {renderCardContent(card, images)}
-          {card.isExpandable && (
-            <div
-              className={cn(
-                "absolute bottom-4 right-4 transition-opacity duration-300",
-                !selectedId ? "opacity-100" : "opacity-0",
-              )}
-            >
-              <Maximize2 size={16} className="text-neutral-400" />
-            </div>
-          )}
+          <div
+            className={cn(
+              "relative flex flex-col h-full w-full",
+              card.id === "win"
+                ? "justify-center items-center w-fit"
+                : isResume
+                  ? "justify-center items-center"
+                  : "p-5 justify-between",
+            )}
+          >
+            {renderCardContent(card, images)}
+            {(isExpandableCard || isResume) && (
+              <div
+                className={cn(
+                  "absolute bottom-4 right-4 transition-opacity duration-300",
+                  !selectedId ? "opacity-100" : "opacity-0",
+                )}
+              >
+                <Maximize2 size={16} className="text-neutral-400" />
+              </div>
+            )}
+          </div>
         </motion.div>
       </m.div>
     );
@@ -671,9 +692,11 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
 
             <motion.div
               layoutId={`card-${selectedId}`}
+              data-bento-shell=""
+              data-bento-frozen=""
               className={cn(
-                "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col mt-12",
-                "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
+                "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col mt-12 me-card-hover",
+                "bg-neutral-50 dark:bg-[#171717]",
                 "[html[data-theme=light]_&]:!bg-[#dbeafe]",
               )}
             >
