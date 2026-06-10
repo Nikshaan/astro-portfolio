@@ -7,6 +7,7 @@ import {
   type GenreEntry,
   type MusicStatsData,
 } from "../utils/musicStatsClient";
+import useIsLightTheme from "../hooks/useTheme";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -35,11 +36,11 @@ const SWATCH_PURPLE = [
   "#8b5cf6",
   "#6d28d9",
 ];
-const SWATCH_BLUE = [
-  "#1e3a8a",
-  "#1d4ed8",
-  "#1e40af",
-  "#3730a3",
+const SWATCH_LIGHT = [
+  "#2D1B4E",
+  "#6449A8",
+  "#7C5CBF",
+  "#9E8EAC",
   "#6d28d9",
   "#701a75",
   "#0f766e",
@@ -49,21 +50,7 @@ const SWATCH_BLUE = [
 export default memo(function MusicGenreStreakBar() {
   const [data, setData] = useState<MusicGenreStreakPayload | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isLightTheme, setIsLightTheme] = useState(false);
-
-  useEffect(() => {
-    const checkTheme = () =>
-      setIsLightTheme(
-        document.documentElement.getAttribute("data-theme") === "light",
-      );
-    checkTheme();
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-    return () => observer.disconnect();
-  }, []);
+  const isLightTheme = useIsLightTheme();
 
   useEffect(() => {
     const hit = readMusicStatsCache();
@@ -86,7 +73,7 @@ export default memo(function MusicGenreStreakBar() {
   const streak = data?.listeningStreak ?? 0;
   const genreData = data?.genreData ?? [];
   const total = genreData.reduce((s, d) => s + d.count, 0);
-  const palette = isLightTheme ? SWATCH_BLUE : SWATCH_PURPLE;
+  const palette = isLightTheme ? SWATCH_LIGHT : SWATCH_PURPLE;
 
   return (
     <div
@@ -146,14 +133,14 @@ export default memo(function MusicGenreStreakBar() {
       <div
         className={cn(
           "hidden h-[1.125rem] w-px shrink-0 self-center sm:block",
-          isLightTheme ? "bg-blue-900/25" : "bg-white/15",
+          isLightTheme ? "bg-[#9B84BF]" : "bg-white/15",
         )}
         aria-hidden="true"
       />
       <div
         className={cn(
           "flex w-full shrink-0 items-center gap-2 border-t border-white/10 pt-2 sm:w-auto sm:border-t-0 sm:pt-0",
-          isLightTheme ? "border-blue-900/15" : "",
+          isLightTheme ? "border-[#9B84BF]" : "",
         )}
       >
         <span
@@ -202,8 +189,8 @@ export default memo(function MusicGenreStreakBar() {
                     100% { background-position: 200px 0; }
                 }
                 [data-theme='light'] .genre-streak-shimmer {
-                    --shimmer-from: #bfdbfe;
-                    --shimmer-to: #93c5fd;
+                    --shimmer-from: #E4DCF2;
+                    --shimmer-to: #C4B0E0;
                 }
             `}</style>
     </div>

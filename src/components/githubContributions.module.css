@@ -76,7 +76,7 @@
 }
 
 [data-theme="light"] .graph {
-  scrollbar-color: #d0d7de #ffffff;
+  scrollbar-color: #c4b0e0 #f5f0eb;
 }
 
 .graph::-webkit-scrollbar {
@@ -89,7 +89,7 @@
 }
 
 [data-theme="light"] .graph::-webkit-scrollbar-track {
-  background: #f6f8fa;
+  background: #f5f0eb;
 }
 
 .graph::-webkit-scrollbar-thumb {
@@ -98,7 +98,7 @@
 }
 
 [data-theme="light"] .graph::-webkit-scrollbar-thumb {
-  background: #d0d7de;
+  background: #c4b0e0;
 }
 
 .graph::-webkit-scrollbar {
@@ -149,23 +149,24 @@
 }
 
 [data-theme="light"] .contributionLevel0 {
-  background-color: #eff6ff !important;
+  background-color: #f5f0eb !important;
+  box-shadow: inset 0 0 0 1px #d8cee8;
 }
 
 [data-theme="light"] .contributionLevel1 {
-  background-color: #bfdbfe !important;
+  background-color: #d8cee8 !important;
 }
 
 [data-theme="light"] .contributionLevel2 {
-  background-color: #60a5fa !important;
+  background-color: #c4b0e0 !important;
 }
 
 [data-theme="light"] .contributionLevel3 {
-  background-color: #3b82f6 !important;
+  background-color: #7c5cbf !important;
 }
 
 [data-theme="light"] .contributionLevel4 {
-  background-color: #1e40af !important;
+  background-color: #6449a8 !important;
 }
 
 @media (min-width: 640px) {
@@ -232,7 +233,7 @@
 }
 
 [data-theme="light"] .skeletonTitle {
-  background: linear-gradient(90deg, #bfdbfe 25%, #93c5fd 50%, #bfdbfe 75%);
+  background: linear-gradient(90deg, #e4dcf2 25%, #c4b0e0 50%, #e4dcf2 75%);
   background-size: 1200px 100%;
 }
 
@@ -247,7 +248,7 @@
 }
 
 [data-theme="light"] .skeletonSubtitle {
-  background: linear-gradient(90deg, #dbeafe 25%, #93c5fd 50%, #dbeafe 75%);
+  background: linear-gradient(90deg, #ede7f6 25%, #c4b0e0 50%, #ede7f6 75%);
   background-size: 1200px 100%;
 }
 
@@ -263,7 +264,7 @@
 }
 
 [data-theme="light"] .skeletonGraph {
-  scrollbar-color: #d0d7de #ffffff;
+  scrollbar-color: #c4b0e0 #f5f0eb;
 }
 
 @media (min-width: 768px) {
@@ -306,7 +307,7 @@
 }
 
 [data-theme="light"] .skeletonDay {
-  background: linear-gradient(90deg, #bfdbfe 25%, #93c5fd 50%, #bfdbfe 75%);
+  background: linear-gradient(90deg, #e4dcf2 25%, #c4b0e0 50%, #e4dcf2 75%);
   background-size: 1200px 100%;
 }
 

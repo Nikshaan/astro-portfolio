@@ -54,9 +54,9 @@ async function parsePayload(response: Response): Promise<RadialHeatmapPayload> {
   return parsed as unknown as RadialHeatmapPayload;
 }
 
-export async function loadRadialHeatmapPayload(
-  options?: { force?: boolean },
-): Promise<RadialHeatmapPayload> {
+export async function loadRadialHeatmapPayload(options?: {
+  force?: boolean;
+}): Promise<RadialHeatmapPayload> {
   const force = options?.force === true;
   const untilSec = anchorUntilSec();
   const now = Date.now();

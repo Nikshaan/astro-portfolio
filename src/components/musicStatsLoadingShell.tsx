@@ -95,10 +95,7 @@ export function YearlyScrobblesLegendSkeleton() {
       aria-hidden
     >
       {YEARLY_LEGEND_BAR_WIDTHS.map((w, i) => (
-        <div
-          key={i}
-          className="flex min-w-0 max-w-[11rem] items-center gap-2"
-        >
+        <div key={i} className="flex min-w-0 max-w-[11rem] items-center gap-2">
           <div className="music-stats-skel-strong h-2 w-2 shrink-0 rounded-full" />
           <div
             className="music-stats-skel-soft h-[0.875rem] rounded-md"

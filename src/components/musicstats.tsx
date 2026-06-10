@@ -55,7 +55,9 @@ export default memo(function MusicStatsClient() {
 
   if (error && !data) {
     return (
-      <div className={`${MUSIC_STATS_SHELL} shrink-0 items-center justify-center`}>
+      <div
+        className={`${MUSIC_STATS_SHELL} shrink-0 items-center justify-center`}
+      >
         <div className="type-body-sm text-red-400">{error}</div>
       </div>
     );
@@ -63,7 +65,9 @@ export default memo(function MusicStatsClient() {
 
   if (!data) {
     return (
-      <div className={`${MUSIC_STATS_SHELL} shrink-0 items-center justify-center`}>
+      <div
+        className={`${MUSIC_STATS_SHELL} shrink-0 items-center justify-center`}
+      >
         <div className="type-body-sm text-gray-400">No data available</div>
       </div>
     );
@@ -91,26 +95,34 @@ export default memo(function MusicStatsClient() {
           </p>
           <div className="flex w-full flex-col items-center gap-2 type-body-sm">
             <p>
-              <span className="font-medium !text-white">Play count:</span>{" "}
-              <span className="!text-white opacity-80">
+              <span className="font-medium !text-white [html[data-theme=light]_&]:!text-white">
+                Play count:
+              </span>{" "}
+              <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
                 {data.upperStatsArray[0]?.toLocaleString()}
               </span>
             </p>
             <p>
-              <span className="font-medium !text-white">Track count:</span>{" "}
-              <span className="!text-white opacity-80">
+              <span className="font-medium !text-white [html[data-theme=light]_&]:!text-white">
+                Track count:
+              </span>{" "}
+              <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
                 {data.upperStatsArray[1]?.toLocaleString()}
               </span>
             </p>
             <p>
-              <span className="font-medium !text-white">Artist count:</span>{" "}
-              <span className="!text-white opacity-80">
+              <span className="font-medium !text-white [html[data-theme=light]_&]:!text-white">
+                Artist count:
+              </span>{" "}
+              <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
                 {data.upperStatsArray[2]?.toLocaleString()}
               </span>
             </p>
             <p>
-              <span className="font-medium !text-white">Album count:</span>{" "}
-              <span className="!text-white opacity-80">
+              <span className="font-medium !text-white [html[data-theme=light]_&]:!text-white">
+                Album count:
+              </span>{" "}
+              <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
                 {data.upperStatsArray[3]?.toLocaleString()}
               </span>
             </p>
@@ -129,8 +141,10 @@ export default memo(function MusicStatsClient() {
                   className="flex flex-col sm:flex-row justify-center items-center h-full w-full gap-1 sm:gap-2 mb-2"
                 >
                   <div className="flex gap-2">
-                    <p className="font-medium !text-white">{artist.name}</p>
-                    <p className="!text-white opacity-70">
+                    <p className="font-medium !text-white [html[data-theme=light]_&]:!text-white">
+                      {artist.name}
+                    </p>
+                    <p className="!text-white opacity-70 [html[data-theme=light]_&]:!text-white">
                       plays: {artist.count}
                     </p>
                   </div>
@@ -138,7 +152,7 @@ export default memo(function MusicStatsClient() {
               ))
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="!text-white opacity-60 type-caption italic">
+                <p className="!text-white opacity-60 type-caption italic [html[data-theme=light]_&]:!text-white">
                   No recent listening data available
                 </p>
               </div>
@@ -150,7 +164,7 @@ export default memo(function MusicStatsClient() {
       <div className="min-h-0 flex-1" aria-hidden />
 
       <div className="flex h-[180px] w-full shrink-0 flex-col lg:h-[250px]">
-        <p className="type-stats-label mb-3 text-center [html[data-theme=light]_&]:!text-black">
+        <p className="type-stats-label mb-3 text-center [html[data-theme=light]_&]:!text-[#2D1B4E]">
           Daily music scrobbles
         </p>
         <div className="min-h-0 w-full flex-1 select-none">

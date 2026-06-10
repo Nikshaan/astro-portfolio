@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from "react";
+import useIsLightTheme, { toggleThemeWithTransition } from "../hooks/useTheme";
 import { motion } from "framer-motion";
 
 interface NavbarProps {
@@ -14,10 +15,10 @@ const DEFAULT_SECTIONS = [
 const Navbar: React.FC<NavbarProps> = memo(
   ({ sections = DEFAULT_SECTIONS }) => {
     const [activeSection, setActiveSection] = useState<string>("me");
-    const [theme, setTheme] = useState<string>("dark");
     const [isVisible, setIsVisible] = useState(true);
     const lastScrollY = useRef(0);
     const navbarRef = useRef<HTMLDivElement>(null);
+    const isLightTheme = useIsLightTheme();
 
     useEffect(() => {
       const observerOptions: IntersectionObserverInit = {
@@ -105,24 +106,6 @@ const Navbar: React.FC<NavbarProps> = memo(
     }, []);
 
     useEffect(() => {
-      const updateTheme = () => {
-        const currentTheme =
-          document.documentElement.getAttribute("data-theme");
-        setTheme(currentTheme || "dark");
-      };
-
-      updateTheme();
-
-      const observer = new MutationObserver(updateTheme);
-      observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ["data-theme"],
-      });
-
-      return () => observer.disconnect();
-    }, []);
-
-    useEffect(() => {
       if (window.location.hash) {
         window.history.replaceState(
           null,
@@ -186,28 +169,7 @@ const Navbar: React.FC<NavbarProps> = memo(
     );
 
     const handleThemeToggle = useCallback(() => {
-      const html = document.documentElement;
-
-      if (html.classList.contains("theme-transitioning")) {
-        html.classList.remove("theme-transitioning");
-        void html.offsetHeight;
-      }
-
-      const currentTheme = html.getAttribute("data-theme");
-
-      html.classList.add("theme-transitioning");
-
-      if (currentTheme === "light") {
-        html.removeAttribute("data-theme");
-        localStorage.setItem("theme", "default");
-      } else {
-        html.setAttribute("data-theme", "light");
-        localStorage.setItem("theme", "light");
-      }
-
-      setTimeout(() => {
-        html.classList.remove("theme-transitioning");
-      }, 400);
+      toggleThemeWithTransition();
     }, []);
 
     const getLinkClasses = useCallback(
@@ -229,7 +191,7 @@ const Navbar: React.FC<NavbarProps> = memo(
       <motion.div
         ref={navbarRef}
         id="navbar"
-        className="bg-[#111111]/80 dark:bg-[#111111]/80 backdrop-blur-md text-white z-50 fixed left-1/2 h-12 w-[90%] max-w-[380px] border border-white/20 rounded-full flex justify-between px-6 items-center shadow-lg nav-links"
+        className="bg-[#111111] text-white z-50 fixed left-1/2 h-12 w-[90%] max-w-[380px] border border-white/20 rounded-full flex justify-between px-6 items-center shadow-lg nav-links"
         initial={{ y: -100, x: "-50%", opacity: 0 }}
         animate={{
           y: isVisible ? 0 : -100,
@@ -275,7 +237,7 @@ const Navbar: React.FC<NavbarProps> = memo(
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >
-            {theme === "light" ? (
+            {isLightTheme ? (
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

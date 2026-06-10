@@ -147,7 +147,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
             "relative h-full w-full rounded-3xl border overflow-hidden me-card-hover group",
             "bg-neutral-50 dark:bg-[#171717]",
             isExpandableCard ? "" : "border-white dark:border-white/20",
-            "[html[data-theme=light]_&]:!bg-[#dbeafe]",
+            "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
             isExpandableCard && !selectedId ? "cursor-pointer" : "",
           )}
           whileHover={isHoverable ? getBentoCardHoverMotion() : undefined}
@@ -156,81 +156,81 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
           style={isHoverable ? { transformOrigin: "center center" } : undefined}
         >
           <div className="relative flex flex-col justify-between h-full w-full p-5 md:p-6">
-          <div className="flex flex-col h-full justify-between">
-            <div>
-              <h3 className="font-medium mb-2">{card.data.name}</h3>
-              <p
-                className="type-body-sm font-light text-neutral-600 dark:text-neutral-400 text-pretty"
-                dangerouslySetInnerHTML={{ __html: card.data.summary }}
-              />
-            </div>
-            <div className="flex flex-col gap-4 mt-auto pt-4">
-              <div className="grid grid-cols-4 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full">
-                {card.data.techstack?.map((tech: string, i: number) => {
-                  const icon = techstackIcons[tech];
-                  return (
-                    <div
-                      key={i}
-                      data-title={tech}
-                      className={cn(
-                        "flex items-center justify-center p-1 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12 min-[500px]:max-md:h-9 tooltip-trigger relative",
-                        "bg-neutral-100 dark:bg-neutral-800",
-                      )}
+            <div className="flex flex-col h-full justify-between">
+              <div>
+                <h3 className="font-medium mb-2">{card.data.name}</h3>
+                <p
+                  className="type-body-sm font-light text-neutral-600 dark:text-neutral-400 text-pretty"
+                  dangerouslySetInnerHTML={{ __html: card.data.summary }}
+                />
+              </div>
+              <div className="flex flex-col gap-4 mt-auto pt-4">
+                <div className="grid grid-cols-4 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full">
+                  {card.data.techstack?.map((tech: string, i: number) => {
+                    const icon = techstackIcons[tech];
+                    return (
+                      <div
+                        key={i}
+                        data-title={tech}
+                        className={cn(
+                          "flex items-center justify-center p-1 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12 min-[500px]:max-md:h-9 tooltip-trigger relative",
+                          "bg-neutral-100 dark:bg-neutral-800",
+                        )}
+                      >
+                        {icon && (
+                          <img
+                            src={icon.src}
+                            width={icon.width}
+                            height={icon.height}
+                            alt={tech}
+                            className="w-full h-full object-contain flex items-center justify-center text-center"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-4 type-body-sm font-medium">
+                  {card.data.live && (
+                    <a
+                      href={card.data.live}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="project-link"
+                      aria-label={`View live demo of ${card.data.name}`}
                     >
-                      {icon && (
-                        <img
-                          src={icon.src}
-                          width={icon.width}
-                          height={icon.height}
-                          alt={tech}
-                          className="w-full h-full object-contain flex items-center justify-center text-center"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex gap-4 type-body-sm font-medium">
-                {card.data.live && (
-                  <a
-                    href={card.data.live}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="project-link"
-                    aria-label={`View live demo of ${card.data.name}`}
-                  >
-                    <ExternalLink size={15} aria-hidden="true" /> Live
-                  </a>
-                )}
-                {card.data.github && (
-                  <a
-                    href={card.data.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="project-link"
-                    aria-label={`View source code of ${card.data.name} on GitHub`}
-                  >
-                    <GithubIcon size={15} aria-hidden="true" /> GitHub
-                  </a>
-                )}
+                      <ExternalLink size={15} aria-hidden="true" /> Live
+                    </a>
+                  )}
+                  {card.data.github && (
+                    <a
+                      href={card.data.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="project-link"
+                      aria-label={`View source code of ${card.data.name} on GitHub`}
+                    >
+                      <GithubIcon size={15} aria-hidden="true" /> GitHub
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {isExpandableCard && (
-            <div
-              className={cn(
-                "absolute bottom-4 right-4 transition-opacity duration-300",
-                !selectedId ? "opacity-100" : "opacity-0",
-              )}
-            >
-              <Maximize2 size={16} className="text-neutral-400" />
-            </div>
-          )}
+            {isExpandableCard && (
+              <div
+                className={cn(
+                  "absolute bottom-4 right-4 transition-opacity duration-300",
+                  !selectedId ? "opacity-100" : "opacity-0",
+                )}
+              >
+                <Maximize2 size={16} className="text-neutral-400" />
+              </div>
+            )}
           </div>
         </motion.div>
       </m.div>
@@ -307,7 +307,7 @@ const ProjectsBentoGrid: React.FC = () => {
             Projects
           </h2>
           <div
-            className="flex gap-1 bg-neutral-200 dark:bg-neutral-800 p-1 rounded-full"
+            className="flex gap-1 bg-neutral-200 dark:bg-neutral-800 p-1 rounded-full [html[data-theme=light]_&]:bg-[#E4DCF2]"
             role="tablist"
             aria-label="Project categories"
           >
@@ -319,8 +319,8 @@ const ProjectsBentoGrid: React.FC = () => {
               className={cn(
                 "px-4 py-1.5 cursor-pointer rounded-full type-ui font-medium transition-all",
                 activeCategory === "aiml"
-                  ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100"
-                  : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100",
+                  ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100 [html[data-theme=light]_&]:bg-[#7C5CBF] [html[data-theme=light]_&]:text-white"
+                  : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 [html[data-theme=light]_&]:text-[#2D1B4E] [html[data-theme=light]_&]:hover:text-[#7C5CBF]",
               )}
             >
               AI/ML
@@ -333,8 +333,8 @@ const ProjectsBentoGrid: React.FC = () => {
               className={cn(
                 "px-4 py-1.5 cursor-pointer rounded-full type-ui font-medium transition-all",
                 activeCategory === "web"
-                  ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100"
-                  : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100",
+                  ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100 [html[data-theme=light]_&]:bg-[#7C5CBF] [html[data-theme=light]_&]:text-white"
+                  : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 [html[data-theme=light]_&]:text-[#2D1B4E] [html[data-theme=light]_&]:hover:text-[#7C5CBF]",
               )}
             >
               Web
@@ -379,7 +379,7 @@ const ProjectsBentoGrid: React.FC = () => {
                 className={cn(
                   "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col me-card-hover",
                   "bg-neutral-50 dark:bg-[#171717]",
-                  "[html[data-theme=light]_&]:!bg-[#dbeafe]",
+                  "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
                 )}
               >
                 <button

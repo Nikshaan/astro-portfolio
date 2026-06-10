@@ -65,7 +65,7 @@ const favicon = await getImage({
         />
         <meta
             name="theme-color"
-            content="#ffffff"
+            content="#F5F0EB"
             media="(prefers-color-scheme: light)"
         />
         <meta name="color-scheme" content="dark light" />
@@ -153,11 +153,13 @@ const favicon = await getImage({
             (function () {
                 try {
                     var theme = localStorage.getItem("theme");
-                    if (theme) {
+                    if (theme === "light") {
                         document.documentElement.setAttribute(
                             "data-theme",
-                            theme,
+                            "light",
                         );
+                    } else {
+                        document.documentElement.removeAttribute("data-theme");
                     }
                 } catch (e) {}
 
@@ -264,8 +266,8 @@ const favicon = await getImage({
     }
 
     [data-theme="light"] body {
-        background-color: #ffffff;
-        color: #000000;
+        background-color: var(--bg-page, #F5F0EB);
+        color: var(--text-body, #6B5B7A);
     }
 </style>
 

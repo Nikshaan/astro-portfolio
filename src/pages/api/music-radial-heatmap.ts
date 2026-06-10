@@ -65,6 +65,7 @@ const jsonResponse = (
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
+  let lastError: unknown = null;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -90,15 +91,18 @@ async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
       if (response.status >= 400 && response.status < 500) {
         throw new Error(`HTTP ${response.status}`);
       }
-    } catch {
+      lastError = new Error(`Unexpected HTTP status ${response.status}`);
+    } catch (err) {
       clearTimeout(timeoutId);
-      if (attempt === maxRetries - 1) throw new Error("Max retries exceeded");
+      lastError = err;
+      if (attempt === maxRetries - 1) {
+        const msg = `Max retries exceeded for ${url}: ${String(lastError)}`;
+        throw new Error(msg);
+      }
     }
-
     await sleep(Math.min(1000 * Math.pow(2, attempt), 4000));
   }
-
-  throw new Error("Max retries exceeded");
+  throw new Error(`Max retries exceeded for ${url}: ${String(lastError)}`);
 }
 
 function normalizeWeeklyArtists(
@@ -168,16 +172,27 @@ async function fetchWeekArtists(
   const url =
     `https://ws.audioscrobbler.com/2.0/?method=user.getweeklyartistchart&user=${encodeURIComponent(username)}` +
     `&from=${fromSec}&to=${toSec}&api_key=${apiKey}&format=json&limit=1000`;
-  const response = await fetchWithRetry(url);
-  const data = await response.json();
-  const map = new Map<string, number>();
-  const labelByKey = new Map<string, string>();
-  for (const { name, plays } of normalizeWeeklyArtists(data)) {
-    const key = name.toLowerCase();
-    if (!labelByKey.has(key)) labelByKey.set(key, name);
-    map.set(key, plays);
+
+  try {
+    const response = await fetchWithRetry(url);
+    const data = await response.json();
+    const map = new Map<string, number>();
+    const labelByKey = new Map<string, string>();
+    for (const { name, plays } of normalizeWeeklyArtists(data)) {
+      const key = name.toLowerCase();
+      if (!labelByKey.has(key)) labelByKey.set(key, name);
+      map.set(key, plays);
+    }
+    return { map, labelByKey };
+  } catch (err) {
+    try {
+      console.error(`fetchWeekArtists failed for ${fromSec}-${toSec}:`, err);
+    } catch (e) {}
+    return {
+      map: new Map<string, number>(),
+      labelByKey: new Map<string, string>(),
+    };
   }
-  return { map, labelByKey };
 }
 
 async function concurrency<T, R>(
@@ -240,7 +255,9 @@ function resolveArtistName(
 const TARGET_WEEKS = 52;
 const SECONDS_PER_WEEK = 604800;
 
-function dedupeWeekBoundaryWeeks(weeks: RadialHeatmapWeek[]): RadialHeatmapWeek[] {
+function dedupeWeekBoundaryWeeks(
+  weeks: RadialHeatmapWeek[],
+): RadialHeatmapWeek[] {
   const seen = new Set<string>();
   const out: RadialHeatmapWeek[] = [];
   for (const w of weeks) {
@@ -260,8 +277,7 @@ function selectRollingLastFmWeeks(
   const sorted = dedupeWeekBoundaryWeeks(
     listFromApi.filter((w) => w.from > 0 && w.to > 0),
   ).sort((a, b) => a.from - b.from);
-  const earliestKeep =
-    anchorSec - (TARGET_WEEKS + 1) * SECONDS_PER_WEEK;
+  const earliestKeep = anchorSec - (TARGET_WEEKS + 1) * SECONDS_PER_WEEK;
   const overlapping = sorted.filter(
     (w) => w.to >= earliestKeep && w.from <= anchorSec,
   );
@@ -309,15 +325,34 @@ async function fetchRadialHeatmap(
 ): Promise<RadialHeatmapResult> {
   const toSec = anchorToSec;
   const fromSec = toSec - ROLLING_DAYS * SECONDS_PER_DAY;
+  const anchorSec = anchorToSec;
 
-  const [topTen, listFromApi] = await Promise.all([
+  const [topRes, listRes] = await Promise.allSettled([
     fetchRollingYearTopArtists(username, apiKey, fromSec, toSec),
     fetchWeeklyChartList(username, apiKey),
   ]);
+
+  let topTen: { name: string; plays: number }[] = [];
+  let listFromApi: RadialHeatmapWeek[] = [];
+
+  if (topRes.status === "fulfilled") {
+    topTen = topRes.value;
+  } else {
+    console.error("fetchRollingYearTopArtists failed:", topRes.reason);
+    topTen = [];
+  }
+
+  if (listRes.status === "fulfilled") {
+    listFromApi = listRes.value;
+  } else {
+    console.error("fetchWeeklyChartList failed:", listRes.reason);
+    listFromApi = [];
+  }
+
   let weeks =
     listFromApi.length === 0
       ? fallbackWeekSlices(fromSec, toSec)
-      : selectRollingLastFmWeeks(listFromApi, anchorToSec);
+      : selectRollingLastFmWeeks(listFromApi, anchorSec);
 
   if (!weeks.length) {
     weeks = fallbackWeekSlices(fromSec, toSec);

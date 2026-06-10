@@ -90,11 +90,11 @@ const Footer = () => {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: "some", margin: "0px 0px 200px 0px" }}
-        className="w-full max-w-[1400px] mx-auto rounded-3xl border bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 data-[theme=light]:!bg-[#dbeafe] data-[theme=light]:!border-[#93c5fd] overflow-hidden footer-transition"
+        className="w-full max-w-[1400px] mx-auto rounded-3xl border bg-neutral-50 dark:bg-[#171717] [html[data-theme=light]_&]:!bg-[#EDE7F6] overflow-hidden footer-transition me-card-hover"
       >
         <motion.div
           variants={itemVariants}
-          className="p-8 md:p-12 border-b border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] footer-transition"
+          className="p-8 md:p-12 border-b border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] footer-transition"
         >
           <h2 className="type-footer-display uppercase text-neutral-900 dark:text-white footer-transition whitespace-nowrap">
             Let's Connect
@@ -104,7 +104,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2">
           <motion.div
             variants={itemVariants}
-            className="p-8 md:p-12 flex flex-col justify-between gap-8 border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] overflow-hidden footer-transition"
+            className="p-8 md:p-12 flex flex-col justify-between gap-8 border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] overflow-hidden footer-transition"
           >
             <div>
               <a
@@ -124,7 +124,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Visit Nikshaan's GitHub profile"
-                className="p-4 rounded-full border border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] hover:bg-neutral-200 dark:hover:bg-white/10 data-[theme=light]:hover:bg-blue-100 footer-transition"
+                className="p-4 rounded-full border border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] hover:bg-neutral-200 dark:hover:bg-white/10 [html[data-theme=light]_&]:hover:bg-[#9B84BF] footer-transition"
               >
                 <Github
                   className="w-5 h-5 text-neutral-900 dark:text-white"
@@ -136,7 +136,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Connect with Nikshaan on LinkedIn"
-                className="p-4 rounded-full border border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] hover:bg-neutral-200 dark:hover:bg-white/10 data-[theme=light]:hover:bg-blue-100 footer-transition"
+                className="p-4 rounded-full border border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] hover:bg-neutral-200 dark:hover:bg-white/10 [html[data-theme=light]_&]:hover:bg-[#9B84BF] footer-transition"
               >
                 <LinkedinIcon
                   className="w-5 h-5 text-neutral-900 dark:text-white"
@@ -146,7 +146,7 @@ const Footer = () => {
               <a
                 href="mailto:nikshaanshetty06@gmail.com"
                 aria-label="Send an email to Nikshaan"
-                className="p-4 rounded-full border border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] hover:bg-neutral-200 dark:hover:bg-white/10 data-[theme=light]:hover:bg-blue-100 footer-transition"
+                className="p-4 rounded-full border border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] hover:bg-neutral-200 dark:hover:bg-white/10 [html[data-theme=light]_&]:hover:bg-[#9B84BF] footer-transition"
               >
                 <Mail
                   className="w-5 h-5 text-neutral-900 dark:text-white"
@@ -161,7 +161,7 @@ const Footer = () => {
             className="p-6 md:p-12 flex flex-col justify-between gap-8"
           >
             <div className="flex flex-col gap-2">
-              <p className="type-body font-medium text-neutral-600 dark:text-neutral-400 data-[theme=light]:text-blue-900/70 mb-2">
+              <p className="type-body font-medium text-neutral-600 dark:text-neutral-400 [html[data-theme=light]_&]:text-[#9E8EAC] mb-2">
                 Navigation
               </p>
               <nav
@@ -178,7 +178,7 @@ const Footer = () => {
                     href={`#${link.href}`}
                     onClick={(e) => handleNavClick(e, link.href)}
                     aria-label={`Navigate to ${link.name} section`}
-                    className="px-4 md:px-6 py-2 rounded-full border border-neutral-200 dark:border-white/10 data-[theme=light]:border-[#93c5fd] type-ui text-neutral-900 dark:text-white font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-black data-[theme=light]:hover:bg-blue-600 data-[theme=light]:hover:text-white footer-transition"
+                    className="px-4 md:px-6 py-2 rounded-full border border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] type-ui text-neutral-900 dark:text-white font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-black [html[data-theme=light]_&]:hover:bg-[#7C5CBF] [html[data-theme=light]_&]:hover:text-white footer-transition"
                   >
                     {link.name}
                   </a>

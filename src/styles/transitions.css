@@ -2,7 +2,11 @@ html.theme-transitioning,
 html.theme-transitioning body,
 html.theme-transitioning #navbar,
 html.theme-transitioning #main-footer,
-html.theme-transitioning .footer-transition {
+html.theme-transitioning .grid-bg,
+html.theme-transitioning .footer-transition,
+html.theme-transitioning [data-bento-shell],
+html.theme-transitioning .me-card-hover,
+html.theme-transitioning .theme-transition {
   transition:
     background-color 0.35s ease,
     color 0.35s ease,
@@ -10,38 +14,18 @@ html.theme-transitioning .footer-transition {
     box-shadow 0.35s ease !important;
 }
 
-html.theme-transitioning div[class*="rounded-3xl"],
-html.theme-transitioning div[class*="bg-neutral"],
-html.theme-transitioning div[class*="bg-[#171717]"],
-html.theme-transitioning div[class*="border"] {
-  transition:
-    background-color 0.35s ease,
-    border-color 0.35s ease !important;
-}
-
-html.theme-transitioning h1,
-html.theme-transitioning h2,
-html.theme-transitioning h3,
-html.theme-transitioning p,
-html.theme-transitioning span,
-html.theme-transitioning a {
-  transition: color 0.35s ease !important;
-}
-
-html.theme-transitioning svg,
-html.theme-transitioning svg path,
-html.theme-transitioning svg circle {
-  transition:
-    fill 0.35s ease,
-    stroke 0.35s ease !important;
-}
-
-html.theme-transitioning button,
-html.theme-transitioning input {
-  transition:
-    background-color 0.35s ease,
-    color 0.35s ease,
-    border-color 0.35s ease !important;
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transitioning,
+  html.theme-transitioning body,
+  html.theme-transitioning #navbar,
+  html.theme-transitioning #main-footer,
+  html.theme-transitioning .grid-bg,
+  html.theme-transitioning .footer-transition,
+  html.theme-transitioning [data-bento-shell],
+  html.theme-transitioning .me-card-hover,
+  html.theme-transitioning .theme-transition {
+    transition: none !important;
+  }
 }
 
 html,
@@ -78,8 +62,9 @@ body {
 
 html[data-theme="light"] .me-card-hover,
 [data-theme="light"] .me-card-hover {
-  --bento-rest-border: #1e3a8a;
-  --bento-hover-border: #3b82f6;
+  --bento-rest-border: #9b84bf;
+  --bento-hover-border: #7c5cbf;
+  border-color: #9b84bf !important;
 }
 
 .me-card-hover:hover:not([data-bento-frozen]),

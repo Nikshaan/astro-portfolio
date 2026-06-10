@@ -1,5 +1,6 @@
 import { Line } from "react-chartjs-2";
 import { useState, useEffect, useMemo, memo } from "react";
+import useIsLightTheme from "../hooks/useTheme";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -29,24 +30,7 @@ interface ChartData {
 }
 
 export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
-  const [isLightTheme, setIsLightTheme] = useState(false);
-
-  useEffect(() => {
-    const checkTheme = () => {
-      const theme = document.documentElement.getAttribute("data-theme");
-      setIsLightTheme(theme === "light");
-    };
-
-    checkTheme();
-
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  const isLightTheme = useIsLightTheme();
 
   if (!data || data.length === 0) {
     return (
@@ -56,12 +40,12 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
     );
   }
 
-  const strokeColor = isLightTheme ? "#3b82f6" : "#ac46fd";
+  const strokeColor = isLightTheme ? "#7C5CBF" : "#ac46fd";
   const fillColor = isLightTheme
-    ? "rgba(147, 197, 253, 0.6)"
+    ? "rgba(196, 176, 224, 0.6)"
     : "rgba(87, 19, 136, 0.6)";
-  const gridColor = isLightTheme ? "#bfdbfe" : "#374151";
-  const textColor = isLightTheme ? "#1e3a8a" : "#ffffff";
+  const gridColor = isLightTheme ? "#D8CEE8" : "#374151";
+  const textColor = isLightTheme ? "#2D1B4E" : "#ffffff";
 
   const chartData = useMemo(
     () => ({

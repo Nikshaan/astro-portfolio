@@ -23,7 +23,10 @@ const RadialArtistHeatmap = lazy(() => import("./RadialArtistHeatmap"));
 const MusicGenreStreakBar = lazy(() => import("./MusicGenreStreakBar"));
 import IndiaMapCard from "./IndiaMapCard";
 import ErrorBoundary from "./ErrorBoundary";
-import { MusicStatsLoadingShell, YearlyScrobblesLoadingShell } from "./musicStatsLoadingShell";
+import {
+  MusicStatsLoadingShell,
+  YearlyScrobblesLoadingShell,
+} from "./musicStatsLoadingShell";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -52,6 +55,7 @@ interface CardWrapperProps {
   className?: string;
   isExpandable?: boolean;
   fillHeight?: boolean;
+  disableHoverMotion?: boolean;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
 }
 
@@ -61,34 +65,38 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
     className,
     isExpandable = false,
     fillHeight = true,
+    disableHoverMotion = false,
     onClick,
   }) => {
-    const isHoverable = isExpandable;
-
     return (
       <div
-        className={cn(fillHeight ? "h-full w-full" : "h-auto w-full", className)}
+        className={cn(
+          fillHeight ? "h-full w-full" : "h-auto w-full",
+          className,
+        )}
       >
         <motion.div
-          data-bento-shell={isExpandable ? "" : undefined}
+          data-bento-shell=""
           className={cn(
             "relative rounded-3xl border overflow-hidden flex flex-col me-card-hover group",
             fillHeight ? "h-full" : "h-auto min-h-0",
             "bg-neutral-50 dark:bg-[#171717]",
             isExpandable ? "" : "border-white dark:border-white/20",
-            "[html[data-theme=light]_&]:!bg-[#dbeafe]",
+            "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
             isExpandable ? "cursor-pointer" : "",
           )}
           onClick={onClick}
-          whileHover={isHoverable ? getBentoCardHoverMotion() : undefined}
-          whileTap={isHoverable ? getBentoCardTapMotion() : undefined}
-          transition={isHoverable ? bentoCardHoverTransition : undefined}
-          style={isHoverable ? { transformOrigin: "center center" } : undefined}
+          whileHover={
+            disableHoverMotion ? undefined : getBentoCardHoverMotion()
+          }
+          whileTap={disableHoverMotion ? undefined : getBentoCardTapMotion()}
+          transition={bentoCardHoverTransition}
+          style={{ transformOrigin: "center center" }}
         >
           {children}
           {isExpandable && (
-            <div className="absolute bottom-4 right-4 z-10 transition-opacity duration-300 opacity-100">
-              <Maximize2 size={16} className="text-neutral-400" />
+            <div className="absolute bottom-4 right-4 z-10 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+              <Maximize2 size={16} className="text-[#FFFFFF]" />
             </div>
           )}
         </motion.div>
@@ -341,6 +349,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
       >
         <CardWrapper
           key="music-stats"
+          disableHoverMotion
           className="col-span-2 md:col-span-2 lg:col-span-2 row-span-2 h-full min-h-0 w-full"
         >
           <div className="flex h-full min-h-0 w-full flex-col">
@@ -348,9 +357,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
               Music Stats
             </h3>
             <div className={FUN_MUSIC_YEARLY_PAIR_BODY}>
-              <Suspense
-                fallback={<MusicStatsLoadingShell />}
-              >
+              <Suspense fallback={<MusicStatsLoadingShell />}>
                 <ErrorBoundary>
                   <MusicStatsClient />
                 </ErrorBoundary>
@@ -361,6 +368,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
 
         <CardWrapper
           key="music-radial"
+          disableHoverMotion
           className="col-span-2 lg:col-span-2 row-span-2 h-full min-h-0 w-full"
         >
           <div className="flex h-full min-h-0 w-full flex-col">
@@ -379,6 +387,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
 
         <CardWrapper
           key="music-genre-streak"
+          disableHoverMotion
           className="col-span-2 lg:col-span-4 min-h-0 w-full"
         >
           <Suspense
@@ -404,6 +413,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
           <CardWrapper
             key={image.id}
             isExpandable={true}
+            disableHoverMotion
             className="col-span-1 row-span-1"
           >
             <a

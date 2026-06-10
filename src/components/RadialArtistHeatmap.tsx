@@ -19,6 +19,7 @@ import {
   YearlyScrobblesChartSkeletonInner,
   YearlyScrobblesLegendSkeleton,
 } from "./musicStatsLoadingShell";
+import useIsLightTheme from "../hooks/useTheme";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -205,7 +206,7 @@ export default memo(function RadialArtistHeatmap() {
   const [data, setData] = useState<RadialHeatmapPayload | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLightTheme, setIsLightTheme] = useState(false);
+  const isLightTheme = useIsLightTheme();
   const coarsePointer = useCoarsePointer();
   const stickyTouchTooltip =
     coarsePointer ||
@@ -300,20 +301,6 @@ export default memo(function RadialArtistHeatmap() {
     return () =>
       document.removeEventListener("touchstart", onDocTouchStart, true);
   }, [stickyTouchTooltip]);
-
-  useEffect(() => {
-    const sync = () =>
-      setIsLightTheme(
-        document.documentElement.getAttribute("data-theme") === "light",
-      );
-    sync();
-    const observer = new MutationObserver(sync);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!shouldLoad) return;
@@ -779,111 +766,98 @@ export default memo(function RadialArtistHeatmap() {
                 onTouchEnd={onSvgTouchComplete}
                 onTouchCancel={onSvgTouchComplete}
               >
-              <desc>
-                Yearly scrobbles shown week by week: ten concentric rings for
-                your most-played artists over the last year. Each ring is split
-                into fifty-two weeks; stronger segments mean more plays that
-                week for that artist.
-              </desc>
-              <g ref={chartGroupRef} transform={CHART_ROTATE_TRANSFORM}>
-                {monthPts.map((m, i) => {
-                  const x = CX + LABEL_R * Math.cos(m.a);
-                  const y = CY + LABEL_R * Math.sin(m.a);
-                  return (
-                    <text
-                      key={`${m.text}-${i}`}
-                      x={x}
-                      y={y}
-                      transform={`rotate(${CHART_TEXT_UPRIGHT_DEG} ${x} ${y})`}
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                      className={cn(
-                        "pointer-events-none font-semibold",
-                        isLightTheme ? "fill-[#0a0f1a]" : "fill-neutral-200",
-                      )}
-                      style={{
-                        fontSize: 12,
-                        paintOrder: "stroke fill",
-                        stroke: isLightTheme ? "#eff6ff" : "rgba(0,0,0,0.55)",
-                        strokeWidth: isLightTheme ? 1.35 : 0.9,
-                        strokeLinejoin: "round",
-                      }}
-                    >
-                      {m.text}
-                    </text>
-                  );
-                })}
-                <circle
-                  r={innermostInnerR() - 10}
-                  cx={CX}
-                  cy={CY}
-                  className={cn(
-                    "pointer-events-none",
-                    isLightTheme
-                      ? "fill-blue-50/95"
-                      : "fill-neutral-900/10 dark:fill-neutral-100/10",
+                <desc>
+                  Yearly scrobbles shown week by week: ten concentric rings for
+                  your most-played artists over the last year. Each ring is
+                  split into fifty-two weeks; stronger segments mean more plays
+                  that week for that artist.
+                </desc>
+                <g ref={chartGroupRef} transform={CHART_ROTATE_TRANSFORM}>
+                  {monthPts.map((m, i) => {
+                    const x = CX + LABEL_R * Math.cos(m.a);
+                    const y = CY + LABEL_R * Math.sin(m.a);
+                    return (
+                      <text
+                        key={`${m.text}-${i}`}
+                        x={x}
+                        y={y}
+                        transform={`rotate(${CHART_TEXT_UPRIGHT_DEG} ${x} ${y})`}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        className={cn(
+                          "pointer-events-none font-semibold",
+                          isLightTheme ? "fill-[#0a0f1a]" : "fill-neutral-200",
+                        )}
+                        style={{
+                          fontSize: 12,
+                          paintOrder: "stroke fill",
+                          stroke: isLightTheme ? "#eff6ff" : "rgba(0,0,0,0.55)",
+                          strokeWidth: isLightTheme ? 1.35 : 0.9,
+                          strokeLinejoin: "round",
+                        }}
+                      >
+                        {m.text}
+                      </text>
+                    );
+                  })}
+                  <circle
+                    r={innermostInnerR() - 10}
+                    cx={CX}
+                    cy={CY}
+                    className={cn(
+                      "pointer-events-none",
+                      isLightTheme
+                        ? "fill-[#EDE7F6]/95"
+                        : "fill-neutral-900/10 dark:fill-neutral-100/10",
+                    )}
+                  />
+                  {STATIC_PATHS.map((row, ring) =>
+                    row.map((d, week) => (
+                      <path
+                        key={`${ring}-${week}`}
+                        ref={(el) => setCellRef(ring, week, el)}
+                        d={d}
+                        fill={model.colors[ring] ?? model.colors[0]}
+                        fillOpacity={
+                          model.baseOpacities[ring]?.[week] ??
+                          (isLightTheme ? 0.14 : 0.06)
+                        }
+                        stroke="none"
+                      />
+                    )),
                   )}
-                />
-                {STATIC_PATHS.map((row, ring) =>
-                  row.map((d, week) => (
-                    <path
-                      key={`${ring}-${week}`}
-                      ref={(el) => setCellRef(ring, week, el)}
-                      d={d}
-                      fill={model.colors[ring] ?? model.colors[0]}
-                      fillOpacity={
-                        model.baseOpacities[ring]?.[week] ??
-                        (isLightTheme ? 0.14 : 0.06)
-                      }
-                      stroke="none"
-                    />
-                  )),
+                  <text
+                    x={CX}
+                    y={CY}
+                    transform={`rotate(${CHART_TEXT_UPRIGHT_DEG} ${CX} ${CY - 7})`}
+                    textAnchor="middle"
+                    className={cn(
+                      "pointer-events-none font-medium",
+                      isLightTheme ? "fill-[#2D1B4E]" : "fill-neutral-500",
+                    )}
+                    style={{ fontSize: 10 }}
+                  >
+                    Yearly scrobbles
+                  </text>
+                </g>
+              </svg>
+              <div
+                ref={tooltipRef}
+                className={cn(
+                  "pointer-events-none absolute z-20 max-w-[min(100%-16px,18rem)] rounded-xl border p-3 type-caption shadow-lg transition-opacity",
+                  "border-white/20 bg-neutral-50 text-neutral-900 dark:border-white/20 dark:bg-[#171717] dark:text-neutral-100",
+                  "[html[data-theme=light]_&]:border-[#9B84BF] [html[data-theme=light]_&]:!bg-[#EDE7F6] [html[data-theme=light]_&]:!text-[#2D1B4E] [html[data-theme=light]_&]:shadow-md",
                 )}
-                <text
-                  x={CX}
-                  y={CY - 7}
-                  transform={`rotate(${CHART_TEXT_UPRIGHT_DEG} ${CX} ${CY - 7})`}
-                  textAnchor="middle"
-                  className={cn(
-                    "pointer-events-none font-medium",
-                    isLightTheme ? "fill-slate-900" : "fill-neutral-500",
-                  )}
-                  style={{ fontSize: 10 }}
-                >
-                  Yearly scrobbles
-                </text>
-                <text
-                  x={CX}
-                  y={CY + 10}
-                  transform={`rotate(${CHART_TEXT_UPRIGHT_DEG} ${CX} ${CY + 10})`}
-                  textAnchor="middle"
-                  className={cn(
-                    "pointer-events-none font-medium",
-                    isLightTheme ? "fill-slate-900" : "fill-neutral-500",
-                  )}
-                  style={{ fontSize: 10 }}
-                >
-                  (week-wise)
-                </text>
-              </g>
-            </svg>
-            <div
-              ref={tooltipRef}
-              className={cn(
-                "pointer-events-none absolute z-20 max-w-[min(100%-16px,18rem)] rounded-xl border p-3 type-caption shadow-lg transition-opacity",
-                "border-white/20 bg-neutral-50 text-neutral-900 dark:border-white/20 dark:bg-[#171717] dark:text-neutral-100",
-                "[html[data-theme=light]_&]:border-[#64748b]/30 [html[data-theme=light]_&]:!bg-white [html[data-theme=light]_&]:!text-slate-900 [html[data-theme=light]_&]:shadow-md",
-              )}
-              style={{ visibility: "hidden", opacity: 0 }}
-            >
-              <div ref={tooltipTitleRef} className="mb-1 font-semibold" />
-              <ul
-                ref={tooltipListRef}
-                className="m-0 max-h-48 list-none space-y-1 overflow-auto p-0"
-              />
-            </div>
-          </>
-        ) : null}
+                style={{ visibility: "hidden", opacity: 0 }}
+              >
+                <div ref={tooltipTitleRef} className="mb-1 font-semibold" />
+                <ul
+                  ref={tooltipListRef}
+                  className="m-0 max-h-48 list-none space-y-1 overflow-auto p-0"
+                />
+              </div>
+            </>
+          ) : null}
         </div>
       </div>
       {chartReady && model ? (

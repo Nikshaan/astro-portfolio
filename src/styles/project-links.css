@@ -14,8 +14,12 @@ html:not([data-theme="light"]) .project-link:hover {
   color: #a78bfa;
 }
 
+html[data-theme="light"] .project-link {
+  color: var(--text-body, #6b5b7a);
+}
+
 html[data-theme="light"] .project-link:hover {
-  color: #2563eb;
+  color: var(--accent-hover, #6449a8);
 }
 
 .project-link-icon {
@@ -46,12 +50,13 @@ html:not([data-theme="light"]) .project-link-icon:hover {
 }
 
 html[data-theme="light"] .project-link-icon {
-  background-color: rgb(255 255 255 / 0.7);
-  border-color: rgb(147 197 253 / 0.55);
+  background-color: var(--bg-surface, #ede7f6);
+  border-color: var(--badge-border, #c4b0e0);
+  color: var(--accent, #7c5cbf);
 }
 
 html[data-theme="light"] .project-link-icon:hover {
-  color: #2563eb;
-  background-color: rgb(219 234 254 / 0.55);
-  border-color: rgb(37 99 235 / 0.35);
+  color: var(--accent-hover, #6449a8);
+  background-color: rgb(216 206 232 / 0.55);
+  border-color: rgb(124 92 191 / 0.35);
 }

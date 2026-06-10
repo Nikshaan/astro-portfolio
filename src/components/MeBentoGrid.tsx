@@ -392,7 +392,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
 
     const desktopDelay = 0;
     const isExpandableCard = card.isExpandable;
-    const isHoverable = (isExpandableCard || isResume) && !selectedId;
+    const isHoverable = isExpandableCard && !selectedId;
     const isCompactCard = card.id === "win";
     const usesMotionBorder = isExpandableCard || isResume;
 
@@ -427,7 +427,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
             card.id === "win" ? "w-fit" : "w-full",
             "bg-neutral-50 dark:bg-[#171717]",
             usesMotionBorder ? "" : "border-white dark:border-white/20",
-            "[html[data-theme=light]_&]:!bg-[#dbeafe]",
+            "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
             card.id === "intro" || card.id === "win" || card.id === "resume"
               ? "overflow-hidden"
               : "overflow-visible",
@@ -462,7 +462,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
             )}
           >
             {renderCardContent(card, images)}
-            {(isExpandableCard || isResume) && (
+            {isExpandableCard && (
               <div
                 className={cn(
                   "absolute bottom-4 right-4 transition-opacity duration-300",
@@ -697,7 +697,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
               className={cn(
                 "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col mt-12 me-card-hover",
                 "bg-neutral-50 dark:bg-[#171717]",
-                "[html[data-theme=light]_&]:!bg-[#dbeafe]",
+                "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
               )}
             >
               <button

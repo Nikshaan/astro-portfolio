@@ -7,7 +7,12 @@ import React, {
   useCallback,
 } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence, useIsPresent } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useIsPresent,
+  useReducedMotion,
+} from "framer-motion";
 import { geoMercator, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import { X, Loader2, Maximize2 } from "lucide-react";
@@ -18,6 +23,7 @@ import {
   getBentoCardHoverMotion,
   getBentoCardTapMotion,
 } from "./bentoCardMotion";
+import useIsLightTheme from "../hooks/useTheme";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -49,18 +55,23 @@ const MAP_LAYOUT_TRANSITION = {
 
 const MAP_SHELL_CLASS = cn(
   "bg-neutral-50 dark:bg-[#171717]",
-  "[html[data-theme=light]_&]:!bg-[#dbeafe]",
+  "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
 );
 
 function IndiaMapModalBackdrop({ onClose }: { onClose: () => void }) {
-  const isPresent = useIsPresent();
+  const shouldReduceMotion = useReducedMotion();
+  const duration = shouldReduceMotion ? 0.08 : 0.22;
   return (
     <motion.div
-      className={cn("absolute inset-0 bg-black/60", isPresent && "backdrop-blur-sm")}
+      className={cn(
+        "absolute inset-0 bg-black/60",
+        !shouldReduceMotion && "backdrop-blur-sm",
+      )}
+      style={{ willChange: "opacity" }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: isPresent ? 0.22 : 0.15 }}
+      transition={{ duration }}
       onClick={onClose}
     />
   );
@@ -136,8 +147,8 @@ const IndiaMapRegions = memo(function IndiaMapRegions({
               key={`shadow-light-${key}`}
               d={d}
               strokeWidth={0}
-              fill="#1e3a8a"
-              opacity={0.14}
+              fill="#9B84BF"
+              opacity={0.18}
               transform={`translate(${1.5 / svgScale}, ${2.2 / svgScale})`}
               style={{ filter: `blur(${2.4 / svgScale}px)` }}
             />
@@ -170,12 +181,12 @@ const IndiaMapRegions = memo(function IndiaMapRegions({
                     ? "cursor-pointer transition-colors duration-300"
                     : "transition-colors duration-300"
               }
-              fill={isLight ? "#bfdbfe" : "#27272a"}
-              stroke={isLight ? "rgba(30,58,138,0.45)" : "#3f3f46"}
+              fill={isLight ? "#FFFFFF" : "#27272a"}
+              stroke={isLight ? "#D8CEE8" : "#3f3f46"}
               style={
                 isLight
                   ? {
-                      filter: "drop-shadow(0px 2px 3px rgba(2,6,23,0.22))",
+                      filter: "drop-shadow(0px 2px 3px rgba(45,27,78,0.12))",
                     }
                   : {
                       filter: "drop-shadow(0px 2px 3px rgba(0,0,0,0.35))",
@@ -217,15 +228,26 @@ const IndiaMapModalMap = memo(function IndiaMapModalMap({
   svgRef: React.RefObject<SVGSVGElement | null>;
 }) {
   const isPresent = useIsPresent();
+  const shouldReduceMotion = useReducedMotion();
   if (!isPresent) return null;
 
   return (
     <motion.div
       layout={false}
       className="flex-1 w-full h-full relative p-0 sm:p-2 md:p-4"
-      initial={false}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.15 }}
+      initial={
+        shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.995 }
+      }
+      animate={{ opacity: 1, scale: 1 }}
+      exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.995 }}
+      transition={{
+        opacity: { duration: shouldReduceMotion ? 0.06 : 0.28 },
+        scale: {
+          duration: shouldReduceMotion ? 0.06 : 0.28,
+          ease: [0.2, 0.8, 0.2, 1],
+        },
+        delay: 0.06,
+      }}
     >
       {!loading && baseMap.pathGenerator && (
         <svg
@@ -361,25 +383,8 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     null,
   );
 
-  const [isLightTheme, setIsLightTheme] = useState(false);
-
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-
-    const readTheme = () =>
-      document.documentElement.getAttribute("data-theme") === "light";
-    setIsLightTheme(readTheme());
-
-    const obs = new MutationObserver(() => {
-      setIsLightTheme(readTheme());
-    });
-
-    obs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-    return () => obs.disconnect();
-  }, []);
+  const isLightTheme = useIsLightTheme();
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (cachedTopology) {
@@ -564,17 +569,24 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
           data-bento-shell=""
           data-bento-frozen={layoutLock ? "" : undefined}
           className={cn(
-            "relative h-full w-full rounded-3xl border overflow-hidden me-card-hover group cursor-pointer shadow-sm",
+            "relative h-full w-full rounded-3xl border overflow-hidden me-card-hover group cursor-pointer",
             MAP_SHELL_CLASS,
-            portalVisible ? "opacity-0 pointer-events-none" : "opacity-100",
+            portalVisible
+              ? "opacity-0 pointer-events-none select-none"
+              : "opacity-100",
           )}
           style={{
             transformOrigin: "center center",
             willChange: portalVisible || layoutLock ? "transform" : undefined,
-            contain: portalVisible || layoutLock ? "layout style paint" : undefined,
+            contain:
+              portalVisible || layoutLock ? "layout style paint" : undefined,
           }}
-          whileHover={isHoverable ? getBentoCardHoverMotion({ compact: true }) : undefined}
-          whileTap={isHoverable ? getBentoCardTapMotion({ compact: true }) : undefined}
+          whileHover={
+            isHoverable ? getBentoCardHoverMotion({ compact: true }) : undefined
+          }
+          whileTap={
+            isHoverable ? getBentoCardTapMotion({ compact: true }) : undefined
+          }
           transition={
             layoutLock ? MAP_LAYOUT_TRANSITION : bentoCardHoverTransition
           }
@@ -589,10 +601,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
           {!loading && baseMap.pathGenerator && (
             <motion.div
               layout={false}
-              className={cn(
-                "absolute inset-0 w-full h-full p-4 flex flex-col items-center justify-center pointer-events-none",
-                portalVisible && "invisible",
-              )}
+              className="absolute inset-0 w-full h-full p-4 flex flex-col items-center justify-center pointer-events-none"
             >
               <div className="absolute top-4 left-4 z-10">
                 <span
@@ -655,14 +664,31 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 
       {typeof document !== "undefined" &&
         createPortal(
-          <AnimatePresence
-            mode="popLayout"
-            onExitComplete={handleExitComplete}
-          >
+          <AnimatePresence mode="popLayout" onExitComplete={handleExitComplete}>
             {portalVisible && (
               <motion.div
                 key="india-map-modal"
                 className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-10 bg-white/0"
+                initial={
+                  shouldReduceMotion
+                    ? { opacity: 0.99 }
+                    : { opacity: 0, scale: 0.995 }
+                }
+                animate={
+                  shouldReduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }
+                }
+                exit={
+                  shouldReduceMotion
+                    ? { opacity: 0.99 }
+                    : { opacity: 0, scale: 0.995 }
+                }
+                transition={{
+                  opacity: { duration: shouldReduceMotion ? 0.06 : 0.22 },
+                  scale: {
+                    duration: shouldReduceMotion ? 0.06 : 0.28,
+                    ease: [0.2, 0.8, 0.2, 1],
+                  },
+                }}
               >
                 <IndiaMapModalBackdrop onClose={handleClose} />
 

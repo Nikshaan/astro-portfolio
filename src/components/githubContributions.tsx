@@ -2,12 +2,14 @@ import { useEffect, useState, useRef, memo } from "react";
 import { m, LazyMotion, domAnimation } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { bentoCardHoverTransition } from "./bentoCardMotion";
 import {
   fetchGithubContributionsData,
   type ContributionDay,
   type ContributionWeek,
   type GitHubAPIResponse,
 } from "../utils/githubContributionsClient";
+import useIsLightTheme from "../hooks/useTheme";
 import styles from "./githubContributions.module.css";
 
 function cn(...inputs: ClassValue[]) {
@@ -53,6 +55,7 @@ export default memo(function GithubContributions({
   const [error, setError] = useState<string | null>(null);
 
   const graphRef = useRef<HTMLDivElement>(null);
+  const isLightTheme = useIsLightTheme();
 
   useEffect(() => {
     if (graphRef.current) {
@@ -99,37 +102,47 @@ export default memo(function GithubContributions({
   return (
     <LazyMotion features={domAnimation}>
       <m.div
+        data-bento-shell=""
         className={cn(
           "relative p-6 rounded-3xl border overflow-hidden w-full flex flex-col justify-between group me-card-hover",
-          "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20 shadow-sm",
-          "[html[data-theme=light]_&]:!bg-[#dbeafe]",
+          "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
+          "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
         )}
         initial={{ opacity: 0, y: 30, scale: 0.98 }}
-        animate={{
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          transition: {
-            duration: 0.5,
-            ease: [0.25, 0.1, 0.25, 1],
-          },
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{
+          opacity: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+          y: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+          scale: bentoCardHoverTransition,
+          default: bentoCardHoverTransition,
         }}
+        style={{ transformOrigin: "center center" }}
       >
         {loading ? (
           <HeatmapSkeleton />
         ) : error ? (
           <>
             <div className={styles.header}>
-              <h3 className={cn("type-panel-title text-neutral-900 dark:text-neutral-100")}>
+              <h3
+                className={cn(
+                  "type-panel-title text-neutral-900 dark:text-neutral-100",
+                )}
+              >
                 GitHub Contributions (Last 12 Months)
               </h3>
             </div>
-            <p className="type-body-sm text-neutral-400 text-center py-4">{error}</p>
+            <p className="type-body-sm text-neutral-400 text-center py-4">
+              {error}
+            </p>
           </>
         ) : weeks.length > 0 ? (
           <>
             <div className={styles.header}>
-              <h3 className={cn("type-panel-title text-neutral-900 dark:text-neutral-100")}>
+              <h3
+                className={cn(
+                  "type-panel-title text-neutral-900 dark:text-neutral-100",
+                )}
+              >
                 GitHub Contributions (Last 12 Months)
               </h3>
               {totalContributions > 0 && (
@@ -154,7 +167,11 @@ export default memo(function GithubContributions({
                         <div
                           key={dayIndex}
                           className={`${styles.day} ${styles[`contributionLevel${level}`]}`}
-                          style={{ backgroundColor: day.color || "#161b22" }}
+                          style={
+                            isLightTheme
+                              ? undefined
+                              : { backgroundColor: day.color || "#161b22" }
+                          }
                           title={`${day.date}: ${day.contributionCount} contributions`}
                           data-tooltip-placement="bottom"
                           suppressHydrationWarning
@@ -169,7 +186,11 @@ export default memo(function GithubContributions({
         ) : (
           <>
             <div className={styles.header}>
-              <h3 className={cn("type-panel-title text-neutral-900 dark:text-neutral-100")}>
+              <h3
+                className={cn(
+                  "type-panel-title text-neutral-900 dark:text-neutral-100",
+                )}
+              >
                 GitHub Contributions (Last 12 Months)
               </h3>
             </div>
