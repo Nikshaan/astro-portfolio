@@ -5,6 +5,7 @@ import React, {
   useMemo,
   memo,
   useSyncExternalStore,
+  useRef,
 } from "react";
 import {
   m,
@@ -258,8 +259,43 @@ const ProjectsBentoGrid: React.FC = () => {
   const handleClose = useCallback(() => setSelectedId(null), []);
   const handleSetAiml = useCallback(() => setActiveCategory("aiml"), []);
   const handleSetWeb = useCallback(() => setActiveCategory("web"), []);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let localLenis: any;
+    let rafId: number;
+    let resizeObserver: ResizeObserver | null = null;
+
+    const initLocalLenis = async () => {
+      if (selectedId && wrapperRef.current) {
+        const Lenis = (await import("lenis")).default;
+        localLenis = new Lenis({
+          wrapper: wrapperRef.current,
+          duration: 1.2,
+          easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          gestureOrientation: "vertical",
+          smoothWheel: true,
+          wheelMultiplier: 1,
+          touchMultiplier: 2,
+          infinite: false,
+        });
+
+        const raf = (time: number) => {
+          localLenis.raf(time);
+          rafId = requestAnimationFrame(raf);
+        };
+        rafId = requestAnimationFrame(raf);
+
+        const contentNode = wrapperRef.current.firstElementChild;
+        if (contentNode) {
+          resizeObserver = new ResizeObserver(() => {
+            localLenis.resize();
+          });
+          resizeObserver.observe(contentNode);
+        }
+      }
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         event.key === "Escape" ||
@@ -281,6 +317,7 @@ const ProjectsBentoGrid: React.FC = () => {
       if (typeof window !== "undefined" && (window as any).lenis) {
         (window as any).lenis.stop();
       }
+      initLocalLenis();
     } else {
       document.body.style.overflow = "";
       document.body.style.paddingRight = "";
@@ -296,6 +333,9 @@ const ProjectsBentoGrid: React.FC = () => {
       if (typeof window !== "undefined" && (window as any).lenis) {
         (window as any).lenis.start();
       }
+      if (localLenis) localLenis.destroy();
+      if (rafId) cancelAnimationFrame(rafId);
+      if (resizeObserver) resizeObserver.disconnect();
     };
   }, [selectedId]);
 
@@ -393,7 +433,10 @@ const ProjectsBentoGrid: React.FC = () => {
                   <X size={20} aria-hidden="true" />
                 </button>
 
-                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <div
+                  ref={wrapperRef}
+                  className="flex-1 overflow-y-auto p-8 custom-scrollbar min-h-0"
+                >
                   <div className="flex flex-col gap-6">
                     <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0 md:pr-12">
                       <h2>{selectedItem.data.name}</h2>
