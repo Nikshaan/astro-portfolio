@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://nikshaan.vercel.app/sitemap-index.xml
+Sitemap: https://nikshaan.dev/sitemap-index.xml
