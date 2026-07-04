@@ -129,6 +129,7 @@ const VISITED_PLACES = [
   { name: "Ahmedabad", lat: 23.0225, lng: 72.5714 },
   { name: "Coorg", lat: 12.4244, lng: 75.7382 },
   { name: "Daman", lat: 20.4142, lng: 72.8328 },
+  { name: "Pilikula", lat: 12.9245, lng: 74.8907 },
 ];
 
 const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
@@ -141,6 +142,16 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
 
   useEffect(() => {
     scheduleRadialHeatmapWarmup();
+
+    const handleUnhandledRejection = (e: PromiseRejectionEvent) => {
+      if (e.reason && e.reason.name === "EncodingError") {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+    return () => {
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+    };
   }, []);
 
   useEffect(() => {
@@ -227,24 +238,8 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
         const scheduleBatch =
           typeof requestIdleCallback === "function"
             ? () =>
-                requestIdleCallback(
-                  () => {
-                    const n = Math.min(images.length, maxPrefetchImages);
-                    for (let i = 0; i < n; i++) {
-                      const img = images[i];
-                      const url = img.fullSrc || img.src;
-                      if (!url) continue;
-                      const link = document.createElement("link");
-                      link.rel = "prefetch";
-                      link.as = "image";
-                      link.href = url;
-                      document.head.appendChild(link);
-                    }
-                  },
-                  { timeout: 2400 },
-                )
-            : () =>
-                queueMicrotask(() => {
+              requestIdleCallback(
+                () => {
                   const n = Math.min(images.length, maxPrefetchImages);
                   for (let i = 0; i < n; i++) {
                     const img = images[i];
@@ -256,7 +251,23 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                     link.href = url;
                     document.head.appendChild(link);
                   }
-                });
+                },
+                { timeout: 2400 },
+              )
+            : () =>
+              queueMicrotask(() => {
+                const n = Math.min(images.length, maxPrefetchImages);
+                for (let i = 0; i < n; i++) {
+                  const img = images[i];
+                  const url = img.fullSrc || img.src;
+                  if (!url) continue;
+                  const link = document.createElement("link");
+                  link.rel = "prefetch";
+                  link.as = "image";
+                  link.href = url;
+                  document.head.appendChild(link);
+                }
+              });
         scheduleBatch();
       },
       { rootMargin: "200px" },

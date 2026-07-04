@@ -124,6 +124,20 @@ export const GET: APIRoute = async () => {
     107: "Moti Daman Fort, Daman",
     108: "Moti Daman Fort, Daman",
     109: "Moti Daman Fort, Daman",
+    110: "Machali, Mangaluru",
+    111: "Udupi",
+    112: "Padubidri",
+    113: "Padubidri",
+    114: "Mulki Station, Karnataka",
+    115: "Pilikula Biological Park, Mangaluru",
+    116: "Pilikula Biological Park, Mangaluru",
+    117: "Pilikula Biological Park, Mangaluru",
+    118: "Pilikula Biological Park, Mangaluru",
+    119: "Pilikula Biological Park, Mangaluru",
+    120: "Mangaluru",
+    121: "Mangaluru",
+    122: "Mangaluru",
+    123: "Mangaluru",
   };
 
   const allImages = await Promise.all(
@@ -142,7 +156,7 @@ export const GET: APIRoute = async () => {
           src: imageModule.default,
           width: 1200,
           quality: 85,
-          format: "avif",
+          format: "webp",
         });
 
         return {

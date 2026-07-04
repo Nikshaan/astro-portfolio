@@ -112,6 +112,20 @@ const photoTitles: Record<number, string> = {
     107: "Moti Daman Fort, Daman",
     108: "Moti Daman Fort, Daman",
     109: "Moti Daman Fort, Daman",
+    110: "Machali, Mangaluru",
+    111: "Udupi",
+    112: "Padubidri",
+    113: "Padubidri",
+    114: "Mulki Station, Karnataka",
+    115: "Pilikula Biological Park, Mangaluru",
+    116: "Pilikula Biological Park, Mangaluru",
+    117: "Pilikula Biological Park, Mangaluru",
+    118: "Pilikula Biological Park, Mangaluru",
+    119: "Pilikula Biological Park, Mangaluru",
+    120: "Mangaluru",
+    121: "Mangaluru",
+    122: "Mangaluru",
+    123: "Mangaluru",
 };
 
 const sortedModules = Object.entries(photoModules)
@@ -132,7 +146,7 @@ const gridImages = await Promise.all(
             src: imageModule.default,
             width: 380,
             quality: 80,
-            format: "avif",
+            format: "webp",
             placeholder: "blur",
         });
 
@@ -140,7 +154,7 @@ const gridImages = await Promise.all(
             src: imageModule.default,
             width: 1200,
             quality: 85,
-            format: "avif",
+            format: "webp",
         });
 
         return {
@@ -151,10 +165,11 @@ const gridImages = await Promise.all(
             height: optimizedThumbnail.attributes.height,
             title: photoTitles[photoNumber] || `Photo ${photoNumber}`,
             alt: `Photography - ${photoTitles[photoNumber] || "Photo " + photoNumber}`,
-            placeholderDataUrl: optimizedThumbnail.attributes.placeholder && 
-                optimizedThumbnail.attributes.placeholder.startsWith('data:') 
-                ? optimizedThumbnail.attributes.placeholder 
-                : undefined,
+            placeholderDataUrl:
+                optimizedThumbnail.attributes.placeholder &&
+                optimizedThumbnail.attributes.placeholder.startsWith("data:")
+                    ? optimizedThumbnail.attributes.placeholder
+                    : undefined,
         };
     }),
 );
