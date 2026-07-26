@@ -48,6 +48,7 @@ import docker from "../data/Docker.svg";
 import vocalopsArchImg from "../data/vocalops-arch.webp";
 import cliDemoImg from "../data/cli_demo.webp";
 import webApprovalImg from "../data/web_approval.webp";
+import ProjectCardContent from "./ProjectCardContent";
 
 const techstackIcons: Record<string, any> = {
   ReactJS: reactjs,
@@ -513,10 +514,9 @@ const ProjectsBentoGrid: React.FC = () => {
                     </div>
 
                     <div className="prose prose-invert prose-lg max-w-none">
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: getProcessedContent(selectedItem.content || ""),
-                        }}
+                      <ProjectCardContent
+                        html={getProcessedContent(selectedItem.content || "")}
+                        isActive={Boolean(selectedId)}
                       />
                     </div>
                   </div>

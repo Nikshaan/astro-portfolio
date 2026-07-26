@@ -1,25 +1,19 @@
-import { useEffect, useState, memo } from "react";
+import { memo, useMemo } from "react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import {
-  loadMusicStatsData,
-  readMusicStatsCache,
-  type GenreEntry,
-  type MusicStatsData,
-} from "../utils/musicStatsClient";
+import { useMusicStatsLive } from "../hooks/useMusicStatsLive";
+import type { GenreEntry, MusicStatsData } from "../utils/musicStatsClient";
 import useIsLightTheme from "../hooks/useTheme";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-interface MusicGenreStreakPayload {
-  listeningStreak?: number;
-  genreData?: GenreEntry[];
-}
-
-function sliceGenrePayload(full: MusicStatsData): MusicGenreStreakPayload {
-  return { listeningStreak: full.listeningStreak, genreData: full.genreData };
+function sliceGenrePayload(full: MusicStatsData) {
+  return {
+    listeningStreak: full.listeningStreak,
+    genreData: full.genreData,
+  };
 }
 
 function capitalise(s: string) {
@@ -48,27 +42,13 @@ const SWATCH_LIGHT = [
 ];
 
 export default memo(function MusicGenreStreakBar() {
-  const [data, setData] = useState<MusicGenreStreakPayload | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: fullData, loading } = useMusicStatsLive();
   const isLightTheme = useIsLightTheme();
 
-  useEffect(() => {
-    const hit = readMusicStatsCache();
-    if (hit) {
-      setData(sliceGenrePayload(hit));
-      setLoading(false);
-      return;
-    }
-    void (async () => {
-      try {
-        const d = await loadMusicStatsData();
-        setData(sliceGenrePayload(d));
-      } catch {
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const data = useMemo(
+    () => (fullData ? sliceGenrePayload(fullData) : null),
+    [fullData],
+  );
 
   const streak = data?.listeningStreak ?? 0;
   const genreData = data?.genreData ?? [];
@@ -95,7 +75,7 @@ export default memo(function MusicGenreStreakBar() {
             aria-hidden="true"
           />
         ) : genreData.length > 0 ? (
-          genreData.map((d, i) => {
+          genreData.map((d: GenreEntry, i: number) => {
             const pct = total > 0 ? Math.round((d.count / total) * 100) : 0;
             return (
               <span

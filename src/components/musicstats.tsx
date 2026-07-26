@@ -1,10 +1,6 @@
-import { useEffect, useState, useCallback, memo } from "react";
+import { memo } from "react";
 import MusicCharts from "./musiccharts";
-import {
-  loadMusicStatsData,
-  readMusicStatsCache,
-  type MusicStatsData,
-} from "../utils/musicStatsClient";
+import { useMusicStatsLive } from "../hooks/useMusicStatsLive";
 import {
   MUSIC_STATS_SHELL,
   MUSIC_STATS_UPPER,
@@ -14,40 +10,7 @@ import {
 export type { GenreEntry } from "../utils/musicStatsClient";
 
 export default memo(function MusicStatsClient() {
-  const [data, setData] = useState<MusicStatsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    const hit = readMusicStatsCache();
-    if (hit) {
-      setData(hit);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const musicData = await loadMusicStatsData();
-      setData(musicData);
-      setError(null);
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load music stats";
-      setError(errorMessage);
-      const fallback = readMusicStatsCache();
-      if (fallback) {
-        setData(fallback);
-        setError(null);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const { data, loading, error } = useMusicStatsLive();
 
   if (loading && !data) {
     return <MusicStatsLoadingShell />;

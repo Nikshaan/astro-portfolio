@@ -57,6 +57,44 @@ const jsonResponse = (
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** Portfolio owner timezone — daily scrobble buckets align to IST midnight. */
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+const DAY_MS = 86_400_000;
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+function getIstCalendarParts(ms: number) {
+  const ist = new Date(ms + IST_OFFSET_MS);
+  return {
+    year: ist.getUTCFullYear(),
+    month: ist.getUTCMonth(),
+    date: ist.getUTCDate(),
+  };
+}
+
+function istMidnightUtcMs(parts: {
+  year: number;
+  month: number;
+  date: number;
+}) {
+  return Date.UTC(parts.year, parts.month, parts.date) - IST_OFFSET_MS;
+}
+
+function toIstDateString(ms: number) {
+  const { year, month, date } = getIstCalendarParts(ms);
+  const m = String(month + 1).padStart(2, "0");
+  const d = String(date).padStart(2, "0");
+  return `${year}-${m}-${d}`;
+}
+
+function getIstDayBounds(daysAgo: number) {
+  const todayParts = getIstCalendarParts(Date.now());
+  const dayStartMs = istMidnightUtcMs(todayParts) - daysAgo * DAY_MS;
+  const from = Math.floor(dayStartMs / 1000);
+  const to = from + 86_399;
+  const dayName = DAY_LABELS[new Date(dayStartMs + IST_OFFSET_MS).getUTCDay()];
+  return { from, to, dayName };
+}
+
 async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     const controller = new AbortController();
@@ -100,14 +138,7 @@ async function fetchDayScrobbles(
   daysAgo: number,
   cachedValue?: number,
 ): Promise<DailyScrobble> {
-  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const date = new Date();
-  date.setUTCDate(date.getUTCDate() - daysAgo);
-  date.setUTCHours(0, 0, 0, 0);
-
-  const from = Math.floor(date.getTime() / 1000);
-  const to = from + 86399;
-  const dayName = dayLabels[date.getUTCDay()];
+  const { from, to, dayName } = getIstDayBounds(daysAgo);
 
   try {
     const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&from=${from}&to=${to}&api_key=${apiKey}&format=json&limit=1`;
@@ -219,7 +250,6 @@ async function fetchListeningStreak(
   apiKey: string,
 ): Promise<number> {
   try {
-    const now = new Date();
     const scrobbleDates = new Set<string>();
 
     let page = 1;
@@ -231,8 +261,8 @@ async function fetchListeningStreak(
     let gapFound = false;
     let isTodayChecked = false;
 
-    const todayStr = now.toISOString().slice(0, 10);
-    let expectedDate = new Date(now);
+    const todayStr = toIstDateString(Date.now());
+    let expectedDayStartMs = istMidnightUtcMs(getIstCalendarParts(Date.now()));
     let expectedDateStr = todayStr;
 
     const startTime = Date.now();
@@ -270,8 +300,7 @@ async function fetchListeningStreak(
         for (const track of tracks) {
           const ts = track?.date?.uts;
           if (ts) {
-            const d = new Date(parseInt(ts, 10) * 1000);
-            const dateStr = d.toISOString().slice(0, 10);
+            const dateStr = toIstDateString(parseInt(ts, 10) * 1000);
             scrobbleDates.add(dateStr);
             if (dateStr < oldestDateStrInBatch) {
               oldestDateStrInBatch = dateStr;
@@ -294,13 +323,13 @@ async function fetchListeningStreak(
           if (scrobbleDates.has(todayStr)) {
             totalStreak++;
           }
-          expectedDate.setUTCDate(expectedDate.getUTCDate() - 1);
-          expectedDateStr = expectedDate.toISOString().slice(0, 10);
+          expectedDayStartMs -= DAY_MS;
+          expectedDateStr = toIstDateString(expectedDayStartMs);
         } else {
           if (scrobbleDates.has(expectedDateStr)) {
             totalStreak++;
-            expectedDate.setUTCDate(expectedDate.getUTCDate() - 1);
-            expectedDateStr = expectedDate.toISOString().slice(0, 10);
+            expectedDayStartMs -= DAY_MS;
+            expectedDateStr = toIstDateString(expectedDayStartMs);
           } else {
             gapFound = true;
           }
