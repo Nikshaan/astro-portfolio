@@ -45,9 +45,9 @@ import matplotlib from "../data/Matplotlib.svg";
 import langgraph from "../data/langgraph.svg";
 import sqlite from "../data/SQLite.svg";
 import docker from "../data/Docker.svg";
-import kubernetes from "../data/Kubernetes.svg";
-import prometheus from "../data/Prometheus.svg";
-import grafana from "../data/Grafana.svg";
+import vocalopsArchImg from "../data/vocalops-arch.webp";
+import cliDemoImg from "../data/cli_demo.webp";
+import webApprovalImg from "../data/web_approval.webp";
 
 const techstackIcons: Record<string, any> = {
   ReactJS: reactjs,
@@ -72,14 +72,27 @@ const techstackIcons: Record<string, any> = {
   LangGraph: langgraph,
   SQLite: sqlite,
   Docker: docker,
-  Kubernetes: kubernetes,
-  Prometheus: prometheus,
-  Grafana: grafana,
 };
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+const content_cache = new Map<string, string>();
+
+const getProcessedContent = (content: string) => {
+  if (content_cache.has(content)) {
+    return content_cache.get(content) || content;
+  }
+
+  let processed = content
+    .replace("{{VOCALOPS_ARCH_IMAGE}}", vocalopsArchImg.src)
+    .replace("{{CLI_DEMO_IMAGE}}", cliDemoImg.src)
+    .replace("{{WEB_APPROVAL_IMAGE}}", webApprovalImg.src);
+
+  content_cache.set(content, processed);
+  return processed;
+};
 
 const mobileQuery =
   typeof window !== "undefined"
@@ -502,7 +515,7 @@ const ProjectsBentoGrid: React.FC = () => {
                     <div className="prose prose-invert prose-lg max-w-none">
                       <div
                         dangerouslySetInnerHTML={{
-                          __html: selectedItem.content || "",
+                          __html: getProcessedContent(selectedItem.content || ""),
                         }}
                       />
                     </div>
