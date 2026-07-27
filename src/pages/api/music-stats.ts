@@ -91,8 +91,118 @@ function getIstDayBounds(daysAgo: number) {
   const dayStartMs = istMidnightUtcMs(todayParts) - daysAgo * DAY_MS;
   const from = Math.floor(dayStartMs / 1000);
   const to = from + 86_399;
-  const dayName = DAY_LABELS[new Date(dayStartMs + IST_OFFSET_MS).getUTCDay()];
-  return { from, to, dayName };
+  const istDay = new Date(dayStartMs + IST_OFFSET_MS);
+  const dayName = DAY_LABELS[istDay.getUTCDay()];
+  const dayNum = istDay.getUTCDate();
+  return { from, to, dayName: `${dayName} ${dayNum}` };
+}
+
+async function fetchRangeScrobbleTotal(
+  username: string,
+  apiKey: string,
+  from: number,
+  to: number,
+): Promise<number> {
+  const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&from=${from}&to=${to}&api_key=${apiKey}&format=json&limit=1`;
+  const response = await fetchWithRetry(url);
+  const data = await response.json();
+  const total = data?.recenttracks?.["@attr"]?.total;
+  return total ? parseInt(total, 10) : 0;
+}
+
+/** Count today's scrobbles from recent pages — catches now-playing and API lag. */
+async function countRecentScrobblesSince(
+  username: string,
+  apiKey: string,
+  fromSec: number,
+): Promise<number> {
+  let page = 1;
+  let count = 0;
+  const limit = 200;
+  const maxPages = 5;
+
+  while (page <= maxPages) {
+    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&limit=${limit}&page=${page}&api_key=${apiKey}&format=json`;
+    const response = await fetchWithRetry(url);
+    const data = await response.json();
+    const raw = data?.recenttracks?.track ?? [];
+    const tracks: any[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
+    if (!tracks.length) break;
+
+    let reachedOlder = false;
+    for (const track of tracks) {
+      const uts = track?.date?.uts;
+      if (!uts) {
+        count += 1;
+        continue;
+      }
+      const ts = parseInt(uts, 10);
+      if (ts >= fromSec) count += 1;
+      else reachedOlder = true;
+    }
+
+    if (reachedOlder) break;
+    page += 1;
+  }
+
+  return count;
+}
+
+async function fetchTodayScrobbles(
+  username: string,
+  apiKey: string,
+): Promise<DailyScrobble> {
+  const { from, to, dayName } = getIstDayBounds(0);
+  const [rangeTotal, recentTotal] = await Promise.all([
+    fetchRangeScrobbleTotal(username, apiKey, from, to),
+    countRecentScrobblesSince(username, apiKey, from),
+  ]);
+  return { name: dayName, scrobbles: Math.max(rangeTotal, recentTotal) };
+}
+
+async function fetchDayScrobbles(
+  username: string,
+  apiKey: string,
+  daysAgo: number,
+  cachedValue?: number,
+): Promise<DailyScrobble> {
+  if (daysAgo === 0) {
+    try {
+      return await fetchTodayScrobbles(username, apiKey);
+    } catch {
+      return { name: getIstDayBounds(0).dayName, scrobbles: 0 };
+    }
+  }
+
+  const { from, to, dayName } = getIstDayBounds(daysAgo);
+
+  try {
+    const total = await fetchRangeScrobbleTotal(username, apiKey, from, to);
+    return { name: dayName, scrobbles: total };
+  } catch {
+    return { name: dayName, scrobbles: cachedValue ?? 0 };
+  }
+}
+
+async function refreshTodayInResult(
+  username: string,
+  apiKey: string,
+  result: MusicStatsResult,
+): Promise<MusicStatsResult> {
+  const todayIndex = 6;
+  const [today, userStats] = await Promise.all([
+    fetchTodayScrobbles(username, apiKey),
+    fetchUserStats(username, apiKey).catch(() => result.upperStatsArray),
+  ]);
+
+  const weeklyScrobbles = [...result.weeklyScrobbles];
+  weeklyScrobbles[todayIndex] = today;
+
+  return {
+    ...result,
+    weeklyScrobbles,
+    upperStatsArray: userStats,
+  };
 }
 
 async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
@@ -130,26 +240,6 @@ async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
   }
 
   throw new Error("Max retries exceeded");
-}
-
-async function fetchDayScrobbles(
-  username: string,
-  apiKey: string,
-  daysAgo: number,
-  cachedValue?: number,
-): Promise<DailyScrobble> {
-  const { from, to, dayName } = getIstDayBounds(daysAgo);
-
-  try {
-    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&from=${from}&to=${to}&api_key=${apiKey}&format=json&limit=1`;
-    const response = await fetchWithRetry(url);
-    const data = await response.json();
-
-    const total = data?.recenttracks?.["@attr"]?.total;
-    return { name: dayName, scrobbles: total ? parseInt(total, 10) : 0 };
-  } catch {
-    return { name: dayName, scrobbles: cachedValue ?? 0 };
-  }
 }
 
 async function fetchUserStats(
@@ -425,7 +515,7 @@ async function fetchMusicStats(
   };
 }
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ request }) => {
   const apiKey = (import.meta.env.LASTFM_API_KEY ||
     import.meta.env.PUBLIC_LASTFM_API_KEY) as string;
   const username = (import.meta.env.LASTFM_USERNAME ||
@@ -441,10 +531,24 @@ export const GET: APIRoute = async () => {
     );
   }
 
+  const url = new URL(request.url);
+  const forceRefresh =
+    url.searchParams.has("_") || url.searchParams.get("force") === "1";
+
   const now = Date.now();
 
-  if (cache && now - cache.timestamp < CACHE_DURATION_MS) {
-    return jsonResponse(cache.data, 200, "HIT");
+  if (!forceRefresh && cache && now - cache.timestamp < CACHE_DURATION_MS) {
+    try {
+      const refreshed = await refreshTodayInResult(
+        username,
+        apiKey,
+        cache.data,
+      );
+      cache = { data: refreshed, timestamp: cache.timestamp };
+      return jsonResponse(refreshed, 200, "HIT-TODAY");
+    } catch {
+      return jsonResponse(cache.data, 200, "HIT");
+    }
   }
 
   if (pendingRequest) {

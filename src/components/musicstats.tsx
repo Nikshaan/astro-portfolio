@@ -131,7 +131,12 @@ export default memo(function MusicStatsClient() {
           Daily music scrobbles
         </p>
         <div className="min-h-0 w-full flex-1 select-none">
-          <MusicCharts data={data.weeklyScrobbles} />
+          <MusicCharts
+            key={data.weeklyScrobbles
+              .map((day) => `${day.name}:${day.scrobbles}`)
+              .join("|")}
+            data={data.weeklyScrobbles}
+          />
         </div>
       </div>
     </div>

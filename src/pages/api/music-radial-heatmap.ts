@@ -49,7 +49,7 @@ function resolvedAnchorSec(
 
 const CACHE_HEADERS = {
   "Content-Type": "application/json",
-  "Cache-Control": "private, max-age=90",
+  "Cache-Control": "no-store, max-age=0",
 } as const;
 
 const jsonResponse = (

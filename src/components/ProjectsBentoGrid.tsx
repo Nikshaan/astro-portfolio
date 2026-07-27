@@ -48,6 +48,8 @@ import docker from "../data/Docker.svg";
 import vocalopsArchImg from "../data/vocalops-arch.webp";
 import cliDemoImg from "../data/cli_demo.webp";
 import webApprovalImg from "../data/web_approval.webp";
+import classificationLossImg from "../data/classification_loss.webp";
+import instructionFinetuningLossImg from "../data/instruction_finetuning_loss.webp";
 import ProjectCardContent from "./ProjectCardContent";
 
 const techstackIcons: Record<string, any> = {
@@ -89,7 +91,12 @@ const getProcessedContent = (content: string) => {
   let processed = content
     .replace("{{VOCALOPS_ARCH_IMAGE}}", vocalopsArchImg.src)
     .replace("{{CLI_DEMO_IMAGE}}", cliDemoImg.src)
-    .replace("{{WEB_APPROVAL_IMAGE}}", webApprovalImg.src);
+    .replace("{{WEB_APPROVAL_IMAGE}}", webApprovalImg.src)
+    .replace("{{CLASSIFICATION_LOSS_IMAGE}}", classificationLossImg.src)
+    .replace(
+      "{{INSTRUCTION_FINETUNING_LOSS_IMAGE}}",
+      instructionFinetuningLossImg.src,
+    );
 
   content_cache.set(content, processed);
   return processed;

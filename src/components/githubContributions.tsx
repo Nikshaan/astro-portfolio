@@ -5,6 +5,7 @@ import { twMerge } from "tailwind-merge";
 import { bentoCardHoverTransition } from "./bentoCardMotion";
 import {
   fetchGithubContributionsData,
+  readGithubContributionsCache,
   type ContributionDay,
   type ContributionWeek,
   type GitHubAPIResponse,
@@ -64,25 +65,31 @@ export default memo(function GithubContributions({
   }, [weeks, loading]);
 
   useEffect(() => {
-    const fetchContributions = async () => {
-      try {
-        const data = await fetchGithubContributionsData();
+    const applyData = (data: GitHubAPIResponse) => {
+      if (data.errors) {
+        setError("Failed to load contributions");
+      } else if (
+        data.data?.user?.contributionsCollection?.contributionCalendar
+      ) {
+        setWeeks(
+          data.data.user.contributionsCollection.contributionCalendar.weeks,
+        );
+        setTotalContributions(
+          data.data.user.contributionsCollection.contributionCalendar
+            .totalContributions,
+        );
+        setError(null);
+      } else {
+        setError("Unexpected API response");
+      }
+    };
 
-        if (data.errors) {
-          setError("Failed to load contributions");
-        } else if (
-          data.data?.user?.contributionsCollection?.contributionCalendar
-        ) {
-          setWeeks(
-            data.data.user.contributionsCollection.contributionCalendar.weeks,
-          );
-          setTotalContributions(
-            data.data.user.contributionsCollection.contributionCalendar
-              .totalContributions,
-          );
-        } else {
-          setError("Unexpected API response");
-        }
+    const fetchContributions = async (force = false) => {
+      try {
+        const data = await fetchGithubContributionsData(
+          force ? { force: true } : undefined,
+        );
+        applyData(data);
       } catch {
         setError("Failed to load contributions");
       } finally {
@@ -90,13 +97,29 @@ export default memo(function GithubContributions({
       }
     };
 
-    if (!initialData) {
-      fetchContributions();
+    const cached = readGithubContributionsCache();
+    if (cached) {
+      applyData(cached);
+      setLoading(false);
     }
 
-    const interval = setInterval(fetchContributions, 60 * 60 * 1000);
+    void fetchContributions();
 
-    return () => clearInterval(interval);
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void fetchContributions(true);
+      }
+    }, 60 * 60 * 1000);
+
+    const onVis = () => {
+      if (document.visibilityState === "visible") void fetchContributions(true);
+    };
+    document.addEventListener("visibilitychange", onVis);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [initialData]);
 
   return (

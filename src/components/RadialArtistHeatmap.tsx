@@ -358,7 +358,9 @@ export default memo(function RadialArtistHeatmap() {
         .catch(() => {});
     };
     const intervalId = window.setInterval(() => pull(0), 20 * 60 * 1000);
-    const onVis = () => pull(60_000);
+    const onVis = () => {
+      if (document.visibilityState === "visible") pull(60_000);
+    };
     document.addEventListener("visibilitychange", onVis);
     return () => {
       cancelled = true;

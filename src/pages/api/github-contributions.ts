@@ -6,6 +6,7 @@ const CACHE_DURATION = 60 * 60 * 1000;
 const REQUEST_TIMEOUT = 8000;
 let cachedData: GitHubResponse | null = null;
 let lastFetchTime = 0;
+let pendingRequest: Promise<GitHubResponse> | null = null;
 
 interface ContributionDay {
   contributionCount: number;
@@ -81,6 +82,22 @@ export const GET: APIRoute = async () => {
     });
   }
 
+  if (pendingRequest) {
+    try {
+      const data = await pendingRequest;
+      return new Response(JSON.stringify(data), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store, max-age=0",
+          "X-Cache-Status": "DEDUPED",
+        },
+      });
+    } catch {
+      // fall through to a fresh fetch
+    }
+  }
+
   const today = new Date();
   const oneYearAgo = new Date(today);
   oneYearAgo.setDate(today.getDate() - 365);
@@ -111,7 +128,7 @@ export const GET: APIRoute = async () => {
     }
   `;
 
-  try {
+  pendingRequest = (async (): Promise<GitHubResponse> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
@@ -138,7 +155,13 @@ export const GET: APIRoute = async () => {
     }
 
     cachedData = data;
-    lastFetchTime = now;
+    lastFetchTime = Date.now();
+    return data;
+  })();
+
+  try {
+    const data = await pendingRequest;
+    pendingRequest = null;
 
     return new Response(JSON.stringify(data), {
       status: 200,
@@ -149,6 +172,8 @@ export const GET: APIRoute = async () => {
       },
     });
   } catch {
+    pendingRequest = null;
+
     if (cachedData) {
       return new Response(JSON.stringify(cachedData), {
         status: 200,

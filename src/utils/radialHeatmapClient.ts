@@ -67,7 +67,7 @@ export async function loadRadialHeatmapPayload(options?: {
 
   const run = async () => {
     const response = await fetch(buildUrl(untilSec), {
-      cache: "default",
+      cache: "no-store",
       headers: { Accept: "application/json" },
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
