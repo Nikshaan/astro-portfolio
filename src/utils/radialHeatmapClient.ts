@@ -13,8 +13,10 @@ export interface RadialHeatmapPayload {
   artists: RadialHeatmapArtistRow[];
 }
 
-const CLIENT_CACHE_MS = 5 * 60 * 1000;
+const CLIENT_DEDUPE_MS = 20_000;
+const READ_CACHE_MS = 5 * 60 * 1000;
 const UNTIL_BUCKET_SEC = 120;
+export const RADIAL_POLL_MS = UNTIL_BUCKET_SEC * 1000;
 
 let cached: RadialHeatmapPayload | null = null;
 let cachedAt = 0;
@@ -34,7 +36,7 @@ function buildUrl(untilSec: number): string {
 }
 
 export function readRadialHeatmapCache(): RadialHeatmapPayload | null {
-  if (cached && Date.now() - cachedAt < CLIENT_CACHE_MS) return cached;
+  if (cached && Date.now() - cachedAt < READ_CACHE_MS) return cached;
   return null;
 }
 
@@ -54,16 +56,12 @@ async function parsePayload(response: Response): Promise<RadialHeatmapPayload> {
   return parsed as unknown as RadialHeatmapPayload;
 }
 
-export async function loadRadialHeatmapPayload(options?: {
-  force?: boolean;
-}): Promise<RadialHeatmapPayload> {
-  const force = options?.force === true;
+export async function loadRadialHeatmapPayload(): Promise<RadialHeatmapPayload> {
   const untilSec = anchorUntilSec();
   const now = Date.now();
 
-  if (!force && cached && now - cachedAt < CLIENT_CACHE_MS) return cached;
-
-  if (!force && inflightPromise) return inflightPromise;
+  if (cached && now - cachedAt < CLIENT_DEDUPE_MS) return cached;
+  if (inflightPromise) return inflightPromise;
 
   const run = async () => {
     const response = await fetch(buildUrl(untilSec), {
@@ -76,10 +74,6 @@ export async function loadRadialHeatmapPayload(options?: {
     cachedAt = Date.now();
     return payload;
   };
-
-  if (force) {
-    return run();
-  }
 
   inflightPromise = run();
   try {

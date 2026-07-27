@@ -1,4 +1,14 @@
 import type { APIRoute } from "astro";
+import {
+  dailyBuckets,
+  fetchWithRetry,
+  getTimeline,
+  listeningStreak,
+  peekTimeline,
+  topArtists,
+  SECONDS_PER_DAY,
+  type Timeline,
+} from "../../lib/lastfmTimeline";
 
 export const prerender = false;
 
@@ -34,15 +44,20 @@ interface MusicStatsResult {
   genreData: GenreEntry[];
 }
 
-const CACHE_DURATION_MS = 5 * 60 * 1000;
-let cache: { data: MusicStatsResult; timestamp: number } | null = null;
-let pendingRequest: Promise<MusicStatsResult> | null = null;
+const SERVER_CACHE_MS = 90 * 1000;
+const MIN_FORCE_INTERVAL_MS = 60 * 1000;
+const LOOKUP_CACHE_MS = 6 * 60 * 60 * 1000;
+const TOP_ARTIST_COUNT = 5;
 
+let cache: { data: MusicStatsResult; timestamp: number } | null = null;
+let userStatsCache: { value: number[]; timestamp: number } | null = null;
+const tagCache = new Map<string, { tags: GenreEntry[]; timestamp: number }>();
+const imageCache = new Map<string, { url: string; timestamp: number }>();
 let spotifyToken: { value: string; expiresAt: number } | null = null;
 
 const CACHE_HEADERS = {
   "Content-Type": "application/json",
-  "Cache-Control": "no-store, max-age=0",
+  "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=600",
 } as const;
 
 const jsonResponse = (
@@ -55,236 +70,82 @@ const jsonResponse = (
     headers: { ...CACHE_HEADERS, "X-Cache-Status": cacheStatus },
   });
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/** Portfolio owner timezone — daily scrobble buckets align to IST midnight. */
-const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
-const DAY_MS = 86_400_000;
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
-
-function getIstCalendarParts(ms: number) {
-  const ist = new Date(ms + IST_OFFSET_MS);
-  return {
-    year: ist.getUTCFullYear(),
-    month: ist.getUTCMonth(),
-    date: ist.getUTCDate(),
-  };
-}
-
-function istMidnightUtcMs(parts: {
-  year: number;
-  month: number;
-  date: number;
-}) {
-  return Date.UTC(parts.year, parts.month, parts.date) - IST_OFFSET_MS;
-}
-
-function toIstDateString(ms: number) {
-  const { year, month, date } = getIstCalendarParts(ms);
-  const m = String(month + 1).padStart(2, "0");
-  const d = String(date).padStart(2, "0");
-  return `${year}-${m}-${d}`;
-}
-
-function getIstDayBounds(daysAgo: number) {
-  const todayParts = getIstCalendarParts(Date.now());
-  const dayStartMs = istMidnightUtcMs(todayParts) - daysAgo * DAY_MS;
-  const from = Math.floor(dayStartMs / 1000);
-  const to = from + 86_399;
-  const istDay = new Date(dayStartMs + IST_OFFSET_MS);
-  const dayName = DAY_LABELS[istDay.getUTCDay()];
-  const dayNum = istDay.getUTCDate();
-  return { from, to, dayName: `${dayName} ${dayNum}` };
-}
-
-async function fetchRangeScrobbleTotal(
-  username: string,
-  apiKey: string,
-  from: number,
-  to: number,
-): Promise<number> {
-  const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&from=${from}&to=${to}&api_key=${apiKey}&format=json&limit=1`;
-  const response = await fetchWithRetry(url);
-  const data = await response.json();
-  const total = data?.recenttracks?.["@attr"]?.total;
-  return total ? parseInt(total, 10) : 0;
-}
-
-/** Count today's scrobbles from recent pages — catches now-playing and API lag. */
-async function countRecentScrobblesSince(
-  username: string,
-  apiKey: string,
-  fromSec: number,
-): Promise<number> {
-  let page = 1;
-  let count = 0;
-  const limit = 200;
-  const maxPages = 5;
-
-  while (page <= maxPages) {
-    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&limit=${limit}&page=${page}&api_key=${apiKey}&format=json`;
-    const response = await fetchWithRetry(url);
-    const data = await response.json();
-    const raw = data?.recenttracks?.track ?? [];
-    const tracks: any[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
-    if (!tracks.length) break;
-
-    let reachedOlder = false;
-    for (const track of tracks) {
-      const uts = track?.date?.uts;
-      if (!uts) {
-        count += 1;
-        continue;
-      }
-      const ts = parseInt(uts, 10);
-      if (ts >= fromSec) count += 1;
-      else reachedOlder = true;
-    }
-
-    if (reachedOlder) break;
-    page += 1;
-  }
-
-  return count;
-}
-
-async function fetchTodayScrobbles(
-  username: string,
-  apiKey: string,
-): Promise<DailyScrobble> {
-  const { from, to, dayName } = getIstDayBounds(0);
-  const [rangeTotal, recentTotal] = await Promise.all([
-    fetchRangeScrobbleTotal(username, apiKey, from, to),
-    countRecentScrobblesSince(username, apiKey, from),
-  ]);
-  return { name: dayName, scrobbles: Math.max(rangeTotal, recentTotal) };
-}
-
-async function fetchDayScrobbles(
-  username: string,
-  apiKey: string,
-  daysAgo: number,
-  cachedValue?: number,
-): Promise<DailyScrobble> {
-  if (daysAgo === 0) {
-    try {
-      return await fetchTodayScrobbles(username, apiKey);
-    } catch {
-      return { name: getIstDayBounds(0).dayName, scrobbles: 0 };
-    }
-  }
-
-  const { from, to, dayName } = getIstDayBounds(daysAgo);
-
-  try {
-    const total = await fetchRangeScrobbleTotal(username, apiKey, from, to);
-    return { name: dayName, scrobbles: total };
-  } catch {
-    return { name: dayName, scrobbles: cachedValue ?? 0 };
-  }
-}
-
-async function refreshTodayInResult(
-  username: string,
-  apiKey: string,
-  result: MusicStatsResult,
-): Promise<MusicStatsResult> {
-  const todayIndex = 6;
-  const [today, userStats] = await Promise.all([
-    fetchTodayScrobbles(username, apiKey),
-    fetchUserStats(username, apiKey).catch(() => result.upperStatsArray),
-  ]);
-
-  const weeklyScrobbles = [...result.weeklyScrobbles];
-  weeklyScrobbles[todayIndex] = today;
-
-  return {
-    ...result,
-    weeklyScrobbles,
-    upperStatsArray: userStats,
-  };
-}
-
-async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: { "User-Agent": "AstroPortfolio/1.0" },
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.status === 429) {
-        const retryAfter = parseInt(
-          response.headers.get("Retry-After") || "3",
-          10,
-        );
-        await sleep(retryAfter * 1000);
-        continue;
-      }
-
-      if (response.ok) return response;
-      if (response.status >= 400 && response.status < 500) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-    } catch (err: unknown) {
-      clearTimeout(timeoutId);
-      if (attempt === maxRetries - 1) throw err;
-    }
-
-    await sleep(Math.min(1000 * Math.pow(2, attempt), 4000));
-  }
-
-  throw new Error("Max retries exceeded");
-}
-
 async function fetchUserStats(
   username: string,
   apiKey: string,
 ): Promise<number[]> {
+  const now = Date.now();
+  if (userStatsCache && now - userStatsCache.timestamp < SERVER_CACHE_MS) {
+    return userStatsCache.value;
+  }
   try {
-    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getinfo&user=${username}&api_key=${apiKey}&format=json`;
+    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getinfo&user=${encodeURIComponent(username)}&api_key=${apiKey}&format=json`;
     const response = await fetchWithRetry(url);
     const data = await response.json();
     const user = data?.user as LastFmUser | undefined;
-
-    return [
+    const value = [
       parseInt(user?.playcount || "0", 10),
       parseInt(user?.track_count || "0", 10),
       parseInt(user?.artist_count || "0", 10),
       parseInt(user?.album_count || "0", 10),
     ];
+    userStatsCache = { value, timestamp: now };
+    return value;
   } catch {
-    return cache?.data.upperStatsArray ?? [0, 0, 0, 0];
+    return userStatsCache?.value ?? cache?.data.upperStatsArray ?? [0, 0, 0, 0];
   }
 }
 
-async function fetchTopArtists(
-  username: string,
+async function fetchArtistTags(
+  artist: string,
   apiKey: string,
-): Promise<ArtistInfo[]> {
+): Promise<GenreEntry[]> {
+  const key = artist.toLowerCase();
+  const hit = tagCache.get(key);
+  if (hit && Date.now() - hit.timestamp < LOOKUP_CACHE_MS) return hit.tags;
+
   try {
-    const url = `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${username}&period=7day&api_key=${apiKey}&format=json&limit=5`;
-    const response = await fetchWithRetry(url);
-    const data = await response.json();
-    const artists = data?.topartists?.artist;
-
-    if (!artists) return [];
-
-    const artistArray = Array.isArray(artists) ? artists : [artists];
-    return artistArray
-      .slice(0, 5)
-      .map((a: { name?: string; playcount?: string }) => ({
-        name: a?.name || "Unknown Artist",
-        count: a?.playcount || "0",
-      }));
+    const url = `https://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&artist=${encodeURIComponent(artist)}&api_key=${apiKey}&format=json`;
+    const res = await fetchWithRetry(url);
+    const json = await res.json();
+    const raw = json?.toptags?.tag;
+    const list = (Array.isArray(raw) ? raw : raw ? [raw] : []) as {
+      name?: string;
+      count?: number;
+    }[];
+    const tags = list.slice(0, 2).map((t) => ({
+      genre: String(t?.name ?? "").toLowerCase(),
+      count: Number(t?.count ?? 0),
+    }));
+    tagCache.set(key, { tags, timestamp: Date.now() });
+    return tags;
   } catch {
-    return cache?.data.artistsInfo ?? [];
+    return hit?.tags ?? [];
   }
+}
+
+async function buildGenreData(
+  artists: ArtistInfo[],
+  apiKey: string,
+): Promise<GenreEntry[]> {
+  if (!artists.length) return cache?.data.genreData ?? [];
+
+  const perArtist = await Promise.all(
+    artists.map((a) => fetchArtistTags(a.name, apiKey)),
+  );
+
+  const aggregated = new Map<string, number>();
+  for (const tags of perArtist) {
+    for (const t of tags) {
+      if (!t.genre) continue;
+      aggregated.set(t.genre, (aggregated.get(t.genre) ?? 0) + t.count);
+    }
+  }
+
+  return [...aggregated.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([genre, count]) => ({ genre, count }));
 }
 
 async function getSpotifyToken(
@@ -303,8 +164,8 @@ async function getSpotifyToken(
     },
     body: "grant_type=client_credentials",
   });
-
   if (!res.ok) throw new Error("Failed to get Spotify token");
+
   const json = await res.json();
   spotifyToken = {
     value: json.access_token,
@@ -313,204 +174,66 @@ async function getSpotifyToken(
   return spotifyToken.value;
 }
 
-async function fetchSpotifyArtistImage(
+async function fetchArtistImage(
   artistName: string,
   clientId: string,
   clientSecret: string,
 ): Promise<string> {
+  if (!artistName || !clientId || !clientSecret) return "";
+
+  const key = artistName.toLowerCase();
+  const hit = imageCache.get(key);
+  if (hit && Date.now() - hit.timestamp < LOOKUP_CACHE_MS) return hit.url;
+
   try {
     const token = await getSpotifyToken(clientId, clientSecret);
-    const q = encodeURIComponent(artistName);
     const res = await fetch(
-      `https://api.spotify.com/v1/search?q=${q}&type=artist&limit=1`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(artistName)}&type=artist&limit=1`,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
-    if (!res.ok) return "";
+    if (!res.ok) return hit?.url ?? "";
     const json = await res.json();
-    return json?.artists?.items?.[0]?.images?.[0]?.url ?? "";
+    const url = json?.artists?.items?.[0]?.images?.[0]?.url ?? "";
+    imageCache.set(key, { url, timestamp: Date.now() });
+    return url;
   } catch {
-    return cache?.data.topArtistImageUrl ?? "";
+    return hit?.url ?? cache?.data.topArtistImageUrl ?? "";
   }
 }
 
-async function fetchListeningStreak(
-  username: string,
-  apiKey: string,
-): Promise<number> {
-  try {
-    const scrobbleDates = new Set<string>();
-
-    let page = 1;
-    const limit = 200;
-    const batchSize = 10;
-    let totalPages = Infinity;
-
-    let totalStreak = 0;
-    let gapFound = false;
-    let isTodayChecked = false;
-
-    const todayStr = toIstDateString(Date.now());
-    let expectedDayStartMs = istMidnightUtcMs(getIstCalendarParts(Date.now()));
-    let expectedDateStr = todayStr;
-
-    const startTime = Date.now();
-
-    while (!gapFound && page <= totalPages) {
-      if (Date.now() - startTime > 8000) {
-        break;
-      }
-
-      const pagesToFetch = [];
-      for (let i = 0; i < batchSize && page + i <= totalPages; i++) {
-        pagesToFetch.push(page + i);
-      }
-
-      const promises = pagesToFetch.map((p) => {
-        const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&limit=${limit}&page=${p}&api_key=${apiKey}&format=json`;
-        return fetchWithRetry(url)
-          .then((res) => res.json())
-          .catch(() => null);
-      });
-
-      const results = await Promise.all(promises);
-      let oldestDateStrInBatch = todayStr;
-
-      for (const data of results) {
-        if (!data) continue;
-
-        if (data?.recenttracks?.["@attr"]?.totalPages) {
-          const tp = parseInt(data.recenttracks["@attr"].totalPages, 10);
-          if (tp !== Infinity) totalPages = tp;
-        }
-
-        const tracks: any[] = data?.recenttracks?.track ?? [];
-
-        for (const track of tracks) {
-          const ts = track?.date?.uts;
-          if (ts) {
-            const dateStr = toIstDateString(parseInt(ts, 10) * 1000);
-            scrobbleDates.add(dateStr);
-            if (dateStr < oldestDateStrInBatch) {
-              oldestDateStrInBatch = dateStr;
-            }
-          } else {
-            scrobbleDates.add(todayStr);
-          }
-        }
-      }
-
-      const isLastBatch = page + batchSize - 1 >= totalPages;
-
-      while (!gapFound) {
-        const isFullyFetched =
-          expectedDateStr > oldestDateStrInBatch || isLastBatch;
-        if (!isFullyFetched) break;
-
-        if (!isTodayChecked && expectedDateStr === todayStr) {
-          isTodayChecked = true;
-          if (scrobbleDates.has(todayStr)) {
-            totalStreak++;
-          }
-          expectedDayStartMs -= DAY_MS;
-          expectedDateStr = toIstDateString(expectedDayStartMs);
-        } else {
-          if (scrobbleDates.has(expectedDateStr)) {
-            totalStreak++;
-            expectedDayStartMs -= DAY_MS;
-            expectedDateStr = toIstDateString(expectedDayStartMs);
-          } else {
-            gapFound = true;
-          }
-        }
-      }
-
-      page += batchSize;
-    }
-
-    return totalStreak;
-  } catch {
-    return cache?.data.listeningStreak ?? 0;
-  }
-}
-
-async function fetchGenreData(
-  artists: ArtistInfo[],
-  apiKey: string,
-): Promise<GenreEntry[]> {
-  if (!artists.length) return [];
-  try {
-    const tagResults = await Promise.all(
-      artists.slice(0, 5).map(async (artist) => {
-        try {
-          const url = `https://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&artist=${encodeURIComponent(artist.name)}&api_key=${apiKey}&format=json`;
-          const res = await fetchWithRetry(url);
-          const json = await res.json();
-          const tags: { name: string; count: number }[] =
-            json?.toptags?.tag ?? [];
-          return tags.slice(0, 2);
-        } catch {
-          return [];
-        }
-      }),
-    );
-
-    const aggregated = new Map<string, number>();
-    for (const tags of tagResults) {
-      for (const tag of tags) {
-        const name = tag.name.toLowerCase();
-        aggregated.set(name, (aggregated.get(name) ?? 0) + tag.count);
-      }
-    }
-
-    return Array.from(aggregated.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([genre, count]) => ({ genre, count }));
-  } catch {
-    return cache?.data.genreData ?? [];
-  }
-}
-
-async function fetchMusicStats(
-  username: string,
+async function buildStats(
+  timeline: Timeline,
   apiKey: string,
   spotifyClientId: string,
   spotifyClientSecret: string,
+  anchorSec: number,
+  userStatsPromise: Promise<number[]>,
 ): Promise<MusicStatsResult> {
-  const [userStats, topArtists, listeningStreak, ...dailyScrobbles] =
-    await Promise.all([
-      fetchUserStats(username, apiKey),
-      fetchTopArtists(username, apiKey),
-      fetchListeningStreak(username, apiKey),
-      ...Array.from({ length: 7 }, (_, i) => {
-        const daysAgo = 6 - i;
-        const cachedValue = cache?.data.weeklyScrobbles[i]?.scrobbles;
-        return fetchDayScrobbles(username, apiKey, daysAgo, cachedValue);
-      }),
-    ]);
+  const nowMs = Date.now();
+  const weekAgo = anchorSec - 7 * SECONDS_PER_DAY;
 
-  const topArtistName = topArtists[0]?.name ?? "";
+  const weeklyScrobbles = dailyBuckets(timeline, 7, nowMs);
+  const streak = listeningStreak(timeline, nowMs);
+  const artistsInfo: ArtistInfo[] = topArtists(
+    timeline,
+    weekAgo,
+    TOP_ARTIST_COUNT,
+  ).map((a) => ({ name: a.name, count: String(a.plays) }));
+  const topArtistName = artistsInfo[0]?.name ?? "";
 
-  const [topArtistImageUrl, genreData] = await Promise.all([
-    topArtistName && spotifyClientId && spotifyClientSecret
-      ? fetchSpotifyArtistImage(
-          topArtistName,
-          spotifyClientId,
-          spotifyClientSecret,
-        )
-      : Promise.resolve(""),
-    fetchGenreData(topArtists, apiKey),
+  const [upperStatsArray, genreData, topArtistImageUrl] = await Promise.all([
+    userStatsPromise,
+    buildGenreData(artistsInfo, apiKey),
+    fetchArtistImage(topArtistName, spotifyClientId, spotifyClientSecret),
   ]);
 
   return {
-    weeklyScrobbles: dailyScrobbles,
-    upperStatsArray: userStats,
-    artistsInfo: topArtists,
+    weeklyScrobbles,
+    upperStatsArray,
+    artistsInfo,
     topArtistImageUrl: topArtistImageUrl || "",
     topArtistName,
-    listeningStreak,
+    listeningStreak: streak,
     genreData,
   };
 }
@@ -532,49 +255,49 @@ export const GET: APIRoute = async ({ request }) => {
   }
 
   const url = new URL(request.url);
-  const forceRefresh =
-    url.searchParams.has("_") || url.searchParams.get("force") === "1";
-
   const now = Date.now();
+  const anchorSec = Math.floor(now / 1000);
+  const cacheAge = cache ? now - cache.timestamp : Number.POSITIVE_INFINITY;
 
-  if (!forceRefresh && cache && now - cache.timestamp < CACHE_DURATION_MS) {
-    try {
-      const refreshed = await refreshTodayInResult(
-        username,
-        apiKey,
-        cache.data,
-      );
-      cache = { data: refreshed, timestamp: cache.timestamp };
-      return jsonResponse(refreshed, 200, "HIT-TODAY");
-    } catch {
-      return jsonResponse(cache.data, 200, "HIT");
-    }
+  const forceRefresh =
+    url.searchParams.get("force") === "1" && cacheAge >= MIN_FORCE_INTERVAL_MS;
+
+  if (!forceRefresh && cache && cacheAge < SERVER_CACHE_MS) {
+    return jsonResponse(cache.data, 200, "HIT");
   }
 
-  if (pendingRequest) {
-    try {
-      const result = await pendingRequest;
-      return jsonResponse(result, 200, "DEDUPED");
-    } catch {}
-  }
-
-  pendingRequest = fetchMusicStats(
-    username,
-    apiKey,
-    spotifyClientId,
-    spotifyClientSecret,
-  );
+  const userStatsPromise = fetchUserStats(username, apiKey);
 
   try {
-    const result = await pendingRequest;
-    cache = { data: result, timestamp: now };
-    pendingRequest = null;
-    return jsonResponse(result, 200, "MISS");
+    const timeline = await getTimeline(username, apiKey, anchorSec, {
+      force: forceRefresh,
+    });
+    const data = await buildStats(
+      timeline,
+      apiKey,
+      spotifyClientId,
+      spotifyClientSecret,
+      anchorSec,
+      userStatsPromise,
+    );
+    cache = { data, timestamp: Date.now() };
+    return jsonResponse(data, 200, forceRefresh ? "MISS" : "FRESH");
   } catch (error) {
-    pendingRequest = null;
+    if (cache) return jsonResponse(cache.data, 200, "STALE");
 
-    if (cache) {
-      return jsonResponse(cache.data, 200, "STALE");
+    const fallback = peekTimeline();
+    if (fallback) {
+      try {
+        const data = await buildStats(
+          fallback,
+          apiKey,
+          spotifyClientId,
+          spotifyClientSecret,
+          anchorSec,
+          userStatsPromise,
+        );
+        return jsonResponse(data, 200, "STALE");
+      } catch {}
     }
 
     return jsonResponse(

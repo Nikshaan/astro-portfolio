@@ -76,7 +76,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "no-store, max-age=0",
+        "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
         "X-Cache-Status": "HIT",
       },
     });
@@ -89,13 +89,11 @@ export const GET: APIRoute = async () => {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Cache-Control": "no-store, max-age=0",
+          "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
           "X-Cache-Status": "DEDUPED",
         },
       });
-    } catch {
-      // fall through to a fresh fetch
-    }
+    } catch {}
   }
 
   const today = new Date();
@@ -167,7 +165,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "no-store, max-age=0",
+        "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
         "X-Cache-Status": "MISS",
       },
     });
@@ -179,7 +177,7 @@ export const GET: APIRoute = async () => {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Cache-Control": "no-store, max-age=0",
+          "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
           "X-Cache-Status": "STALE",
         },
       });

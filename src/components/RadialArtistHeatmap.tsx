@@ -14,6 +14,7 @@ import type { RadialHeatmapPayload } from "../utils/radialHeatmapClient";
 import {
   loadRadialHeatmapPayload,
   readRadialHeatmapCache,
+  RADIAL_POLL_MS,
 } from "../utils/radialHeatmapClient";
 import {
   YearlyScrobblesChartSkeletonInner,
@@ -201,6 +202,18 @@ function normalizeArtists(
   });
 }
 
+function cellOpacity(
+  plays: number,
+  peak: number,
+  isLightTheme: boolean,
+): number {
+  const empty = isLightTheme ? 0.14 : 0.06;
+  if (plays <= 0 || peak <= 0) return empty;
+  const t = Math.sqrt(Math.min(1, plays / peak));
+  const floor = isLightTheme ? 0.34 : 0.24;
+  return floor + t * (1 - floor);
+}
+
 export default memo(function RadialArtistHeatmap() {
   const [shouldLoad, setShouldLoad] = useState(false);
   const [data, setData] = useState<RadialHeatmapPayload | null>(null);
@@ -344,11 +357,12 @@ export default memo(function RadialArtistHeatmap() {
     if (!shouldLoad) return;
     let cancelled = false;
     const lastPullAt = { t: 0 };
+
     const pull = (minGapMs: number) => {
       const n = Date.now();
       if (minGapMs > 0 && n - lastPullAt.t < minGapMs) return;
       lastPullAt.t = n;
-      void loadRadialHeatmapPayload({ force: true })
+      void loadRadialHeatmapPayload()
         .then((payload) => {
           if (!cancelled) {
             setData(payload);
@@ -357,9 +371,14 @@ export default memo(function RadialArtistHeatmap() {
         })
         .catch(() => {});
     };
-    const intervalId = window.setInterval(() => pull(0), 20 * 60 * 1000);
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === "visible") pull(0);
+    }, RADIAL_POLL_MS);
+
     const onVis = () => {
-      if (document.visibilityState === "visible") pull(60_000);
+      if (document.visibilityState !== "visible") return;
+      pull(30_000);
     };
     document.addEventListener("visibilitychange", onVis);
     return () => {
@@ -452,21 +471,13 @@ export default memo(function RadialArtistHeatmap() {
     const fromSec = wk[0]?.from ?? 0;
     const toSec = wk[N_WEEKS - 1]?.to ?? fromSec;
     const baseOpacities: number[][] = [];
-    const oEmpty = isLightTheme ? 0.14 : 0.06;
     for (let r = 0; r < N_RINGS; r++) {
       const plays =
         artists[r]?.plays ?? Array.from({ length: N_WEEKS }, () => 0);
       const peak = plays.reduce((m, v) => Math.max(m, v), 0);
       const row: number[] = [];
       for (let w = 0; w < N_WEEKS; w++) {
-        const p = plays[w] ?? 0;
-        if (peak <= 0) row.push(oEmpty);
-        else if (p <= 0) row.push(oEmpty);
-        else {
-          const t = Math.min(1, p / peak);
-          if (isLightTheme) row.push(Math.min(1, 0.2 + t * 0.8));
-          else row.push(Math.max(0.06, t));
-        }
+        row.push(cellOpacity(plays[w] ?? 0, peak, isLightTheme));
       }
       baseOpacities.push(row);
     }

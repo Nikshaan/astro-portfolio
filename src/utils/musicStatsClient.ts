@@ -31,9 +31,9 @@ export interface MusicStatsSnapshot {
   error: string | null;
 }
 
-const CACHE_MS = 5 * 60 * 1000;
-const LIVE_REFRESH_MS = 20 * 60 * 1000;
-const VISIBILITY_MIN_GAP_MS = 60_000;
+const CLIENT_DEDUPE_MS = 20_000;
+const READ_CACHE_MS = 5 * 60 * 1000;
+const POLL_MS = 90_000;
 
 type StatsListener = (snapshot: MusicStatsSnapshot) => void;
 
@@ -41,13 +41,13 @@ let cached: MusicStatsData | null = null;
 let cacheTimestamp = 0;
 let inflight: Promise<MusicStatsData> | null = null;
 let liveRefreshStarted = false;
-let lastLiveRefreshAt = 0;
+let lastPollAt = 0;
 
 const listeners = new Set<StatsListener>();
 
 let snapshot: MusicStatsSnapshot = {
   data: null,
-  loading: false,
+  loading: true,
   error: null,
 };
 
@@ -62,19 +62,18 @@ function setSnapshot(patch: Partial<MusicStatsSnapshot>) {
   emit();
 }
 
-function buildApiUrl(force: boolean) {
+function buildApiUrl() {
   const baseUrl = import.meta.env.BASE_URL || "/";
   const apiPath = baseUrl.endsWith("/")
     ? "api/music-stats"
     : "/api/music-stats";
-  const url = `${baseUrl}${apiPath}`;
-  return force ? `${url}?_=${Date.now()}` : url;
+  return `${baseUrl}${apiPath}`;
 }
 
-async function fetchMusicStatsPayload(force: boolean): Promise<MusicStatsData> {
+async function fetchMusicStatsPayload(): Promise<MusicStatsData> {
   scheduleRadialHeatmapWarmup();
 
-  const response = await fetch(buildApiUrl(force), {
+  const response = await fetch(buildApiUrl(), {
     cache: "no-store",
     headers: { Accept: "application/json" },
   });
@@ -97,49 +96,32 @@ async function fetchMusicStatsPayload(force: boolean): Promise<MusicStatsData> {
 }
 
 export function readMusicStatsCache(): MusicStatsData | null {
-  if (cached && Date.now() - cacheTimestamp < CACHE_MS) return cached;
+  if (cached && Date.now() - cacheTimestamp < READ_CACHE_MS) return cached;
   return null;
 }
 
-export async function loadMusicStatsData(options?: {
-  force?: boolean;
-}): Promise<MusicStatsData> {
-  const force = options?.force === true;
+export async function loadMusicStatsData(): Promise<MusicStatsData> {
   const now = Date.now();
 
-  if (!force && cached && now - cacheTimestamp < CACHE_MS) return cached;
+  if (cached && now - cacheTimestamp < CLIENT_DEDUPE_MS) return cached;
+  if (inflight) return inflight;
 
-  if (inflight) {
-    if (!force) return inflight;
-    await inflight.catch(() => {});
-  }
-
-  inflight = fetchMusicStatsPayload(force).finally(() => {
+  inflight = fetchMusicStatsPayload().finally(() => {
     inflight = null;
   });
 
   return inflight;
 }
 
-async function revalidateMusicStats(options?: {
-  force?: boolean;
-  silent?: boolean;
-}) {
-  const force = options?.force === true;
+async function revalidateMusicStats(options?: { silent?: boolean }) {
   const silent = options?.silent === true;
-  const now = Date.now();
-
-  if (!force && cached && now - cacheTimestamp < CACHE_MS) {
-    setSnapshot({ data: cached, loading: false, error: null });
-    return cached;
-  }
 
   if (!silent || !cached) {
-    setSnapshot({ loading: true, error: null });
+    setSnapshot({ loading: !cached, error: null });
   }
 
   try {
-    const musicData = await loadMusicStatsData(force ? { force: true } : undefined);
+    const musicData = await loadMusicStatsData();
     setSnapshot({ data: musicData, loading: false, error: null });
     return musicData;
   } catch (err: unknown) {
@@ -154,20 +136,24 @@ async function revalidateMusicStats(options?: {
   }
 }
 
-function runLiveRefresh(minGapMs: number) {
+function poll(minGapMs: number) {
   const now = Date.now();
-  if (minGapMs > 0 && now - lastLiveRefreshAt < minGapMs) return;
-  lastLiveRefreshAt = now;
-  void revalidateMusicStats({ force: true, silent: true }).catch(() => {});
+  if (minGapMs > 0 && now - lastPollAt < minGapMs) return;
+  lastPollAt = now;
+  void revalidateMusicStats({ silent: true }).catch(() => {});
 }
 
 function ensureMusicStatsLiveRefresh() {
   if (liveRefreshStarted || typeof window === "undefined") return;
   liveRefreshStarted = true;
 
-  window.setInterval(() => runLiveRefresh(0), LIVE_REFRESH_MS);
+  window.setInterval(() => {
+    if (document.visibilityState === "visible") poll(0);
+  }, POLL_MS);
+
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") runLiveRefresh(VISIBILITY_MIN_GAP_MS);
+    if (document.visibilityState !== "visible") return;
+    poll(30_000);
   });
 }
 
@@ -177,7 +163,7 @@ export function subscribeMusicStats(listener: StatsListener) {
   listener(snapshot);
 
   if (isFirst) {
-    void revalidateMusicStats({ silent: !!cached });
+    void revalidateMusicStats({ silent: false });
     ensureMusicStatsLiveRefresh();
   }
 
