@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Backward-compatibility shim: the project previously referenced `src/data/framer.svg`.
-     Keep this file to avoid build/runtime errors if any cached/built output still imports it.
-     Prefer using `Brand-Framer-Motion--Streamline-Tabler.svg` via `ProjectsBentoGrid.tsx`. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Framer Motion">
-  <rect width="24" height="24" rx="4" fill="#111111"/>
-  <path d="M7 6h10v4H12l5 6v2H7v-4h5l-5-6V6z" fill="#ffffff"/>
-</svg>

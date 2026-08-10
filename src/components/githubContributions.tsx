@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, memo } from "react";
+import { useEffect, useState, useRef, memo, useCallback } from "react";
 import { m, LazyMotion, domAnimation } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -16,6 +16,54 @@ import styles from "./githubContributions.module.css";
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+function formatContributionDayLabel(day: ContributionDay): string {
+  const date = new Date(`${day.date}T12:00:00`);
+  const formattedDate = new Intl.DateTimeFormat(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+
+  const count = day.contributionCount;
+  if (count === 0) {
+    return `No contributions on ${formattedDate}`;
+  }
+
+  return `${count} contribution${count === 1 ? "" : "s"} on ${formattedDate}`;
+}
+
+interface ContributionDayCellProps {
+  day: ContributionDay;
+  level: number;
+  isLightTheme: boolean;
+  onHover: (day: ContributionDay, element: HTMLDivElement) => void;
+  onLeave: () => void;
+}
+
+const ContributionDayCell = memo(function ContributionDayCell({
+  day,
+  level,
+  isLightTheme,
+  onHover,
+  onLeave,
+}: ContributionDayCellProps) {
+  const label = formatContributionDayLabel(day);
+
+  return (
+    <div
+      className={`${styles.day} ${styles[`contributionLevel${level}`]}`}
+      style={
+        isLightTheme ? undefined : { backgroundColor: day.color || "#161b22" }
+      }
+      aria-label={label}
+      onMouseEnter={(event) => onHover(day, event.currentTarget)}
+      onMouseLeave={onLeave}
+      suppressHydrationWarning
+    />
+  );
+});
 
 interface GithubContributionsProps {
   initialData?: GitHubAPIResponse;
@@ -56,7 +104,46 @@ export default memo(function GithubContributions({
   const [error, setError] = useState<string | null>(null);
 
   const graphRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const isLightTheme = useIsLightTheme();
+
+  const positionTooltip = useCallback(
+    (day: ContributionDay, element: HTMLDivElement) => {
+      const tooltip = tooltipRef.current;
+      if (!tooltip) return;
+
+      tooltip.textContent = formatContributionDayLabel(day);
+      tooltip.classList.toggle(styles.dayTooltipLight, isLightTheme);
+
+      const rect = element.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top - 8;
+
+      tooltip.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
+      tooltip.dataset.visible = "true";
+    },
+    [isLightTheme],
+  );
+
+  const hideTooltip = useCallback(() => {
+    const tooltip = tooltipRef.current;
+    if (!tooltip) return;
+    delete tooltip.dataset.visible;
+  }, []);
+
+  useEffect(() => {
+    const graph = graphRef.current;
+    if (!graph) return;
+
+    const hideOnScroll = () => hideTooltip();
+    graph.addEventListener("scroll", hideOnScroll, { passive: true });
+    window.addEventListener("scroll", hideOnScroll, { passive: true });
+
+    return () => {
+      graph.removeEventListener("scroll", hideOnScroll);
+      window.removeEventListener("scroll", hideOnScroll);
+    };
+  }, [hideTooltip, weeks, loading]);
 
   useEffect(() => {
     if (graphRef.current) {
@@ -128,7 +215,7 @@ export default memo(function GithubContributions({
         data-bento-shell=""
         className={cn(
           "relative p-6 rounded-3xl border overflow-hidden w-full flex flex-col justify-between group me-card-hover",
-          "bg-neutral-50 dark:bg-[#171717] border-white dark:border-white/20",
+          "bg-[#171717] border-white dark:border-white/20",
           "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
         )}
         initial={{ opacity: 0, y: 30, scale: 0.98 }}
@@ -187,18 +274,14 @@ export default memo(function GithubContributions({
                       else if (count > 9) level = 4;
 
                       return (
-                        <div
+                        <ContributionDayCell
                           key={dayIndex}
-                          className={`${styles.day} ${styles[`contributionLevel${level}`]}`}
-                          style={
-                            isLightTheme
-                              ? undefined
-                              : { backgroundColor: day.color || "#161b22" }
-                          }
-                          title={`${day.date}: ${day.contributionCount} contributions`}
-                          data-tooltip-placement="bottom"
-                          suppressHydrationWarning
-                        ></div>
+                          day={day}
+                          level={level}
+                          isLightTheme={isLightTheme}
+                          onHover={positionTooltip}
+                          onLeave={hideTooltip}
+                        />
                       );
                     },
                   )}
@@ -222,6 +305,12 @@ export default memo(function GithubContributions({
             </p>
           </>
         )}
+        <div
+          ref={tooltipRef}
+          className={styles.dayTooltip}
+          role="tooltip"
+          aria-hidden="true"
+        />
       </m.div>
     </LazyMotion>
   );

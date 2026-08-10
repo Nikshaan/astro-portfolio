@@ -167,7 +167,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
           data-bento-frozen={selectedId === card.id ? "" : undefined}
           className={cn(
             "relative h-full w-full rounded-3xl border overflow-hidden me-card-hover group",
-            "bg-neutral-50 dark:bg-[#171717]",
+            "bg-[#171717]",
             isExpandableCard ? "" : "border-white dark:border-white/20",
             "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
             isExpandableCard && !selectedId ? "cursor-pointer" : "",
@@ -380,7 +380,7 @@ const ProjectsBentoGrid: React.FC = () => {
               className={cn(
                 "px-4 py-1.5 cursor-pointer rounded-full type-ui font-medium transition-all",
                 activeCategory === "aiml"
-                  ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100 [html[data-theme=light]_&]:bg-[#7C5CBF] [html[data-theme=light]_&]:text-white"
+                  ? "bg-neutral-700 shadow-sm text-neutral-100 [html[data-theme=light]_&]:bg-[#7C5CBF] [html[data-theme=light]_&]:text-white"
                   : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 [html[data-theme=light]_&]:text-[#2D1B4E] [html[data-theme=light]_&]:hover:text-[#7C5CBF]",
               )}
             >
@@ -394,7 +394,7 @@ const ProjectsBentoGrid: React.FC = () => {
               className={cn(
                 "px-4 py-1.5 cursor-pointer rounded-full type-ui font-medium transition-all",
                 activeCategory === "web"
-                  ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-neutral-100 [html[data-theme=light]_&]:bg-[#7C5CBF] [html[data-theme=light]_&]:text-white"
+                  ? "bg-neutral-700 shadow-sm text-neutral-100 [html[data-theme=light]_&]:bg-[#7C5CBF] [html[data-theme=light]_&]:text-white"
                   : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 [html[data-theme=light]_&]:text-[#2D1B4E] [html[data-theme=light]_&]:hover:text-[#7C5CBF]",
               )}
             >
@@ -439,7 +439,7 @@ const ProjectsBentoGrid: React.FC = () => {
                 data-bento-frozen=""
                 className={cn(
                   "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col me-card-hover",
-                  "bg-neutral-50 dark:bg-[#171717]",
+                  "bg-[#171717]",
                   "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
                 )}
               >
@@ -523,7 +523,6 @@ const ProjectsBentoGrid: React.FC = () => {
                     <div className="prose prose-invert prose-lg max-w-none">
                       <ProjectCardContent
                         html={getProcessedContent(selectedItem.content || "")}
-                        isActive={Boolean(selectedId)}
                       />
                     </div>
                   </div>

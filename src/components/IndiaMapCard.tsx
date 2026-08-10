@@ -54,7 +54,7 @@ const MAP_LAYOUT_TRANSITION = {
 };
 
 const MAP_SHELL_CLASS = cn(
-  "bg-neutral-50 dark:bg-[#171717]",
+  "bg-[#171717]",
   "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
 );
 

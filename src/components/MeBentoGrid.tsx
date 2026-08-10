@@ -122,7 +122,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
                 decoding="async"
                 className="absolute inset-0 w-full h-full object-cover border rounded-full select-none profile-image-border border-white dark:border-white/20 flex items-center justify-center text-center"
                 style={{
-                  backgroundColor: "#f3f4f6",
+                  backgroundColor: "#171717",
                   aspectRatio: "1/1",
                 }}
               />
@@ -261,10 +261,10 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
               rel="noopener noreferrer"
               aria-label="Visit Nikshaan's GitHub profile"
               data-title="GitHub"
-              className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0"
+              className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-neutral-700/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0 [html[data-theme=light]_&]:!bg-white/90"
             >
               <Github
-                className="w-5 h-5 md:w-6 md:h-6 text-black"
+                className="w-5 h-5 md:w-6 md:h-6 text-white [html[data-theme=light]_&]:text-black"
                 strokeWidth={1.75}
               />
             </a>
@@ -274,7 +274,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
               rel="noopener noreferrer"
               aria-label="Connect with Nikshaan on LinkedIn"
               data-title="LinkedIn"
-              className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0"
+              className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-neutral-700/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0 [html[data-theme=light]_&]:!bg-white/90"
             >
               <img
                 src={linkedinColor.src}
@@ -287,7 +287,7 @@ const renderCardContent = (card: any, images: Record<string, any>) => {
               href={card.data.links.email}
               aria-label="Send an email to Nikshaan"
               data-title="Email"
-              className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-white/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0"
+              className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-neutral-700/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0 [html[data-theme=light]_&]:!bg-white/90"
             >
               <img
                 src={gmailColor.src}
@@ -425,7 +425,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
           className={cn(
             "relative h-full rounded-3xl border overflow-hidden me-card-hover group",
             card.id === "win" ? "w-fit" : "w-full",
-            "bg-neutral-50 dark:bg-[#171717]",
+            "bg-[#171717]",
             usesMotionBorder ? "" : "border-white dark:border-white/20",
             "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
             card.id === "intro" || card.id === "win" || card.id === "resume"
@@ -696,7 +696,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
               data-bento-frozen=""
               className={cn(
                 "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col mt-12 me-card-hover",
-                "bg-neutral-50 dark:bg-[#171717]",
+                "bg-[#171717]",
                 "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
               )}
             >

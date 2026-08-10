@@ -90,7 +90,7 @@ const Footer = () => {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: "some", margin: "0px 0px 200px 0px" }}
-        className="w-full max-w-[1400px] mx-auto rounded-3xl border bg-neutral-50 dark:bg-[#171717] [html[data-theme=light]_&]:!bg-[#EDE7F6] overflow-hidden footer-transition me-card-hover"
+        className="w-full max-w-[1400px] mx-auto rounded-3xl border bg-[#171717] [html[data-theme=light]_&]:!bg-[#EDE7F6] overflow-hidden footer-transition me-card-hover"
       >
         <motion.div
           variants={itemVariants}

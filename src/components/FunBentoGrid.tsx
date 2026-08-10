@@ -80,7 +80,7 @@ const CardWrapper: React.FC<CardWrapperProps> = memo(
           className={cn(
             "relative rounded-3xl border overflow-hidden flex flex-col me-card-hover group",
             fillHeight ? "h-full" : "h-auto min-h-0",
-            "bg-neutral-50 dark:bg-[#171717]",
+            "bg-[#171717]",
             isExpandable ? "" : "border-white dark:border-white/20",
             "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
             isExpandable ? "cursor-pointer" : "",
@@ -469,7 +469,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                   onError={(e) => {
                     const img = e.currentTarget;
                     img.style.backgroundImage = "";
-                    img.style.backgroundColor = "#f3f4f6";
+                    img.style.backgroundColor = "#171717";
                     img.classList.remove("opacity-0");
                     img.classList.add("opacity-100");
                   }}

@@ -1,4 +1,7 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(:root:not([data-theme="light"]) &));
+
 @import "./transitions.css";
 @import "./light-theme.css";
 @import "./project-links.css";

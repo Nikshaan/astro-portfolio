@@ -858,7 +858,7 @@ export default memo(function RadialArtistHeatmap() {
                 ref={tooltipRef}
                 className={cn(
                   "pointer-events-none absolute z-20 max-w-[min(100%-16px,18rem)] rounded-xl border p-3 type-caption shadow-lg transition-opacity",
-                  "border-white/20 bg-neutral-50 text-neutral-900 dark:border-white/20 dark:bg-[#171717] dark:text-neutral-100",
+                  "border-white/20 bg-[#171717] text-neutral-100 dark:border-white/20",
                   "[html[data-theme=light]_&]:border-[#9B84BF] [html[data-theme=light]_&]:!bg-[#EDE7F6] [html[data-theme=light]_&]:!text-[#2D1B4E] [html[data-theme=light]_&]:shadow-md",
                 )}
                 style={{ visibility: "hidden", opacity: 0 }}

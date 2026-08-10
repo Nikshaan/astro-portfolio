@@ -136,16 +136,20 @@
   min-height: 10px;
   border-radius: 2px;
   cursor: pointer;
-  transition: transform 0.2s;
+  outline: 1px solid transparent;
+  transition:
+    outline-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .day:hover {
-  transform: scale(1.2);
-  outline: 1px solid rgba(255, 255, 255, 0.2);
+  outline-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 [data-theme="light"] .day:hover {
-  outline: 1px solid rgba(0, 0, 0, 0.2);
+  outline-color: rgba(100, 73, 168, 0.55);
+  box-shadow: 0 0 0 1px rgba(100, 73, 168, 0.2);
 }
 
 [data-theme="light"] .contributionLevel0 {
@@ -195,6 +199,35 @@
   .day {
     min-height: 12px;
   }
+}
+
+.dayTooltip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  background-color: rgb(23, 23, 23);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.12s ease-out;
+  will-change: transform, opacity;
+}
+
+.dayTooltip[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.dayTooltipLight {
+  background-color: rgb(124, 92, 191);
 }
 
 @keyframes shimmer {
