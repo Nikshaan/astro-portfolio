@@ -7,68 +7,26 @@ import Navbar from "./Navbar";
 <style is:global>
   .nav-link {
     position: relative;
-    color: #ffffff;
+    color: var(--text-secondary);
   }
 
   .nav-link:hover {
-    color: #c084fc;
-    opacity: 0.9;
+    color: var(--text-primary);
   }
 
   .nav-link.active {
-    color: #a855f7 !important;
+    color: var(--accent);
     font-weight: 600;
   }
 
   .nav-link.active:hover {
-    color: #a855f7 !important;
-    opacity: 1;
-  }
-
-  [data-theme="light"] .nav-link {
-    color: var(--text-body, #6B5B7A) !important;
-  }
-  [data-theme="light"] .nav-link:hover {
-    color: var(--accent, #7C5CBF) !important;
-    background-color: rgba(124, 92, 191, 0.1);
-  }
-
-  [data-theme="light"] .nav-link.active {
-    color: var(--accent, #7C5CBF) !important;
-    background-color: rgba(124, 92, 191, 0.1);
-  }
-
-  [data-theme="light"] .nav-link.active:hover {
-    color: var(--accent-hover, #6449A8) !important;
-  }
-
-  [data-theme="light"] #navbar {
-    background-color: rgba(245, 240, 235, 0.92) !important;
-    backdrop-filter: blur(12px) !important;
-    border-color: var(--bg-surface-border, #9B84BF) !important;
-    box-shadow:
-      0 4px 6px -1px rgba(45, 27, 78, 0.08),
-      0 2px 4px -1px rgba(45, 27, 78, 0.05);
-  }
-
-  [data-theme="light"] #theme-toggle {
-    color: var(--text-heading, #2D1B4E);
-  }
-
-  [data-theme="light"] #theme-toggle:hover {
-    background-color: rgba(124, 92, 191, 0.15) !important;
-  }
-
-  #theme-toggle:hover {
-    background-color: rgba(168, 85, 247, 0.2);
+    color: var(--accent);
   }
 
   .nav-link,
   #theme-toggle {
-    transition: all 0.2s ease-in-out;
-  }
-
-  [data-theme="light"] .navbar-divider {
-    background-color: var(--bg-surface-border, #9B84BF) !important;
+    transition:
+      color 0.2s ease-in-out,
+      background-color 0.2s ease-in-out;
   }
 </style>

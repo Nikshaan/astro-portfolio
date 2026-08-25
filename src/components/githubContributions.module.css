@@ -1,22 +1,3 @@
-.contributionsContainer {
-  margin-top: 0;
-  width: 100%;
-  padding: 0 1rem;
-}
-
-@media (min-width: 640px) {
-  .contributionsContainer {
-    margin-top: 0;
-  }
-}
-
-@media (min-width: 1024px) {
-  .contributionsContainer {
-    margin-top: 0;
-    padding: 0;
-  }
-}
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -32,21 +13,7 @@
 
 .header .total {
   font-size: var(--type-caption);
-  color: #8b949e;
-}
-
-[data-theme="light"] .header .total {
-  color: #57606a;
-}
-
-.loading {
-  color: #8b949e;
-  padding: 2rem 0;
-  text-align: center;
-}
-
-[data-theme="light"] .loading {
-  color: #57606a;
+  color: var(--text-tertiary);
 }
 
 .graph {
@@ -55,7 +22,7 @@
   overflow-x: auto;
   padding: 0.5rem 0;
   scrollbar-width: thin;
-  scrollbar-color: #30363d #0d1117;
+  scrollbar-color: var(--border-strong) var(--surface-page);
   width: 100%;
   justify-content: flex-start;
 }
@@ -75,34 +42,17 @@
   }
 }
 
-[data-theme="light"] .graph {
-  scrollbar-color: #c4b0e0 #f5f0eb;
-}
-
 .graph::-webkit-scrollbar {
-  height: 8px;
-  display: block;
+  height: 4px;
 }
 
 .graph::-webkit-scrollbar-track {
-  background: #0d1117;
-}
-
-[data-theme="light"] .graph::-webkit-scrollbar-track {
-  background: #f5f0eb;
+  background: var(--surface-page);
 }
 
 .graph::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: var(--border-strong);
   border-radius: 4px;
-}
-
-[data-theme="light"] .graph::-webkit-scrollbar-thumb {
-  background: #c4b0e0;
-}
-
-.graph::-webkit-scrollbar {
-  height: 4px;
 }
 
 @media (max-width: 768px) {
@@ -120,20 +70,27 @@
   flex-direction: column;
   gap: 2px;
   flex: 0 0 auto;
-  min-width: 0;
+  width: 10px;
+}
+
+@media (min-width: 640px) {
+  .week {
+    width: 11px;
+  }
 }
 
 @media (min-width: 1024px) {
   .week {
     flex: 1 1 0;
+    width: auto;
     min-width: 0;
+    gap: 3px;
   }
 }
 
 .day {
-  width: 100%;
-  aspect-ratio: 1;
-  min-height: 10px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   cursor: pointer;
   outline: 1px solid transparent;
@@ -142,62 +99,50 @@
     box-shadow 0.15s ease;
 }
 
-.day:hover {
-  outline-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
-}
-
-[data-theme="light"] .day:hover {
-  outline-color: rgba(100, 73, 168, 0.55);
-  box-shadow: 0 0 0 1px rgba(100, 73, 168, 0.2);
-}
-
-[data-theme="light"] .contributionLevel0 {
-  background-color: #f5f0eb !important;
-  box-shadow: inset 0 0 0 1px #d8cee8;
-}
-
-[data-theme="light"] .contributionLevel1 {
-  background-color: #d8cee8 !important;
-}
-
-[data-theme="light"] .contributionLevel2 {
-  background-color: #c4b0e0 !important;
-}
-
-[data-theme="light"] .contributionLevel3 {
-  background-color: #7c5cbf !important;
-}
-
-[data-theme="light"] .contributionLevel4 {
-  background-color: #6449a8 !important;
-}
-
 @media (min-width: 640px) {
-  .graph {
-    gap: 2px;
-  }
-
-  .week {
-    gap: 2px;
-  }
-
   .day {
-    min-height: 11px;
+    width: 11px;
+    height: 11px;
   }
+}
+
+@media (min-width: 1024px) {
+  .day {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+}
+
+.day:hover {
+  outline-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.contributionLevel0 {
+  background-color: var(--surface-raised);
+  box-shadow: inset 0 0 0 1px var(--border-subtle);
+}
+
+.contributionLevel1 {
+  background-color: color-mix(in oklab, var(--accent) 25%, var(--surface-raised));
+}
+
+.contributionLevel2 {
+  background-color: color-mix(in oklab, var(--accent) 50%, var(--surface-raised));
+}
+
+.contributionLevel3 {
+  background-color: color-mix(in oklab, var(--accent) 75%, var(--surface-raised));
+}
+
+.contributionLevel4 {
+  background-color: var(--accent);
 }
 
 @media (min-width: 1024px) {
   .graph {
     gap: 3px;
-  }
-
-  .week {
-    gap: 3px;
-  }
-
-  .day {
-    min-height: 12px;
   }
 }
 
@@ -209,8 +154,9 @@
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  background-color: rgb(23, 23, 23);
-  color: #ffffff;
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 14px;
@@ -224,10 +170,6 @@
 .dayTooltip[data-visible="true"] {
   opacity: 1;
   visibility: visible;
-}
-
-.dayTooltipLight {
-  background-color: rgb(124, 92, 191);
 }
 
 @keyframes shimmer {
@@ -259,30 +201,30 @@
   height: 1.25rem;
   width: 280px;
   max-width: 70%;
-  background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  background: linear-gradient(
+    90deg,
+    var(--shimmer-from-1) 25%,
+    var(--shimmer-to-1) 50%,
+    var(--shimmer-from-1) 75%
+  );
   background-size: 1200px 100%;
   animation: shimmer 1.6s infinite linear;
   border-radius: 3px;
-}
-
-[data-theme="light"] .skeletonTitle {
-  background: linear-gradient(90deg, #e4dcf2 25%, #c4b0e0 50%, #e4dcf2 75%);
-  background-size: 1200px 100%;
 }
 
 .skeletonSubtitle {
   height: 0.875rem;
   width: 180px;
   max-width: 40%;
-  background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  background: linear-gradient(
+    90deg,
+    var(--shimmer-from-1) 25%,
+    var(--shimmer-to-1) 50%,
+    var(--shimmer-from-1) 75%
+  );
   background-size: 1200px 100%;
   animation: shimmer 1.6s infinite linear;
   border-radius: 3px;
-}
-
-[data-theme="light"] .skeletonSubtitle {
-  background: linear-gradient(90deg, #ede7f6 25%, #c4b0e0 50%, #ede7f6 75%);
-  background-size: 1200px 100%;
 }
 
 .skeletonGraph {
@@ -293,11 +235,7 @@
   padding: 0.5rem 0;
   justify-content: flex-start;
   scrollbar-width: thin;
-  scrollbar-color: #30363d #0d1117;
-}
-
-[data-theme="light"] .skeletonGraph {
-  scrollbar-color: #c4b0e0 #f5f0eb;
+  scrollbar-color: var(--border-strong) var(--surface-page);
 }
 
 @media (min-width: 768px) {
@@ -334,14 +272,14 @@
   box-sizing: border-box;
   flex-shrink: 0;
   border-radius: 2px;
-  background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  background: linear-gradient(
+    90deg,
+    var(--shimmer-from-1) 25%,
+    var(--shimmer-to-1) 50%,
+    var(--shimmer-from-1) 75%
+  );
   background-size: 1200px 100%;
   animation: shimmer 1.6s infinite linear;
-}
-
-[data-theme="light"] .skeletonDay {
-  background: linear-gradient(90deg, #e4dcf2 25%, #c4b0e0 50%, #e4dcf2 75%);
-  background-size: 1200px 100%;
 }
 
 @media (max-width: 1023px) {

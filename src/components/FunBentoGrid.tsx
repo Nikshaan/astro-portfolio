@@ -1,22 +1,12 @@
-import React, {
-  useEffect,
-  Suspense,
-  lazy,
-  memo,
-  useState,
-  useRef,
-} from "react";
+import React, { useEffect, Suspense, lazy, useState, useRef } from "react";
+import { LazyMotion, domAnimation } from "framer-motion";
 import { isSlowConnection } from "../utils/networkAware";
 import { scheduleRadialHeatmapWarmup } from "./musicRadialHeatmapWarmup";
-import { motion } from "framer-motion";
-import { Maximize2 } from "lucide-react";
-import {
-  bentoCardHoverTransition,
-  getBentoCardHoverMotion,
-  getBentoCardTapMotion,
-} from "./bentoCardMotion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import BentoGrid from "./bento/BentoGrid";
+import BentoCard from "./bento/BentoCard";
+import { SPANS } from "./bento/spans";
 
 const MusicStatsClient = lazy(() => import("./musicstats"));
 const RadialArtistHeatmap = lazy(() => import("./RadialArtistHeatmap"));
@@ -33,7 +23,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const FUN_MUSIC_YEARLY_PAIR_BODY =
-  "flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-x-hidden px-2 pb-5 pt-0 sm:px-4 md:px-6";
+  "flex min-w-0 w-full max-w-full flex-1 flex-col px-2 pb-5 pt-0 sm:px-4 md:px-6";
 
 interface Image {
   id: string;
@@ -49,61 +39,6 @@ interface Image {
 interface FunBentoGridProps {
   images: Image[];
 }
-
-interface CardWrapperProps {
-  children: React.ReactNode;
-  className?: string;
-  isExpandable?: boolean;
-  fillHeight?: boolean;
-  disableHoverMotion?: boolean;
-  onClick?: React.MouseEventHandler<HTMLDivElement>;
-}
-
-const CardWrapper: React.FC<CardWrapperProps> = memo(
-  ({
-    children,
-    className,
-    isExpandable = false,
-    fillHeight = true,
-    disableHoverMotion = false,
-    onClick,
-  }) => {
-    return (
-      <div
-        className={cn(
-          fillHeight ? "h-full w-full" : "h-auto w-full",
-          className,
-        )}
-      >
-        <motion.div
-          data-bento-shell=""
-          className={cn(
-            "relative rounded-3xl border overflow-hidden flex flex-col me-card-hover group",
-            fillHeight ? "h-full" : "h-auto min-h-0",
-            "bg-[#171717]",
-            isExpandable ? "" : "border-white dark:border-white/20",
-            "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
-            isExpandable ? "cursor-pointer" : "",
-          )}
-          onClick={onClick}
-          whileHover={
-            disableHoverMotion ? undefined : getBentoCardHoverMotion()
-          }
-          whileTap={disableHoverMotion ? undefined : getBentoCardTapMotion()}
-          transition={bentoCardHoverTransition}
-          style={{ transformOrigin: "center center" }}
-        >
-          {children}
-          {isExpandable && (
-            <div className="absolute bottom-4 right-4 z-10 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-              <Maximize2 size={16} className="text-[#FFFFFF]" />
-            </div>
-          )}
-        </motion.div>
-      </div>
-    );
-  },
-);
 
 const VISITED_PLACES = [
   { name: "Mumbai", lat: 19.076, lng: 72.8777 },
@@ -183,8 +118,6 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
   }, []);
 
   useEffect(() => {
-    document.getElementById("gallery-shimmer-style")?.remove();
-
     if (!document.getElementById("fun-gallery-style")) {
       const style = document.createElement("style");
       style.id = "fun-gallery-style";
@@ -193,7 +126,8 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                     transform: scale(1);
                     transition: transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity 220ms ease-out;
                 }
-                .gallery-photo-link:hover .gallery-photo-zoom {
+                .gallery-photo-link:hover .gallery-photo-zoom,
+                .gallery-photo-link:focus-visible .gallery-photo-zoom {
                     transform: scale(1.05);
                 }
                 @media (prefers-reduced-motion: reduce) {
@@ -325,11 +259,12 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
             ) as HTMLAnchorElement;
             return link;
           },
-          Thumbs: {
-            type: "classic",
-          },
-          Images: {
-            zoom: true,
+          Thumbs: { type: "classic" },
+          Images: { zoom: true },
+          on: {
+            close: () => {
+              (document.activeElement as HTMLElement | null)?.blur();
+            },
           },
         } as any,
       );
@@ -349,24 +284,16 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
   }, [images]);
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-4 pt-16">
-      <h2 className="text-neutral-900 dark:text-neutral-100 tracking-tight mb-8 px-2">
-        F.U.N
+    <LazyMotion features={domAnimation}>
+    <div className="w-full max-w-[1400px] mx-auto px-4">
+      <h2 id="fun-heading" className="mb-8 text-[var(--text-primary)]">
+        Fun
       </h2>
 
-      <div
-        ref={containerRef}
-        className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(0,auto)]"
-      >
-        <CardWrapper
-          key="music-stats"
-          disableHoverMotion
-          className="col-span-2 md:col-span-2 lg:col-span-2 row-span-2 h-full min-h-0 w-full"
-        >
+      <BentoGrid id="fun-grid" containerRef={containerRef}>
+        <BentoCard span="half" disableHoverMotion padded={false}>
           <div className="flex h-full min-h-0 w-full flex-col">
-            <h3 className="mb-3 shrink-0 p-5 pb-0 md:p-6 md:pb-0">
-              Music Stats
-            </h3>
+            <h3 className="mb-3 shrink-0 p-5 pb-0 md:p-6 md:pb-0">Music Stats</h3>
             <div className={FUN_MUSIC_YEARLY_PAIR_BODY}>
               <Suspense fallback={<MusicStatsLoadingShell />}>
                 <ErrorBoundary>
@@ -375,13 +302,9 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
               </Suspense>
             </div>
           </div>
-        </CardWrapper>
+        </BentoCard>
 
-        <CardWrapper
-          key="music-radial"
-          disableHoverMotion
-          className="col-span-2 lg:col-span-2 row-span-2 h-full min-h-0 w-full"
-        >
+        <BentoCard span="half" disableHoverMotion padded={false}>
           <div className="flex h-full min-h-0 w-full flex-col">
             <h3 className="mb-3 shrink-0 p-5 pb-0 md:p-6 md:pb-0">
               Yearly scrobbles (week-wise)
@@ -394,48 +317,39 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
               </Suspense>
             </div>
           </div>
-        </CardWrapper>
+        </BentoCard>
 
-        <CardWrapper
-          key="music-genre-streak"
-          disableHoverMotion
-          className="col-span-2 lg:col-span-4 min-h-0 w-full"
-        >
-          <Suspense
-            fallback={
-              <div className="flex min-h-[120px] w-full items-center justify-center rounded-2xl border border-transparent type-caption text-neutral-400">
-                Loading genre streak…
-              </div>
-            }
-          >
-            <ErrorBoundary>
-              <MusicGenreStreakBar />
-            </ErrorBoundary>
-          </Suspense>
-        </CardWrapper>
+        <BentoCard span="wideShort" disableHoverMotion padded={false}>
+          <div className="flex h-full w-full items-center">
+            <Suspense
+              fallback={
+                <div className="flex min-h-[64px] w-full items-center justify-center rounded-2xl border border-transparent type-caption text-[var(--text-tertiary)]">
+                  Loading genre streak…
+                </div>
+              }
+            >
+              <ErrorBoundary>
+                <MusicGenreStreakBar />
+              </ErrorBoundary>
+            </Suspense>
+          </div>
+        </BentoCard>
 
         <IndiaMapCard
-          className="col-span-1 row-span-1 aspect-[4/3] w-full"
+          className={SPANS.quarter}
           visitedPlaces={VISITED_PLACES}
-          index={2}
         />
 
         {images.slice(0, visibleCount).map((image: Image, i: number) => (
-          <CardWrapper
-            key={image.id}
-            isExpandable={true}
-            disableHoverMotion
-            className="col-span-1 row-span-1"
-          >
+          <div key={image.id} className={cn("h-full w-full", SPANS.quarter)}>
             <a
               href={image.fullSrc || image.src}
-              className="gallery-photo-link group/photo relative block size-full cursor-pointer overflow-hidden rounded-3xl"
-              style={{ aspectRatio: "4/3", display: "block" }}
+              className="gallery-photo-link group/photo relative block h-full w-full cursor-pointer overflow-hidden rounded-[var(--radius-card)] border border-[var(--border-subtle)]"
               data-fancybox="gallery"
               data-caption={image.title}
               aria-label={`View photo: ${image.title}`}
             >
-              <div className="absolute inset-0 z-10 overflow-hidden rounded-3xl">
+              <div className="absolute inset-0 z-10 overflow-hidden">
                 <img
                   src={image.src}
                   width={image.width}
@@ -446,15 +360,13 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                   decoding="async"
                   sizes="(max-width: 1024px) 50vw, 25vw"
                   className={cn(
-                    "gallery-photo-zoom size-full origin-center object-cover",
+                    "gallery-photo-zoom h-full w-full origin-center object-cover",
                     image.placeholderDataUrl?.startsWith("data:")
                       ? "opacity-0"
                       : "opacity-100",
                   )}
                   style={{
-                    backgroundImage: image.placeholderDataUrl?.startsWith(
-                      "data:",
-                    )
+                    backgroundImage: image.placeholderDataUrl?.startsWith("data:")
                       ? `url(${image.placeholderDataUrl})`
                       : undefined,
                     backgroundSize: "cover",
@@ -469,34 +381,31 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                   onError={(e) => {
                     const img = e.currentTarget;
                     img.style.backgroundImage = "";
-                    img.style.backgroundColor = "#171717";
+                    img.style.backgroundColor = "var(--surface-raised)";
                     img.classList.remove("opacity-0");
                     img.classList.add("opacity-100");
                   }}
                 />
               </div>
-              <div className="pointer-events-none absolute inset-0 z-20 flex items-end bg-black/0 p-4 transition-colors duration-300 ease-out group-hover/photo:bg-black/20 motion-reduce:transition-none">
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-end bg-black/0 p-4 transition-colors duration-300 ease-out group-hover/photo:bg-black/30 group-focus-visible/photo:bg-black/30 motion-reduce:transition-none">
                 <p
                   className={cn(
-                    "w-full truncate type-body-sm font-medium !text-white opacity-0 transition-opacity duration-300 drop-shadow-md group-hover/photo:opacity-100",
-                    "motion-reduce:transition-none motion-reduce:group-hover/photo:opacity-100",
+                    "w-full truncate type-body-sm font-medium !text-white opacity-0 transition-opacity duration-300 drop-shadow-md group-hover/photo:opacity-100 group-focus-visible/photo:opacity-100",
+                    "motion-reduce:transition-none",
                   )}
                 >
                   {image.title}
                 </p>
               </div>
             </a>
-          </CardWrapper>
+          </div>
         ))}
         {visibleCount < images.length && (
-          <div
-            ref={sentinelRef}
-            className="col-span-full h-4"
-            aria-hidden="true"
-          />
+          <div ref={sentinelRef} className="col-span-full h-4" aria-hidden="true" />
         )}
-      </div>
+      </BentoGrid>
     </div>
+    </LazyMotion>
   );
 };
 

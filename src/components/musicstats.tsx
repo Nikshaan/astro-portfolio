@@ -7,8 +7,6 @@ import {
   MusicStatsLoadingShell,
 } from "./musicStatsLoadingShell";
 
-export type { GenreEntry } from "../utils/musicStatsClient";
-
 export default memo(function MusicStatsClient() {
   const { data, loading, error } = useMusicStatsLive();
 
@@ -21,7 +19,7 @@ export default memo(function MusicStatsClient() {
       <div
         className={`${MUSIC_STATS_SHELL} shrink-0 items-center justify-center`}
       >
-        <div className="type-body-sm text-red-400">{error}</div>
+        <div className="type-body-sm text-[var(--danger)]">{error}</div>
       </div>
     );
   }
@@ -31,7 +29,7 @@ export default memo(function MusicStatsClient() {
       <div
         className={`${MUSIC_STATS_SHELL} shrink-0 items-center justify-center`}
       >
-        <div className="type-body-sm text-gray-400">No data available</div>
+        <div className="type-body-sm text-[var(--text-tertiary)]">No data available</div>
       </div>
     );
   }
@@ -53,12 +51,12 @@ export default memo(function MusicStatsClient() {
         style={bgStyle}
       >
         <div className="w-full text-center">
-          <p className="type-stats-label mb-3 text-center !text-white [html[data-theme=light]_&]:!text-white">
+          <p className="type-stats-label mb-3 text-center text-white">
             Total music scrobbles
           </p>
           <div className="flex w-full flex-col items-center gap-2 type-body-sm">
             <p>
-              <span className="font-medium !text-white [html[data-theme=light]_&]:!text-white">
+              <span className="font-medium text-white">
                 Play count:
               </span>{" "}
               <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
@@ -66,7 +64,7 @@ export default memo(function MusicStatsClient() {
               </span>
             </p>
             <p>
-              <span className="font-medium !text-white [html[data-theme=light]_&]:!text-white">
+              <span className="font-medium text-white">
                 Track count:
               </span>{" "}
               <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
@@ -74,7 +72,7 @@ export default memo(function MusicStatsClient() {
               </span>
             </p>
             <p>
-              <span className="font-medium !text-white [html[data-theme=light]_&]:!text-white">
+              <span className="font-medium text-white">
                 Artist count:
               </span>{" "}
               <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
@@ -82,7 +80,7 @@ export default memo(function MusicStatsClient() {
               </span>
             </p>
             <p>
-              <span className="font-medium !text-white [html[data-theme=light]_&]:!text-white">
+              <span className="font-medium text-white">
                 Album count:
               </span>{" "}
               <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
@@ -93,7 +91,7 @@ export default memo(function MusicStatsClient() {
         </div>
 
         <div className="w-full text-center">
-          <p className="type-stats-label mb-3 text-center !text-white [html[data-theme=light]_&]:!text-white">
+          <p className="type-stats-label mb-3 text-center text-white">
             Top artists of the week
           </p>
           <div className="type-body-sm">
@@ -104,7 +102,7 @@ export default memo(function MusicStatsClient() {
                   className="flex flex-col sm:flex-row justify-center items-center h-full w-full gap-1 sm:gap-2 mb-2"
                 >
                   <div className="flex gap-2">
-                    <p className="font-medium !text-white [html[data-theme=light]_&]:!text-white">
+                    <p className="font-medium text-white">
                       {artist.name}
                     </p>
                     <p className="!text-white opacity-70 [html[data-theme=light]_&]:!text-white">
@@ -127,7 +125,7 @@ export default memo(function MusicStatsClient() {
       <div className="min-h-0 flex-1" aria-hidden />
 
       <div className="flex h-[180px] w-full shrink-0 flex-col lg:h-[250px]">
-        <p className="type-stats-label mb-3 text-center [html[data-theme=light]_&]:!text-[#2D1B4E]">
+        <p className="type-stats-label mb-3 text-center text-[var(--text-primary)]">
           Daily music scrobbles
         </p>
         <div className="min-h-0 w-full flex-1 select-none">

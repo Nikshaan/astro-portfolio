@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, memo, useCallback } from "react";
 import { m, LazyMotion, domAnimation } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { bentoCardHoverTransition } from "./bentoCardMotion";
 import {
   fetchGithubContributionsData,
   readGithubContributionsCache,
@@ -10,7 +9,6 @@ import {
   type ContributionWeek,
   type GitHubAPIResponse,
 } from "../utils/githubContributionsClient";
-import useIsLightTheme from "../hooks/useTheme";
 import styles from "./githubContributions.module.css";
 
 function cn(...inputs: ClassValue[]) {
@@ -37,7 +35,6 @@ function formatContributionDayLabel(day: ContributionDay): string {
 interface ContributionDayCellProps {
   day: ContributionDay;
   level: number;
-  isLightTheme: boolean;
   onHover: (day: ContributionDay, element: HTMLDivElement) => void;
   onLeave: () => void;
 }
@@ -45,7 +42,6 @@ interface ContributionDayCellProps {
 const ContributionDayCell = memo(function ContributionDayCell({
   day,
   level,
-  isLightTheme,
   onHover,
   onLeave,
 }: ContributionDayCellProps) {
@@ -54,13 +50,9 @@ const ContributionDayCell = memo(function ContributionDayCell({
   return (
     <div
       className={`${styles.day} ${styles[`contributionLevel${level}`]}`}
-      style={
-        isLightTheme ? undefined : { backgroundColor: day.color || "#161b22" }
-      }
       aria-label={label}
       onMouseEnter={(event) => onHover(day, event.currentTarget)}
       onMouseLeave={onLeave}
-      suppressHydrationWarning
     />
   );
 });
@@ -105,7 +97,6 @@ export default memo(function GithubContributions({
 
   const graphRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const isLightTheme = useIsLightTheme();
 
   const positionTooltip = useCallback(
     (day: ContributionDay, element: HTMLDivElement) => {
@@ -113,7 +104,6 @@ export default memo(function GithubContributions({
       if (!tooltip) return;
 
       tooltip.textContent = formatContributionDayLabel(day);
-      tooltip.classList.toggle(styles.dayTooltipLight, isLightTheme);
 
       const rect = element.getBoundingClientRect();
       const x = rect.left + rect.width / 2;
@@ -122,7 +112,7 @@ export default memo(function GithubContributions({
       tooltip.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
       tooltip.dataset.visible = "true";
     },
-    [isLightTheme],
+    [],
   );
 
   const hideTooltip = useCallback(() => {
@@ -209,59 +199,48 @@ export default memo(function GithubContributions({
     };
   }, [initialData]);
 
+  const summaryLabel =
+    totalContributions > 0
+      ? `GitHub contribution graph: ${totalContributions} contributions in the last 12 months`
+      : "GitHub contribution graph";
+
   return (
     <LazyMotion features={domAnimation}>
       <m.div
         data-bento-shell=""
         className={cn(
-          "relative p-6 rounded-3xl border overflow-hidden w-full flex flex-col justify-between group me-card-hover",
-          "bg-[#171717] border-white dark:border-white/20",
-          "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
+          "relative p-5 rounded-[var(--radius-card)] border overflow-hidden h-full w-full flex flex-col justify-between",
+          "bg-[var(--surface-card)] border-[var(--border-subtle)] text-[var(--text-primary)]",
         )}
-        initial={{ opacity: 0, y: 30, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{
-          opacity: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
-          y: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
-          scale: bentoCardHoverTransition,
-          default: bentoCardHoverTransition,
-        }}
-        style={{ transformOrigin: "center center" }}
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] } }}
+        viewport={{ once: true, amount: 0.2, margin: "80px 0px -10% 0px" }}
       >
         {loading ? (
           <HeatmapSkeleton />
         ) : error ? (
           <>
             <div className={styles.header}>
-              <h3
-                className={cn(
-                  "type-panel-title text-neutral-900 dark:text-neutral-100",
-                )}
-              >
-                GitHub Contributions (Last 12 Months)
-              </h3>
+              <h3 className="type-panel-title">GitHub Contributions (Last 12 Months)</h3>
             </div>
-            <p className="type-body-sm text-neutral-400 text-center py-4">
-              {error}
-            </p>
+            <p className="type-body-sm text-[var(--text-tertiary)] text-center py-4">{error}</p>
           </>
         ) : weeks.length > 0 ? (
           <>
             <div className={styles.header}>
-              <h3
-                className={cn(
-                  "type-panel-title text-neutral-900 dark:text-neutral-100",
-                )}
-              >
-                GitHub Contributions (Last 12 Months)
-              </h3>
+              <h3 className="type-panel-title">GitHub Contributions (Last 12 Months)</h3>
               {totalContributions > 0 && (
                 <span className={styles.total}>
                   {totalContributions} contributions in the last year
                 </span>
               )}
             </div>
-            <div className={styles.graph} ref={graphRef}>
+            <div
+              className={styles.graph}
+              ref={graphRef}
+              role="img"
+              aria-label={summaryLabel}
+            >
               {weeks.map((week: ContributionWeek, weekIndex: number) => (
                 <div key={weekIndex} className={styles.week}>
                   {week.contributionDays.map(
@@ -278,7 +257,6 @@ export default memo(function GithubContributions({
                           key={dayIndex}
                           day={day}
                           level={level}
-                          isLightTheme={isLightTheme}
                           onHover={positionTooltip}
                           onLeave={hideTooltip}
                         />
@@ -292,15 +270,9 @@ export default memo(function GithubContributions({
         ) : (
           <>
             <div className={styles.header}>
-              <h3
-                className={cn(
-                  "type-panel-title text-neutral-900 dark:text-neutral-100",
-                )}
-              >
-                GitHub Contributions (Last 12 Months)
-              </h3>
+              <h3 className="type-panel-title">GitHub Contributions (Last 12 Months)</h3>
             </div>
-            <p className="type-body-sm text-neutral-400 text-center py-4">
+            <p className="type-body-sm text-[var(--text-tertiary)] text-center py-4">
               No contribution data available
             </p>
           </>

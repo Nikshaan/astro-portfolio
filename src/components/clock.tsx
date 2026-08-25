@@ -1,6 +1,10 @@
 import { useEffect, useState, memo } from "react";
 
-const Clock = memo(function Clock() {
+interface ClockProps {
+  inline?: boolean;
+}
+
+const Clock = memo(function Clock({ inline = false }: ClockProps) {
   const [currentTime, setCurrentTime] = useState<string>("");
   const [isMounted, setIsMounted] = useState(false);
 
@@ -24,24 +28,23 @@ const Clock = memo(function Clock() {
     return () => clearInterval(timer);
   }, []);
 
-  if (!isMounted) {
+  const text = isMounted ? currentTime : "Loading...";
+
+  if (inline) {
     return (
-      <div className="font-light text-center my-1">
-        <p className="text-nowrap type-body-sm" style={{ color: "white" }}>
-          Loading...
-        </p>
-      </div>
+      <span className="text-nowrap font-light" suppressHydrationWarning>
+        {text}
+      </span>
     );
   }
 
   return (
     <div className="font-light text-center my-1">
       <p
-        className="text-nowrap type-body-sm"
-        style={{ color: "white" }}
+        className="text-nowrap type-body-sm text-[var(--text-secondary)]"
         suppressHydrationWarning={true}
       >
-        {currentTime}
+        {text}
       </p>
     </div>
   );

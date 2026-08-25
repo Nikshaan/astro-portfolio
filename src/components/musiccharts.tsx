@@ -35,17 +35,17 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
   if (!data || data.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <div className="text-gray-400 type-body-sm">Chart data loading...</div>
+        <div className="text-[var(--text-tertiary)] type-body-sm">Chart data loading...</div>
       </div>
     );
   }
 
-  const strokeColor = isLightTheme ? "#7C5CBF" : "#ac46fd";
+  const strokeColor = isLightTheme ? "#6D4AFF" : "#A78BFA";
   const fillColor = isLightTheme
-    ? "rgba(196, 176, 224, 0.6)"
-    : "rgba(87, 19, 136, 0.6)";
-  const gridColor = isLightTheme ? "#D8CEE8" : "#374151";
-  const textColor = isLightTheme ? "#2D1B4E" : "#ffffff";
+    ? "rgba(109, 74, 255, 0.14)"
+    : "rgba(167, 139, 250, 0.16)";
+  const gridColor = isLightTheme ? "#E7E5E4" : "#262626";
+  const textColor = isLightTheme ? "#57534E" : "#A3A3A3";
 
   const chartData = useMemo(
     () => ({

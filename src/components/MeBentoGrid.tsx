@@ -1,31 +1,14 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  memo,
-  useRef,
-  useSyncExternalStore,
-} from "react";
-import {
-  m,
-  motion,
-  AnimatePresence,
-  LazyMotion,
-  domAnimation,
-} from "framer-motion";
-import { X, Maximize2, MapPin, Github } from "lucide-react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { LazyMotion, domAnimation } from "framer-motion";
+import { Github, MapPin, FileText } from "lucide-react";
 import cardsData from "../data/cardsdata.json";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 import Clock from "./clock";
-import {
-  bentoCardHoverTransition,
-  getBentoCardHoverMotion,
-  getBentoCardTapMotion,
-} from "./bentoCardMotion";
+import BentoGrid from "./bento/BentoGrid";
+import BentoCard from "./bento/BentoCard";
+import BentoModal from "./bento/Modal";
+import GithubContributions from "./githubContributions";
+import { SPANS } from "./bento/spans";
 import beeImage from "../data/bee.avif";
-import nikshaanBg from "../data/NIKSHAAN.avif";
 import collegeLogo from "../data/djsce-logo.avif";
 import aryaLogo from "../data/arya.avif";
 import codeAIlogo from "../data/codeai.avif";
@@ -49,27 +32,7 @@ const defaultImages: Record<string, any> = {
   mentoriaLogo: mentoriaLogo,
   gssocLogo: gssocLogo,
   winIcon: winIcon,
-  locationBg: { src: nikshaanBg.src, attributes: {} },
 };
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-const mobileQuery =
-  typeof window !== "undefined"
-    ? window.matchMedia("(max-width: 1024px)")
-    : null;
-function useIsMobile() {
-  return useSyncExternalStore(
-    (cb) => {
-      mobileQuery?.addEventListener("change", cb);
-      return () => mobileQuery?.removeEventListener("change", cb);
-    },
-    () => mobileQuery?.matches ?? false,
-    () => false,
-  );
-}
 
 const content_cache = new Map<string, string>();
 
@@ -77,407 +40,36 @@ const getProcessedContent = (content: string) => {
   if (content_cache.has(content)) {
     return content_cache.get(content) || content;
   }
-
-  let processed = content
+  const processed = content
     .replace("{{CERTIFICATE_IMAGE}}", certificateImg.src)
     .replace("{{LOR_IMAGE}}", lorImg.src)
     .replace("{{BADGE_IMAGE}}", badgeImg.src);
-
   content_cache.set(content, processed);
   return processed;
 };
 
-const renderCardContent = (card: any, images: Record<string, any>) => {
-  switch (card.type) {
-    case "intro":
-      return (
-        <div className="flex flex-col-reverse md:flex-row h-full justify-between gap-6 xl:gap-8 items-center md:items-stretch">
-          <div className="flex flex-col gap-2 w-full md:flex-1 h-full justify-between type-body text-center md:text-left">
-            <div className="font-light text-pretty">
-              <p dangerouslySetInnerHTML={{ __html: card.data.text }} />
-              <p className="my-2">My interest lies in:</p>
-              <ul className="list-disc list-inside text-left inline-block min-[440px]:grid min-[440px]:grid-cols-2 min-[440px]:gap-x-4 min-[440px]:w-fit min-[440px]:mx-auto md:block md:w-full md:mx-0">
-                {card.data.interests.map((interest: string, i: number) => (
-                  <li className="text-left" key={i}>
-                    {interest}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          <div className="flex justify-center items-center w-full md:w-auto h-full lg:self-center">
-            <div className="intro-card-image relative w-[160px] sm:w-[180px] md:w-[220px] lg:w-[200px] xl:w-[240px] 2xl:w-[260px] aspect-square flex-shrink-0">
-              <img
-                src={images[card.data.image].src}
-                srcSet={
-                  images[card.data.image].srcSet?.attribute ||
-                  images[card.data.image].attributes?.srcset
-                }
-                sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 220px, (max-width: 1280px) 200px, 260px"
-                width={images[card.data.image].attributes?.width || 400}
-                height={images[card.data.image].attributes?.height || 400}
-                alt="profile"
-                loading={card.type === "intro" ? "eager" : "lazy"}
-                fetchPriority={card.type === "intro" ? "high" : "auto"}
-                decoding="async"
-                className="absolute inset-0 w-full h-full object-cover border rounded-full select-none profile-image-border border-white dark:border-white/20 flex items-center justify-center text-center"
-                style={{
-                  backgroundColor: "#171717",
-                  aspectRatio: "1/1",
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      );
-    case "education":
-      return (
-        <div className="flex flex-col md:flex-row h-full items-center justify-center md:justify-between gap-4 text-center md:text-right">
-          <div className="w-full md:w-[20%] flex justify-center items-center">
-            <img
-              src={images[card.data.image].src}
-              srcSet={
-                images[card.data.image].srcSet?.attribute ||
-                images[card.data.image].attributes?.srcset
-              }
-              sizes="180px"
-              width={images[card.data.image].width}
-              height={images[card.data.image].height}
-              alt="logo"
-              loading="lazy"
-              decoding="async"
-              className="select-none transition-all transform duration-200 w-[120px] md:w-[180px] h-auto object-contain flex items-center justify-center text-center"
-            />
-          </div>
-          <div className="font-light w-full md:w-[80%] type-body">
-            <p className="font-bold">{card.data.school}</p>
-            <p
-              className="font-light type-body-sm"
-              dangerouslySetInnerHTML={{ __html: card.data.degree }}
-            />
-            <p className="font-light type-body-sm">{card.data.date}</p>
-          </div>
-        </div>
-      );
-    case "extracurr":
-      return (
-        <div className="flex flex-col justify-center lg:justify-between gap-4 lg:gap-0 h-full type-body">
-          {card.data.items.map((item: any, i: number) => (
-            <div key={i} className="flex">
-              <div className="w-[20%] flex justify-center items-center">
-                <img
-                  src={images[item.image].src}
-                  srcSet={
-                    images[item.image].srcSet?.attribute ||
-                    images[item.image].attributes?.srcset
-                  }
-                  sizes="90px"
-                  width={images[item.image].width}
-                  height={images[item.image].height}
-                  alt="logo"
-                  loading="lazy"
-                  decoding="async"
-                  className="select-none transition-all transform duration-200 w-[60px] md:w-[90px] flex items-center justify-center text-center"
-                />
-              </div>
-              <div className="w-[80%] flex flex-col items-end text-right my-2">
-                <p className="font-bold">{item.title}</p>
-                <p className="font-light type-body-sm">{item.subtitle}</p>
-                <p className="font-light type-body-sm">{item.role}</p>
-                <p className="font-light type-body-sm">{item.date}</p>
-              </div>
-            </div>
-          ))}
-
-          {card.data.certification && (
-            <div className="text-right mt-4">
-              <p className="mb-1 font-bold text-left">certification</p>
-              <p className="font-light text-left">
-                <span className="font-medium">
-                  {card.data.certification.title}
-                </span>{" "}
-                - {card.data.certification.issuer}
-              </p>
-            </div>
-          )}
-        </div>
-      );
-    case "location": {
-      const bgSrc = images.locationBg?.src;
-      const bgSrcset = images.locationBg?.attributes?.srcset;
-      const bgImageStyle = bgSrcset
-        ? `image-set(${bgSrcset
-            .split(",")
-            .map((s: string) => {
-              const parts = s.trim().split(/\s+/);
-              return `url('${parts[0]}') ${parts[1] || ""}`;
-            })
-            .join(", ")})`
-        : bgSrc
-          ? `url('${bgSrc}')`
-          : undefined;
-      return (
-        <div
-          className="relative flex flex-col min-[425px]:flex-row lg:flex-col min-[1150px]:!flex-row justify-center items-center w-full h-full gap-4 type-body"
-          style={{ color: "white" }}
-        >
-          <div className="absolute -inset-5 rounded-3xl overflow-hidden pointer-events-none">
-            {bgImageStyle && (
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: bgImageStyle,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              />
-            )}
-            <div className="absolute inset-0 bg-black/55" />
-          </div>
-          <div className="relative z-[2] flex flex-col justify-center items-center w-full min-[425px]:flex-1 lg:w-full min-[1150px]:flex-1 gap-1 md:gap-2">
-            <div className="flex justify-center items-center gap-1 md:gap-2">
-              <MapPin
-                className="w-5 h-5 mb-1 lg:w-6 lg:h-6"
-                style={{ color: "white" }}
-              />
-              <p
-                className="font-bold text-center text-nowrap"
-                style={{ color: "white" }}
-              >
-                Mumbai, India
-              </p>
-            </div>
-            <div
-              className="flex justify-center items-center w-full md:w-auto mt-1 md:mt-0"
-              style={{ color: "white" }}
-            >
-              <Clock />
-            </div>
-          </div>
-          <div className="relative z-[2] flex justify-center items-center gap-2.5 w-full min-[425px]:flex-1 lg:w-full min-[1150px]:flex-1 h-full overflow-visible">
-            <a
-              href={card.data.links.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Visit Nikshaan's GitHub profile"
-              data-title="GitHub"
-              className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-neutral-700/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0 [html[data-theme=light]_&]:!bg-white/90"
-            >
-              <Github
-                className="w-5 h-5 md:w-6 md:h-6 text-white [html[data-theme=light]_&]:text-black"
-                strokeWidth={1.75}
-              />
-            </a>
-            <a
-              href={card.data.links.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Connect with Nikshaan on LinkedIn"
-              data-title="LinkedIn"
-              className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-neutral-700/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0 [html[data-theme=light]_&]:!bg-white/90"
-            >
-              <img
-                src={linkedinColor.src}
-                alt=""
-                aria-hidden="true"
-                className="w-5 h-5 md:w-6 md:h-6"
-              />
-            </a>
-            <a
-              href={card.data.links.email}
-              aria-label="Send an email to Nikshaan"
-              data-title="Email"
-              className="tooltip-trigger flex items-center justify-center p-1.5 md:p-2 rounded-full !bg-neutral-700/90 backdrop-blur-md shadow-md hover:scale-110 active:scale-95 transition-transform duration-150 shrink-0 [html[data-theme=light]_&]:!bg-white/90"
-            >
-              <img
-                src={gmailColor.src}
-                alt=""
-                aria-hidden="true"
-                className="w-5 h-5 md:w-6 md:h-6"
-              />
-            </a>
-          </div>
-        </div>
-      );
-    }
-    case "win":
-      return (
-        <img
-          src={images[card.data.image].src}
-          srcSet={
-            images[card.data.image].srcSet?.attribute ||
-            images[card.data.image].attributes?.srcset
-          }
-          sizes="100px"
-          width={images[card.data.image].width}
-          height={images[card.data.image].height}
-          alt="win"
-          loading="lazy"
-          decoding="async"
-          className="select-none w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[100px] md:h-[100px] lg:w-[100px] lg:h-[100px] object-contain flex items-center justify-center text-center"
-        />
-      );
-    case "experience":
-      return (
-        <div className="flex flex-col gap-4 type-body">
-          {card.data.items.map((item: any, i: number) => (
-            <div key={i} className="flex">
-              <div className="w-[20%] flex justify-center items-center">
-                <img
-                  src={images[item.image].src}
-                  srcSet={
-                    images[item.image].srcSet?.attribute ||
-                    images[item.image].attributes?.srcset
-                  }
-                  sizes="70px"
-                  width={images[item.image].width}
-                  height={images[item.image].height}
-                  alt="logo"
-                  loading="lazy"
-                  decoding="async"
-                  className="select-none transition-all transform duration-200 rounded-full w-[50px] md:w-[70px] flex items-center justify-center text-center"
-                />
-              </div>
-              <div className="w-[80%] flex flex-col items-end text-right my-1">
-                <p className="font-bold">{item.title}</p>
-                <p className="type-body-sm">{item.company}</p>
-                <p className="font-light type-body-sm">{item.date}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      );
-    case "resume":
-      return (
-        <div className="flex justify-center items-center h-full w-full">
-          <p className="type-decorative-word uppercase tracking-widest text-neutral-400 dark:text-neutral-300 [writing-mode:vertical-lr] rotate-180 max-lg:rotate-0 max-lg:[writing-mode:horizontal-tb]">
-            resume
-          </p>
-        </div>
-      );
-
-    default:
-      return null;
-  }
-};
-
-interface CardWrapperProps {
-  card: any;
+function CardImage({
+  image,
+  alt,
+  className,
+}: {
+  image: any;
+  alt: string;
   className?: string;
-  index?: number;
-  selectedId: string | null;
-  setSelectedId: (id: string | null) => void;
-  images: Record<string, any>;
+}) {
+  return (
+    <img
+      src={image.src}
+      srcSet={image.srcSet?.attribute || image.attributes?.srcset}
+      width={image.attributes?.width}
+      height={image.attributes?.height}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      className={className}
+    />
+  );
 }
-
-const CardWrapper: React.FC<CardWrapperProps> = memo(
-  ({ card, className, index = 0, selectedId, setSelectedId, images }) => {
-    const isMobile = useIsMobile();
-    const shouldAnimate = selectedId === null || selectedId === card.id;
-    const isResume = card.id === "resume";
-
-    const handleClick = useCallback(() => {
-      if (isResume) {
-        window.open(card?.data?.link, "_blank");
-      } else if (card?.isExpandable) {
-        setSelectedId(card?.id);
-      }
-    }, [
-      isResume,
-      card?.data?.link,
-      card?.isExpandable,
-      card?.id,
-      setSelectedId,
-    ]);
-
-    const desktopDelay = 0;
-    const isExpandableCard = card.isExpandable;
-    const isHoverable = isExpandableCard && !selectedId;
-    const isCompactCard = card.id === "win";
-    const usesMotionBorder = isExpandableCard || isResume;
-
-    return (
-      <m.div
-        className={cn("h-full w-full", className)}
-        initial={{ opacity: 0, y: 30, scale: 0.98 }}
-        whileInView={{
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          transition: {
-            duration: isMobile ? 0.3 : 0.5,
-            ease: [0.25, 0.1, 0.25, 1],
-            delay: isMobile ? 0 : desktopDelay,
-          },
-        }}
-        viewport={{
-          once: true,
-          amount: "some",
-          margin: "80px 0px 320px 0px",
-        }}
-      >
-        <motion.div
-          layoutId={shouldAnimate ? `card-${card.id}` : undefined}
-          onClick={handleClick}
-          data-card-id={card.id}
-          data-bento-shell={usesMotionBorder ? "" : undefined}
-          data-bento-frozen={selectedId === card.id ? "" : undefined}
-          className={cn(
-            "relative h-full rounded-3xl border overflow-hidden me-card-hover group",
-            card.id === "win" ? "w-fit" : "w-full",
-            "bg-[#171717]",
-            usesMotionBorder ? "" : "border-white dark:border-white/20",
-            "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
-            card.id === "intro" || card.id === "win" || card.id === "resume"
-              ? "overflow-hidden"
-              : "overflow-visible",
-            (isExpandableCard || isResume) && !selectedId
-              ? "cursor-pointer"
-              : "",
-            card.id === "resume"
-              ? "min-h-[100px] lg:min-h-[150px]"
-              : "min-h-[150px]",
-          )}
-          whileHover={
-            isHoverable
-              ? getBentoCardHoverMotion({ compact: isCompactCard })
-              : undefined
-          }
-          whileTap={
-            isHoverable
-              ? getBentoCardTapMotion({ compact: isCompactCard })
-              : undefined
-          }
-          transition={isHoverable ? bentoCardHoverTransition : undefined}
-          style={isHoverable ? { transformOrigin: "center center" } : undefined}
-        >
-          <div
-            className={cn(
-              "relative flex flex-col h-full w-full",
-              card.id === "win"
-                ? "justify-center items-center w-fit"
-                : isResume
-                  ? "justify-center items-center"
-                  : "p-5 justify-between",
-            )}
-          >
-            {renderCardContent(card, images)}
-            {isExpandableCard && (
-              <div
-                className={cn(
-                  "absolute bottom-4 right-4 transition-opacity duration-300",
-                  !selectedId ? "opacity-100" : "opacity-0",
-                )}
-              >
-                <Maximize2 size={16} className="text-neutral-400" />
-              </div>
-            )}
-          </div>
-        </motion.div>
-      </m.div>
-    );
-  },
-);
 
 interface MeBentoGridProps {
   optimizedImages?: Record<string, any>;
@@ -485,15 +77,8 @@ interface MeBentoGridProps {
 
 const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const images = useMemo(
-    () => optimizedImages || defaultImages,
-    [optimizedImages],
-  );
-
-  const selectedItem = useMemo(
-    () => cardsData.find((item) => item.id === selectedId),
-    [selectedId],
-  );
+  const images = useMemo(() => optimizedImages || defaultImages, [optimizedImages]);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const {
     introCard,
@@ -502,8 +87,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
     locationCard,
     winCard,
     experienceCard,
-    resumeCard,
-  } = useMemo(
+  }: Record<string, any> = useMemo(
     () => ({
       introCard: cardsData.find((c) => c.id === "intro"),
       extracurrCard: cardsData.find((c) => c.id === "extracurr"),
@@ -511,227 +95,269 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
       locationCard: cardsData.find((c) => c.id === "location"),
       winCard: cardsData.find((c) => c.id === "win"),
       experienceCard: cardsData.find((c) => c.id === "experience"),
-      resumeCard: cardsData.find((c) => c.id === "resume"),
     }),
     [],
   );
 
+  const selectedItem: any = useMemo(
+    () => cardsData.find((item) => item.id === selectedId),
+    [selectedId],
+  );
+
   const handleClose = useCallback(() => setSelectedId(null), []);
 
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let localLenis: any;
-    let rafId: number;
-    let resizeObserver: ResizeObserver | null = null;
-
-    const initLocalLenis = async () => {
-      if (selectedId && wrapperRef.current) {
-        const Lenis = (await import("lenis")).default;
-        localLenis = new Lenis({
-          wrapper: wrapperRef.current,
-          duration: 1.2,
-          easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-          gestureOrientation: "vertical",
-          smoothWheel: true,
-          wheelMultiplier: 1,
-          touchMultiplier: 2,
-          infinite: false,
-        });
-
-        const raf = (time: number) => {
-          localLenis.raf(time);
-          rafId = requestAnimationFrame(raf);
-        };
-        rafId = requestAnimationFrame(raf);
-
-        const contentNode = wrapperRef.current.firstElementChild;
-        if (contentNode) {
-          resizeObserver = new ResizeObserver(() => {
-            localLenis.resize();
-          });
-          resizeObserver.observe(contentNode);
-        }
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.key === "Escape" ||
-        event.code === "Escape" ||
-        event.keyCode === 27
-      ) {
-        setSelectedId(null);
-      }
-    };
-
-    if (selectedId) {
-      document.documentElement.style.setProperty(
-        "--scrollbar-width",
-        `${window.innerWidth - document.documentElement.clientWidth}px`,
-      );
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = "var(--scrollbar-width, 0px)";
-      window.addEventListener("keydown", handleKeyDown);
-      if ((window as any).lenis) (window as any).lenis.stop();
-      initLocalLenis();
-    } else {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-      if ((window as any).lenis) (window as any).lenis.start();
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-      window.removeEventListener("keydown", handleKeyDown);
-      if ((window as any).lenis) (window as any).lenis.start();
-      if (localLenis) localLenis.destroy();
-      if (rafId) cancelAnimationFrame(rafId);
-      if (resizeObserver) resizeObserver.disconnect();
-    };
-  }, [selectedId]);
+  if (!introCard) return null;
 
   return (
     <LazyMotion features={domAnimation}>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full auto-rows-[minmax(150px,auto)]">
-        {introCard && (
-          <CardWrapper
-            card={introCard}
-            index={0}
-            className="col-span-2 lg:col-span-2 lg:row-span-2 min-h-[300px]"
-            selectedId={selectedId}
-            setSelectedId={setSelectedId}
-            images={images}
-          />
-        )}
-        {educationCard && (
-          <CardWrapper
-            card={educationCard}
-            index={1}
-            className="col-span-2 lg:col-span-2 lg:row-span-1 min-h-[150px]"
-            selectedId={selectedId}
-            setSelectedId={setSelectedId}
-            images={images}
-          />
-        )}
-        <div className="col-span-2 lg:col-span-2 flex gap-4 w-full">
-          {locationCard && (
-            <CardWrapper
-              card={locationCard}
-              index={2}
-              className="flex-1 w-auto min-w-0"
-              selectedId={selectedId}
-              setSelectedId={setSelectedId}
-              images={images}
-            />
-          )}
-          {winCard && (
-            <CardWrapper
-              card={winCard}
-              index={3}
-              className="w-fit shrink-0"
-              selectedId={selectedId}
-              setSelectedId={setSelectedId}
-              images={images}
-            />
-          )}
-        </div>
-
-        <div className="col-span-2 lg:col-span-4 flex flex-col lg:flex-row gap-4 w-full h-auto">
-          {resumeCard && (
-            <div className="block h-full w-full lg:w-fit col-span-2 lg:col-span-1">
-              <CardWrapper
-                card={resumeCard}
-                index={4}
-                className="h-[100px] lg:h-full w-full lg:w-[100px]"
-                selectedId={selectedId}
-                setSelectedId={setSelectedId}
-                images={images}
-              />
+      <BentoGrid id="me-grid">
+        <BentoCard span="hero" eager>
+          <div className="flex flex-col-reverse md:flex-row h-full justify-between gap-6 xl:gap-8 items-center md:items-stretch">
+            <div className="flex flex-col gap-4 w-full md:flex-1 h-full justify-center type-body text-center md:text-left">
+              <div>
+                <p
+                  className="text-pretty"
+                  dangerouslySetInnerHTML={{ __html: introCard.data.text }}
+                />
+                <p className="type-lead font-medium text-[var(--accent)] mt-1">
+                  AI/ML engineer &amp; software developer
+                </p>
+              </div>
+              <div className="h-px w-full bg-[var(--border-subtle)]" />
+              <div>
+                <p className="mb-3 text-[var(--text-secondary)]">My interest lies in:</p>
+                <ul className="flex flex-wrap justify-center md:justify-start gap-2">
+                  {introCard.data.interests?.map((interest: string, i: number) => (
+                    <li
+                      key={i}
+                      className="px-3 py-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-raised)] type-body-sm text-[var(--text-secondary)]"
+                    >
+                      {interest}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          )}
-          <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 w-full">
-            {extracurrCard && (
-              <CardWrapper
-                card={extracurrCard}
-                index={5}
-                className="col-span-2 lg:col-span-1 lg:row-span-2 h-auto"
-                selectedId={selectedId}
-                setSelectedId={setSelectedId}
-                images={images}
-              />
-            )}
-            {experienceCard && (
-              <CardWrapper
-                card={experienceCard}
-                index={6}
-                className="col-span-2 lg:col-span-1 lg:row-span-2 h-auto"
-                selectedId={selectedId}
-                setSelectedId={setSelectedId}
-                images={images}
-              />
-            )}
+            <div className="flex justify-center items-center w-full md:w-auto h-full lg:self-center">
+              <div className="intro-card-image relative w-[140px] sm:w-[160px] md:w-[180px] lg:w-[160px] xl:w-[190px] 2xl:w-[210px] aspect-square flex-shrink-0">
+                <img
+                  src={images[introCard.data.image].src}
+                  srcSet={
+                    images[introCard.data.image].srcSet?.attribute ||
+                    images[introCard.data.image].attributes?.srcset
+                  }
+                  sizes="(max-width: 640px) 140px, (max-width: 1024px) 180px, 210px"
+                  width={images[introCard.data.image].attributes?.width || 400}
+                  height={images[introCard.data.image].attributes?.height || 400}
+                  alt="Nikshaan's profile avatar"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover border rounded-full select-none profile-image-border border-[var(--border-strong)]"
+                  style={{ backgroundColor: "var(--surface-raised)" }}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </BentoCard>
 
-      <AnimatePresence>
-        {selectedId && selectedItem && (
-          <m.div
-            key="modal-overlay"
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
+        {educationCard && (
+          <BentoCard span="eduRight">
+            <div className="flex flex-col md:flex-row h-full items-center justify-center md:justify-start gap-4 text-center md:text-left">
+              <div className="w-full md:w-[22%] flex justify-center items-center">
+                <CardImage
+                  image={images[educationCard.data.image]}
+                  alt="Dwarkadas J. Sanghvi College of Engineering logo"
+                  className="select-none w-[70px] h-[70px] sm:w-[90px] sm:h-[90px] object-contain"
+                />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold">{educationCard.data.school}</p>
+                <p
+                  className="type-body-sm text-[var(--text-secondary)] mt-1"
+                  dangerouslySetInnerHTML={{ __html: educationCard.data.degree }}
+                />
+                <p className="type-caption text-[var(--text-tertiary)] mt-1">
+                  {educationCard.data.date}
+                </p>
+              </div>
+            </div>
+          </BentoCard>
+        )}
+
+        <BentoCard span="quarter" href="/Nikshaan_Shetty_resume.pdf" target="_blank" rel="noopener noreferrer">
+          <div className="flex flex-col h-full items-center justify-center gap-2 text-center">
+            <FileText size={44} strokeWidth={1.5} className="text-[var(--text-secondary)]" aria-hidden="true" />
+            <div>
+              <p className="font-bold">Resume</p>
+              <p className="type-caption text-[var(--text-tertiary)]">PDF · opens in a new tab</p>
+            </div>
+          </div>
+        </BentoCard>
+
+        {winCard && (
+          <BentoCard
+            span="winTile"
+            expandable
+            onActivate={() => setSelectedId("win")}
+            selected={selectedId === "win"}
+            layoutId="card-win"
+            aria-label="View hackathon wins"
           >
-            <m.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={handleClose}
-              className="absolute inset-0 bg-black/60 backdrop-blur-md"
-            />
+            <div className="flex flex-col h-full items-center justify-center gap-2 text-center">
+              <CardImage
+                image={images.winIcon}
+                alt=""
+                className="select-none w-[52px] h-[52px] sm:w-[64px] sm:h-[64px] object-contain"
+              />
+              <span className="type-caption text-[var(--text-tertiary)]">
+                Hackathon wins
+              </span>
+            </div>
+          </BentoCard>
+        )}
 
-            <motion.div
-              layoutId={`card-${selectedId}`}
-              data-bento-shell=""
-              data-bento-frozen=""
-              className={cn(
-                "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col mt-12 me-card-hover",
-                "bg-[#171717]",
-                "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
-              )}
-            >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleClose();
-                }}
-                aria-label="Close details"
-                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-20 cursor-pointer"
-              >
-                <X size={20} aria-hidden="true" />
-              </button>
-
-              <div
-                ref={wrapperRef}
-                className="flex-1 overflow-y-auto p-8 custom-scrollbar min-h-0"
-              >
-                <div
-                  className={cn(
-                    "prose prose-invert prose-lg max-w-none",
-                    selectedItem.id === "win" && "prose-content-compact",
-                  )}
-                >
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: getProcessedContent(selectedItem.content || ""),
-                    }}
+        {experienceCard && (
+          <BentoCard
+            span="third"
+            expandable
+            onActivate={() => setSelectedId("experience")}
+            selected={selectedId === "experience"}
+            layoutId="card-experience"
+            aria-label="View full experience details"
+          >
+            <p className="font-bold mb-3">Experience</p>
+            <div className="flex flex-col gap-3 flex-1 justify-center">
+              {experienceCard.data.items?.map((item: any, i: number) => (
+                <div key={i} className="flex items-center gap-3">
+                  <CardImage
+                    image={images[item.image]}
+                    alt=""
+                    className="w-8 h-8 rounded-full object-contain shrink-0 bg-[var(--surface-raised)]"
                   />
+                  <div className="min-w-0">
+                    <p className="type-body-sm font-medium truncate">{item.title}</p>
+                    <p className="type-caption text-[var(--text-tertiary)] truncate">
+                      {item.company} · {item.date}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </BentoCard>
+        )}
+
+        {extracurrCard && (
+          <BentoCard span="third">
+            <p className="font-bold mb-3">{extracurrCard.data.title}</p>
+            <div className="flex flex-col gap-3 flex-1 justify-center">
+              {extracurrCard.data.items?.map((item: any, i: number) => (
+                <div key={i} className="flex items-center gap-3">
+                  <CardImage
+                    image={images[item.image]}
+                    alt=""
+                    className="w-8 h-8 rounded-md object-contain shrink-0 bg-[var(--surface-raised)]"
+                  />
+                  <div className="min-w-0">
+                    <p className="type-body-sm font-medium truncate">{item.title}</p>
+                    <p className="type-caption text-[var(--text-tertiary)] truncate">
+                      {item.role} · {item.date}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="type-caption text-[var(--text-tertiary)] mt-3 pt-3 border-t border-[var(--border-subtle)]">
+              Certification: {extracurrCard.data.certification?.title} —{" "}
+              {extracurrCard.data.certification?.issuer}
+            </p>
+          </BentoCard>
+        )}
+
+        {locationCard && (
+          <BentoCard span="third">
+            <p className="font-bold mb-3">{locationCard.data.title || "Contact"}</p>
+            <div className="flex flex-col gap-3 flex-1 justify-center">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--surface-raised)]">
+                  <MapPin size={16} aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <p className="type-body-sm font-medium truncate">{locationCard.data.location}</p>
+                  <p className="type-caption text-[var(--text-tertiary)]">
+                    Local time: <Clock inline />
+                  </p>
                 </div>
               </div>
-            </motion.div>
-          </m.div>
+              <a
+                href={locationCard.data.links.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 group/link"
+              >
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--surface-raised)] group-hover/link:text-[var(--accent)] transition-colors">
+                  <Github size={16} aria-hidden="true" />
+                </div>
+                <p className="type-body-sm font-medium truncate group-hover/link:text-[var(--accent)] transition-colors">
+                  github.com/Nikshaan
+                </p>
+              </a>
+              <a
+                href={locationCard.data.links.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 group/link"
+              >
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--surface-raised)]">
+                  <img src={linkedinColor.src} alt="" className="w-4 h-4" />
+                </div>
+                <p className="type-body-sm font-medium truncate group-hover/link:text-[var(--accent)] transition-colors">
+                  linkedin.com/in/nikshaan-shetty
+                </p>
+              </a>
+              <a
+                href={locationCard.data.links.email}
+                className="flex items-center gap-3 group/link"
+              >
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--surface-raised)]">
+                  <img src={gmailColor.src} alt="" className="w-4 h-4" />
+                </div>
+                <p className="type-body-sm font-medium truncate group-hover/link:text-[var(--accent)] transition-colors">
+                  nikshaanshetty06@gmail.com
+                </p>
+              </a>
+            </div>
+          </BentoCard>
         )}
-      </AnimatePresence>
+
+        <div className={`h-full w-full ${SPANS.wide}`}>
+          <GithubContributions />
+        </div>
+      </BentoGrid>
+
+      <BentoModal
+        open={!!selectedId && !!selectedItem}
+        onClose={handleClose}
+        layoutId={selectedId ? `card-${selectedId}` : undefined}
+        titleId="me-modal-title"
+        closeLabel="Close details"
+        contentRef={wrapperRef}
+      >
+        {selectedItem && (
+          <div className="flex flex-col gap-6">
+            <h2 id="me-modal-title" className="pr-12">
+              {selectedItem.id === "win" ? "Hackathon wins" : "Experience"}
+            </h2>
+            <div className="prose max-w-none">
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: getProcessedContent(selectedItem.content || ""),
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </BentoModal>
     </LazyMotion>
   );
 };

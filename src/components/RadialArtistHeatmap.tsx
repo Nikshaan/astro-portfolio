@@ -44,16 +44,16 @@ const CHART_ROTATE_TRANSFORM = `rotate(${ROTATE_NEWEST_WEEK_TO_TOP_DEG} ${CX} ${
 const CHART_TEXT_UPRIGHT_DEG = -ROTATE_NEWEST_WEEK_TO_TOP_DEG;
 
 const ARTIST_PALETTE = [
-  "#D64045",
-  "#E07830",
-  "#C49A15",
-  "#72B03C",
-  "#1FA868",
-  "#18A0B8",
-  "#3878CC",
-  "#6858D0",
-  "#A848C0",
-  "#D04478",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+  "var(--chart-7)",
+  "var(--chart-8)",
+  "var(--chart-9)",
+  "var(--chart-10)",
 ];
 
 function annularPath(
@@ -754,10 +754,7 @@ export default memo(function RadialArtistHeatmap() {
           {showSkeleton ? <YearlyScrobblesChartSkeletonInner /> : null}
           {showEmpty ? (
             <div
-              className={cn(
-                "flex h-full w-full items-center justify-center px-3 text-center type-body-sm",
-                isLightTheme ? "text-slate-600" : "text-neutral-400",
-              )}
+              className="flex h-full w-full items-center justify-center px-3 text-center type-body-sm text-[var(--text-tertiary)]"
             >
               Not enough weekly listening history yet.
             </div>
@@ -797,15 +794,12 @@ export default memo(function RadialArtistHeatmap() {
                         transform={`rotate(${CHART_TEXT_UPRIGHT_DEG} ${x} ${y})`}
                         textAnchor="middle"
                         dominantBaseline="central"
-                        className={cn(
-                          "pointer-events-none font-semibold",
-                          isLightTheme ? "fill-[#0a0f1a]" : "fill-neutral-200",
-                        )}
+                        className="pointer-events-none font-semibold fill-[var(--text-primary)]"
                         style={{
                           fontSize: 12,
                           paintOrder: "stroke fill",
-                          stroke: isLightTheme ? "#eff6ff" : "rgba(0,0,0,0.55)",
-                          strokeWidth: isLightTheme ? 1.35 : 0.9,
+                          stroke: "var(--surface-card)",
+                          strokeWidth: 1.1,
                           strokeLinejoin: "round",
                         }}
                       >
@@ -817,12 +811,7 @@ export default memo(function RadialArtistHeatmap() {
                     r={innermostInnerR() - 10}
                     cx={CX}
                     cy={CY}
-                    className={cn(
-                      "pointer-events-none",
-                      isLightTheme
-                        ? "fill-[#EDE7F6]/95"
-                        : "fill-neutral-900/10 dark:fill-neutral-100/10",
-                    )}
+                    className="pointer-events-none fill-[var(--surface-raised)]"
                   />
                   {STATIC_PATHS.map((row, ring) =>
                     row.map((d, week) => (
@@ -844,10 +833,7 @@ export default memo(function RadialArtistHeatmap() {
                     y={CY}
                     transform={`rotate(${CHART_TEXT_UPRIGHT_DEG} ${CX} ${CY - 7})`}
                     textAnchor="middle"
-                    className={cn(
-                      "pointer-events-none font-medium",
-                      isLightTheme ? "fill-[#2D1B4E]" : "fill-neutral-500",
-                    )}
+                    className="pointer-events-none font-medium fill-[var(--text-tertiary)]"
                     style={{ fontSize: 10 }}
                   >
                     Yearly scrobbles
@@ -856,11 +842,7 @@ export default memo(function RadialArtistHeatmap() {
               </svg>
               <div
                 ref={tooltipRef}
-                className={cn(
-                  "pointer-events-none absolute z-20 max-w-[min(100%-16px,18rem)] rounded-xl border p-3 type-caption shadow-lg transition-opacity",
-                  "border-white/20 bg-[#171717] text-neutral-100 dark:border-white/20",
-                  "[html[data-theme=light]_&]:border-[#9B84BF] [html[data-theme=light]_&]:!bg-[#EDE7F6] [html[data-theme=light]_&]:!text-[#2D1B4E] [html[data-theme=light]_&]:shadow-md",
-                )}
+                className="pointer-events-none absolute z-20 max-w-[min(100%-16px,18rem)] rounded-[var(--radius-control)] border p-3 type-caption shadow-lg transition-opacity border-[var(--border-subtle)] bg-[var(--surface-raised)] text-[var(--text-primary)]"
                 style={{ visibility: "hidden", opacity: 0 }}
               >
                 <div ref={tooltipTitleRef} className="mb-1 font-semibold" />
@@ -892,10 +874,7 @@ export default memo(function RadialArtistHeatmap() {
                   style={{ backgroundColor: model.colors[i] }}
                 />
                 <span
-                  className={cn(
-                    "min-w-0 truncate",
-                    isLightTheme ? "text-neutral-900" : "text-neutral-100",
-                  )}
+                  className="min-w-0 truncate text-[var(--text-primary)]"
                   title={a.name}
                 >
                   {a.name}

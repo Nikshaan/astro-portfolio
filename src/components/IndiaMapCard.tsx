@@ -24,6 +24,7 @@ import {
   getBentoCardTapMotion,
 } from "./bentoCardMotion";
 import useIsLightTheme from "../hooks/useTheme";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -38,7 +39,6 @@ export interface VisitedPlace {
 interface IndiaMapCardProps {
   visitedPlaces?: VisitedPlace[];
   className?: string;
-  index?: number;
 }
 
 let cachedTopology: any = null;
@@ -53,10 +53,7 @@ const MAP_LAYOUT_TRANSITION = {
   },
 };
 
-const MAP_SHELL_CLASS = cn(
-  "bg-[#171717]",
-  "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
-);
+const MAP_SHELL_CLASS = "bg-[var(--surface-card)] border-[var(--border-subtle)]";
 
 function IndiaMapModalBackdrop({ onClose }: { onClose: () => void }) {
   const shouldReduceMotion = useReducedMotion();
@@ -64,7 +61,7 @@ function IndiaMapModalBackdrop({ onClose }: { onClose: () => void }) {
   return (
     <motion.div
       className={cn(
-        "absolute inset-0 bg-black/60",
+        "absolute inset-0 bg-[var(--surface-overlay)]",
         !shouldReduceMotion && "backdrop-blur-sm",
       )}
       style={{ willChange: "opacity" }}
@@ -141,60 +138,37 @@ const IndiaMapRegions = memo(function IndiaMapRegions({
   return (
     <>
       <g>
-        {isLightTheme &&
-          regionPaths.map(({ key, d }) => (
-            <path
-              key={`shadow-light-${key}`}
-              d={d}
-              strokeWidth={0}
-              fill="#9B84BF"
-              opacity={0.18}
-              transform={`translate(${1.5 / svgScale}, ${2.2 / svgScale})`}
-              style={{ filter: `blur(${2.4 / svgScale}px)` }}
-            />
-          ))}
-        {!isLightTheme &&
-          regionPaths.map(({ key, d }) => (
-            <path
-              key={`shadow-dark-${key}`}
-              d={d}
-              strokeWidth={0}
-              fill="#000000"
-              opacity={0.28}
-              transform={`translate(${1.35 / svgScale}, ${2.1 / svgScale})`}
-              style={{ filter: `blur(${2.6 / svgScale}px)` }}
-            />
-          ))}
+        {regionPaths.map(({ key, d }) => (
+          <path
+            key={`shadow-${key}`}
+            d={d}
+            strokeWidth={0}
+            fill="#000000"
+            opacity={isLightTheme ? 0.12 : 0.28}
+            transform={`translate(${1.4 / svgScale}, ${2.1 / svgScale})`}
+            style={{ filter: `blur(${2.5 / svgScale}px)` }}
+          />
+        ))}
       </g>
       <g>
-        {regionPaths.map(({ key, d }) => {
-          const isLight = isLightTheme;
-          return (
-            <path
-              key={`region-${key}`}
-              d={d}
-              strokeWidth={1 / svgScale}
-              className={
-                isLight
-                  ? "transition-colors duration-300"
-                  : interactive
-                    ? "cursor-pointer transition-colors duration-300"
-                    : "transition-colors duration-300"
-              }
-              fill={isLight ? "#FFFFFF" : "#27272a"}
-              stroke={isLight ? "#D8CEE8" : "#3f3f46"}
-              style={
-                isLight
-                  ? {
-                      filter: "drop-shadow(0px 2px 3px rgba(45,27,78,0.12))",
-                    }
-                  : {
-                      filter: "drop-shadow(0px 2px 3px rgba(0,0,0,0.35))",
-                    }
-              }
-            />
-          );
-        })}
+        {regionPaths.map(({ key, d }) => (
+          <path
+            key={`region-${key}`}
+            d={d}
+            strokeWidth={1 / svgScale}
+            className={cn(
+              "transition-colors duration-300",
+              interactive && !isLightTheme ? "cursor-pointer" : "",
+            )}
+            fill="var(--surface-raised)"
+            stroke="var(--border-strong)"
+            style={{
+              filter: isLightTheme
+                ? "drop-shadow(0px 2px 3px rgba(28,25,23,0.1))"
+                : "drop-shadow(0px 2px 3px rgba(0,0,0,0.35))",
+            }}
+          />
+        ))}
       </g>
     </>
   );
@@ -325,20 +299,19 @@ const IndiaMapModalMap = memo(function IndiaMapModalMap({
                   >
                     <circle
                       r={baseRadius}
-                      className="fill-purple-500 dark:fill-purple-400 opacity-30 animate-ping pointer-events-none"
+                      fill="var(--accent)"
+                      className="opacity-30 animate-ping pointer-events-none"
                     />
                     <circle
                       r={isHovered ? hoverRadius : baseRadius}
-                      className={
-                        isHovered
-                          ? "fill-purple-600 dark:fill-purple-300 transition-all duration-300 pointer-events-none"
-                          : "fill-purple-500 dark:fill-purple-400 transition-all duration-300 pointer-events-none"
-                      }
+                      fill="var(--accent)"
+                      className="transition-all duration-300 pointer-events-none"
                     />
                     {isHovered && (
                       <circle
                         r={hoverRadius + 2}
-                        className="fill-none stroke-purple-600 dark:stroke-purple-300 stroke-2 pointer-events-none"
+                        stroke="var(--accent)"
+                        className="fill-none stroke-2 pointer-events-none"
                       />
                     )}
                   </g>
@@ -372,7 +345,6 @@ async function loadIndiaTopology(): Promise<any> {
 const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
   visitedPlaces = [],
   className,
-  index = 0,
 }) => {
   const [portalVisible, setPortalVisible] = useState(false);
   const [layoutLock, setLayoutLock] = useState(false);
@@ -385,6 +357,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 
   const isLightTheme = useIsLightTheme();
   const shouldReduceMotion = useReducedMotion();
+  const trapRef = useFocusTrap(portalVisible);
 
   useEffect(() => {
     if (cachedTopology) {
@@ -421,9 +394,6 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     if (!layoutLock) {
       document.body.style.overflow = "";
       document.body.style.paddingRight = "";
-      if (typeof window !== "undefined" && (window as any).lenis) {
-        (window as any).lenis.start();
-      }
       return;
     }
 
@@ -437,12 +407,8 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
       document.body.style.paddingRight = "var(--scrollbar-width, 0px)";
     });
 
-    if (typeof window !== "undefined" && (window as any).lenis) {
-      (window as any).lenis.stop();
-    }
-
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" || e.code === "Escape" || e.keyCode === 27) {
+      if (e.key === "Escape" || e.code === "Escape") {
         handleClose();
       }
     };
@@ -561,6 +527,13 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     }
   };
 
+  const handleCardKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+      e.preventDefault();
+      handleCardClick();
+    }
+  };
+
   return (
     <>
       <div className={cn("h-full w-full", className)}>
@@ -568,8 +541,12 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
           layoutId="india-map-card"
           data-bento-shell=""
           data-bento-frozen={layoutLock ? "" : undefined}
+          role="button"
+          tabIndex={0}
+          aria-label={`Open travel map, ${visitedPlaces.length} cities visited`}
+          onKeyDown={handleCardKeyDown}
           className={cn(
-            "relative h-full w-full rounded-3xl border overflow-hidden me-card-hover group cursor-pointer",
+            "relative h-full w-full rounded-[var(--radius-card)] border overflow-hidden bento-card group cursor-pointer",
             MAP_SHELL_CLASS,
             portalVisible
               ? "opacity-0 pointer-events-none select-none"
@@ -593,7 +570,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
           onClick={handleCardClick}
         >
           {loading && (
-            <div className="absolute inset-0 flex items-center justify-center text-neutral-400">
+            <div className="absolute inset-0 flex items-center justify-center text-[var(--text-tertiary)]">
               <Loader2 className="animate-spin w-5 h-5" />
             </div>
           )}
@@ -604,18 +581,13 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
               className="absolute inset-0 w-full h-full p-4 flex flex-col items-center justify-center pointer-events-none"
             >
               <div className="absolute top-4 left-4 z-10">
-                <span
-                  className={cn(
-                    "type-bento-eyebrow",
-                    "text-neutral-500 dark:text-neutral-400",
-                  )}
-                >
+                <span className="type-bento-eyebrow text-[var(--text-tertiary)]">
                   Travels
                 </span>
               </div>
 
-              <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Maximize2 className="w-4 h-4 text-neutral-400" />
+              <div className="absolute top-4 right-4 z-10 opacity-60 group-hover:opacity-100 transition-opacity">
+                <Maximize2 className="w-4 h-4 text-[var(--text-tertiary)]" />
               </div>
 
               <svg
@@ -640,13 +612,11 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                         key={i}
                         transform={`translate(${coords[0]}, ${coords[1]})`}
                       >
+                        <circle r={7} fill="var(--accent)" />
                         <circle
                           r={7}
-                          className="fill-purple-500 dark:fill-purple-400"
-                        />
-                        <circle
-                          r={7}
-                          className="fill-purple-500 dark:fill-purple-400 animate-ping opacity-75"
+                          fill="var(--accent)"
+                          className="animate-ping opacity-75"
                           style={{
                             willChange: "transform, opacity",
                             backfaceVisibility: "hidden",
@@ -693,11 +663,15 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                 <IndiaMapModalBackdrop onClose={handleClose} />
 
                 <motion.div
+                  ref={trapRef as any}
                   layoutId="india-map-card"
                   data-bento-shell=""
                   data-bento-frozen=""
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="india-map-title"
                   className={cn(
-                    "relative w-full h-full max-w-6xl max-h-[95vh] md:max-h-[90vh] rounded-[2rem] overflow-hidden shadow-2xl flex flex-col me-card-hover border",
+                    "relative w-full h-full max-w-6xl max-h-[95vh] md:max-h-[90vh] rounded-[1.5rem] overflow-hidden shadow-2xl flex flex-col bento-card border",
                     MAP_SHELL_CLASS,
                   )}
                   style={{
@@ -709,22 +683,23 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                 >
                   <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex gap-2">
                     <button
+                      data-autofocus
                       onClick={handleClose}
                       aria-label="Close map view"
-                      className="p-2 cursor-pointer rounded-full bg-neutral-100 dark:bg-zinc-800 hover:bg-neutral-200 dark:hover:bg-zinc-700 transition-colors"
+                      className="p-2 cursor-pointer rounded-full bg-[var(--surface-raised)] hover:bg-[var(--border-subtle)] transition-colors"
                     >
                       <X
-                        className="w-5 h-5 text-neutral-900 dark:text-white cursor-pointer"
+                        className="w-5 h-5 text-[var(--text-primary)] cursor-pointer"
                         aria-hidden="true"
                       />
                     </button>
                   </div>
 
                   <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20 pointer-events-none">
-                    <h2 className="type-map-heading text-neutral-900 dark:text-white">
+                    <h3 id="india-map-title" className="type-map-heading text-[var(--text-primary)]">
                       India
-                    </h2>
-                    <p className="type-body-sm text-neutral-500 dark:text-neutral-400">
+                    </h3>
+                    <p className="type-body-sm text-[var(--text-tertiary)]">
                       {visitedPlaces.length} Cities Visited
                     </p>
                   </div>
@@ -751,10 +726,13 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                       top: tooltipPos.y - 16,
                     }}
                   >
-                    <div className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-3 py-1.5 md:px-4 md:py-2 rounded-md shadow-lg type-body-sm font-medium whitespace-nowrap">
+                    <div className="bg-[var(--text-primary)] text-[var(--surface-page)] px-3 py-1.5 md:px-4 md:py-2 rounded-md shadow-lg type-body-sm font-medium whitespace-nowrap">
                       {hoveredPlace.name}
                     </div>
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-neutral-900 dark:border-t-white"></div>
+                    <div
+                      className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px]"
+                      style={{ borderTopColor: "var(--text-primary)" }}
+                    ></div>
                   </div>
                 )}
               </motion.div>

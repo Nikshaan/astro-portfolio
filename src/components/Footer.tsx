@@ -1,21 +1,7 @@
-import React, { useCallback, useSyncExternalStore } from "react";
-import { MoveRight, Github, LinkedinIcon, Mail } from "lucide-react";
+import { useCallback } from "react";
+import { MoveRight, Github, Linkedin, Mail } from "lucide-react";
 import { motion } from "framer-motion";
-
-const mobileQuery =
-  typeof window !== "undefined"
-    ? window.matchMedia("(max-width: 1024px)")
-    : null;
-function useIsMobile() {
-  return useSyncExternalStore(
-    (cb) => {
-      mobileQuery?.addEventListener("change", cb);
-      return () => mobileQuery?.removeEventListener("change", cb);
-    },
-    () => mobileQuery?.matches ?? false,
-    () => false,
-  );
-}
+import useIsMobile from "../hooks/useIsMobile";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -27,20 +13,7 @@ const Footer = () => {
 
       const targetSection = document.getElementById(sectionId);
       if (targetSection) {
-        const lenis = (window as any).lenis;
-
-        if (lenis) {
-          lenis.scrollTo(targetSection, {
-            offset: 0,
-            duration: 1.2,
-            immediate: false,
-          });
-        } else {
-          targetSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }
+        targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
 
         setTimeout(() => {
           if (window.location.hash) {
@@ -57,11 +30,10 @@ const Footer = () => {
   );
 
   const containerVariants = {
-    hidden: { opacity: 0, y: 50, scale: 0.95 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
-      scale: 1,
       transition: {
         duration: isMobile ? 0.3 : 0.5,
         ease: [0.22, 1, 0.36, 1] as const,
@@ -71,7 +43,7 @@ const Footer = () => {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 16 },
     visible: {
       opacity: 1,
       y: 0,
@@ -83,20 +55,20 @@ const Footer = () => {
   };
 
   return (
-    <footer className="w-full p-4 pt-0 text-neutral-600 dark:text-neutral-400 font-sans bg-black">
+    <footer className="w-full p-4 pt-0 text-[var(--text-secondary)] bg-[var(--surface-page)]">
       <motion.div
         id="main-footer"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, amount: "some", margin: "0px 0px 200px 0px" }}
-        className="w-full max-w-[1400px] mx-auto rounded-3xl border bg-[#171717] [html[data-theme=light]_&]:!bg-[#EDE7F6] overflow-hidden footer-transition me-card-hover"
+        viewport={{ once: true, amount: 0.2, margin: "0px 0px -10% 0px" }}
+        className="w-full max-w-[1400px] mx-auto rounded-[var(--radius-card)] border bg-[var(--surface-card)] border-[var(--border-subtle)] overflow-hidden footer-transition bento-card"
       >
         <motion.div
           variants={itemVariants}
-          className="p-8 md:p-12 border-b border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] footer-transition"
+          className="p-8 md:p-12 border-b border-[var(--border-subtle)] footer-transition"
         >
-          <h2 className="type-footer-display uppercase text-neutral-900 dark:text-white footer-transition whitespace-nowrap">
+          <h2 className="type-footer-display uppercase text-[var(--text-primary)] footer-transition whitespace-nowrap">
             Let's Connect
           </h2>
         </motion.div>
@@ -104,15 +76,15 @@ const Footer = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2">
           <motion.div
             variants={itemVariants}
-            className="p-8 md:p-12 flex flex-col justify-between gap-8 border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] overflow-hidden footer-transition"
+            className="p-8 md:p-12 flex flex-col justify-between gap-8 border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)] overflow-hidden footer-transition"
           >
             <div>
               <a
                 href="mailto:nikshaanshetty06@gmail.com"
-                className="group flex items-center gap-2 md:gap-4 type-footer-contact text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-300 whitespace-nowrap footer-transition"
+                className="group flex items-center gap-2 md:gap-4 type-footer-contact text-[var(--text-primary)] hover:text-[var(--text-secondary)] whitespace-nowrap footer-transition"
               >
                 nikshaanshetty06@gmail.com
-                <span className="bg-neutral-900 dark:bg-white text-white dark:text-black p-2 rounded-full group-hover:rotate-[-45deg] footer-transform-transition flex-shrink-0 footer-transition">
+                <span className="bg-[var(--text-primary)] text-[var(--surface-page)] p-2 rounded-full group-hover:rotate-[-45deg] footer-transform-transition flex-shrink-0 footer-transition">
                   <MoveRight className="w-3 h-3 md:w-5 md:h-5" />
                 </span>
               </a>
@@ -124,50 +96,33 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Visit Nikshaan's GitHub profile"
-                className="p-4 rounded-full border border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] hover:bg-neutral-200 dark:hover:bg-white/10 [html[data-theme=light]_&]:hover:bg-[#9B84BF] footer-transition"
+                className="p-4 rounded-full border border-[var(--border-subtle)] hover:bg-[var(--surface-raised)] footer-transition"
               >
-                <Github
-                  className="w-5 h-5 text-neutral-900 dark:text-white"
-                  aria-hidden="true"
-                />
+                <Github className="w-5 h-5 text-[var(--text-primary)]" aria-hidden="true" />
               </a>
               <a
                 href="https://www.linkedin.com/in/nikshaan-shetty/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Connect with Nikshaan on LinkedIn"
-                className="p-4 rounded-full border border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] hover:bg-neutral-200 dark:hover:bg-white/10 [html[data-theme=light]_&]:hover:bg-[#9B84BF] footer-transition"
+                className="p-4 rounded-full border border-[var(--border-subtle)] hover:bg-[var(--surface-raised)] footer-transition"
               >
-                <LinkedinIcon
-                  className="w-5 h-5 text-neutral-900 dark:text-white"
-                  aria-hidden="true"
-                />
+                <Linkedin className="w-5 h-5 text-[var(--text-primary)]" aria-hidden="true" />
               </a>
               <a
                 href="mailto:nikshaanshetty06@gmail.com"
                 aria-label="Send an email to Nikshaan"
-                className="p-4 rounded-full border border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] hover:bg-neutral-200 dark:hover:bg-white/10 [html[data-theme=light]_&]:hover:bg-[#9B84BF] footer-transition"
+                className="p-4 rounded-full border border-[var(--border-subtle)] hover:bg-[var(--surface-raised)] footer-transition"
               >
-                <Mail
-                  className="w-5 h-5 text-neutral-900 dark:text-white"
-                  aria-hidden="true"
-                />
+                <Mail className="w-5 h-5 text-[var(--text-primary)]" aria-hidden="true" />
               </a>
             </div>
           </motion.div>
 
-          <motion.div
-            variants={itemVariants}
-            className="p-6 md:p-12 flex flex-col justify-between gap-8"
-          >
+          <motion.div variants={itemVariants} className="p-6 md:p-12 flex flex-col justify-between gap-8">
             <div className="flex flex-col gap-2">
-              <p className="type-body font-medium text-neutral-600 dark:text-neutral-400 [html[data-theme=light]_&]:text-[#9E8EAC] mb-2">
-                Navigation
-              </p>
-              <nav
-                aria-label="Footer navigation"
-                className="flex flex-wrap gap-2 md:gap-3"
-              >
+              <p className="type-body font-medium text-[var(--text-tertiary)] mb-2">Navigation</p>
+              <nav aria-label="Footer navigation" className="flex flex-wrap gap-2 md:gap-3">
                 {[
                   { name: "me", href: "me" },
                   { name: "projects", href: "projects" },
@@ -178,7 +133,7 @@ const Footer = () => {
                     href={`#${link.href}`}
                     onClick={(e) => handleNavClick(e, link.href)}
                     aria-label={`Navigate to ${link.name} section`}
-                    className="px-4 md:px-6 py-2 rounded-full border border-neutral-200 dark:border-white/10 [html[data-theme=light]_&]:border-[#9B84BF] type-ui text-neutral-900 dark:text-white font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-black [html[data-theme=light]_&]:hover:bg-[#7C5CBF] [html[data-theme=light]_&]:hover:text-white footer-transition"
+                    className="px-4 md:px-6 py-2 rounded-full border border-[var(--border-subtle)] type-ui text-[var(--text-primary)] font-medium hover:bg-[var(--accent)] hover:text-[var(--accent-contrast)] hover:border-[var(--accent)] footer-transition"
                   >
                     {link.name}
                   </a>
@@ -187,16 +142,14 @@ const Footer = () => {
             </div>
 
             <div className="flex flex-row flex-wrap justify-between items-center gap-x-4 gap-y-2">
-              <p className="type-caption font-medium text-neutral-500 dark:text-neutral-500">
+              <p className="type-caption font-medium text-[var(--text-tertiary)]">
                 &copy; {currentYear} Nikshaan Shetty.
               </p>
-              <div className="type-caption font-medium text-neutral-500 dark:text-neutral-500 flex items-center gap-1">
+              <div className="type-caption font-medium text-[var(--text-tertiary)] flex items-center gap-1">
                 <span>Built with</span>
-                <span className="text-neutral-900 dark:text-white">Astro</span>
-                <span className="text-neutral-300 dark:text-neutral-700">
-                  /
-                </span>
-                <span className="text-neutral-900 dark:text-white">React</span>
+                <span className="text-[var(--text-primary)]">Astro</span>
+                <span className="text-[var(--border-strong)]">/</span>
+                <span className="text-[var(--text-primary)]">React</span>
               </div>
             </div>
           </motion.div>

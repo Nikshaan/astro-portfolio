@@ -1,20 +1,7 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  memo,
-  useSyncExternalStore,
-  useRef,
-} from "react";
-import {
-  m,
-  motion,
-  AnimatePresence,
-  LazyMotion,
-  domAnimation,
-} from "framer-motion";
-import { X, Maximize2, GithubIcon, ExternalLink } from "lucide-react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { LazyMotion, domAnimation } from "framer-motion";
+import { Github, ExternalLink, ArrowRight } from "lucide-react";
 import cardsData from "../data/cardsdata.json";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -24,11 +11,6 @@ import nodejs from "../data/Node.js.svg";
 import fastapi from "../data/FastAPI.svg";
 import redux from "../data/Redux.svg";
 import expressjs from "../data/Express.svg";
-import {
-  bentoCardHoverTransition,
-  getBentoCardHoverMotion,
-  getBentoCardTapMotion,
-} from "./bentoCardMotion";
 import mongodb from "../data/MongoDB.svg";
 import postgresql from "../data/PostgresSQL.svg";
 import motionIcon from "../data/Brand-Framer-Motion--Streamline-Tabler.svg";
@@ -51,6 +33,9 @@ import webApprovalImg from "../data/web_approval.webp";
 import classificationLossImg from "../data/classification_loss.webp";
 import instructionFinetuningLossImg from "../data/instruction_finetuning_loss.webp";
 import ProjectCardContent from "./ProjectCardContent";
+import BentoGrid from "./bento/BentoGrid";
+import BentoCard from "./bento/BentoCard";
+import BentoModal from "./bento/Modal";
 
 const techstackIcons: Record<string, any> = {
   ReactJS: reactjs,
@@ -87,8 +72,7 @@ const getProcessedContent = (content: string) => {
   if (content_cache.has(content)) {
     return content_cache.get(content) || content;
   }
-
-  let processed = content
+  const processed = content
     .replace("{{VOCALOPS_ARCH_IMAGE}}", vocalopsArchImg.src)
     .replace("{{CLI_DEMO_IMAGE}}", cliDemoImg.src)
     .replace("{{WEB_APPROVAL_IMAGE}}", webApprovalImg.src)
@@ -97,179 +81,74 @@ const getProcessedContent = (content: string) => {
       "{{INSTRUCTION_FINETUNING_LOSS_IMAGE}}",
       instructionFinetuningLossImg.src,
     );
-
   content_cache.set(content, processed);
   return processed;
 };
 
-const mobileQuery =
-  typeof window !== "undefined"
-    ? window.matchMedia("(max-width: 1024px)")
-    : null;
-function useIsMobile() {
-  return useSyncExternalStore(
-    (cb) => {
-      mobileQuery?.addEventListener("change", cb);
-      return () => mobileQuery?.removeEventListener("change", cb);
-    },
-    () => mobileQuery?.matches ?? false,
-    () => false,
-  );
-}
+function TechStack({ techstack }: { techstack?: string[] }) {
+  const [hovered, setHovered] = useState<{ tech: string; x: number; y: number } | null>(null);
 
-interface CardWrapperProps {
-  card: any;
-  className?: string;
-  index?: number;
-  selectedId: string | null;
-  setSelectedId: (id: string | null) => void;
-}
+  const showTooltip = useCallback((e: React.SyntheticEvent<HTMLDivElement>, tech: string) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setHovered({ tech, x: rect.left + rect.width / 2, y: rect.bottom });
+  }, []);
+  const hideTooltip = useCallback(() => setHovered(null), []);
 
-const CardWrapper: React.FC<CardWrapperProps> = memo(
-  ({ card, className, index = 0, selectedId, setSelectedId }) => {
-    const isMobile = useIsMobile();
-    const shouldAnimate = selectedId === null || selectedId === card.id;
-
-    const handleClick = useCallback(() => {
-      if (card.isExpandable) {
-        setSelectedId(card.id);
-      }
-    }, [card.isExpandable, card.id, setSelectedId]);
-
-    const desktopDelay = 0;
-    const isExpandableCard = card.isExpandable;
-    const isHoverable = isExpandableCard && !selectedId;
-
-    return (
-      <m.div
-        className={cn("h-full w-full", className)}
-        initial={{ opacity: 0, y: 30, scale: 0.98 }}
-        whileInView={{
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          transition: {
-            duration: isMobile ? 0.3 : 0.5,
-            ease: [0.25, 0.1, 0.25, 1],
-            delay: isMobile ? 0 : desktopDelay,
-          },
-        }}
-        viewport={{
-          once: true,
-          amount: "some",
-          margin: "80px 0px 320px 0px",
-        }}
-      >
-        <motion.div
-          layoutId={shouldAnimate ? `card-${card.id}` : undefined}
-          onClick={handleClick}
-          data-bento-shell={isExpandableCard ? "" : undefined}
-          data-bento-frozen={selectedId === card.id ? "" : undefined}
-          className={cn(
-            "relative h-full w-full rounded-3xl border overflow-hidden me-card-hover group",
-            "bg-[#171717]",
-            isExpandableCard ? "" : "border-white dark:border-white/20",
-            "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
-            isExpandableCard && !selectedId ? "cursor-pointer" : "",
-          )}
-          whileHover={isHoverable ? getBentoCardHoverMotion() : undefined}
-          whileTap={isHoverable ? getBentoCardTapMotion() : undefined}
-          transition={isHoverable ? bentoCardHoverTransition : undefined}
-          style={isHoverable ? { transformOrigin: "center center" } : undefined}
-        >
-          <div className="relative flex flex-col justify-between h-full w-full p-5 md:p-6">
-            <div className="flex flex-col h-full justify-between">
-              <div>
-                <h3 className="font-medium mb-2">{card.data.name}</h3>
-                <p
-                  className="type-body-sm font-light text-neutral-600 dark:text-neutral-400 text-pretty"
-                  dangerouslySetInnerHTML={{ __html: card.data.summary }}
-                />
-              </div>
-              <div className="flex flex-col gap-4 mt-auto pt-4">
-                <div className="grid grid-cols-4 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full">
-                  {card.data.techstack?.map((tech: string, i: number) => {
-                    const icon = techstackIcons[tech];
-                    return (
-                      <div
-                        key={i}
-                        data-title={tech}
-                        className={cn(
-                          "flex items-center justify-center p-1 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12 min-[500px]:max-md:h-9 tooltip-trigger relative",
-                          "bg-neutral-100 dark:bg-neutral-800",
-                        )}
-                      >
-                        {icon && (
-                          <img
-                            src={icon.src}
-                            width={icon.width}
-                            height={icon.height}
-                            alt={tech}
-                            className="w-full h-full object-contain flex items-center justify-center text-center"
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex gap-4 type-body-sm font-medium">
-                  {card.data.live && (
-                    <a
-                      href={card.data.live}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="project-link"
-                      aria-label={`View live demo of ${card.data.name}`}
-                    >
-                      <ExternalLink size={15} aria-hidden="true" /> Live
-                    </a>
-                  )}
-                  {card.data.github && (
-                    <a
-                      href={card.data.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="project-link"
-                      aria-label={`View source code of ${card.data.name} on GitHub`}
-                    >
-                      <GithubIcon size={15} aria-hidden="true" /> GitHub
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {isExpandableCard && (
-              <div
-                className={cn(
-                  "absolute bottom-4 right-4 transition-opacity duration-300",
-                  !selectedId ? "opacity-100" : "opacity-0",
-                )}
-              >
-                <Maximize2 size={16} className="text-neutral-400" />
-              </div>
+  return (
+    <div className="grid grid-cols-4 lg:grid-cols-3 gap-2 w-full">
+      {techstack?.map((tech, i) => {
+        const icon = techstackIcons[tech];
+        return (
+          <div
+            key={i}
+            tabIndex={0}
+            onMouseEnter={(e) => showTooltip(e, tech)}
+            onMouseLeave={hideTooltip}
+            onFocus={(e) => showTooltip(e, tech)}
+            onBlur={hideTooltip}
+            aria-label={tech}
+            className="flex items-center justify-center p-1 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-raised)] w-full h-12 relative hover:border-[var(--accent)] transition-colors"
+          >
+            {icon && (
+              <img
+                src={icon.src}
+                width={icon.width}
+                height={icon.height}
+                alt=""
+                className="w-full h-full object-contain"
+                loading="lazy"
+                decoding="async"
+              />
             )}
           </div>
-        </motion.div>
-      </m.div>
-    );
-  },
-);
+        );
+      })}
+      {typeof document !== "undefined" &&
+        hovered &&
+        createPortal(
+          <div
+            className="pointer-events-none fixed z-[10000] -translate-x-1/2 translate-y-2 rounded-md border border-[var(--border-subtle)] bg-[var(--surface-raised)] px-2.5 py-1 type-caption text-[var(--text-primary)] shadow-lg whitespace-nowrap"
+            style={{ left: hovered.x, top: hovered.y }}
+          >
+            {hovered.tech}
+          </div>,
+          document.body,
+        )}
+    </div>
+  );
+}
 
 const ProjectsBentoGrid: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<"web" | "aiml">("aiml");
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
-  const selectedItem = useMemo(
+  const selectedItem: any = useMemo(
     () => cardsData.find((item) => item.id === selectedId),
     [selectedId],
   );
 
-  const projects = useMemo(
+  const projects: any[] = useMemo(
     () =>
       cardsData.filter(
         (item) => item.type === "project" && item.category === activeCategory,
@@ -278,259 +157,148 @@ const ProjectsBentoGrid: React.FC = () => {
   );
 
   const handleClose = useCallback(() => setSelectedId(null), []);
-  const handleSetAiml = useCallback(() => setActiveCategory("aiml"), []);
-  const handleSetWeb = useCallback(() => setActiveCategory("web"), []);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let localLenis: any;
-    let rafId: number;
-    let resizeObserver: ResizeObserver | null = null;
-
-    const initLocalLenis = async () => {
-      if (selectedId && wrapperRef.current) {
-        const Lenis = (await import("lenis")).default;
-        localLenis = new Lenis({
-          wrapper: wrapperRef.current,
-          duration: 1.2,
-          easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-          gestureOrientation: "vertical",
-          smoothWheel: true,
-          wheelMultiplier: 1,
-          touchMultiplier: 2,
-          infinite: false,
-        });
-
-        const raf = (time: number) => {
-          localLenis.raf(time);
-          rafId = requestAnimationFrame(raf);
-        };
-        rafId = requestAnimationFrame(raf);
-
-        const contentNode = wrapperRef.current.firstElementChild;
-        if (contentNode) {
-          resizeObserver = new ResizeObserver(() => {
-            localLenis.resize();
-          });
-          resizeObserver.observe(contentNode);
-        }
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.key === "Escape" ||
-        event.code === "Escape" ||
-        event.keyCode === 27
-      ) {
-        setSelectedId(null);
-      }
-    };
-
-    if (selectedId) {
-      document.documentElement.style.setProperty(
-        "--scrollbar-width",
-        `${window.innerWidth - document.documentElement.clientWidth}px`,
-      );
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = "var(--scrollbar-width, 0px)";
-      window.addEventListener("keydown", handleKeyDown);
-      if (typeof window !== "undefined" && (window as any).lenis) {
-        (window as any).lenis.stop();
-      }
-      initLocalLenis();
-    } else {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-      if (typeof window !== "undefined" && (window as any).lenis) {
-        (window as any).lenis.start();
-      }
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-      window.removeEventListener("keydown", handleKeyDown);
-      if (typeof window !== "undefined" && (window as any).lenis) {
-        (window as any).lenis.start();
-      }
-      if (localLenis) localLenis.destroy();
-      if (rafId) cancelAnimationFrame(rafId);
-      if (resizeObserver) resizeObserver.disconnect();
-    };
-  }, [selectedId]);
 
   return (
     <LazyMotion features={domAnimation}>
-      <div className="w-full max-w-[1400px] mx-auto p-4 pt-16">
-        <div className="flex justify-between items-end mb-8 px-2">
-          <h2 className="text-neutral-900 dark:text-neutral-100 tracking-tight">
+      <div className="w-full max-w-[1400px] mx-auto px-4">
+        <div className="flex flex-wrap justify-between items-end gap-4 mb-8">
+          <h2 id="projects-heading" className="text-[var(--text-primary)]">
             Projects
           </h2>
           <div
-            className="flex gap-1 bg-neutral-200 dark:bg-neutral-800 p-1 rounded-full [html[data-theme=light]_&]:bg-[#E4DCF2]"
+            className="flex gap-1 border-b border-[var(--border-subtle)]"
             role="tablist"
             aria-label="Project categories"
           >
-            <button
-              onClick={handleSetAiml}
-              role="tab"
-              aria-selected={activeCategory === "aiml"}
-              aria-label="Show AI and Machine Learning projects"
-              className={cn(
-                "px-4 py-1.5 cursor-pointer rounded-full type-ui font-medium transition-all",
-                activeCategory === "aiml"
-                  ? "bg-neutral-700 shadow-sm text-neutral-100 [html[data-theme=light]_&]:bg-[#7C5CBF] [html[data-theme=light]_&]:text-white"
-                  : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 [html[data-theme=light]_&]:text-[#2D1B4E] [html[data-theme=light]_&]:hover:text-[#7C5CBF]",
-              )}
-            >
-              AI/ML
-            </button>
-            <button
-              onClick={handleSetWeb}
-              role="tab"
-              aria-selected={activeCategory === "web"}
-              aria-label="Show Web Development projects"
-              className={cn(
-                "px-4 py-1.5 cursor-pointer rounded-full type-ui font-medium transition-all",
-                activeCategory === "web"
-                  ? "bg-neutral-700 shadow-sm text-neutral-100 [html[data-theme=light]_&]:bg-[#7C5CBF] [html[data-theme=light]_&]:text-white"
-                  : "text-neutral-700 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 [html[data-theme=light]_&]:text-[#2D1B4E] [html[data-theme=light]_&]:hover:text-[#7C5CBF]",
-              )}
-            >
-              Web
-            </button>
+            {(["aiml", "web"] as const).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                role="tab"
+                aria-selected={activeCategory === cat}
+                id={`tab-${cat}`}
+                aria-controls="projects-panel"
+                className={cn(
+                  "px-4 py-2 cursor-pointer type-ui font-medium transition-colors border-b-2 -mb-px",
+                  activeCategory === cat
+                    ? "border-[var(--accent)] text-[var(--text-primary)]"
+                    : "border-transparent text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]",
+                )}
+              >
+                {cat === "aiml" ? "AI/ML" : "Web"}
+              </button>
+            ))}
           </div>
         </div>
 
-        <m.div
-          key={activeCategory}
-          className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr"
-        >
-          {projects.map((project, i) => (
-            <CardWrapper
+        <BentoGrid id="projects-panel" role="tabpanel" aria-labelledby={`tab-${activeCategory}`}>
+          {projects.map((project) => (
+            <BentoCard
               key={project.id}
-              card={project}
-              index={i}
-              className="col-span-2 md:col-span-1 lg:col-span-1 min-h-[250px]"
-              selectedId={selectedId}
-              setSelectedId={setSelectedId}
-            />
-          ))}
-        </m.div>
-
-        <AnimatePresence>
-          {selectedId && selectedItem && (
-            <m.div
-              key="modal-overlay"
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
+              span="third"
+              expandable
+              onActivate={() => setSelectedId(project.id)}
+              selected={selectedId === project.id}
+              layoutId={`card-${project.id}`}
+              aria-label={`View case study for ${project.data.name}`}
             >
-              <m.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={handleClose}
-                className="absolute inset-0 bg-black/60 backdrop-blur-md"
-              />
-
-              <motion.div
-                layoutId={`card-${selectedId}`}
-                data-bento-shell=""
-                data-bento-frozen=""
-                className={cn(
-                  "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl flex flex-col me-card-hover",
-                  "bg-[#171717]",
-                  "[html[data-theme=light]_&]:!bg-[#EDE7F6]",
-                )}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleClose();
-                  }}
-                  aria-label="Close project details"
-                  className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-20 cursor-pointer"
-                >
-                  <X size={20} aria-hidden="true" />
-                </button>
-
-                <div
-                  ref={wrapperRef}
-                  className="flex-1 overflow-y-auto p-8 custom-scrollbar min-h-0"
-                >
-                  <div className="flex flex-col gap-6">
-                    <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0 md:pr-12">
-                      <h2>{selectedItem.data.name}</h2>
-                      <div className="flex gap-2">
-                        {selectedItem.data.live && (
-                          <a
-                            href={selectedItem.data.live}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="project-link-icon"
-                            aria-label={`View live demo of ${selectedItem.data.name}`}
-                            title="View Live Demo"
-                          >
-                            <ExternalLink size={20} aria-hidden="true" />
-                          </a>
-                        )}
-                        {selectedItem.data.github && (
-                          <a
-                            href={selectedItem.data.github}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="project-link-icon"
-                            aria-label={`View source code of ${selectedItem.data.name} on GitHub`}
-                            title="View on GitHub"
-                          >
-                            <GithubIcon size={20} aria-hidden="true" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 w-full">
-                      {selectedItem.data.techstack?.map(
-                        (tech: string, i: number) => {
-                          const icon = techstackIcons[tech];
-                          return (
-                            <div
-                              key={i}
-                              title={tech}
-                              data-tooltip-placement="bottom"
-                              className={cn(
-                                "flex items-center justify-center p-1 rounded-md border border-neutral-200 dark:border-neutral-700 w-full h-12",
-                                "bg-neutral-100 dark:bg-neutral-800",
-                              )}
-                            >
-                              {icon && (
-                                <img
-                                  src={icon.src}
-                                  width={icon.width}
-                                  height={icon.height}
-                                  alt={tech}
-                                  className="w-full h-full object-contain flex items-center justify-center text-center"
-                                  loading="lazy"
-                                  decoding="async"
-                                />
-                              )}
-                            </div>
-                          );
-                        },
+              <div className="flex flex-col h-full justify-between gap-4">
+                <div>
+                  <h3 className="font-bold mb-2">{project.data.name}</h3>
+                  <p
+                    className="type-body-sm text-[var(--text-secondary)]"
+                    dangerouslySetInnerHTML={{ __html: project.data.summary }}
+                  />
+                </div>
+                <div className="flex flex-col gap-3">
+                  <TechStack techstack={project.data.techstack} />
+                  <div className="flex items-center justify-between type-body-sm font-medium">
+                    <div className="flex gap-4">
+                      {project.data.live && (
+                        <a
+                          href={project.data.live}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="project-link"
+                          aria-label={`View live demo of ${project.data.name}`}
+                        >
+                          <ExternalLink size={15} aria-hidden="true" /> Live
+                        </a>
+                      )}
+                      {project.data.github && (
+                        <a
+                          href={project.data.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="project-link"
+                          aria-label={`View source code of ${project.data.name} on GitHub`}
+                        >
+                          <Github size={15} aria-hidden="true" /> GitHub
+                        </a>
                       )}
                     </div>
-
-                    <div className="prose prose-invert prose-lg max-w-none">
-                      <ProjectCardContent
-                        html={getProcessedContent(selectedItem.content || "")}
-                      />
-                    </div>
+                    <span className="flex items-center gap-1 text-[var(--text-tertiary)] group-hover:text-[var(--accent)] transition-colors">
+                      Details <ArrowRight size={14} aria-hidden="true" />
+                    </span>
                   </div>
                 </div>
-              </motion.div>
-            </m.div>
+              </div>
+            </BentoCard>
+          ))}
+        </BentoGrid>
+
+        <BentoModal
+          open={!!selectedId && !!selectedItem}
+          onClose={handleClose}
+          layoutId={selectedId ? `card-${selectedId}` : undefined}
+          titleId="project-modal-title"
+          closeLabel="Close project details"
+          contentRef={wrapperRef}
+          headerActions={
+            selectedItem ? (
+              <>
+                {selectedItem.data.live && (
+                  <a
+                    href={selectedItem.data.live}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="project-link-icon"
+                    aria-label={`View live demo of ${selectedItem.data.name}`}
+                    title="View Live Demo"
+                  >
+                    <ExternalLink size={20} aria-hidden="true" />
+                  </a>
+                )}
+                {selectedItem.data.github && (
+                  <a
+                    href={selectedItem.data.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="project-link-icon"
+                    aria-label={`View source code of ${selectedItem.data.name} on GitHub`}
+                    title="View on GitHub"
+                  >
+                    <Github size={20} aria-hidden="true" />
+                  </a>
+                )}
+              </>
+            ) : undefined
+          }
+        >
+          {selectedItem && (
+            <div className="flex flex-col gap-6">
+              <h2 id="project-modal-title" className="pr-24">
+                {selectedItem.data.name}
+              </h2>
+              <TechStack techstack={selectedItem.data.techstack} />
+              <div className="prose max-w-none">
+                <ProjectCardContent html={getProcessedContent(selectedItem.content || "")} />
+              </div>
+            </div>
           )}
-        </AnimatePresence>
+        </BentoModal>
       </div>
     </LazyMotion>
   );

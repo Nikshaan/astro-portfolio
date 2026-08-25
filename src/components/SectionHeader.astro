@@ -1,0 +1,23 @@
+---
+interface Props {
+  title: string;
+  tagline?: string;
+  id: string;
+  level?: "h1" | "h2";
+  size?: "hero" | "default";
+}
+
+const { title, tagline, id, level = "h2", size = "default" } = Astro.props;
+const Heading = level;
+---
+
+<div class="w-full mb-6 md:mb-8">
+  <Heading id={id} class={size === "hero" ? "type-hero-display" : undefined}>
+    {title}
+  </Heading>
+  {
+    tagline && (
+      <p class="type-lead text-[var(--text-secondary)] mt-2">{tagline}</p>
+    )
+  }
+</div>

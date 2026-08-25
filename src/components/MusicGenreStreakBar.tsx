@@ -3,7 +3,6 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useMusicStatsLive } from "../hooks/useMusicStatsLive";
 import type { GenreEntry, MusicStatsData } from "../utils/musicStatsClient";
-import useIsLightTheme from "../hooks/useTheme";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -20,30 +19,19 @@ function capitalise(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-const SWATCH_PURPLE = [
-  "#7c3aed",
-  "#9333ea",
-  "#a855f7",
-  "#c084fc",
-  "#e879f9",
-  "#a78bfa",
-  "#8b5cf6",
-  "#6d28d9",
-];
-const SWATCH_LIGHT = [
-  "#2D1B4E",
-  "#6449A8",
-  "#7C5CBF",
-  "#9E8EAC",
-  "#6d28d9",
-  "#701a75",
-  "#0f766e",
-  "#9a3412",
+const GENRE_PALETTE = [
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+  "var(--chart-7)",
+  "var(--chart-8)",
+  "var(--chart-9)",
+  "var(--chart-10)",
 ];
 
 export default memo(function MusicGenreStreakBar() {
   const { data: fullData, loading } = useMusicStatsLive();
-  const isLightTheme = useIsLightTheme();
 
   const data = useMemo(
     () => (fullData ? sliceGenrePayload(fullData) : null),
@@ -53,7 +41,6 @@ export default memo(function MusicGenreStreakBar() {
   const streak = data?.listeningStreak ?? 0;
   const genreData = data?.genreData ?? [];
   const total = genreData.reduce((s, d) => s + d.count, 0);
-  const palette = isLightTheme ? SWATCH_LIGHT : SWATCH_PURPLE;
 
   return (
     <div
@@ -65,10 +52,10 @@ export default memo(function MusicGenreStreakBar() {
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5">
         {loading ? (
           <div
-            className="genre-streak-shimmer h-3 w-full max-w-md rounded"
+            className="h-3 w-full max-w-md rounded"
             style={{
               backgroundImage:
-                "linear-gradient(90deg, var(--shimmer-from, #2a2a2a) 25%, var(--shimmer-to, #3a3a3a) 50%, var(--shimmer-from, #2a2a2a) 75%)",
+                "linear-gradient(90deg, var(--shimmer-from) 25%, var(--shimmer-to) 50%, var(--shimmer-from) 75%)",
               backgroundSize: "400px 100%",
               animation: "genreStreakShimmer 1.6s infinite linear",
             }}
@@ -80,99 +67,58 @@ export default memo(function MusicGenreStreakBar() {
             return (
               <span
                 key={d.genre}
-                className={cn(
-                  "inline-flex min-w-0 max-w-full items-baseline gap-1.5 type-body-sm",
-                  isLightTheme ? "text-neutral-900" : "text-neutral-100",
-                )}
+                className="inline-flex min-w-0 max-w-full items-baseline gap-1.5 type-body-sm text-[var(--text-primary)]"
               >
                 <span
                   className="shrink-0 text-[0.65rem] leading-none opacity-90"
-                  style={{ color: palette[i % palette.length] }}
+                  style={{ color: GENRE_PALETTE[i % GENRE_PALETTE.length] }}
                   aria-hidden="true"
                 >
                   ●
                 </span>
                 <span className="min-w-0 truncate">{capitalise(d.genre)}</span>
-                <span className="shrink-0 tabular-nums opacity-80">
+                <span className="shrink-0 tabular-nums opacity-80 text-[var(--text-secondary)]">
                   — {pct}%
                 </span>
               </span>
             );
           })
         ) : (
-          <span
-            className={cn(
-              "type-body-sm",
-              isLightTheme ? "text-slate-600" : "text-neutral-400",
-            )}
-          >
+          <span className="type-body-sm text-[var(--text-tertiary)]">
             Not enough genre data yet
           </span>
         )}
       </div>
       <div
-        className={cn(
-          "hidden h-[1.125rem] w-px shrink-0 self-center sm:block",
-          isLightTheme ? "bg-[#9B84BF]" : "bg-white/15",
-        )}
+        className="hidden h-[1.125rem] w-px shrink-0 self-center bg-[var(--border-subtle)] sm:block"
         aria-hidden="true"
       />
-      <div
-        className={cn(
-          "flex w-full shrink-0 items-center gap-2 border-t border-white/10 pt-2 sm:w-auto sm:border-t-0 sm:pt-0",
-          isLightTheme ? "border-[#9B84BF]" : "",
-        )}
-      >
+      <div className="flex w-full shrink-0 items-center gap-2 border-t border-[var(--border-subtle)] pt-2 sm:w-auto sm:border-t-0 sm:pt-0">
         <span
-          className={cn(
-            "type-body-sm font-medium not-italic",
-            isLightTheme ? "text-neutral-900" : "text-neutral-100",
-          )}
+          className="type-body-sm font-medium not-italic text-[var(--text-primary)]"
           aria-hidden="true"
         >
           ♪
         </span>
         {loading ? (
           <div
-            className="genre-streak-shimmer h-3 w-32 rounded"
+            className="h-3 w-32 rounded"
             style={{
               backgroundImage:
-                "linear-gradient(90deg, var(--shimmer-from, #2a2a2a) 25%, var(--shimmer-to, #3a3a3a) 50%, var(--shimmer-from, #2a2a2a) 75%)",
+                "linear-gradient(90deg, var(--shimmer-from) 25%, var(--shimmer-to) 50%, var(--shimmer-from) 75%)",
               backgroundSize: "400px 100%",
               animation: "genreStreakShimmer 1.6s infinite linear",
             }}
             aria-hidden="true"
           />
         ) : streak > 0 ? (
-          <span
-            className={cn(
-              "type-body-sm font-medium",
-              isLightTheme ? "text-neutral-900" : "text-neutral-100",
-            )}
-          >
+          <span className="type-body-sm font-medium text-[var(--text-primary)]">
             {streak} day listening streak
           </span>
         ) : (
-          <span
-            className={cn(
-              "type-caption",
-              isLightTheme ? "text-slate-600" : "text-neutral-400",
-            )}
-          >
-            No streak yet
-          </span>
+          <span className="type-caption text-[var(--text-tertiary)]">No streak yet</span>
         )}
       </div>
-      <style>{`
-                @keyframes genreStreakShimmer {
-                    0% { background-position: -200px 0; }
-                    100% { background-position: 200px 0; }
-                }
-                [data-theme='light'] .genre-streak-shimmer {
-                    --shimmer-from: #E4DCF2;
-                    --shimmer-to: #C4B0E0;
-                }
-            `}</style>
     </div>
   );
 });

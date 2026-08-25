@@ -2,24 +2,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  color: rgb(115 115 115);
-  transition: color 0.26s cubic-bezier(0.25, 0.1, 0.25, 1);
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
 }
 
-html:not([data-theme="light"]) .project-link {
-  color: rgb(163 163 163);
-}
-
-html:not([data-theme="light"]) .project-link:hover {
-  color: #a78bfa;
-}
-
-html[data-theme="light"] .project-link {
-  color: var(--text-body, #6b5b7a);
-}
-
-html[data-theme="light"] .project-link:hover {
-  color: var(--accent-hover, #6449a8);
+.project-link:hover {
+  color: var(--accent);
 }
 
 .project-link-icon {
@@ -27,36 +15,18 @@ html[data-theme="light"] .project-link:hover {
   align-items: center;
   justify-content: center;
   padding: 0.5rem;
-  border-radius: 9999px;
-  color: rgb(115 115 115);
-  background-color: rgb(245 245 245 / 0.65);
-  border: 1px solid rgb(229 229 229 / 0.9);
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
   transition:
-    color 0.26s cubic-bezier(0.25, 0.1, 0.25, 1),
-    background-color 0.26s cubic-bezier(0.25, 0.1, 0.25, 1),
-    border-color 0.26s cubic-bezier(0.25, 0.1, 0.25, 1);
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
-html:not([data-theme="light"]) .project-link-icon {
-  color: rgb(163 163 163);
-  background-color: rgb(255 255 255 / 0.04);
-  border-color: rgb(255 255 255 / 0.12);
-}
-
-html:not([data-theme="light"]) .project-link-icon:hover {
-  color: #a78bfa;
-  background-color: rgb(255 255 255 / 0.07);
-  border-color: rgb(167 139 250 / 0.4);
-}
-
-html[data-theme="light"] .project-link-icon {
-  background-color: var(--bg-surface, #ede7f6);
-  border-color: var(--badge-border, #c4b0e0);
-  color: var(--accent, #7c5cbf);
-}
-
-html[data-theme="light"] .project-link-icon:hover {
-  color: var(--accent-hover, #6449a8);
-  background-color: rgb(216 206 232 / 0.55);
-  border-color: rgb(124 92 191 / 0.35);
+.project-link-icon:hover {
+  color: var(--accent);
+  background-color: var(--accent-quiet);
+  border-color: var(--accent);
 }

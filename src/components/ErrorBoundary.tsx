@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 
 interface Props {
@@ -28,7 +28,7 @@ class ErrorBoundary extends Component<Props, State> {
       return (
         this.props.fallback || (
           <div className="w-full h-full flex items-center justify-center text-center p-4">
-            <div className="text-neutral-500 dark:text-neutral-400">
+            <div className="text-[var(--text-tertiary)]">
               <p className="type-body-sm">Music stats unavailable</p>
               <p className="type-caption mt-1">Please try again later</p>
             </div>

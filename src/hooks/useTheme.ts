@@ -39,12 +39,16 @@ export function toggleThemeWithTransition(duration = 400) {
 
   const isLight = html.getAttribute("data-theme") === "light";
 
+  const meta = document.getElementById("meta-theme-color");
+
   if (isLight) {
     html.removeAttribute("data-theme");
-    localStorage.removeItem("theme");
+    localStorage.setItem("theme", "dark");
+    meta?.setAttribute("content", "#0a0a0a");
   } else {
     html.setAttribute("data-theme", "light");
     localStorage.setItem("theme", "light");
+    meta?.setAttribute("content", "#faf9f7");
   }
 
   window.setTimeout(() => {

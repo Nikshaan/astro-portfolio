@@ -3,7 +3,6 @@ import MainLayout from "../layouts/MainLayout.astro";
 import "../styles/global.css";
 import NavbarWrapper from "../components/NavbarWrapper.astro";
 import ProjectsBentoGridWrapper from "../components/ProjectsBentoGridWrapper.astro";
-import GithubContributions from "../components/githubContributions";
 import FunBentoGridWrapper from "../components/FunBentoGridWrapper.astro";
 
 import MeBentoGridWrapper from "../components/MeBentoGridWrapper.astro";
@@ -33,7 +32,10 @@ const optimizedProfileImage = await getImage({
   if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
   }
-  window.scrollTo(0, 0);
+  var nav = performance.getEntriesByType("navigation")[0];
+  if (!nav || nav.type !== "back_forward") {
+    window.scrollTo(0, 0);
+  }
 </script>
 
 <MainLayout
@@ -42,35 +44,28 @@ const optimizedProfileImage = await getImage({
   preloadImage={optimizedBeeImage.src}
   profileImage={optimizedProfileImage.src}
 >
+  <a href="#main-content" class="skip-link">Skip to main content</a>
   <NavbarWrapper />
   <main
     id="main-content"
-    role="main"
-    class="bg-black text-neutral-50 min-h-[100svh] w-full flex items-center flex-col"
+    class="bg-[var(--surface-page)] text-[var(--text-primary)] min-h-[100svh] w-full flex items-center flex-col"
   >
-    <div class="grid-bg w-full flex flex-col justify-start items-center pb-10">
+    <div class="w-full flex flex-col justify-start items-center gap-16 pb-16 pt-24">
       <section
         id="me"
-        class="w-full max-w-[1400px] p-4 pt-24"
+        class="w-full max-w-[1400px] px-4"
         data-section="me"
         aria-labelledby="me-heading"
       >
-        <h1 id="me-heading" class="sr-only">Nikshaan Shetty - About Me</h1>
         <MeBentoGridWrapper beeImage={optimizedBeeImage} />
       </section>
 
-      <div class="w-full max-w-[1400px] mx-auto px-4 mb-8">
-        <GithubContributions client:idle />
-      </div>
-
       <section
+        id="projects"
         class="w-full flex flex-col gap-2 flex-1"
         aria-labelledby="projects-heading"
       >
-        <div data-section="projects" id="projects" class="-mt-5">
-          <h2 id="projects-heading" class="sr-only">Projects</h2>
-          <ProjectsBentoGridWrapper />
-        </div>
+        <ProjectsBentoGridWrapper />
       </section>
 
       <section
@@ -79,7 +74,6 @@ const optimizedProfileImage = await getImage({
         data-section="fun"
         aria-labelledby="fun-heading"
       >
-        <h2 id="fun-heading" class="sr-only">F.U.N</h2>
         <FunBentoGridWrapper />
       </section>
     </div>
@@ -87,166 +81,10 @@ const optimizedProfileImage = await getImage({
 </MainLayout>
 
 <style>
-  .grid-bg {
-    position: relative;
-    background-color: #111111;
-    background-image:
-      linear-gradient(to bottom, rgba(0, 0, 0, 0.38), rgb(0, 0, 0) 82%),
-      repeating-linear-gradient(
-        to right,
-        rgba(255, 255, 255, 0.18) 0px,
-        rgba(255, 255, 255, 0.18) 1px,
-        transparent 1px,
-        transparent 80px
-      ),
-      repeating-linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0.18) 0px,
-        rgba(255, 255, 255, 0.18) 1px,
-        transparent 1px,
-        transparent 80px
-      );
-    background-size:
-      auto,
-      80px 100%,
-      100% 80px;
-    background-position:
-      top left,
-      top left,
-      top left;
-    background-repeat: no-repeat, repeat, repeat;
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      rgba(17, 17, 17, 1),
-      rgba(17, 17, 17, 1) 60%
-    );
-    mask-image: linear-gradient(
-      to bottom,
-      rgba(17, 17, 17, 1),
-      rgba(17, 17, 17, 1) 60%
-    );
-    transition: background-color 0.3s ease;
-  }
-
-  [data-theme="light"] .grid-bg {
-    background-color: #F5F0EB;
-    background-image:
-      linear-gradient(
-        to bottom,
-        rgba(237, 231, 246, 0.12),
-        #F5F0EB 82%
-      ),
-      repeating-linear-gradient(
-        to right,
-        rgba(45, 27, 78, 0.14) 0px,
-        rgba(45, 27, 78, 0.14) 1px,
-        transparent 1px,
-        transparent 80px
-      ),
-      repeating-linear-gradient(
-        to bottom,
-        rgba(45, 27, 78, 0.14) 0px,
-        rgba(45, 27, 78, 0.14) 1px,
-        transparent 1px,
-        transparent 80px
-      );
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      rgba(245, 240, 235, 1),
-      rgba(245, 240, 235, 1) 60%
-    );
-    mask-image: linear-gradient(
-      to bottom,
-      rgba(245, 240, 235, 1),
-      rgba(245, 240, 235, 1) 60%
-    );
-  }
-
-  .skip-nav {
-    position: absolute;
-    top: -40px;
-    left: 0;
-    background: #000;
-    color: #fff;
-    padding: 8px;
-    z-index: 100;
-    transition: top 0.2s;
-    text-decoration: none;
-    border-radius: 0 0 4px 0;
-  }
-
-  .skip-nav:focus {
-    top: 0;
-  }
-
-  [data-theme="light"] .skip-nav {
-    background: #7C5CBF;
-    color: #FFFFFF;
-    border: none;
-  }
-
-  :focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 2px;
-  }
-
-  button:focus-visible,
-  a:focus-visible,
-  input:focus-visible,
-  textarea:focus-visible {
-    outline: 2px solid #a855f7;
-    outline-offset: 2px;
-  }
-
-  [data-theme="light"] button:focus-visible,
-  [data-theme="light"] a:focus-visible,
-  [data-theme="light"] input:focus-visible,
-  [data-theme="light"] textarea:focus-visible {
-    outline: 2px solid #7C5CBF;
-    outline-offset: 2px;
-  }
-
   .save-data img {
     image-rendering: auto;
   }
   .save-data video:not(.project-demo-video) {
-    display: none;
-  }
-  .project-card {
-    contain: layout style;
-  }
-
-  .photo-grid-item {
-    contain: layout style paint;
-  }
-
-  .music-widget {
-    contain: layout style;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
-  }
-
-  nav a,
-  .project-filter-btn,
-  .social-icon a,
-  .photo-thumb {
-    min-height: 44px;
-    min-width: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .skeleton-hidden {
     display: none;
   }
 </style>

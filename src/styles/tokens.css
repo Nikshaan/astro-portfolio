@@ -1,0 +1,96 @@
+
+:root {
+  --surface-page: #0a0a0a;
+  --surface-card: #141414;
+  --surface-raised: #1c1c1c;
+  --surface-overlay: rgba(10, 10, 10, 0.72);
+
+  --border-subtle: #262626;
+  --border-strong: #3a3a3a;
+
+  --text-primary: #fafaf9;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #6b6b6b;
+  --text-on-accent: #0a0a0a;
+
+  --accent: #a78bfa;
+  --accent-strong: #c4b5fd;
+  --accent-quiet: color-mix(in oklab, var(--accent) 14%, transparent);
+  --accent-contrast: #0a0a0a;
+
+  --danger: #f87171;
+  --danger-quiet: color-mix(in oklab, var(--danger) 16%, transparent);
+
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-pill: 9999px;
+
+  --bento-row: 5rem;
+  --bento-gap: 0.75rem;
+
+  --focus-ring: var(--accent);
+
+  --shimmer-from: #1f1f1f;
+  --shimmer-to: #2c2c2c;
+  --shimmer-from-1: #1a1a1a;
+  --shimmer-to-1: #262626;
+  --shimmer-from-2: #171717;
+  --shimmer-to-2: #212121;
+
+  --chart-1: #ddd6fe;
+  --chart-2: #c4b5fd;
+  --chart-3: #a78bfa;
+  --chart-4: #8b5cf6;
+  --chart-5: #7c3aed;
+  --chart-6: #6d28d9;
+  --chart-7: #5b21b6;
+  --chart-8: #4c1d95;
+  --chart-9: #a8a29e;
+  --chart-10: #78716c;
+
+  --scrollbar-thumb: rgba(163, 163, 163, 0.35);
+  --radial-cell-highlight-stroke: var(--surface-card);
+}
+
+[data-theme="light"] {
+  --surface-page: #efeef3;
+  --surface-card: #ffffff;
+  --surface-raised: #e7e4ef;
+  --surface-overlay: rgba(29, 27, 38, 0.45);
+
+  --border-subtle: #dcd8e6;
+  --border-strong: #c3bfd4;
+
+  --text-primary: #1d1b26;
+  --text-secondary: #55515f;
+  --text-tertiary: #948fa0;
+  --text-on-accent: #ffffff;
+
+  --accent: #6d4aff;
+  --accent-strong: #5636d6;
+  --accent-quiet: color-mix(in oklab, var(--accent) 10%, transparent);
+  --accent-contrast: #ffffff;
+
+  --danger: #dc2626;
+  --danger-quiet: color-mix(in oklab, var(--danger) 12%, transparent);
+
+  --shimmer-from: #ece9e6;
+  --shimmer-to: #ddd7d1;
+  --shimmer-from-1: #efece9;
+  --shimmer-to-1: #ded8d2;
+  --shimmer-from-2: #f2efec;
+  --shimmer-to-2: #e2dcd6;
+
+  --chart-1: #ddd6fe;
+  --chart-2: #c4b5fd;
+  --chart-3: #a78bfa;
+  --chart-4: #8b5cf6;
+  --chart-5: #7c3aed;
+  --chart-6: #6d28d9;
+  --chart-7: #5b21b6;
+  --chart-8: #4c1d95;
+  --chart-9: #a8a29e;
+  --chart-10: #78716c;
+
+  --scrollbar-thumb: rgba(87, 83, 78, 0.35);
+}

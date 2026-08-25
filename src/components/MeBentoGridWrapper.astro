@@ -8,30 +8,11 @@ import varakLogo from "../data/varak.avif";
 import mentoriaLogo from "../data/mentoria.avif";
 import gssocLogo from "../data/gssoc.avif";
 import winIcon from "../data/winIcon.avif";
-import nikshaanRaw from "../data/NIKSHAAN.avif";
 
 const { beeImage } = Astro.props;
 
-const locationBg = await getImage({
-    src: nikshaanRaw,
-    format: "avif",
-    widths: [400, 640, 900, 1200],
-    width: 900,
-    quality: 80,
-});
-
-const optimizedProfileImage = await getImage({
-    src: nikshaanRaw,
-    format: "avif",
-    widths: [150, 300, 400],
-    width: 400,
-    quality: 85,
-});
-
 const optimizedImages = {
     beeImage: beeImage,
-    locationBg: locationBg,
-    profileImage: optimizedProfileImage,
     collegeLogo: await getImage({
         src: collegeLogo,
         format: "avif",
@@ -42,8 +23,8 @@ const optimizedImages = {
     aryaLogo: await getImage({
         src: aryaLogo,
         format: "avif",
-        widths: [120, 180, 240, 360],
-        width: 360,
+        widths: [60, 90, 120, 180],
+        width: 180,
         quality: 90,
     }),
     codeAIlogo: await getImage({
@@ -84,12 +65,5 @@ const optimizedImages = {
 };
 ---
 
-<link
-    rel="preload"
-    as="image"
-    href={locationBg.src}
-    imagesrcset={locationBg.attributes.srcset}
-    imagesizes="(max-width: 640px) 400px, 640px"
-/>
-
+<h1 id="me-heading" class="sr-only">Nikshaan Shetty — AI/ML engineer & software developer, Mumbai, India</h1>
 <MeBentoGrid client:idle optimizedImages={optimizedImages} />
