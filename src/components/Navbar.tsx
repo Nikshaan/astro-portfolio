@@ -121,6 +121,18 @@ const Navbar: React.FC<NavbarProps> = memo(
       (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
         e.preventDefault();
 
+        if (sectionId === "me") {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          setActiveSection(sectionId);
+
+          setTimeout(() => {
+            if (window.location.hash) {
+              window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            }
+          }, 10);
+          return;
+        }
+
         const targetSection = document.getElementById(sectionId);
         if (targetSection) {
           targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
