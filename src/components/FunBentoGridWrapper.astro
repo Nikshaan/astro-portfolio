@@ -21,6 +21,7 @@ const gridImages = await Promise.all(
 
         const optimizedThumbnail = await getImage({
             src: imageModule.default,
+            widths: [380, 560, 760],
             width: 380,
             quality: 80,
             format: "webp",
@@ -37,6 +38,7 @@ const gridImages = await Promise.all(
         return {
             id: `photo-${photoNumber}`,
             src: optimizedThumbnail.src,
+            srcSet: optimizedThumbnail.srcSet?.attribute,
             fullSrc: optimizedFull.src,
             width: optimizedThumbnail.attributes.width,
             height: optimizedThumbnail.attributes.height,
@@ -56,4 +58,4 @@ const validImages = gridImages.filter(
 );
 ---
 
-<FunBentoGrid client:idle images={validImages} />
+<FunBentoGrid client:visible images={validImages} />

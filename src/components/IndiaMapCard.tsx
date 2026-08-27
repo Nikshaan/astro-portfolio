@@ -543,7 +543,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
           data-bento-frozen={layoutLock ? "" : undefined}
           role="button"
           tabIndex={0}
-          aria-label={`Open travel map, ${visitedPlaces.length} cities visited`}
+          aria-label={`Travels — open map, ${visitedPlaces.length} cities visited`}
           onKeyDown={handleCardKeyDown}
           className={cn(
             "relative h-full w-full rounded-[var(--radius-card)] border overflow-hidden bento-card group cursor-pointer",

@@ -122,22 +122,25 @@ function weekFromSvgPoint(x: number, y: number): number | null {
   return wi;
 }
 
+const IST_TIME_ZONE = "Asia/Kolkata";
+const IST_OFFSET_SEC = 5.5 * 60 * 60;
+
 function monthLabels(
   fromSec: number,
   toSec: number,
 ): { a: number; text: string }[] {
   const out: { a: number; text: string }[] = [];
   const span = Math.max(1, toSec - fromSec);
-  let y = new Date(fromSec * 1000).getUTCFullYear();
-  let mo = new Date(fromSec * 1000).getUTCMonth();
+  let y = new Date((fromSec + IST_OFFSET_SEC) * 1000).getUTCFullYear();
+  let mo = new Date((fromSec + IST_OFFSET_SEC) * 1000).getUTCMonth();
   for (let i = 0; i < 24; i++) {
-    const sec = Math.floor(Date.UTC(y, mo, 1) / 1000);
+    const sec = Math.floor(Date.UTC(y, mo, 1) / 1000) - IST_OFFSET_SEC;
     if (sec >= fromSec && sec <= toSec) {
       const u = (sec - fromSec) / span;
       const a = -Math.PI / 2 + u * 2 * Math.PI;
       const text = new Date(sec * 1000).toLocaleDateString(undefined, {
         month: "short",
-        timeZone: "UTC",
+        timeZone: IST_TIME_ZONE,
       });
       out.push({ a, text });
     }
@@ -146,7 +149,7 @@ function monthLabels(
       mo = 0;
       y++;
     }
-    if (Date.UTC(y, mo, 1) / 1000 > toSec) break;
+    if (Date.UTC(y, mo, 1) / 1000 - IST_OFFSET_SEC > toSec) break;
   }
   return out;
 }
@@ -156,7 +159,7 @@ function formatWeekOf(fromSec: number): string {
     weekday: "short",
     month: "short",
     day: "numeric",
-    timeZone: "UTC",
+    timeZone: IST_TIME_ZONE,
   });
   return `Week of ${line}`;
 }

@@ -1,11 +1,10 @@
 ---
-import { Tooltips } from "astro-tooltips";
-
 interface Props {
     title: string;
     description: string;
-    preloadImage?: string;
-    profileImage?: string;
+    preloadImageSrc?: string;
+    preloadImageSrcSet?: string;
+    preloadImageSizes?: string;
 }
 
 import beeImage from "../data/bee.avif";
@@ -13,8 +12,10 @@ import { getImage } from "astro:assets";
 import VercelAnalytics from "../components/VercelAnalytics.astro";
 import Footer from "../components/Footer";
 import "../styles/global.css";
+import dmSansWoff2 from "@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2?url";
+import spaceGroteskWoff2 from "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url";
 
-const { title, description, preloadImage, profileImage } = Astro.props;
+const { title, description, preloadImageSrc, preloadImageSrcSet, preloadImageSizes } = Astro.props;
 
 const favicon = await getImage({
     src: beeImage,
@@ -82,52 +83,19 @@ const ogImage = await getImage({
         <meta name="apple-mobile-web-app-title" content="Nikshaan" />
         <link rel="apple-touch-icon" sizes="180x180" href={appleTouchIcon.src} />
 
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="preload" as="font" type="font/woff2" href={dmSansWoff2} crossorigin />
+        <link rel="preload" as="font" type="font/woff2" href={spaceGroteskWoff2} crossorigin />
 
-        <link
-            rel="preload"
-            href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-            as="style"
-        />
-        <link
-            href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-            rel="stylesheet"
-            media="print"
-            onload="this.media='all'"
-        />
-        <noscript>
-            <link
-                rel="stylesheet"
-                href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-            />
-        </noscript>
-
-        <link rel="dns-prefetch" href="https://api.github.com" />
-        <link rel="dns-prefetch" href="https://ws.audioscrobbler.com" />
-        <link rel="dns-prefetch" href="https://api.spotify.com" />
-        <link rel="dns-prefetch" href="https://accounts.spotify.com" />
-        <link rel="dns-prefetch" href="https://www.linkedin.com" />
-        <link rel="dns-prefetch" href="https://github.com" />
-        <link rel="dns-prefetch" href="https://vitals.vercel-insights.com" />
+        <link rel="preconnect" href="https://i.scdn.co" crossorigin />
 
         {
-            preloadImage && (
+            preloadImageSrc && (
                 <link
                     rel="preload"
                     as="image"
-                    href={preloadImage}
-                    fetchpriority="high"
-                    type="image/avif"
-                />
-            )
-        }
-        {
-            profileImage && (
-                <link
-                    rel="preload"
-                    as="image"
-                    href={profileImage}
+                    href={preloadImageSrc}
+                    imagesrcset={preloadImageSrcSet}
+                    imagesizes={preloadImageSizes}
                     fetchpriority="high"
                     type="image/avif"
                 />
@@ -144,8 +112,6 @@ const ogImage = await getImage({
                 ]
             }
         </script>
-
-        <Tooltips interactive={false} delay={[0, 50]} />
 
         <script is:inline>
             (function () {
@@ -219,7 +185,7 @@ const ogImage = await getImage({
     </head>
     <body class="h-full">
         <slot />
-        <Footer client:idle />
+        <Footer client:visible />
         <VercelAnalytics />
         <script
             type="application/ld+json"

@@ -36,7 +36,7 @@ export default memo(function MusicStatsClient() {
 
   const bgStyle: React.CSSProperties = data.topArtistImageUrl
     ? {
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url(${data.topArtistImageUrl})`,
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.72)), url(${data.topArtistImageUrl})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         borderRadius: "1.25rem",
@@ -59,7 +59,7 @@ export default memo(function MusicStatsClient() {
               <span className="font-medium text-white">
                 Play count:
               </span>{" "}
-              <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
+              <span className="!text-white [html[data-theme=light]_&]:!text-white">
                 {data.upperStatsArray[0]?.toLocaleString()}
               </span>
             </p>
@@ -67,7 +67,7 @@ export default memo(function MusicStatsClient() {
               <span className="font-medium text-white">
                 Track count:
               </span>{" "}
-              <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
+              <span className="!text-white [html[data-theme=light]_&]:!text-white">
                 {data.upperStatsArray[1]?.toLocaleString()}
               </span>
             </p>
@@ -75,7 +75,7 @@ export default memo(function MusicStatsClient() {
               <span className="font-medium text-white">
                 Artist count:
               </span>{" "}
-              <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
+              <span className="!text-white [html[data-theme=light]_&]:!text-white">
                 {data.upperStatsArray[2]?.toLocaleString()}
               </span>
             </p>
@@ -83,7 +83,7 @@ export default memo(function MusicStatsClient() {
               <span className="font-medium text-white">
                 Album count:
               </span>{" "}
-              <span className="!text-white opacity-80 [html[data-theme=light]_&]:!text-white">
+              <span className="!text-white [html[data-theme=light]_&]:!text-white">
                 {data.upperStatsArray[3]?.toLocaleString()}
               </span>
             </p>
@@ -92,7 +92,7 @@ export default memo(function MusicStatsClient() {
 
         <div className="w-full text-center">
           <p className="type-stats-label mb-3 text-center text-white">
-            Top artists of the week
+            Top artists — last 7 days
           </p>
           <div className="type-body-sm">
             {data.artistsInfo.length > 0 ? (
@@ -105,7 +105,7 @@ export default memo(function MusicStatsClient() {
                     <p className="font-medium text-white">
                       {artist.name}
                     </p>
-                    <p className="!text-white opacity-70 [html[data-theme=light]_&]:!text-white">
+                    <p className="!text-white [html[data-theme=light]_&]:!text-white">
                       plays: {artist.count}
                     </p>
                   </div>
@@ -113,7 +113,7 @@ export default memo(function MusicStatsClient() {
               ))
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="!text-white opacity-60 type-caption italic [html[data-theme=light]_&]:!text-white">
+                <p className="!text-white opacity-90 type-caption italic [html[data-theme=light]_&]:!text-white">
                   No recent listening data available
                 </p>
               </div>

@@ -22,6 +22,7 @@ import gmailColor from "../data/gmail-color.svg";
 import certificateImg from "../data/Nikshaan Shetty Certificate.webp";
 import lorImg from "../data/Nikshaan Shetty LOR.webp";
 import badgeImg from "../data/Contributor's badge.webp";
+import { BEE_IMAGE_SIZES } from "../lib/imageSizes";
 
 const defaultImages: Record<string, any> = {
   beeImage: beeImage,
@@ -51,16 +52,19 @@ const getProcessedContent = (content: string) => {
 function CardImage({
   image,
   alt,
+  sizes,
   className,
 }: {
   image: any;
   alt: string;
+  sizes: string;
   className?: string;
 }) {
   return (
     <img
       src={image.src}
       srcSet={image.srcSet?.attribute || image.attributes?.srcset}
+      sizes={sizes}
       width={image.attributes?.width}
       height={image.attributes?.height}
       alt={alt}
@@ -146,7 +150,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                     images[introCard.data.image].srcSet?.attribute ||
                     images[introCard.data.image].attributes?.srcset
                   }
-                  sizes="(max-width: 640px) 140px, (max-width: 1024px) 180px, 210px"
+                  sizes={BEE_IMAGE_SIZES}
                   width={images[introCard.data.image].attributes?.width || 400}
                   height={images[introCard.data.image].attributes?.height || 400}
                   alt="Nikshaan's profile avatar"
@@ -168,6 +172,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                 <CardImage
                   image={images[educationCard.data.image]}
                   alt="Dwarkadas J. Sanghvi College of Engineering logo"
+                  sizes="90px"
                   className="select-none w-[70px] h-[70px] sm:w-[90px] sm:h-[90px] object-contain"
                 />
               </div>
@@ -208,6 +213,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
               <CardImage
                 image={images.winIcon}
                 alt=""
+                sizes="64px"
                 className="select-none w-[52px] h-[52px] sm:w-[64px] sm:h-[64px] object-contain"
               />
               <span className="type-caption text-[var(--text-tertiary)]">
@@ -224,7 +230,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
             onActivate={() => setSelectedId("experience")}
             selected={selectedId === "experience"}
             layoutId="card-experience"
-            aria-label="View full experience details"
+            aria-label="Experience — view full details"
           >
             <p className="font-bold mb-3">Experience</p>
             <div className="flex flex-col gap-3 flex-1 justify-center">
@@ -233,6 +239,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                   <CardImage
                     image={images[item.image]}
                     alt=""
+                    sizes="32px"
                     className="w-8 h-8 rounded-full object-contain shrink-0 bg-[var(--surface-raised)]"
                   />
                   <div className="min-w-0">
@@ -256,6 +263,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                   <CardImage
                     image={images[item.image]}
                     alt=""
+                    sizes="32px"
                     className="w-8 h-8 rounded-md object-contain shrink-0 bg-[var(--surface-raised)]"
                   />
                   <div className="min-w-0">

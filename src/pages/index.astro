@@ -7,24 +7,17 @@ import FunBentoGridWrapper from "../components/FunBentoGridWrapper.astro";
 
 import MeBentoGridWrapper from "../components/MeBentoGridWrapper.astro";
 import beeImage from "../data/bee.avif";
-import nikshaanRaw from "../data/NIKSHAAN.avif";
 import { getImage } from "astro:assets";
+import { BEE_IMAGE_SIZES } from "../lib/imageSizes";
 
 export const prerender = true;
 
 const optimizedBeeImage = await getImage({
   src: beeImage,
   format: "avif",
-  widths: [320, 640, 768, 1024, 1280],
-  width: 313,
+  widths: [140, 180, 210, 280, 420],
+  width: 210,
   quality: 95,
-});
-
-const optimizedProfileImage = await getImage({
-  src: nikshaanRaw,
-  format: "avif",
-  width: 400,
-  quality: 85,
 });
 ---
 
@@ -41,8 +34,9 @@ const optimizedProfileImage = await getImage({
 <MainLayout
   title="Nikshaan | Portfolio"
   description="I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style."
-  preloadImage={optimizedBeeImage.src}
-  profileImage={optimizedProfileImage.src}
+  preloadImageSrc={optimizedBeeImage.src}
+  preloadImageSrcSet={optimizedBeeImage.srcSet?.attribute}
+  preloadImageSizes={BEE_IMAGE_SIZES}
 >
   <a href="#main-content" class="skip-link">Skip to main content</a>
   <NavbarWrapper />

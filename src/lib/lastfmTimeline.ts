@@ -1,3 +1,5 @@
+import snapshotData from "../generated/lastfmSnapshot.json";
+
 export interface Scrobble {
   ts: number;
   artist: string;
@@ -10,9 +12,22 @@ export interface Timeline {
   fetchedAt: number;
 }
 
+interface SnapshotFile {
+  artists: string[];
+  scrobbles: [number, number][];
+  fromSec: number;
+  toSec: number;
+  generatedAt: number;
+}
+
+const snapshot = snapshotData as SnapshotFile;
+
 const PAGE_SIZE = 500;
 const MAX_PAGES = 40;
+const FETCH_CONCURRENCY = 4;
 const REQUEST_TIMEOUT_MS = 8000;
+const MAX_RATE_LIMIT_RETRIES = 3;
+const MAX_RATE_LIMIT_WAIT_MS = 15_000;
 
 export const SECONDS_PER_DAY = 86_400;
 const SECONDS_PER_WEEK = 604_800;
@@ -20,11 +35,34 @@ export const ROLLING_DAYS = 365;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+
+  async function worker(): Promise<void> {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i]);
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, () => worker()),
+  );
+  return results;
+}
+
 export async function fetchWithRetry(
   url: string,
   maxRetries = 3,
 ): Promise<Response> {
   let lastError: unknown = null;
+  let rateLimitRetries = 0;
+  let rateLimitWaitMs = 0;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     const controller = new AbortController();
@@ -41,11 +79,24 @@ export async function fetchWithRetry(
       clearTimeout(timeoutId);
 
       if (response.status === 429) {
-        const retryAfter = parseInt(
+        if (
+          rateLimitRetries >= MAX_RATE_LIMIT_RETRIES ||
+          rateLimitWaitMs >= MAX_RATE_LIMIT_WAIT_MS
+        ) {
+          throw new Error("HTTP 429: rate limit retry budget exhausted");
+        }
+        const retryAfterSec = parseInt(
           response.headers.get("Retry-After") || "3",
           10,
         );
-        await sleep(retryAfter * 1000);
+        const waitMs = Math.min(
+          retryAfterSec * 1000,
+          MAX_RATE_LIMIT_WAIT_MS - rateLimitWaitMs,
+        );
+        rateLimitRetries++;
+        rateLimitWaitMs += waitMs;
+        await sleep(waitMs);
+        attempt--;
         continue;
       }
       if (response.ok) return response;
@@ -80,7 +131,7 @@ function recentTracksUrl(
   );
 }
 
-function parseTracks(raw: unknown, nowSec: number): Scrobble[] {
+function parseTracks(raw: unknown): Scrobble[] {
   const root = raw as {
     recenttracks?: { track?: unknown };
   } | null;
@@ -89,27 +140,27 @@ function parseTracks(raw: unknown, nowSec: number): Scrobble[] {
 
   const out: Scrobble[] = [];
   for (const t of arr as {
+    "@attr"?: { nowplaying?: string };
     date?: { uts?: string };
     artist?: { "#text"?: string; name?: string };
   }[]) {
+    if (t?.["@attr"]?.nowplaying) continue;
     const name = (t?.artist?.["#text"] ?? t?.artist?.name ?? "").trim();
-    if (!name) continue;
     const uts = t?.date?.uts;
-    const ts = uts ? parseInt(uts, 10) : nowSec;
+    if (!name || !uts) continue;
+    const ts = parseInt(uts, 10);
     if (!Number.isFinite(ts)) continue;
     out.push({ ts, artist: name });
   }
   return out;
 }
 
-async function fetchTimelineUncached(
+async function fetchRangeOrThrow(
   username: string,
   apiKey: string,
   fromSec: number,
   toSec: number,
-): Promise<Timeline> {
-  const nowSec = Math.floor(Date.now() / 1000);
-
+): Promise<Scrobble[]> {
   const probe = await fetchWithRetry(
     recentTracksUrl(username, apiKey, fromSec, toSec, 1, 1),
   );
@@ -119,39 +170,88 @@ async function fetchTimelineUncached(
     10,
   );
 
-  if (!Number.isFinite(total) || total <= 0) {
-    return { scrobbles: [], fromSec, toSec, fetchedAt: Date.now() };
-  }
+  if (!Number.isFinite(total) || total <= 0) return [];
 
   const pages = Math.min(Math.ceil(total / PAGE_SIZE), MAX_PAGES);
-  const responses = await Promise.all(
-    Array.from({ length: pages }, (_, i) =>
+  const pageNumbers = Array.from({ length: pages }, (_, i) => i + 1);
+  const responses = await mapWithConcurrency(
+    pageNumbers,
+    FETCH_CONCURRENCY,
+    (page) =>
       fetchWithRetry(
-        recentTracksUrl(username, apiKey, fromSec, toSec, PAGE_SIZE, i + 1),
-      )
-        .then((r) => r.json())
-        .catch(() => null),
-    ),
+        recentTracksUrl(username, apiKey, fromSec, toSec, PAGE_SIZE, page),
+      ).then((r) => r.json()),
   );
 
   const scrobbles: Scrobble[] = [];
-  for (const json of responses) {
-    if (!json) continue;
-    scrobbles.push(...parseTracks(json, nowSec));
-  }
-
+  for (const json of responses) scrobbles.push(...parseTracks(json));
   scrobbles.sort((a, b) => a.ts - b.ts);
-  return { scrobbles, fromSec, toSec, fetchedAt: Date.now() };
+  return scrobbles;
 }
 
-const TIMELINE_CACHE_MS = 90 * 1000;
-const ANCHOR_TOLERANCE_SEC = 300;
+interface TimelineState {
+  scrobbles: Scrobble[];
+  coveredToSec: number;
+  fetchedAt: number;
+}
 
-let timelineCache: Timeline | null = null;
-let timelinePending: Promise<Timeline> | null = null;
+function decodeSnapshot(): TimelineState {
+  const scrobbles: Scrobble[] = snapshot.scrobbles.map(([ts, idx]) => ({
+    ts,
+    artist: snapshot.artists[idx] ?? "",
+  }));
+  return { scrobbles, coveredToSec: snapshot.toSec, fetchedAt: 0 };
+}
+
+function pruneOld(scrobbles: Scrobble[], cutoffSec: number): Scrobble[] {
+  let start = 0;
+  while (start < scrobbles.length && scrobbles[start].ts < cutoffSec) start++;
+  return start === 0 ? scrobbles : scrobbles.slice(start);
+}
+
+function toTimeline(s: TimelineState, anchorSec: number): Timeline {
+  return {
+    scrobbles: s.scrobbles,
+    fromSec: anchorSec - ROLLING_DAYS * SECONDS_PER_DAY,
+    toSec: s.coveredToSec,
+    fetchedAt: s.fetchedAt,
+  };
+}
+
+async function refresh(
+  username: string,
+  apiKey: string,
+  anchorSec: number,
+  base: TimelineState,
+): Promise<TimelineState> {
+  const cutoffSec = anchorSec - ROLLING_DAYS * SECONDS_PER_DAY;
+  const needsFullFetch = base.coveredToSec <= 0 || base.coveredToSec < cutoffSec;
+  const fromSec = needsFullFetch ? cutoffSec : base.coveredToSec + 1;
+
+  if (fromSec > anchorSec) {
+    return {
+      scrobbles: pruneOld(base.scrobbles, cutoffSec),
+      coveredToSec: base.coveredToSec,
+      fetchedAt: Date.now(),
+    };
+  }
+
+  const delta = await fetchRangeOrThrow(username, apiKey, fromSec, anchorSec);
+  const merged = needsFullFetch
+    ? delta
+    : pruneOld(base.scrobbles, cutoffSec).concat(delta);
+
+  return { scrobbles: merged, coveredToSec: anchorSec, fetchedAt: Date.now() };
+}
+
+const TIMELINE_TTL_MS = 30 * 1000;
+
+let state: TimelineState | null = null;
+let pending: Promise<TimelineState> | null = null;
 
 export function peekTimeline(): Timeline | null {
-  return timelineCache;
+  if (!state) return null;
+  return toTimeline(state, state.coveredToSec);
 }
 
 export async function getTimeline(
@@ -161,35 +261,35 @@ export async function getTimeline(
   options?: { force?: boolean },
 ): Promise<Timeline> {
   const force = options?.force === true;
-  const fromSec = anchorSec - ROLLING_DAYS * SECONDS_PER_DAY;
-  const now = Date.now();
+  if (!state) state = decodeSnapshot();
 
-  if (
-    !force &&
-    timelineCache &&
-    now - timelineCache.fetchedAt < TIMELINE_CACHE_MS &&
-    Math.abs(timelineCache.toSec - anchorSec) <= ANCHOR_TOLERANCE_SEC
-  ) {
-    return timelineCache;
+  const now = Date.now();
+  if (!force && now - state.fetchedAt < TIMELINE_TTL_MS) {
+    return toTimeline(state, anchorSec);
   }
 
-  if (timelinePending) return timelinePending;
+  if (pending) {
+    try {
+      return toTimeline(await pending, anchorSec);
+    } catch {
+      return toTimeline(state, anchorSec);
+    }
+  }
 
-  const run = fetchTimelineUncached(username, apiKey, fromSec, anchorSec).then(
-    (t) => {
-      timelineCache = t;
-      return t;
-    },
-  );
-  timelinePending = run;
+  const base = state;
+  const run = refresh(username, apiKey, anchorSec, base).then((s) => {
+    state = s;
+    return s;
+  });
+  pending = run;
   void run.catch(() => {}).finally(() => {
-    if (timelinePending === run) timelinePending = null;
+    if (pending === run) pending = null;
   });
 
   try {
-    return await run;
+    return toTimeline(await run, anchorSec);
   } catch (err) {
-    if (timelineCache) return timelineCache;
+    if (state) return toTimeline(state, anchorSec);
     throw err;
   }
 }
@@ -214,6 +314,14 @@ function istMidnightUtcMs(p: { year: number; month: number; date: number }) {
 function toIstDateString(ms: number): string {
   const { year, month, date } = istParts(ms);
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
+}
+
+export function istDayStartSec(nowMs: number): number {
+  return Math.floor(istMidnightUtcMs(istParts(nowMs)) / 1000);
+}
+
+export function istDayEndSec(nowMs: number): number {
+  return istDayStartSec(nowMs) + SECONDS_PER_DAY - 1;
 }
 
 export interface DailyScrobble {

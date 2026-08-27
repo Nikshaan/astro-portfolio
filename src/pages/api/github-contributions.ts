@@ -1,17 +1,26 @@
 import type { APIRoute } from "astro";
+import { GH_TOKEN, GH_USERNAME } from "astro:env/server";
 
 export const prerender = false;
 
-const CACHE_DURATION = 60 * 60 * 1000;
+const CACHE_DURATION = 60 * 1000;
 const REQUEST_TIMEOUT = 8000;
 let cachedData: GitHubResponse | null = null;
 let lastFetchTime = 0;
 let pendingRequest: Promise<GitHubResponse> | null = null;
 
+export type ContributionLevel =
+  | "NONE"
+  | "FIRST_QUARTILE"
+  | "SECOND_QUARTILE"
+  | "THIRD_QUARTILE"
+  | "FOURTH_QUARTILE";
+
 interface ContributionDay {
   contributionCount: number;
   date: string;
   color: string;
+  contributionLevel: ContributionLevel;
 }
 
 interface ContributionWeek {
@@ -54,10 +63,27 @@ const FALLBACK_DATA: GitHubResponse = {
   },
 };
 
-export const GET: APIRoute = async () => {
-  const GH_TOKEN = import.meta.env.GH_TOKEN as string;
-  const GH_USERNAME = import.meta.env.GH_USERNAME as string;
+const QUERY = `
+  query($username: String!) {
+    user(login: $username) {
+      contributionsCollection {
+        contributionCalendar {
+          totalContributions
+          weeks {
+            contributionDays {
+              contributionCount
+              date
+              color
+              contributionLevel
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
+export const GET: APIRoute = async () => {
   if (!GH_TOKEN || !GH_USERNAME) {
     return new Response(
       JSON.stringify({
@@ -76,7 +102,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
+        "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=600",
         "X-Cache-Status": "HIT",
       },
     });
@@ -89,44 +115,14 @@ export const GET: APIRoute = async () => {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
+          "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=600",
           "X-Cache-Status": "DEDUPED",
         },
       });
     } catch {}
   }
 
-  const today = new Date();
-  const oneYearAgo = new Date(today);
-  oneYearAgo.setDate(today.getDate() - 365);
-  oneYearAgo.setHours(0, 0, 0, 0);
-
-  const todayEnd = new Date(today);
-  todayEnd.setHours(23, 59, 59, 999);
-
-  const from: string = oneYearAgo.toISOString();
-  const to: string = todayEnd.toISOString();
-
-  const query = `
-    query($username: String!, $from: DateTime!, $to: DateTime!) {
-      user(login: $username) {
-        contributionsCollection(from: $from, to: $to) {
-          contributionCalendar {
-            totalContributions
-            weeks {
-              contributionDays {
-                contributionCount
-                date
-                color
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  pendingRequest = (async (): Promise<GitHubResponse> => {
+  const run = (async (): Promise<GitHubResponse> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
@@ -139,8 +135,8 @@ export const GET: APIRoute = async () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        query,
-        variables: { username: GH_USERNAME, from, to },
+        query: QUERY,
+        variables: { username: GH_USERNAME },
       }),
     });
 
@@ -157,27 +153,29 @@ export const GET: APIRoute = async () => {
     return data;
   })();
 
+  pendingRequest = run;
+  void run.catch(() => {}).finally(() => {
+    if (pendingRequest === run) pendingRequest = null;
+  });
+
   try {
-    const data = await pendingRequest;
-    pendingRequest = null;
+    const data = await run;
 
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
+        "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=600",
         "X-Cache-Status": "MISS",
       },
     });
   } catch {
-    pendingRequest = null;
-
     if (cachedData) {
       return new Response(JSON.stringify(cachedData), {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
+          "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=600",
           "X-Cache-Status": "STALE",
         },
       });

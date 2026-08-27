@@ -6,13 +6,32 @@ import {
   fetchGithubContributionsData,
   readGithubContributionsCache,
   type ContributionDay,
+  type ContributionLevel,
   type ContributionWeek,
   type GitHubAPIResponse,
 } from "../utils/githubContributionsClient";
 import styles from "./githubContributions.module.css";
 
+const LEVEL_BY_ENUM: Record<ContributionLevel, number> = {
+  NONE: 0,
+  FIRST_QUARTILE: 1,
+  SECOND_QUARTILE: 2,
+  THIRD_QUARTILE: 3,
+  FOURTH_QUARTILE: 4,
+};
+
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+function levelFor(day: ContributionDay): number {
+  if (day.contributionLevel) return LEVEL_BY_ENUM[day.contributionLevel];
+  const count = day.contributionCount;
+  if (count <= 0) return 0;
+  if (count <= 3) return 1;
+  if (count <= 6) return 2;
+  if (count <= 9) return 3;
+  return 4;
 }
 
 function formatContributionDayLabel(day: ContributionDay): string {
@@ -45,12 +64,9 @@ const ContributionDayCell = memo(function ContributionDayCell({
   onHover,
   onLeave,
 }: ContributionDayCellProps) {
-  const label = formatContributionDayLabel(day);
-
   return (
     <div
       className={`${styles.day} ${styles[`contributionLevel${level}`]}`}
-      aria-label={label}
       onMouseEnter={(event) => onHover(day, event.currentTarget)}
       onMouseLeave={onLeave}
     />
@@ -161,6 +177,7 @@ export default memo(function GithubContributions({
       }
     };
 
+    let lastPollAt = 0;
     const fetchContributions = async (force = false) => {
       try {
         const data = await fetchGithubContributionsData(
@@ -174,22 +191,27 @@ export default memo(function GithubContributions({
       }
     };
 
+    const poll = (minGapMs: number, force: boolean) => {
+      const now = Date.now();
+      if (minGapMs > 0 && now - lastPollAt < minGapMs) return;
+      lastPollAt = now;
+      void fetchContributions(force);
+    };
+
     const cached = readGithubContributionsCache();
     if (cached) {
       applyData(cached);
       setLoading(false);
     }
 
-    void fetchContributions();
+    poll(0, false);
 
     const interval = window.setInterval(() => {
-      if (document.visibilityState === "visible") {
-        void fetchContributions(true);
-      }
-    }, 60 * 60 * 1000);
+      if (document.visibilityState === "visible") poll(0, true);
+    }, 5 * 60 * 1000);
 
     const onVis = () => {
-      if (document.visibilityState === "visible") void fetchContributions(true);
+      if (document.visibilityState === "visible") poll(60_000, true);
     };
     document.addEventListener("visibilitychange", onVis);
 
@@ -221,14 +243,14 @@ export default memo(function GithubContributions({
         ) : error ? (
           <>
             <div className={styles.header}>
-              <h3 className="type-panel-title">GitHub Contributions (Last 12 Months)</h3>
+              <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
             </div>
             <p className="type-body-sm text-[var(--text-tertiary)] text-center py-4">{error}</p>
           </>
         ) : weeks.length > 0 ? (
           <>
             <div className={styles.header}>
-              <h3 className="type-panel-title">GitHub Contributions (Last 12 Months)</h3>
+              <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
               {totalContributions > 0 && (
                 <span className={styles.total}>
                   {totalContributions} contributions in the last year
@@ -244,24 +266,15 @@ export default memo(function GithubContributions({
               {weeks.map((week: ContributionWeek, weekIndex: number) => (
                 <div key={weekIndex} className={styles.week}>
                   {week.contributionDays.map(
-                    (day: ContributionDay, dayIndex: number) => {
-                      const count = day.contributionCount;
-                      let level = 0;
-                      if (count > 0 && count <= 3) level = 1;
-                      else if (count > 3 && count <= 6) level = 2;
-                      else if (count > 6 && count <= 9) level = 3;
-                      else if (count > 9) level = 4;
-
-                      return (
-                        <ContributionDayCell
-                          key={dayIndex}
-                          day={day}
-                          level={level}
-                          onHover={positionTooltip}
-                          onLeave={hideTooltip}
-                        />
-                      );
-                    },
+                    (day: ContributionDay, dayIndex: number) => (
+                      <ContributionDayCell
+                        key={dayIndex}
+                        day={day}
+                        level={levelFor(day)}
+                        onHover={positionTooltip}
+                        onLeave={hideTooltip}
+                      />
+                    ),
                   )}
                 </div>
               ))}
@@ -270,7 +283,7 @@ export default memo(function GithubContributions({
         ) : (
           <>
             <div className={styles.header}>
-              <h3 className="type-panel-title">GitHub Contributions (Last 12 Months)</h3>
+              <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
             </div>
             <p className="type-body-sm text-[var(--text-tertiary)] text-center py-4">
               No contribution data available

@@ -28,6 +28,7 @@ const FUN_MUSIC_YEARLY_PAIR_BODY =
 interface Image {
   id: string;
   src: string;
+  srcSet?: string;
   fullSrc?: string;
   width: number;
   height: number;
@@ -162,18 +163,37 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const maxPrefetchImages = 48;
 
-    const preloadObserver = new IntersectionObserver(
-      (entries) => {
-        if (!entries[0]?.isIntersecting) return;
-        preloadObserver.disconnect();
+    let preloadObserver: IntersectionObserver | null = null;
 
-        const scheduleBatch =
-          typeof requestIdleCallback === "function"
-            ? () =>
-              requestIdleCallback(
-                () => {
+    if (!isSlowConnection()) {
+      const maxPrefetchImages = 3;
+      preloadObserver = new IntersectionObserver(
+        (entries) => {
+          if (!entries[0]?.isIntersecting) return;
+          preloadObserver?.disconnect();
+
+          const scheduleBatch =
+            typeof requestIdleCallback === "function"
+              ? () =>
+                requestIdleCallback(
+                  () => {
+                    const n = Math.min(images.length, maxPrefetchImages);
+                    for (let i = 0; i < n; i++) {
+                      const img = images[i];
+                      const url = img.fullSrc || img.src;
+                      if (!url) continue;
+                      const link = document.createElement("link");
+                      link.rel = "prefetch";
+                      link.as = "image";
+                      link.href = url;
+                      document.head.appendChild(link);
+                    }
+                  },
+                  { timeout: 2400 },
+                )
+              : () =>
+                queueMicrotask(() => {
                   const n = Math.min(images.length, maxPrefetchImages);
                   for (let i = 0; i < n; i++) {
                     const img = images[i];
@@ -185,28 +205,13 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
                     link.href = url;
                     document.head.appendChild(link);
                   }
-                },
-                { timeout: 2400 },
-              )
-            : () =>
-              queueMicrotask(() => {
-                const n = Math.min(images.length, maxPrefetchImages);
-                for (let i = 0; i < n; i++) {
-                  const img = images[i];
-                  const url = img.fullSrc || img.src;
-                  if (!url) continue;
-                  const link = document.createElement("link");
-                  link.rel = "prefetch";
-                  link.as = "image";
-                  link.href = url;
-                  document.head.appendChild(link);
-                }
-              });
-        scheduleBatch();
-      },
-      { rootMargin: "200px" },
-    );
-    preloadObserver.observe(container);
+                });
+          scheduleBatch();
+        },
+        { rootMargin: "200px" },
+      );
+      preloadObserver.observe(container);
+    }
 
     const loadOnInteraction = () => {
       initFancybox();
@@ -276,7 +281,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
       import("@fancyapps/ui").then(({ Fancybox }) => {
         Fancybox.close();
       });
-      preloadObserver.disconnect();
+      preloadObserver?.disconnect();
       container.removeEventListener("click", handleClick);
       container.removeEventListener("mouseenter", loadOnInteraction, true);
       container.removeEventListener("focus", loadOnInteraction, true);
@@ -352,6 +357,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
               <div className="absolute inset-0 z-10 overflow-hidden">
                 <img
                   src={image.src}
+                  srcSet={image.srcSet}
                   width={image.width}
                   height={image.height}
                   alt={image.alt}

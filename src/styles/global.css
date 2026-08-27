@@ -2,13 +2,18 @@
 
 @custom-variant dark (&:where(:root:not([data-theme="light"]) &));
 
+@import "@fontsource-variable/dm-sans/wght.css";
+@import "@fontsource-variable/space-grotesk/wght.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";
+
 @import "./tokens.css";
 @import "./transitions.css";
 @import "./project-links.css";
 
 :root {
-  --font-heading: "Space Grotesk", sans-serif;
-  --font-body: "DM Sans", sans-serif;
+  --font-heading: "Space Grotesk Variable", sans-serif;
+  --font-body: "DM Sans Variable", sans-serif;
+  --font-mono: "JetBrains Mono Variable", "Consolas", "Monaco", "Courier New", monospace;
 
   --type-h1: clamp(1.375rem, 1.3rem + 0.3vw, 1.625rem);
   --type-h2: clamp(1.25rem, 1.2rem + 0.2vw, 1.375rem);
@@ -305,7 +310,7 @@
 code,
 pre,
 .font-mono {
-  font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
+  font-family: var(--font-mono);
 }
 
 html.lenis,
@@ -450,8 +455,7 @@ html.lenis body {
 
 .prose code,
 .prose pre {
-  font-family:
-    "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace !important;
+  font-family: var(--font-mono) !important;
 }
 
 .prose h1 {
@@ -571,8 +575,8 @@ html.lenis body {
 
   --f-counter-bg: var(--surface-card) !important;
 
-  --f-caption-color: var(--text-primary) !important;
-  --f-caption-bg: transparent !important;
+  --f-caption-color: #ffffff !important;
+  --f-caption-bg: rgba(0, 0, 0, 0.6) !important;
 
   --f-spinner-color-1: var(--border-subtle) !important;
   --f-spinner-color-2: var(--accent) !important;
@@ -601,6 +605,11 @@ html.lenis body {
   --f-thumb-border-radius: var(--radius-control) !important;
   --f-thumb-selected-shadow: inset 0 0 0 2px var(--accent) !important;
   --f-thumb-focus-shadow: inset 0 0 0 2px var(--accent) !important;
+}
+
+.f-caption {
+  border-radius: var(--radius-control);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 @keyframes musicShimmer {

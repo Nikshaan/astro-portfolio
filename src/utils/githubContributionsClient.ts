@@ -1,7 +1,15 @@
+export type ContributionLevel =
+  | "NONE"
+  | "FIRST_QUARTILE"
+  | "SECOND_QUARTILE"
+  | "THIRD_QUARTILE"
+  | "FOURTH_QUARTILE";
+
 export interface ContributionDay {
   contributionCount: number;
   date: string;
   color: string;
+  contributionLevel?: ContributionLevel;
 }
 
 export interface ContributionWeek {
@@ -32,7 +40,7 @@ let inflight: Promise<GitHubAPIResponse> | null = null;
 let cached: GitHubAPIResponse | null = null;
 let cacheTimestamp = 0;
 
-const CLIENT_CACHE_MS = 55 * 60 * 1000;
+const CLIENT_CACHE_MS = 60 * 1000;
 
 export function readGithubContributionsCache(): GitHubAPIResponse | null {
   if (cached && Date.now() - cacheTimestamp < CLIENT_CACHE_MS) return cached;

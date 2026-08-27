@@ -33,7 +33,7 @@ export interface MusicStatsSnapshot {
 
 const CLIENT_DEDUPE_MS = 20_000;
 const READ_CACHE_MS = 5 * 60 * 1000;
-const POLL_MS = 90_000;
+const POLL_MS = 45_000;
 
 type StatsListener = (snapshot: MusicStatsSnapshot) => void;
 

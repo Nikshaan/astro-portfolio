@@ -15,24 +15,18 @@ export interface RadialHeatmapPayload {
 
 const CLIENT_DEDUPE_MS = 20_000;
 const READ_CACHE_MS = 5 * 60 * 1000;
-const UNTIL_BUCKET_SEC = 120;
-export const RADIAL_POLL_MS = UNTIL_BUCKET_SEC * 1000;
+export const RADIAL_POLL_MS = 5 * 60 * 1000;
 
 let cached: RadialHeatmapPayload | null = null;
 let cachedAt = 0;
 let inflightPromise: Promise<RadialHeatmapPayload> | null = null;
 
-function anchorUntilSec(): number {
-  const s = Math.floor(Date.now() / 1000);
-  return Math.floor(s / UNTIL_BUCKET_SEC) * UNTIL_BUCKET_SEC;
-}
-
-function buildUrl(untilSec: number): string {
+function buildUrl(): string {
   const baseUrl = import.meta.env.BASE_URL || "/";
   const slug = baseUrl.endsWith("/")
     ? "api/music-radial-heatmap"
     : "/api/music-radial-heatmap";
-  return `${baseUrl}${slug}?until=${untilSec}`;
+  return `${baseUrl}${slug}`;
 }
 
 export function readRadialHeatmapCache(): RadialHeatmapPayload | null {
@@ -57,14 +51,13 @@ async function parsePayload(response: Response): Promise<RadialHeatmapPayload> {
 }
 
 export async function loadRadialHeatmapPayload(): Promise<RadialHeatmapPayload> {
-  const untilSec = anchorUntilSec();
   const now = Date.now();
 
   if (cached && now - cachedAt < CLIENT_DEDUPE_MS) return cached;
   if (inflightPromise) return inflightPromise;
 
   const run = async () => {
-    const response = await fetch(buildUrl(untilSec), {
+    const response = await fetch(buildUrl(), {
       cache: "no-store",
       headers: { Accept: "application/json" },
     });

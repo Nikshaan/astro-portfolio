@@ -1,8 +1,15 @@
 import type { APIRoute } from "astro";
 import {
+  LASTFM_API_KEY,
+  LASTFM_USERNAME,
+  SPOTIFY_CLIENT_ID,
+  SPOTIFY_CLIENT_SECRET,
+} from "astro:env/server";
+import {
   dailyBuckets,
   fetchWithRetry,
   getTimeline,
+  istDayStartSec,
   listeningStreak,
   peekTimeline,
   topArtists,
@@ -44,10 +51,10 @@ interface MusicStatsResult {
   genreData: GenreEntry[];
 }
 
-const SERVER_CACHE_MS = 90 * 1000;
-const MIN_FORCE_INTERVAL_MS = 60 * 1000;
+const SERVER_CACHE_MS = 30 * 1000;
 const LOOKUP_CACHE_MS = 6 * 60 * 60 * 1000;
 const TOP_ARTIST_COUNT = 5;
+const TOP_TAGS_PER_ARTIST = 3;
 
 let cache: { data: MusicStatsResult; timestamp: number } | null = null;
 let userStatsCache: { value: number[]; timestamp: number } | null = null;
@@ -57,7 +64,7 @@ let spotifyToken: { value: string; expiresAt: number } | null = null;
 
 const CACHE_HEADERS = {
   "Content-Type": "application/json",
-  "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=600",
+  "Cache-Control": "public, max-age=0, s-maxage=30, stale-while-revalidate=300",
 } as const;
 
 const jsonResponse = (
@@ -113,7 +120,7 @@ async function fetchArtistTags(
       name?: string;
       count?: number;
     }[];
-    const tags = list.slice(0, 2).map((t) => ({
+    const tags = list.slice(0, TOP_TAGS_PER_ARTIST).map((t) => ({
       genre: String(t?.name ?? "").toLowerCase(),
       count: Number(t?.count ?? 0),
     }));
@@ -135,17 +142,22 @@ async function buildGenreData(
   );
 
   const aggregated = new Map<string, number>();
-  for (const tags of perArtist) {
+  artists.forEach((artist, i) => {
+    const tags = perArtist[i];
+    const tagTotal = tags.reduce((sum, t) => sum + t.count, 0);
+    if (tagTotal <= 0) return;
+    const plays = parseInt(artist.count, 10) || 0;
     for (const t of tags) {
       if (!t.genre) continue;
-      aggregated.set(t.genre, (aggregated.get(t.genre) ?? 0) + t.count);
+      const weight = (t.count / tagTotal) * plays;
+      aggregated.set(t.genre, (aggregated.get(t.genre) ?? 0) + weight);
     }
-  }
+  });
 
   return [...aggregated.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
-    .map(([genre, count]) => ({ genre, count }));
+    .map(([genre, count]) => ({ genre, count: Math.round(count * 100) / 100 }));
 }
 
 async function getSpotifyToken(
@@ -193,7 +205,11 @@ async function fetchArtistImage(
     );
     if (!res.ok) return hit?.url ?? "";
     const json = await res.json();
-    const url = json?.artists?.items?.[0]?.images?.[0]?.url ?? "";
+    const item = json?.artists?.items?.[0];
+    const matches =
+      typeof item?.name === "string" &&
+      item.name.toLowerCase() === key;
+    const url = matches ? (item?.images?.[0]?.url ?? "") : "";
     imageCache.set(key, { url, timestamp: Date.now() });
     return url;
   } catch {
@@ -206,11 +222,10 @@ async function buildStats(
   apiKey: string,
   spotifyClientId: string,
   spotifyClientSecret: string,
-  anchorSec: number,
   userStatsPromise: Promise<number[]>,
 ): Promise<MusicStatsResult> {
   const nowMs = Date.now();
-  const weekAgo = anchorSec - 7 * SECONDS_PER_DAY;
+  const weekAgo = istDayStartSec(nowMs) - 6 * SECONDS_PER_DAY;
 
   const weeklyScrobbles = dailyBuckets(timeline, 7, nowMs);
   const streak = listeningStreak(timeline, nowMs);
@@ -238,15 +253,8 @@ async function buildStats(
   };
 }
 
-export const GET: APIRoute = async ({ request }) => {
-  const apiKey = (import.meta.env.LASTFM_API_KEY ||
-    import.meta.env.PUBLIC_LASTFM_API_KEY) as string;
-  const username = (import.meta.env.LASTFM_USERNAME ||
-    import.meta.env.PUBLIC_LASTFM_USERNAME) as string;
-  const spotifyClientId = import.meta.env.SPOTIFY_CLIENT_ID as string;
-  const spotifyClientSecret = import.meta.env.SPOTIFY_CLIENT_SECRET as string;
-
-  if (!apiKey || !username) {
+export const GET: APIRoute = async () => {
+  if (!LASTFM_API_KEY || !LASTFM_USERNAME) {
     return jsonResponse(
       { error: "Last.fm credentials not configured" },
       500,
@@ -254,34 +262,27 @@ export const GET: APIRoute = async ({ request }) => {
     );
   }
 
-  const url = new URL(request.url);
   const now = Date.now();
   const anchorSec = Math.floor(now / 1000);
   const cacheAge = cache ? now - cache.timestamp : Number.POSITIVE_INFINITY;
 
-  const forceRefresh =
-    url.searchParams.get("force") === "1" && cacheAge >= MIN_FORCE_INTERVAL_MS;
-
-  if (!forceRefresh && cache && cacheAge < SERVER_CACHE_MS) {
+  if (cache && cacheAge < SERVER_CACHE_MS) {
     return jsonResponse(cache.data, 200, "HIT");
   }
 
-  const userStatsPromise = fetchUserStats(username, apiKey);
+  const userStatsPromise = fetchUserStats(LASTFM_USERNAME, LASTFM_API_KEY);
 
   try {
-    const timeline = await getTimeline(username, apiKey, anchorSec, {
-      force: forceRefresh,
-    });
+    const timeline = await getTimeline(LASTFM_USERNAME, LASTFM_API_KEY, anchorSec);
     const data = await buildStats(
       timeline,
-      apiKey,
-      spotifyClientId,
-      spotifyClientSecret,
-      anchorSec,
+      LASTFM_API_KEY,
+      SPOTIFY_CLIENT_ID ?? "",
+      SPOTIFY_CLIENT_SECRET ?? "",
       userStatsPromise,
     );
     cache = { data, timestamp: Date.now() };
-    return jsonResponse(data, 200, forceRefresh ? "MISS" : "FRESH");
+    return jsonResponse(data, 200, "FRESH");
   } catch (error) {
     if (cache) return jsonResponse(cache.data, 200, "STALE");
 
@@ -290,10 +291,9 @@ export const GET: APIRoute = async ({ request }) => {
       try {
         const data = await buildStats(
           fallback,
-          apiKey,
-          spotifyClientId,
-          spotifyClientSecret,
-          anchorSec,
+          LASTFM_API_KEY,
+          SPOTIFY_CLIENT_ID ?? "",
+          SPOTIFY_CLIENT_SECRET ?? "",
           userStatsPromise,
         );
         return jsonResponse(data, 200, "STALE");

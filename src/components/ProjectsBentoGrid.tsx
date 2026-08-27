@@ -101,6 +101,7 @@ function TechStack({ techstack }: { techstack?: string[] }) {
         return (
           <div
             key={i}
+            role="img"
             tabIndex={0}
             onMouseEnter={(e) => showTooltip(e, tech)}
             onMouseLeave={hideTooltip}
@@ -200,7 +201,7 @@ const ProjectsBentoGrid: React.FC = () => {
               onActivate={() => setSelectedId(project.id)}
               selected={selectedId === project.id}
               layoutId={`card-${project.id}`}
-              aria-label={`View case study for ${project.data.name}`}
+              aria-label={`${project.data.name} — view case study`}
             >
               <div className="flex flex-col h-full justify-between gap-4">
                 <div>
