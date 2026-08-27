@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { getImage } from "astro:assets";
 import { photoTitles } from "../../data/photoTitles";
+import { photoOrderRank } from "../../data/photoOrder";
 
 export const prerender = true;
 
@@ -21,7 +22,7 @@ export const GET: APIRoute = async () => {
       .sort(([a], [b]) => {
         const aNum = parseInt(a.match(/photo(\d+)/)?.[1] || "0");
         const bNum = parseInt(b.match(/photo(\d+)/)?.[1] || "0");
-        return aNum - bNum;
+        return photoOrderRank(aNum) - photoOrderRank(bNum);
       })
       .map(async ([path, module]) => {
         const photoNumber = parseInt(path.match(/photo(\d+)/)?.[1] || "0");

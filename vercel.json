@@ -21,7 +21,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://*.vercel.app https://*.spotify.com https://*.scdn.co; connect-src 'self' https://api.spotify.com https://ws.audioscrobbler.com https://vitals.vercel-insights.com; frame-ancestors 'none';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://*.vercel.app https://*.spotify.com https://*.scdn.co https://avatars.githubusercontent.com; connect-src 'self' https://api.spotify.com https://ws.audioscrobbler.com https://vitals.vercel-insights.com; frame-ancestors 'none';"
         },
         {
           "key": "X-Content-Type-Options",

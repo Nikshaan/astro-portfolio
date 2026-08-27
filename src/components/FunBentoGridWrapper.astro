@@ -2,6 +2,7 @@
 import FunBentoGrid from "./FunBentoGrid";
 import { getImage } from "astro:assets";
 import { photoTitles } from "../data/photoTitles";
+import { photoOrderRank } from "../data/photoOrder";
 
 const photoModules = import.meta.glob("../data/photos/photo*.webp");
 
@@ -9,7 +10,7 @@ const sortedModules = Object.entries(photoModules)
     .sort(([a], [b]) => {
         const aNum = parseInt(a.match(/photo(\d+)/)?.[1] || "0");
         const bNum = parseInt(b.match(/photo(\d+)/)?.[1] || "0");
-        return aNum - bNum;
+        return photoOrderRank(aNum) - photoOrderRank(bNum);
     })
     .slice(0, 7);
 

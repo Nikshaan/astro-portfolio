@@ -1,8 +1,13 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LazyMotion, domAnimation } from "framer-motion";
-import { Github, ExternalLink, ArrowRight } from "lucide-react";
+import { Github, ExternalLink, ArrowRight, Star, MessageCircle } from "lucide-react";
 import cardsData from "../data/cardsdata.json";
+import {
+  fetchOssContributionsData,
+  readOssContributionsCache,
+  type Contribution,
+} from "../utils/ossContributionsClient";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import reactjs from "../data/React.svg";
@@ -139,10 +144,69 @@ function TechStack({ techstack }: { techstack?: string[] }) {
   );
 }
 
+const OSS_MODAL_ID = "oss-contributions";
+
+function formatContributionDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function OssShimmerBar({ width }: { width: number }) {
+  return (
+    <div
+      className="h-3 rounded-md"
+      style={{
+        width,
+        backgroundImage:
+          "linear-gradient(90deg, var(--shimmer-from) 25%, var(--shimmer-to) 50%, var(--shimmer-from) 75%)",
+        backgroundSize: "400px 100%",
+        animation: "genreStreakShimmer 1.6s infinite linear",
+      }}
+    />
+  );
+}
+
 const ProjectsBentoGrid: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<"web" | "aiml">("aiml");
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const [contributions, setContributions] = useState<Contribution[] | null>(
+    () => readOssContributionsCache(),
+  );
+  const [ossError, setOssError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchOssContributionsData()
+      .then((data) => {
+        if (!cancelled) setContributions(data);
+      })
+      .catch(() => {
+        if (!cancelled) setOssError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const orgLogos = useMemo(() => {
+    if (!contributions) return [];
+    const seen = new Set<string>();
+    const logos: string[] = [];
+    for (const c of contributions) {
+      const org = c.repoName.split("/")[0];
+      if (seen.has(org)) continue;
+      seen.add(org);
+      logos.push(c.orgLogo);
+    }
+    return logos;
+  }, [contributions]);
+
+  const orgCount = orgLogos.length;
 
   const selectedItem: any = useMemo(
     () => cardsData.find((item) => item.id === selectedId),
@@ -248,14 +312,114 @@ const ProjectsBentoGrid: React.FC = () => {
               </div>
             </BentoCard>
           ))}
+
+          <BentoCard
+            span="wide"
+            expandable
+            onActivate={() => setSelectedId(OSS_MODAL_ID)}
+            selected={selectedId === OSS_MODAL_ID}
+            layoutId={`card-${OSS_MODAL_ID}`}
+            aria-label="Open Source Contributions — view all"
+          >
+            <div className="flex h-full flex-col justify-between gap-6 md:flex-row md:items-stretch">
+              <div className="flex shrink-0 flex-col justify-between gap-4 md:w-64">
+                <div>
+                  <h3 className="font-bold mb-2">Open Source</h3>
+                  <p className="type-body-sm text-[var(--text-secondary)]">
+                    Merged contributions to organization-owned repos.
+                  </p>
+                </div>
+                {!contributions && !ossError ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      {[0, 1, 2, 3].map((i) => (
+                        <div
+                          key={i}
+                          className="w-8 h-8 rounded-full shrink-0"
+                          style={{
+                            backgroundImage:
+                              "linear-gradient(90deg, var(--shimmer-from) 25%, var(--shimmer-to) 50%, var(--shimmer-from) 75%)",
+                            backgroundSize: "400px 100%",
+                            animation: "genreStreakShimmer 1.6s infinite linear",
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <OssShimmerBar width={140} />
+                  </div>
+                ) : ossError || contributions?.length === 0 ? (
+                  <p className="type-body-sm text-[var(--text-tertiary)] italic">
+                    No contributions yet — check back soon.
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center -space-x-2">
+                      {orgLogos.slice(0, 5).map((logo, i) => (
+                        <img
+                          key={i}
+                          src={logo}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="w-8 h-8 rounded-full object-cover border-2 border-[var(--surface-card)] bg-[var(--surface-raised)]"
+                        />
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between type-body-sm font-medium">
+                      <span className="text-[var(--text-secondary)]">
+                        {contributions!.length} contribution
+                        {contributions!.length === 1 ? "" : "s"} · {orgCount} org
+                        {orgCount === 1 ? "" : "s"}
+                      </span>
+                      <span className="flex items-center gap-1 text-[var(--text-tertiary)] group-hover:text-[var(--accent)] transition-colors">
+                        Details <ArrowRight size={14} aria-hidden="true" />
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {contributions && contributions.length > 0 && (
+                <div className="grid min-w-0 flex-1 grid-cols-1 content-center gap-x-6 gap-y-3 border-t border-[var(--border-subtle)] pt-4 sm:grid-cols-2 md:border-l md:border-t-0 md:pl-6 md:pt-0 xl:grid-cols-3">
+                  {contributions.slice(0, 6).map((c) => (
+                    <div key={c.id} className="flex min-w-0 items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <img
+                          src={c.orgLogo}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="w-7 h-7 rounded-full shrink-0 object-cover bg-[var(--surface-raised)]"
+                        />
+                        <p className="type-body-sm font-medium truncate">{c.title}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-3 type-caption text-[var(--text-tertiary)]">
+                        <span className="max-w-24 truncate">{c.repoName}</span>
+                        <span className="flex items-center gap-1 shrink-0">
+                          <Star size={11} aria-hidden="true" />
+                          {c.repoStars.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </BentoCard>
         </BentoGrid>
 
         <BentoModal
-          open={!!selectedId && !!selectedItem}
+          open={
+            (!!selectedId && !!selectedItem) || selectedId === OSS_MODAL_ID
+          }
           onClose={handleClose}
           layoutId={selectedId ? `card-${selectedId}` : undefined}
           titleId="project-modal-title"
-          closeLabel="Close project details"
+          closeLabel={
+            selectedId === OSS_MODAL_ID
+              ? "Close open source contributions"
+              : "Close project details"
+          }
           contentRef={wrapperRef}
           headerActions={
             selectedItem ? (
@@ -288,16 +452,70 @@ const ProjectsBentoGrid: React.FC = () => {
             ) : undefined
           }
         >
-          {selectedItem && (
+          {selectedId === OSS_MODAL_ID ? (
             <div className="flex flex-col gap-6">
-              <h2 id="project-modal-title" className="pr-24">
-                {selectedItem.data.name}
-              </h2>
-              <TechStack techstack={selectedItem.data.techstack} />
-              <div className="prose max-w-none">
-                <ProjectCardContent html={getProcessedContent(selectedItem.content || "")} />
+              <div className="pr-24">
+                <h2 id="project-modal-title">Open Source Contributions</h2>
+                <p className="type-body-sm text-[var(--text-tertiary)] mt-1">
+                  Merged pull requests and closed issues on organization-owned repos.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3">
+                {contributions?.map((c) => (
+                  <a
+                    key={c.id}
+                    href={c.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group/row flex items-center gap-3 p-3 rounded-[var(--radius-control)] border border-[var(--border-subtle)] hover:border-[var(--accent)] transition-colors"
+                  >
+                    <img
+                      src={c.orgLogo}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="w-9 h-9 rounded-full shrink-0 object-cover bg-[var(--surface-raised)]"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="type-body-sm font-medium truncate group-hover/row:text-[var(--accent)] transition-colors">
+                        {c.title}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 type-caption text-[var(--text-tertiary)] mt-1">
+                        <span className="truncate">{c.repoName}</span>
+                        <span className="flex items-center gap-1 shrink-0">
+                          <Star size={12} aria-hidden="true" />
+                          {c.repoStars.toLocaleString()}
+                        </span>
+                        <span className="flex items-center gap-1 shrink-0">
+                          <MessageCircle size={12} aria-hidden="true" />
+                          {c.commentCount}
+                        </span>
+                        <span className="shrink-0">
+                          {formatContributionDate(c.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                    <ExternalLink
+                      size={14}
+                      className="shrink-0 text-[var(--text-tertiary)] group-hover/row:text-[var(--accent)] transition-colors"
+                      aria-hidden="true"
+                    />
+                  </a>
+                ))}
               </div>
             </div>
+          ) : (
+            selectedItem && (
+              <div className="flex flex-col gap-6">
+                <h2 id="project-modal-title" className="pr-24">
+                  {selectedItem.data.name}
+                </h2>
+                <TechStack techstack={selectedItem.data.techstack} />
+                <div className="prose max-w-none">
+                  <ProjectCardContent html={getProcessedContent(selectedItem.content || "")} />
+                </div>
+              </div>
+            )
           )}
         </BentoModal>
       </div>
