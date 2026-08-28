@@ -38,10 +38,9 @@ const LABEL_R = 325;
 const SWEEP_DEG = (360 - N_WEEKS * GAP_DEG) / N_WEEKS;
 const SWEEP_RAD = (SWEEP_DEG * Math.PI) / 180;
 const STRIDE_RAD = SWEEP_RAD + (GAP_DEG * Math.PI) / 180;
-const ROTATE_NEWEST_WEEK_TO_TOP_DEG =
-  -((N_WEEKS - 1) * STRIDE_RAD * 180) / Math.PI;
-const CHART_ROTATE_TRANSFORM = `rotate(${ROTATE_NEWEST_WEEK_TO_TOP_DEG} ${CX} ${CY})`;
-const CHART_TEXT_UPRIGHT_DEG = -ROTATE_NEWEST_WEEK_TO_TOP_DEG;
+
+const IST_TIME_ZONE = "Asia/Kolkata";
+const IST_OFFSET_SEC = 5.5 * 60 * 60;
 
 const ARTIST_PALETTE = [
   "var(--chart-1)",
@@ -122,46 +121,86 @@ function weekFromSvgPoint(x: number, y: number): number | null {
   return wi;
 }
 
-const IST_TIME_ZONE = "Asia/Kolkata";
-const IST_OFFSET_SEC = 5.5 * 60 * 60;
+function getWeekSlotOfYear(fromSec: number): number {
+  const d = new Date(fromSec * 1000);
+  const dateStr = d.toLocaleDateString("en-US", {
+    timeZone: IST_TIME_ZONE,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  });
+  const parts = dateStr.split("/");
+  const y = parseInt(parts[2], 10);
+  const jan1UtcMs = Date.UTC(y, 0, 1) - IST_OFFSET_SEC * 1000;
+  const jan1Date = new Date(jan1UtcMs + IST_OFFSET_SEC * 1000);
+  const jan1Day = jan1Date.getUTCDay();
+  const jan1DaysSinceMon = (jan1Day + 6) % 7;
+  const jan1MonStartSec = Math.floor(jan1UtcMs / 1000) - jan1DaysSinceMon * 86400;
 
-function monthLabels(
-  fromSec: number,
-  toSec: number,
-): { a: number; text: string }[] {
+  const diffSec = fromSec - jan1MonStartSec;
+  const weekIdx = Math.floor(diffSec / (7 * 86400));
+  return Math.min(51, Math.max(0, ((weekIdx % 52) + 52) % 52));
+}
+
+const FIXED_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+function monthLabels(): { a: number; text: string }[] {
   const out: { a: number; text: string }[] = [];
-  const span = Math.max(1, toSec - fromSec);
-  let y = new Date((fromSec + IST_OFFSET_SEC) * 1000).getUTCFullYear();
-  let mo = new Date((fromSec + IST_OFFSET_SEC) * 1000).getUTCMonth();
-  for (let i = 0; i < 24; i++) {
-    const sec = Math.floor(Date.UTC(y, mo, 1) / 1000) - IST_OFFSET_SEC;
-    if (sec >= fromSec && sec <= toSec) {
-      const u = (sec - fromSec) / span;
-      const a = -Math.PI / 2 + u * 2 * Math.PI;
-      const text = new Date(sec * 1000).toLocaleDateString(undefined, {
-        month: "short",
-        timeZone: IST_TIME_ZONE,
-      });
-      out.push({ a, text });
-    }
-    mo++;
-    if (mo > 11) {
-      mo = 0;
-      y++;
-    }
-    if (Date.UTC(y, mo, 1) / 1000 - IST_OFFSET_SEC > toSec) break;
+  for (let i = 0; i < 12; i++) {
+    const a = -Math.PI / 2 + i * (Math.PI / 6);
+    out.push({ a, text: FIXED_MONTHS[i] });
   }
   return out;
 }
 
-function formatWeekOf(fromSec: number): string {
-  const line = new Date(fromSec * 1000).toLocaleDateString(undefined, {
-    weekday: "short",
+function formatWeekRange(fromSec: number, toSec: number): string {
+  const dFrom = new Date(fromSec * 1000);
+  const dTo = new Date(toSec * 1000);
+
+  const optsMonthDay: Intl.DateTimeFormatOptions = {
     month: "short",
     day: "numeric",
     timeZone: IST_TIME_ZONE,
+  };
+  const optsFull: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: IST_TIME_ZONE,
+  };
+
+  const fromYearStr = dFrom.toLocaleDateString("en-US", {
+    year: "numeric",
+    timeZone: IST_TIME_ZONE,
   });
-  return `Week of ${line}`;
+  const toYearStr = dTo.toLocaleDateString("en-US", {
+    year: "numeric",
+    timeZone: IST_TIME_ZONE,
+  });
+
+  const strFrom = dFrom.toLocaleDateString(undefined, optsMonthDay);
+
+  if (fromYearStr !== toYearStr) {
+    const strFromWithYear = dFrom.toLocaleDateString(undefined, optsFull);
+    const strToWithYear = dTo.toLocaleDateString(undefined, optsFull);
+    return `${strFromWithYear} – ${strToWithYear}`;
+  }
+
+  const strTo = dTo.toLocaleDateString(undefined, optsFull);
+  return `${strFrom} – ${strTo}`;
 }
 
 function useCoarsePointer() {
@@ -468,15 +507,40 @@ export default memo(function RadialArtistHeatmap() {
 
   const model = useMemo((): BuiltModel | null => {
     if (!data?.weeks?.length || !data.artists?.length) return null;
-    const wk = data.weeks;
-    if (wk.length !== N_WEEKS) return null;
-    const artists = normalizeArtists(data.artists);
-    const fromSec = wk[0]?.from ?? 0;
-    const toSec = wk[N_WEEKS - 1]?.to ?? fromSec;
+    const rawWk = data.weeks;
+    if (rawWk.length !== N_WEEKS) return null;
+    const rawArtists = normalizeArtists(data.artists);
+
+    const alignedWeeks: RadialHeatmapPayload["weeks"] = new Array(N_WEEKS);
+    const alignedArtists: RadialHeatmapPayload["artists"] = rawArtists.map(
+      (a) => ({
+        name: a.name,
+        plays: new Array(N_WEEKS).fill(0),
+      }),
+    );
+
+    for (let i = 0; i < N_WEEKS; i++) {
+      const wk = rawWk[i];
+      if (!wk) continue;
+      const slot = getWeekSlotOfYear(wk.from);
+      alignedWeeks[slot] = wk;
+      for (let r = 0; r < N_RINGS; r++) {
+        alignedArtists[r].plays[slot] = rawArtists[r]?.plays[i] ?? 0;
+      }
+    }
+
+    for (let s = 0; s < N_WEEKS; s++) {
+      if (!alignedWeeks[s]) {
+        alignedWeeks[s] = rawWk[s] ?? { from: 0, to: 0 };
+      }
+    }
+
+    const fromSec = alignedWeeks[0]?.from ?? 0;
+    const toSec = alignedWeeks[N_WEEKS - 1]?.to ?? fromSec;
     const baseOpacities: number[][] = [];
     for (let r = 0; r < N_RINGS; r++) {
       const plays =
-        artists[r]?.plays ?? Array.from({ length: N_WEEKS }, () => 0);
+        alignedArtists[r]?.plays ?? Array.from({ length: N_WEEKS }, () => 0);
       const peak = plays.reduce((m, v) => Math.max(m, v), 0);
       const row: number[] = [];
       for (let w = 0; w < N_WEEKS; w++) {
@@ -484,16 +548,22 @@ export default memo(function RadialArtistHeatmap() {
       }
       baseOpacities.push(row);
     }
-    const colors = artists.map(
+    const colors = alignedArtists.map(
       (_, i) => ARTIST_PALETTE[i % ARTIST_PALETTE.length],
     );
-    return { artists, weeks: wk, baseOpacities, colors, fromSec, toSec };
+    return {
+      artists: alignedArtists,
+      weeks: alignedWeeks,
+      baseOpacities,
+      colors,
+      fromSec,
+      toSec,
+    };
   }, [data, isLightTheme]);
 
   const monthPts = useMemo(() => {
-    if (!model) return [];
-    return monthLabels(model.fromSec, model.toSec);
-  }, [model]);
+    return monthLabels();
+  }, []);
 
   useLayoutEffect(() => {
     modelRef.current = model;
@@ -550,9 +620,9 @@ export default memo(function RadialArtistHeatmap() {
         return;
       }
       if (!host) return;
-      const fromSec = m.weeks[week]?.from;
-      if (fromSec === undefined) return;
-      titleEl.textContent = formatWeekOf(fromSec);
+      const wk = m.weeks[week];
+      if (!wk) return;
+      titleEl.textContent = formatWeekRange(wk.from, wk.to);
       while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
       const rows: { name: string; plays: number; color: string }[] = [];
       for (let r = 0; r < N_RINGS; r++) {
@@ -785,7 +855,7 @@ export default memo(function RadialArtistHeatmap() {
                   split into fifty-two weeks; stronger segments mean more plays
                   that week for that artist.
                 </desc>
-                <g ref={chartGroupRef} transform={CHART_ROTATE_TRANSFORM}>
+                <g ref={chartGroupRef}>
                   {monthPts.map((m, i) => {
                     const x = CX + LABEL_R * Math.cos(m.a);
                     const y = CY + LABEL_R * Math.sin(m.a);
@@ -794,7 +864,6 @@ export default memo(function RadialArtistHeatmap() {
                         key={`${m.text}-${i}`}
                         x={x}
                         y={y}
-                        transform={`rotate(${CHART_TEXT_UPRIGHT_DEG} ${x} ${y})`}
                         textAnchor="middle"
                         dominantBaseline="central"
                         className="pointer-events-none font-semibold fill-[var(--text-primary)]"
@@ -834,8 +903,8 @@ export default memo(function RadialArtistHeatmap() {
                   <text
                     x={CX}
                     y={CY}
-                    transform={`rotate(${CHART_TEXT_UPRIGHT_DEG} ${CX} ${CY - 7})`}
                     textAnchor="middle"
+                    dominantBaseline="central"
                     className="pointer-events-none font-medium fill-[var(--text-tertiary)]"
                     style={{ fontSize: 10 }}
                   >
@@ -851,7 +920,7 @@ export default memo(function RadialArtistHeatmap() {
                 <div ref={tooltipTitleRef} className="mb-1 font-semibold" />
                 <ul
                   ref={tooltipListRef}
-                  className="m-0 max-h-48 list-none space-y-1 overflow-auto p-0"
+                  className="m-0 list-none space-y-1 p-0"
                 />
               </div>
             </>

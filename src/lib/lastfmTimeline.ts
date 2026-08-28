@@ -401,11 +401,18 @@ export interface HeatmapWeek {
   to: number;
 }
 
-export function rollingWeeks(anchorSec: number, count: number): HeatmapWeek[] {
+export function calendarWeeks(nowMs: number, count: number): HeatmapWeek[] {
+  const istDate = new Date(nowMs + IST_OFFSET_MS);
+  const day = istDate.getUTCDay();
+  const daysSinceMonday = (day + 6) % 7;
+  const currentMonStartSec =
+    istDayStartSec(nowMs) - daysSinceMonday * SECONDS_PER_DAY;
+
   const weeks: HeatmapWeek[] = [];
   for (let i = count - 1; i >= 0; i--) {
-    const to = anchorSec - i * SECONDS_PER_WEEK;
-    weeks.push({ from: to - SECONDS_PER_WEEK + 1, to });
+    const from = currentMonStartSec - i * SECONDS_PER_WEEK;
+    const to = from + SECONDS_PER_WEEK - 1;
+    weeks.push({ from, to });
   }
   return weeks;
 }

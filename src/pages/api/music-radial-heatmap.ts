@@ -1,10 +1,10 @@
 import type { APIRoute } from "astro";
 import { LASTFM_API_KEY, LASTFM_USERNAME } from "astro:env/server";
 import {
+  calendarWeeks,
   getTimeline,
   istDayEndSec,
   peekTimeline,
-  rollingWeeks,
   topArtists,
   weeklyPlayMatrix,
   type HeatmapWeek,
@@ -46,9 +46,9 @@ const jsonResponse = (
     headers: { ...CACHE_HEADERS, "X-Cache-Status": cacheStatus },
   });
 
-function buildResult(timeline: Timeline, anchorSec: number): RadialHeatmapResult {
-  const weeks = rollingWeeks(anchorSec, TARGET_WEEKS);
-  const rankingStart = weeks[0]?.from ?? anchorSec;
+function buildResult(timeline: Timeline, nowMs: number): RadialHeatmapResult {
+  const weeks = calendarWeeks(nowMs, TARGET_WEEKS);
+  const rankingStart = weeks[0]?.from ?? Math.floor(nowMs / 1000);
   const artists = topArtists(timeline, rankingStart, TOP_N);
   const matrix = weeklyPlayMatrix(timeline, weeks, artists);
 
@@ -67,8 +67,8 @@ export const GET: APIRoute = async () => {
     );
   }
 
-  const anchorSec = istDayEndSec(Date.now());
   const now = Date.now();
+  const anchorSec = istDayEndSec(now);
   const cacheAge = cache ? now - cache.timestamp : Number.POSITIVE_INFINITY;
 
   if (cache && cacheAge < SERVER_CACHE_MS) {
@@ -77,7 +77,7 @@ export const GET: APIRoute = async () => {
 
   try {
     const timeline = await getTimeline(LASTFM_USERNAME, LASTFM_API_KEY, anchorSec);
-    const data = buildResult(timeline, anchorSec);
+    const data = buildResult(timeline, now);
     cache = { data, timestamp: Date.now() };
     return jsonResponse(data, 200, "FRESH");
   } catch (error) {
@@ -85,7 +85,7 @@ export const GET: APIRoute = async () => {
 
     const fallback = peekTimeline();
     if (fallback) {
-      return jsonResponse(buildResult(fallback, anchorSec), 200, "STALE");
+      return jsonResponse(buildResult(fallback, now), 200, "STALE");
     }
 
     return jsonResponse(
