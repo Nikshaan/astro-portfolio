@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, memo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { m, LazyMotion, domAnimation } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -113,6 +114,7 @@ export default memo(function GithubContributions({
 
   const graphRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
 
   const positionTooltip = useCallback(
     (day: ContributionDay, element: HTMLDivElement) => {
@@ -120,21 +122,31 @@ export default memo(function GithubContributions({
       if (!tooltip) return;
 
       tooltip.textContent = formatContributionDayLabel(day);
+      setTooltipVisible(true);
 
-      const rect = element.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top - 8;
+      const place = () => {
+        const tip = tooltipRef.current;
+        if (!tip) return;
+        const rect = element.getBoundingClientRect();
+        const pad = 8;
+        const tooltipWidth = tip.offsetWidth || 220;
+        const x = Math.min(
+          Math.max(pad + tooltipWidth / 2, rect.left + rect.width / 2),
+          window.innerWidth - pad - tooltipWidth / 2,
+        );
+        const y = rect.top - 8;
+        tip.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
+      };
 
-      tooltip.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
-      tooltip.dataset.visible = "true";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(place);
+      });
     },
     [],
   );
 
   const hideTooltip = useCallback(() => {
-    const tooltip = tooltipRef.current;
-    if (!tooltip) return;
-    delete tooltip.dataset.visible;
+    setTooltipVisible(false);
   }, []);
 
   useEffect(() => {
@@ -290,12 +302,17 @@ export default memo(function GithubContributions({
             </p>
           </>
         )}
-        <div
-          ref={tooltipRef}
-          className={styles.dayTooltip}
-          role="tooltip"
-          aria-hidden="true"
-        />
+        {typeof document !== "undefined" &&
+          createPortal(
+            <div
+              ref={tooltipRef}
+              className={styles.dayTooltip}
+              data-visible={tooltipVisible ? "true" : undefined}
+              role="tooltip"
+              aria-hidden={!tooltipVisible}
+            />,
+            document.body,
+          )}
       </m.div>
     </LazyMotion>
   );

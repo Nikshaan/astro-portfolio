@@ -1,13 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LazyMotion, domAnimation } from "framer-motion";
-import { Github, ExternalLink, ArrowRight, Star, MessageCircle } from "lucide-react";
+import { Github, ExternalLink, Star, MessageCircle } from "lucide-react";
 import cardsData from "../data/cardsdata.json";
 import {
   fetchOssContributionsData,
   readOssContributionsCache,
   type Contribution,
 } from "../utils/ossContributionsClient";
+import {
+  readLlmRepoStarsCache,
+  startLlmRepoStarsPolling,
+} from "../utils/llmRepoStarsClient";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import reactjs from "../data/React.svg";
@@ -145,6 +149,7 @@ function TechStack({ techstack }: { techstack?: string[] }) {
 }
 
 const OSS_MODAL_ID = "oss-contributions";
+const LLM_FROM_SCRATCH_ID = "project-llm-from-scratch";
 
 function formatContributionDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -178,6 +183,9 @@ const ProjectsBentoGrid: React.FC = () => {
     () => readOssContributionsCache(),
   );
   const [ossError, setOssError] = useState(false);
+  const [llmStars, setLlmStars] = useState<number | null>(() =>
+    readLlmRepoStarsCache(),
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -191,6 +199,10 @@ const ProjectsBentoGrid: React.FC = () => {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    return startLlmRepoStarsPolling(setLlmStars);
   }, []);
 
   const orgLogos = useMemo(() => {
@@ -267,46 +279,63 @@ const ProjectsBentoGrid: React.FC = () => {
               layoutId={`card-${project.id}`}
               aria-label={`${project.data.name} — view case study`}
             >
-              <div className="flex flex-col h-full justify-between gap-4">
-                <div>
-                  <h3 className="font-bold mb-2">{project.data.name}</h3>
+              <div className="project-card">
+                <div className="project-card__main">
+                  <h3 className="mb-2 pr-8 font-bold">{project.data.name}</h3>
                   <p
                     className="type-body-sm text-[var(--text-secondary)]"
                     dangerouslySetInnerHTML={{ __html: project.data.summary }}
                   />
                 </div>
-                <div className="flex flex-col gap-3">
+                <div className="project-card__foot">
                   <TechStack techstack={project.data.techstack} />
-                  <div className="flex items-center justify-between type-body-sm font-medium">
-                    <div className="flex gap-4">
+                  <div className="project-card-footer">
+                    <div className="project-card-footer__links">
                       {project.data.live && (
                         <a
                           href={project.data.live}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="project-link"
+                          className="project-card-action project-card-action--link"
                           aria-label={`View live demo of ${project.data.name}`}
                         >
-                          <ExternalLink size={15} aria-hidden="true" /> Live
+                          <span className="project-card-action__icon" aria-hidden="true">
+                            <ExternalLink size={14} />
+                          </span>
+                          Live
                         </a>
                       )}
                       {project.data.github && (
-                        <a
-                          href={project.data.github}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="project-link"
-                          aria-label={`View source code of ${project.data.name} on GitHub`}
-                        >
-                          <Github size={15} aria-hidden="true" /> GitHub
-                        </a>
+                        <span className="project-card-footer__github">
+                          <a
+                            href={project.data.github}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="project-card-action project-card-action--link"
+                            aria-label={`View source code of ${project.data.name} on GitHub`}
+                          >
+                            <span className="project-card-action__icon" aria-hidden="true">
+                              <Github size={14} />
+                            </span>
+                            GitHub
+                          </a>
+                          {project.id === LLM_FROM_SCRATCH_ID &&
+                            llmStars !== null && (
+                              <span
+                                className="project-card-action project-card-action--meta tabular-nums"
+                                aria-label={`${llmStars.toLocaleString()} GitHub stars`}
+                              >
+                                <span className="project-card-action__icon" aria-hidden="true">
+                                  <Star size={14} />
+                                </span>
+                                {llmStars.toLocaleString()}
+                              </span>
+                            )}
+                        </span>
                       )}
                     </div>
-                    <span className="flex items-center gap-1 text-[var(--text-tertiary)] group-hover:text-[var(--accent)] transition-colors">
-                      Details <ArrowRight size={14} aria-hidden="true" />
-                    </span>
                   </div>
                 </div>
               </div>
@@ -321,89 +350,79 @@ const ProjectsBentoGrid: React.FC = () => {
             layoutId={`card-${OSS_MODAL_ID}`}
             aria-label="Open Source Contributions — view all"
           >
-            <div className="flex h-full flex-col justify-between gap-6 md:flex-row md:items-stretch">
-              <div className="flex shrink-0 flex-col justify-between gap-4 md:w-64">
-                <div>
-                  <h3 className="font-bold mb-2">Open Source</h3>
+            <div className="flex h-full flex-col gap-6">
+              <div className="min-w-0 space-y-2">
+                  <h3 className="font-bold">Open Source</h3>
                   <p className="type-body-sm text-[var(--text-secondary)]">
                     Merged contributions to organization-owned repos.
                   </p>
+                  {!contributions && !ossError ? (
+                    <OssShimmerBar width={180} />
+                  ) : ossError || contributions?.length === 0 ? (
+                    <p className="type-body-sm text-[var(--text-tertiary)] italic">
+                      No contributions yet — check back soon.
+                    </p>
+                  ) : (
+                    <p className="type-body-sm font-medium text-[var(--text-secondary)]">
+                      {contributions!.length} contribution
+                      {contributions!.length === 1 ? "" : "s"} · {orgCount} org
+                      {orgCount === 1 ? "" : "s"}
+                    </p>
+                  )}
                 </div>
-                {!contributions && !ossError ? (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
-                      {[0, 1, 2, 3].map((i) => (
-                        <div
-                          key={i}
-                          className="w-8 h-8 rounded-full shrink-0"
-                          style={{
-                            backgroundImage:
-                              "linear-gradient(90deg, var(--shimmer-from) 25%, var(--shimmer-to) 50%, var(--shimmer-from) 75%)",
-                            backgroundSize: "400px 100%",
-                            animation: "genreStreakShimmer 1.6s infinite linear",
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <OssShimmerBar width={140} />
-                  </div>
-                ) : ossError || contributions?.length === 0 ? (
-                  <p className="type-body-sm text-[var(--text-tertiary)] italic">
-                    No contributions yet — check back soon.
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center -space-x-2">
-                      {orgLogos.slice(0, 5).map((logo, i) => (
-                        <img
-                          key={i}
-                          src={logo}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                          className="w-8 h-8 rounded-full object-cover border-2 border-[var(--surface-card)] bg-[var(--surface-raised)]"
-                        />
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between type-body-sm font-medium">
-                      <span className="text-[var(--text-secondary)]">
-                        {contributions!.length} contribution
-                        {contributions!.length === 1 ? "" : "s"} · {orgCount} org
-                        {orgCount === 1 ? "" : "s"}
-                      </span>
-                      <span className="flex items-center gap-1 text-[var(--text-tertiary)] group-hover:text-[var(--accent)] transition-colors">
-                        Details <ArrowRight size={14} aria-hidden="true" />
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
 
-              {contributions && contributions.length > 0 && (
-                <div className="grid min-w-0 flex-1 grid-cols-1 content-center gap-x-6 gap-y-3 border-t border-[var(--border-subtle)] pt-4 sm:grid-cols-2 md:border-l md:border-t-0 md:pl-6 md:pt-0 xl:grid-cols-3">
-                  {contributions.slice(0, 6).map((c) => (
-                    <div key={c.id} className="flex min-w-0 items-center justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <img
-                          src={c.orgLogo}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                          className="w-7 h-7 rounded-full shrink-0 object-cover bg-[var(--surface-raised)]"
-                        />
-                        <p className="type-body-sm font-medium truncate">{c.title}</p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-3 type-caption text-[var(--text-tertiary)]">
-                        <span className="max-w-24 truncate">{c.repoName}</span>
-                        <span className="flex items-center gap-1 shrink-0">
-                          <Star size={11} aria-hidden="true" />
-                          {c.repoStars.toLocaleString()}
-                        </span>
+              {!contributions && !ossError ? (
+                <div className="flex flex-col gap-4">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div
+                        className="h-9 w-9 shrink-0 rounded-full"
+                        style={{
+                          backgroundImage:
+                            "linear-gradient(90deg, var(--shimmer-from) 25%, var(--shimmer-to) 50%, var(--shimmer-from) 75%)",
+                          backgroundSize: "400px 100%",
+                          animation: "genreStreakShimmer 1.6s infinite linear",
+                        }}
+                      />
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        <OssShimmerBar width={220} />
+                        <OssShimmerBar width={120} />
                       </div>
                     </div>
                   ))}
                 </div>
-              )}
+              ) : null}
+
+              {contributions && contributions.length > 0 ? (
+                <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+                  {contributions.slice(0, 4).map((c) => (
+                    <div
+                      key={c.id}
+                      className="flex min-w-0 items-start gap-3 rounded-[var(--radius-control)] bg-[var(--surface-raised)]/40 p-3"
+                    >
+                      <img
+                        src={c.orgLogo}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="h-9 w-9 shrink-0 rounded-full object-cover bg-[var(--surface-raised)]"
+                      />
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <p className="type-body-sm font-medium truncate text-[var(--text-primary)]">
+                          {c.title}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 type-caption text-[var(--text-tertiary)]">
+                          <span className="truncate">{c.repoName}</span>
+                          <span className="flex shrink-0 items-center gap-1">
+                            <Star size={11} aria-hidden="true" />
+                            {c.repoStars.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </BentoCard>
         </BentoGrid>

@@ -285,6 +285,7 @@ export default memo(function RadialArtistHeatmap() {
   const modelRef = useRef<BuiltModel | null>(null);
   const lastPointerWeekRef = useRef<number | null>(null);
   const [hoverWeek, setHoverWeek] = useState<number | null>(null);
+  const [hoverArtist, setHoverArtist] = useState<number | null>(null);
   const cellsRef = useRef<(SVGPathElement | null)[][]>([]);
 
   const bindRoot = useCallback((el: HTMLDivElement | null) => {
@@ -320,6 +321,42 @@ export default memo(function RadialArtistHeatmap() {
           if (!el) continue;
           if (w === week) {
             const plays = m.artists[r]?.plays?.[week] ?? 0;
+            if (plays > 0) {
+              el.setAttribute("fill-opacity", "1");
+              el.setAttribute("stroke", "var(--radial-cell-highlight-stroke)");
+              el.setAttribute("stroke-width", "1");
+            } else {
+              const o = m.baseOpacities[r]?.[w] ?? 0.06;
+              el.setAttribute("fill-opacity", String(o));
+              el.setAttribute("stroke", "none");
+              el.setAttribute("stroke-width", "0");
+            }
+          } else {
+            const o = m.baseOpacities[r]?.[w] ?? 0.06;
+            el.setAttribute("fill-opacity", String(o));
+            el.setAttribute("stroke", "none");
+            el.setAttribute("stroke-width", "0");
+          }
+        }
+      }
+    },
+    [flushHighlight],
+  );
+
+  const applyArtistHover = useCallback(
+    (ring: number | null) => {
+      const m = modelRef.current;
+      if (!m) return;
+      if (ring === null) {
+        flushHighlight();
+        return;
+      }
+      for (let r = 0; r < N_RINGS; r++) {
+        for (let w = 0; w < N_WEEKS; w++) {
+          const el = cellsRef.current[r]?.[w];
+          if (!el) continue;
+          if (r === ring) {
+            const plays = m.artists[r]?.plays?.[w] ?? 0;
             if (plays > 0) {
               el.setAttribute("fill-opacity", "1");
               el.setAttribute("stroke", "var(--radial-cell-highlight-stroke)");
@@ -569,6 +606,7 @@ export default memo(function RadialArtistHeatmap() {
     modelRef.current = model;
     lastPointerWeekRef.current = null;
     setHoverWeek(null);
+    setHoverArtist(null);
     if (!model) return;
     for (let r = 0; r < N_RINGS; r++) {
       for (let w = 0; w < N_WEEKS; w++) {
@@ -694,14 +732,33 @@ export default memo(function RadialArtistHeatmap() {
     dismissTouchRef.current = () => {
       lastPointerWeekRef.current = null;
       setHoverWeek(null);
+      setHoverArtist(null);
       flushHighlight();
       updateTooltip(null, 0, 0);
     };
   }, [flushHighlight, updateTooltip]);
 
+  const onLegendArtistEnter = useCallback(
+    (ring: number) => {
+      if (coarsePointer) return;
+      lastPointerWeekRef.current = null;
+      setHoverWeek(null);
+      setHoverArtist(ring);
+      applyArtistHover(ring);
+      updateTooltip(null, 0, 0);
+    },
+    [applyArtistHover, coarsePointer, updateTooltip],
+  );
+
+  const onLegendArtistLeave = useCallback(() => {
+    setHoverArtist(null);
+    flushHighlight();
+  }, [flushHighlight]);
+
   const onSvgMouseMove = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
       if (coarsePointer) return;
+      setHoverArtist(null);
       const p = pointerToChartSpace(e.clientX, e.clientY);
       if (!p) return;
       const wi = weekFromSvgPoint(p.x, p.y);
@@ -733,6 +790,7 @@ export default memo(function RadialArtistHeatmap() {
   const onSvgMouseLeave = useCallback(() => {
     lastPointerWeekRef.current = null;
     setHoverWeek(null);
+    setHoverArtist(null);
     flushHighlight();
     updateTooltip(null, 0, 0);
   }, [flushHighlight, updateTooltip]);
@@ -740,6 +798,7 @@ export default memo(function RadialArtistHeatmap() {
   const onSvgTouchMove = useCallback(
     (e: React.TouchEvent<SVGSVGElement>) => {
       if (!e.touches[0]) return;
+      setHoverArtist(null);
       const t = e.touches[0];
       const p = pointerToChartSpace(t.clientX, t.clientY);
       if (!p) return;
@@ -932,14 +991,18 @@ export default memo(function RadialArtistHeatmap() {
           {model.artists.map((a, i) => {
             if (!a.name) return null;
             const pw = hoverWeek !== null ? (a.plays[hoverWeek] ?? 0) : -1;
-            const legendDim = hoverWeek !== null && pw <= 0;
+            const legendDim =
+              (hoverWeek !== null && pw <= 0) ||
+              (hoverArtist !== null && hoverArtist !== i);
             return (
               <div
                 key={a.name}
                 className={cn(
-                  "flex min-w-0 max-w-[11rem] items-center gap-2 type-caption transition-opacity duration-150",
+                  "flex min-w-0 max-w-[11rem] cursor-pointer items-center gap-2 type-caption transition-opacity duration-150",
                   legendDim ? "opacity-35" : "opacity-100",
                 )}
+                onPointerEnter={() => onLegendArtistEnter(i)}
+                onPointerLeave={onLegendArtistLeave}
               >
                 <span
                   className="h-2 w-2 shrink-0 rounded-full"

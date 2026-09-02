@@ -193,10 +193,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
         <BentoCard span="quarter" href="/Nikshaan_Shetty_resume.pdf" target="_blank" rel="noopener noreferrer">
           <div className="flex flex-col h-full items-center justify-center gap-2 text-center">
             <FileText size={44} strokeWidth={1.5} className="text-[var(--text-secondary)]" aria-hidden="true" />
-            <div>
-              <p className="font-bold">Resume</p>
-              <p className="type-caption text-[var(--text-tertiary)]">PDF · opens in a new tab</p>
-            </div>
+            <p className="font-bold">Resume</p>
           </div>
         </BentoCard>
 

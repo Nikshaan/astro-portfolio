@@ -20,7 +20,7 @@
   display: flex;
   gap: 2px;
   overflow-x: auto;
-  padding: 0.5rem 0;
+  padding: 4px 2px;
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) var(--surface-page);
   width: 100%;
@@ -38,7 +38,7 @@
   .graph {
     width: 100%;
     gap: 2px;
-    overflow-x: hidden;
+    overflow-x: visible;
   }
 }
 
@@ -247,7 +247,7 @@
 
 @media (min-width: 1024px) {
   .skeletonGraph {
-    overflow-x: hidden;
+    overflow-x: visible;
   }
 }
 

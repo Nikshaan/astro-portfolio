@@ -39,6 +39,7 @@ interface Image {
 
 interface FunBentoGridProps {
   images: Image[];
+  galleryImageCount: number;
 }
 
 const VISITED_PLACES = [
@@ -68,7 +69,10 @@ const VISITED_PLACES = [
   { name: "Pilikula", lat: 12.9245, lng: 74.8907 },
 ];
 
-const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
+const FunBentoGrid: React.FC<FunBentoGridProps> = ({
+  images,
+  galleryImageCount,
+}) => {
   const [visibleCount, setVisibleCount] = useState(12);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -410,6 +414,12 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({ images }) => {
           <div ref={sentinelRef} className="col-span-full h-4" aria-hidden="true" />
         )}
       </BentoGrid>
+      {galleryImageCount > 0 && (
+        <p className="mt-4 text-center type-caption text-[var(--text-tertiary)]">
+          Click any photo to open the full gallery of {galleryImageCount}{" "}
+          {galleryImageCount === 1 ? "image" : "images"}.
+        </p>
+      )}
     </div>
     </LazyMotion>
   );
