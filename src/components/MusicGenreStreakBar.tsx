@@ -95,7 +95,7 @@ export default memo(function MusicGenreStreakBar() {
       />
       <div className="flex w-full shrink-0 items-center gap-2 border-t border-[var(--border-subtle)] pt-2 sm:w-auto sm:border-t-0 sm:pt-0">
         <span
-          className="type-body-sm font-medium not-italic text-[var(--text-primary)]"
+          className="type-body-sm not-italic text-[var(--text-primary)]"
           aria-hidden="true"
         >
           ♪
@@ -112,7 +112,7 @@ export default memo(function MusicGenreStreakBar() {
             aria-hidden="true"
           />
         ) : streak > 0 ? (
-          <span className="type-body-sm font-medium text-[var(--text-primary)]">
+          <span className="type-body-sm font-bold text-[var(--text-primary)]">
             {streak} day listening streak
           </span>
         ) : (

@@ -256,7 +256,7 @@ const ProjectsBentoGrid: React.FC = () => {
                 id={`tab-${cat}`}
                 aria-controls="projects-panel"
                 className={cn(
-                  "px-4 py-2 cursor-pointer type-ui font-medium transition-colors border-b-2 -mb-px",
+                  "px-4 py-2 cursor-pointer type-ui font-bold transition-colors border-b-2 -mb-px",
                   activeCategory === cat
                     ? "border-[var(--accent)] text-[var(--text-primary)]"
                     : "border-transparent text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]",
@@ -363,7 +363,7 @@ const ProjectsBentoGrid: React.FC = () => {
                       No contributions yet — check back soon.
                     </p>
                   ) : (
-                    <p className="type-body-sm font-medium text-[var(--text-secondary)]">
+                    <p className="type-body-sm text-[var(--text-secondary)]">
                       {contributions!.length} contribution
                       {contributions!.length === 1 ? "" : "s"} · {orgCount} org
                       {orgCount === 1 ? "" : "s"}
@@ -408,7 +408,7 @@ const ProjectsBentoGrid: React.FC = () => {
                         className="h-9 w-9 shrink-0 rounded-full object-cover bg-[var(--surface-raised)]"
                       />
                       <div className="min-w-0 flex-1 space-y-1">
-                        <p className="type-body-sm font-medium truncate text-[var(--text-primary)]">
+                        <p className="type-body-sm font-bold truncate text-[var(--text-primary)]">
                           {c.title}
                         </p>
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 type-caption text-[var(--text-tertiary)]">
@@ -496,7 +496,7 @@ const ProjectsBentoGrid: React.FC = () => {
                       className="w-9 h-9 rounded-full shrink-0 object-cover bg-[var(--surface-raised)]"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="type-body-sm font-medium truncate group-hover/row:text-[var(--accent)] transition-colors">
+                      <p className="type-body-sm font-bold truncate group-hover/row:text-[var(--accent)] transition-colors">
                         {c.title}
                       </p>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 type-caption text-[var(--text-tertiary)] mt-1">

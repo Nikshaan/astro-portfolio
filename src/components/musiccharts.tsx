@@ -305,7 +305,7 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
                 }}
               />
             )}
-            <p className="type-caption font-medium text-[var(--text-primary)]">
+            <p className="type-caption font-bold text-[var(--text-primary)]">
               {active.name}
             </p>
             <p className="type-caption text-[var(--text-secondary)]">

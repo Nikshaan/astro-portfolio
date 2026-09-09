@@ -56,7 +56,7 @@ export default memo(function MusicStatsClient() {
           </p>
           <div className="flex w-full flex-col items-center gap-2 type-body-sm">
             <p>
-              <span className="font-medium text-white">
+              <span className="font-bold text-white">
                 Play count:
               </span>{" "}
               <span className="!text-white [html[data-theme=light]_&]:!text-white">
@@ -64,7 +64,7 @@ export default memo(function MusicStatsClient() {
               </span>
             </p>
             <p>
-              <span className="font-medium text-white">
+              <span className="font-bold text-white">
                 Track count:
               </span>{" "}
               <span className="!text-white [html[data-theme=light]_&]:!text-white">
@@ -72,7 +72,7 @@ export default memo(function MusicStatsClient() {
               </span>
             </p>
             <p>
-              <span className="font-medium text-white">
+              <span className="font-bold text-white">
                 Artist count:
               </span>{" "}
               <span className="!text-white [html[data-theme=light]_&]:!text-white">
@@ -80,7 +80,7 @@ export default memo(function MusicStatsClient() {
               </span>
             </p>
             <p>
-              <span className="font-medium text-white">
+              <span className="font-bold text-white">
                 Album count:
               </span>{" "}
               <span className="!text-white [html[data-theme=light]_&]:!text-white">
@@ -102,7 +102,7 @@ export default memo(function MusicStatsClient() {
                   className="flex flex-col sm:flex-row justify-center items-center h-full w-full gap-1 sm:gap-2 mb-2"
                 >
                   <div className="flex gap-2">
-                    <p className="font-medium text-white">
+                    <p className="font-bold text-white">
                       {artist.name}
                     </p>
                     <p className="!text-white [html[data-theme=light]_&]:!text-white">

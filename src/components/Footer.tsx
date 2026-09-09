@@ -68,7 +68,7 @@ const Footer = () => {
           variants={itemVariants}
           className="p-8 md:p-12 border-b border-[var(--border-subtle)] footer-transition"
         >
-          <h2 className="type-footer-display uppercase text-[var(--text-primary)] footer-transition whitespace-nowrap">
+          <h2 className="type-footer-display uppercase text-[var(--text-primary)] footer-transition">
             Let's Connect
           </h2>
         </motion.div>
@@ -81,10 +81,10 @@ const Footer = () => {
             <div>
               <a
                 href="mailto:nikshaanshetty06@gmail.com"
-                className="group flex items-center gap-2 md:gap-4 type-footer-contact text-[var(--text-primary)] hover:text-[var(--text-secondary)] whitespace-nowrap footer-transition"
+                className="group inline-flex items-center gap-2 md:gap-4 type-footer-contact text-[var(--text-primary)] hover:text-[var(--text-secondary)] footer-transition max-w-full min-w-0"
               >
-                nikshaanshetty06@gmail.com
-                <span className="bg-[var(--text-primary)] text-[var(--surface-page)] p-2 rounded-full group-hover:rotate-[-45deg] footer-transform-transition flex-shrink-0 footer-transition">
+                <span className="truncate">nikshaanshetty06@gmail.com</span>
+                <span className="bg-[var(--text-primary)] text-[var(--surface-page)] p-2 rounded-full group-hover:rotate-[-45deg] footer-transform-transition shrink-0 footer-transition">
                   <MoveRight className="w-3 h-3 md:w-5 md:h-5" />
                 </span>
               </a>
@@ -121,7 +121,7 @@ const Footer = () => {
 
           <motion.div variants={itemVariants} className="p-6 md:p-12 flex flex-col justify-between gap-8">
             <div className="flex flex-col gap-2">
-              <p className="type-body font-medium text-[var(--text-tertiary)] mb-2">Navigation</p>
+              <p className="type-body text-[var(--text-tertiary)] mb-2">Navigation</p>
               <nav aria-label="Footer navigation" className="flex flex-wrap gap-2 md:gap-3">
                 {[
                   { name: "me", href: "me" },
@@ -133,7 +133,7 @@ const Footer = () => {
                     href={`#${link.href}`}
                     onClick={(e) => handleNavClick(e, link.href)}
                     aria-label={`Navigate to ${link.name} section`}
-                    className="px-4 md:px-6 py-2 rounded-full border border-[var(--border-subtle)] type-ui text-[var(--text-primary)] font-medium hover:bg-[var(--accent)] hover:text-[var(--accent-contrast)] hover:border-[var(--accent)] footer-transition"
+                    className="px-4 md:px-6 py-2 rounded-full border border-[var(--border-subtle)] type-ui text-[var(--text-primary)] font-bold hover:bg-[var(--accent)] hover:text-[var(--accent-contrast)] hover:border-[var(--accent)] footer-transition"
                   >
                     {link.name}
                   </a>
@@ -142,10 +142,10 @@ const Footer = () => {
             </div>
 
             <div className="flex flex-row flex-wrap justify-between items-center gap-x-4 gap-y-2">
-              <p className="type-caption font-medium text-[var(--text-tertiary)]">
+              <p className="type-caption text-[var(--text-tertiary)]">
                 &copy; {currentYear} Nikshaan Shetty.
               </p>
-              <div className="type-caption font-medium text-[var(--text-tertiary)] flex items-center gap-1">
+              <div className="type-caption text-[var(--text-tertiary)] flex items-center gap-1">
                 <span>Built with</span>
                 <span className="text-[var(--text-primary)]">Astro</span>
                 <span className="text-[var(--border-strong)]">/</span>

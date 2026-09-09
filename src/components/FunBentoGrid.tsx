@@ -13,6 +13,7 @@ const RadialArtistHeatmap = lazy(() => import("./RadialArtistHeatmap"));
 const MusicGenreStreakBar = lazy(() => import("./MusicGenreStreakBar"));
 import IndiaMapCard from "./IndiaMapCard";
 import ErrorBoundary from "./ErrorBoundary";
+import InfoTooltip from "./InfoTooltip";
 import {
   MusicStatsLoadingShell,
   YearlyScrobblesLoadingShell,
@@ -315,9 +316,10 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
 
         <BentoCard span="half" disableHoverMotion padded={false}>
           <div className="flex h-full min-h-0 w-full flex-col">
-            <h3 className="mb-3 shrink-0 p-5 pb-0 md:p-6 md:pb-0">
-              Yearly scrobbles (week-wise)
-            </h3>
+            <div className="mb-3 flex items-start justify-between shrink-0 p-5 pb-0 md:p-6 md:pb-0">
+              <h3>Yearly scrobbles (week-wise)</h3>
+              <InfoTooltip />
+            </div>
             <div className={FUN_MUSIC_YEARLY_PAIR_BODY}>
               <Suspense fallback={<YearlyScrobblesLoadingShell />}>
                 <ErrorBoundary>
@@ -400,7 +402,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
               <div className="pointer-events-none absolute inset-0 z-20 flex items-end bg-black/0 p-4 transition-colors duration-300 ease-out group-hover/photo:bg-black/30 group-focus-visible/photo:bg-black/30 motion-reduce:transition-none">
                 <p
                   className={cn(
-                    "w-full truncate type-body-sm font-medium !text-white opacity-0 transition-opacity duration-300 drop-shadow-md group-hover/photo:opacity-100 group-focus-visible/photo:opacity-100",
+                    "w-full truncate type-body-sm font-bold !text-white opacity-0 transition-opacity duration-300 drop-shadow-md group-hover/photo:opacity-100 group-focus-visible/photo:opacity-100",
                     "motion-reduce:transition-none",
                   )}
                 >

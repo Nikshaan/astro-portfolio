@@ -159,7 +159,7 @@
   border: 1px solid var(--border-subtle);
   padding: 6px 12px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: var(--type-caption);
   line-height: 1.4;
   white-space: nowrap;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);

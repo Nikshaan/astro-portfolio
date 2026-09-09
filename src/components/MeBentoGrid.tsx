@@ -123,7 +123,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                   className="text-pretty"
                   dangerouslySetInnerHTML={{ __html: introCard.data.text }}
                 />
-                <p className="type-lead font-medium text-[var(--accent)] mt-1">
+                <p className="type-lead font-bold text-[var(--accent)] mt-1">
                   AI/ML engineer &amp; software developer
                 </p>
               </div>
@@ -177,7 +177,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                 />
               </div>
               <div className="flex-1">
-                <p className="font-bold">{educationCard.data.school}</p>
+                <h3 className="font-heading font-bold">{educationCard.data.school}</h3>
                 <p
                   className="type-body-sm text-[var(--text-secondary)] mt-1"
                   dangerouslySetInnerHTML={{ __html: educationCard.data.degree }}
@@ -193,7 +193,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
         <BentoCard span="quarter" href="/Nikshaan_Shetty_resume.pdf" target="_blank" rel="noopener noreferrer">
           <div className="flex flex-col h-full items-center justify-center gap-2 text-center">
             <FileText size={44} strokeWidth={1.5} className="text-[var(--text-secondary)]" aria-hidden="true" />
-            <p className="font-bold">Resume</p>
+            <h3 className="font-heading font-bold">Resume</h3>
           </div>
         </BentoCard>
 
@@ -213,9 +213,9 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                 sizes="64px"
                 className="select-none w-[52px] h-[52px] sm:w-[64px] sm:h-[64px] object-contain"
               />
-              <span className="type-caption text-[var(--text-tertiary)]">
+              <h3 className="font-heading font-bold">
                 Hackathon wins
-              </span>
+              </h3>
             </div>
           </BentoCard>
         )}
@@ -229,7 +229,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
             layoutId="card-experience"
             aria-label="Experience — view full details"
           >
-            <p className="font-bold mb-3">Experience</p>
+            <h3 className="font-heading font-bold mb-3">Experience</h3>
             <div className="flex flex-col gap-3 flex-1 justify-center">
               {experienceCard.data.items?.map((item: any, i: number) => (
                 <div key={i} className="flex items-center gap-3">
@@ -240,7 +240,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                     className="w-8 h-8 rounded-full object-contain shrink-0 bg-[var(--surface-raised)]"
                   />
                   <div className="min-w-0">
-                    <p className="type-body-sm font-medium truncate">{item.title}</p>
+                    <p className="type-body-sm truncate">{item.title}</p>
                     <p className="type-caption text-[var(--text-tertiary)] truncate">
                       {item.company} · {item.date}
                     </p>
@@ -253,7 +253,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
 
         {extracurrCard && (
           <BentoCard span="third">
-            <p className="font-bold mb-3">{extracurrCard.data.title}</p>
+            <h3 className="font-heading font-bold mb-3">{extracurrCard.data.title}</h3>
             <div className="flex flex-col gap-3 flex-1 justify-center">
               {extracurrCard.data.items?.map((item: any, i: number) => (
                 <div key={i} className="flex items-center gap-3">
@@ -264,7 +264,12 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                     className="w-8 h-8 rounded-md object-contain shrink-0 bg-[var(--surface-raised)]"
                   />
                   <div className="min-w-0">
-                    <p className="type-body-sm font-medium truncate">{item.title}</p>
+                    <p className="type-body-sm truncate">{item.title}</p>
+                    {item.subtitle && (
+                      <p className="type-caption text-[var(--text-secondary)] truncate">
+                        {item.subtitle}
+                      </p>
+                    )}
                     <p className="type-caption text-[var(--text-tertiary)] truncate">
                       {item.role} · {item.date}
                     </p>
@@ -281,14 +286,14 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
 
         {locationCard && (
           <BentoCard span="third">
-            <p className="font-bold mb-3">{locationCard.data.title || "Contact"}</p>
+            <h3 className="font-heading font-bold mb-3">{locationCard.data.title || "Contact"}</h3>
             <div className="flex flex-col gap-3 flex-1 justify-center">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--surface-raised)]">
                   <MapPin size={16} aria-hidden="true" />
                 </div>
                 <div className="min-w-0">
-                  <p className="type-body-sm font-medium truncate">{locationCard.data.location}</p>
+                  <p className="type-body-sm truncate">{locationCard.data.location}</p>
                   <p className="type-caption text-[var(--text-tertiary)]">
                     Local time: <Clock inline />
                   </p>
@@ -303,7 +308,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                 <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--surface-raised)] group-hover/link:text-[var(--accent)] transition-colors">
                   <Github size={16} aria-hidden="true" />
                 </div>
-                <p className="type-body-sm font-medium truncate group-hover/link:text-[var(--accent)] transition-colors">
+                <p className="type-body-sm truncate group-hover/link:text-[var(--accent)] transition-colors">
                   github.com/Nikshaan
                 </p>
               </a>
@@ -316,7 +321,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                 <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--surface-raised)]">
                   <img src={linkedinColor.src} alt="" className="w-4 h-4" />
                 </div>
-                <p className="type-body-sm font-medium truncate group-hover/link:text-[var(--accent)] transition-colors">
+                <p className="type-body-sm truncate group-hover/link:text-[var(--accent)] transition-colors">
                   linkedin.com/in/nikshaan-shetty
                 </p>
               </a>
@@ -327,7 +332,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                 <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--surface-raised)]">
                   <img src={gmailColor.src} alt="" className="w-4 h-4" />
                 </div>
-                <p className="type-body-sm font-medium truncate group-hover/link:text-[var(--accent)] transition-colors">
+                <p className="type-body-sm truncate group-hover/link:text-[var(--accent)] transition-colors">
                   nikshaanshetty06@gmail.com
                 </p>
               </a>

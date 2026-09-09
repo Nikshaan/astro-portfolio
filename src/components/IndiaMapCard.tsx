@@ -726,7 +726,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
                       top: tooltipPos.y - 16,
                     }}
                   >
-                    <div className="bg-[var(--text-primary)] text-[var(--surface-page)] px-3 py-1.5 md:px-4 md:py-2 rounded-md shadow-lg type-body-sm font-medium whitespace-nowrap">
+                    <div className="bg-[var(--text-primary)] text-[var(--surface-page)] px-3 py-1.5 md:px-4 md:py-2 rounded-md shadow-lg type-body-sm font-bold whitespace-nowrap">
                       {hoveredPlace.name}
                     </div>
                     <div

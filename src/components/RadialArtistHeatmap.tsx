@@ -925,7 +925,7 @@ export default memo(function RadialArtistHeatmap() {
                         y={y}
                         textAnchor="middle"
                         dominantBaseline="central"
-                        className="pointer-events-none font-semibold fill-[var(--text-primary)]"
+                        className="pointer-events-none font-bold fill-[var(--text-primary)]"
                         style={{
                           fontSize: 12,
                           paintOrder: "stroke fill",
@@ -964,7 +964,7 @@ export default memo(function RadialArtistHeatmap() {
                     y={CY}
                     textAnchor="middle"
                     dominantBaseline="central"
-                    className="pointer-events-none font-medium fill-[var(--text-tertiary)]"
+                    className="pointer-events-none fill-[var(--text-tertiary)]"
                     style={{ fontSize: 10 }}
                   >
                     Yearly scrobbles
@@ -976,7 +976,7 @@ export default memo(function RadialArtistHeatmap() {
                 className="pointer-events-none absolute z-20 max-w-[min(100%-16px,18rem)] rounded-[var(--radius-control)] border p-3 type-caption shadow-lg transition-opacity border-[var(--border-subtle)] bg-[var(--surface-raised)] text-[var(--text-primary)]"
                 style={{ visibility: "hidden", opacity: 0 }}
               >
-                <div ref={tooltipTitleRef} className="mb-1 font-semibold" />
+                <div ref={tooltipTitleRef} className="mb-1 font-bold" />
                 <ul
                   ref={tooltipListRef}
                   className="m-0 list-none space-y-1 p-0"

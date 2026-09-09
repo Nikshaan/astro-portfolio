@@ -5,28 +5,121 @@ import Navbar from "./Navbar";
 <Navbar client:idle />
 
 <style is:global>
+  .nav-shell {
+    width: 100%;
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: 1rem;
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+    transition:
+      max-width 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+      padding 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  .nav-shell[data-scrolled="true"] {
+    max-width: 100vw;
+    padding-inline: 0;
+    padding-top: 0;
+  }
+
+  .nav-card {
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border-subtle);
+    background-color: var(--surface-card);
+    transition:
+      border-radius 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+      border-color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+      background-color 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+      box-shadow 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  .nav-shell[data-scrolled="true"] .nav-card {
+    border-radius: 0;
+    border-top-color: transparent;
+    border-left-color: transparent;
+    border-right-color: transparent;
+    border-bottom-color: var(--border-subtle);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .nav-wordmark {
+    font-family: var(--font-heading);
+    font-size: var(--type-content-subtitle);
+  }
+
   .nav-link {
     position: relative;
     color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: var(--type-nav);
+    font-weight: 400;
   }
 
   .nav-link:hover {
     color: var(--text-primary);
   }
 
-  .nav-link.active {
-    color: var(--accent);
-    font-weight: 600;
+  .nav-link.active,
+  .nav-link[aria-current="page"] {
+    color: var(--text-primary);
   }
 
-  .nav-link.active:hover {
-    color: var(--accent);
+  .theme-toggle-btn {
+    position: relative;
+    width: 32px;
+    height: 32px;
   }
 
-  .nav-link,
-  #theme-toggle {
+  .theme-toggle-btn .theme-toggle-sun,
+  .theme-toggle-btn .theme-toggle-moon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     transition:
-      color 0.2s ease-in-out,
-      background-color 0.2s ease-in-out;
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  /* Dark theme (default): show Sun */
+  .theme-toggle-btn .theme-toggle-sun {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+  }
+
+  .theme-toggle-btn .theme-toggle-moon {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7) rotate(-30deg);
+    pointer-events: none;
+  }
+
+  /* Light theme: show Moon */
+  :root[data-theme="light"] .theme-toggle-btn .theme-toggle-sun {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7) rotate(30deg);
+    pointer-events: none;
+  }
+
+  :root[data-theme="light"] .theme-toggle-btn .theme-toggle-moon {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    pointer-events: auto;
+  }
+
+  .nav-progress-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background-color: var(--accent);
+    width: var(--nav-progress, 0%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+
+  .nav-shell[data-scrolled="true"] .nav-progress-indicator {
+    opacity: 1;
   }
 </style>

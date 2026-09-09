@@ -12,8 +12,8 @@ import { getImage } from "astro:assets";
 import VercelAnalytics from "../components/VercelAnalytics.astro";
 import Footer from "../components/Footer";
 import "../styles/global.css";
-import dmSansWoff2 from "@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2?url";
-import spaceGroteskWoff2 from "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url";
+import iaWriterQuattroWoff2 from "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-400-normal.woff2?url";
+import ibmPlexSerifWoff2 from "@fontsource/ibm-plex-serif/files/ibm-plex-serif-latin-600-normal.woff2?url";
 
 const { title, description, preloadImageSrc, preloadImageSrcSet, preloadImageSizes } = Astro.props;
 
@@ -80,8 +80,8 @@ const ogImageUrl = "https://nikshaan.dev/linkedin_banner.webp";
         <meta name="apple-mobile-web-app-title" content="Nikshaan" />
         <link rel="apple-touch-icon" sizes="180x180" href={appleTouchIcon.src} />
 
-        <link rel="preload" as="font" type="font/woff2" href={dmSansWoff2} crossorigin />
-        <link rel="preload" as="font" type="font/woff2" href={spaceGroteskWoff2} crossorigin />
+        <link rel="preload" as="font" type="font/woff2" href={iaWriterQuattroWoff2} crossorigin />
+        <link rel="preload" as="font" type="font/woff2" href={ibmPlexSerifWoff2} crossorigin />
 
         <link rel="preconnect" href="https://i.scdn.co" crossorigin />
 
