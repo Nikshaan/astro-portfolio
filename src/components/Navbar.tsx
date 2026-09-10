@@ -6,6 +6,7 @@ import beeImage from "../data/bee.avif";
 
 interface NavbarProps {
   sections?: Array<{ id: string; label: string }>;
+  avatarSrc?: string;
 }
 
 const DEFAULT_SECTIONS = [
@@ -14,10 +15,16 @@ const DEFAULT_SECTIONS = [
   { id: "fun", label: "fun" },
 ];
 
-const Navbar: React.FC<NavbarProps> = memo(({ sections = DEFAULT_SECTIONS }) => {
+const Navbar: React.FC<NavbarProps> = memo(({ sections = DEFAULT_SECTIONS, avatarSrc }) => {
   const [activeSection, setActiveSection] = useState<string>("me");
   const shellRef = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
+
+  // Navigation lock refs to suppress observer oscillation during programmatic smooth scroll
+  const navTargetRef = useRef<string | null>(null);
+  const unlockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cleanupListenersRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const observerOptions: IntersectionObserverInit = {
@@ -38,7 +45,12 @@ const Navbar: React.FC<NavbarProps> = memo(({ sections = DEFAULT_SECTIONS }) => 
         }
       });
 
-      let maxVisibility = 0;
+      // Suppress active tab updates while programmatic smooth scrolling is in flight
+      if (navTargetRef.current !== null) {
+        return;
+      }
+
+      let maxVisibility = -1;
       let mostVisibleSection = "me";
 
       sectionVisibility.forEach((ratio, id) => {
@@ -117,35 +129,133 @@ const Navbar: React.FC<NavbarProps> = memo(({ sections = DEFAULT_SECTIONS }) => 
     };
   }, []);
 
-  const handleNavClick = useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
-      e.preventDefault();
+  const navigateToSection = useCallback(
+    (sectionId: string) => {
+      // 1. Clean up any existing navigation listeners & timers
+      if (cleanupListenersRef.current) {
+        cleanupListenersRef.current();
+      }
+
+      // 2. Set destination active immediately to start single direct caret glide
+      setActiveSection(sectionId);
+      navTargetRef.current = sectionId;
+
+      const unlock = () => {
+        navTargetRef.current = null;
+        if (unlockTimeoutRef.current) {
+          clearTimeout(unlockTimeoutRef.current);
+          unlockTimeoutRef.current = null;
+        }
+        if (scrollDebounceRef.current) {
+          clearTimeout(scrollDebounceRef.current);
+          scrollDebounceRef.current = null;
+        }
+        window.removeEventListener("scrollend", handleScrollEnd);
+        window.removeEventListener("scroll", handleScrollDebounce);
+        window.removeEventListener("wheel", handleUserInterrupt);
+        window.removeEventListener("touchmove", handleUserInterrupt);
+        window.removeEventListener("keydown", handleKeyInterrupt);
+        cleanupListenersRef.current = null;
+      };
+
+      const handleScrollEnd = () => {
+        unlock();
+      };
+
+      const handleUserInterrupt = () => {
+        unlock();
+      };
+
+      const handleKeyInterrupt = (e: KeyboardEvent) => {
+        if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(e.key)) {
+          unlock();
+        }
+      };
+
+      const handleScrollDebounce = () => {
+        if (scrollDebounceRef.current) {
+          clearTimeout(scrollDebounceRef.current);
+        }
+        scrollDebounceRef.current = setTimeout(() => {
+          unlock();
+        }, 120);
+      };
+
+      cleanupListenersRef.current = unlock;
+
+      const scrollBehavior: ScrollBehavior = shouldReduceMotion ? "auto" : "smooth";
 
       if (sectionId === "me") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        setActiveSection(sectionId);
-
-        setTimeout(() => {
-          if (window.location.hash) {
-            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        if (window.scrollY === 0) {
+          unlock();
+          return;
+        }
+        window.scrollTo({ top: 0, behavior: scrollBehavior });
+      } else {
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+          const rect = targetSection.getBoundingClientRect();
+          // Check if already aligned with the scroll target (scroll-margin: 80px)
+          if (Math.abs(rect.top - 80) < 6) {
+            unlock();
+            return;
           }
-        }, 10);
+          targetSection.scrollIntoView({ behavior: scrollBehavior, block: "start" });
+        } else {
+          unlock();
+          return;
+        }
+      }
+
+      if (shouldReduceMotion) {
+        unlock();
         return;
       }
 
-      const targetSection = document.getElementById(sectionId);
-      if (targetSection) {
-        targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
-        setActiveSection(sectionId);
+      // Attach completion & interruption listeners
+      window.addEventListener("scrollend", handleScrollEnd, { once: true });
+      window.addEventListener("scroll", handleScrollDebounce, { passive: true });
+      window.addEventListener("wheel", handleUserInterrupt, { passive: true, once: true });
+      window.addEventListener("touchmove", handleUserInterrupt, { passive: true, once: true });
+      window.addEventListener("keydown", handleKeyInterrupt, { passive: true, once: true });
 
-        setTimeout(() => {
-          if (window.location.hash) {
-            window.history.replaceState(null, "", window.location.pathname + window.location.search);
-          }
-        }, 10);
-      }
+      // Safety timeout: smooth scroll typically completes within 400-800ms
+      unlockTimeoutRef.current = setTimeout(unlock, 1200);
+
+      setTimeout(() => {
+        if (window.location.hash) {
+          window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
+      }, 10);
     },
-    [],
+    [shouldReduceMotion],
+  );
+
+  useEffect(() => {
+    const handleExternalNav = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail) {
+        e.preventDefault();
+        navigateToSection(customEvent.detail);
+      }
+    };
+
+    window.addEventListener("nav:navigate", handleExternalNav);
+
+    return () => {
+      window.removeEventListener("nav:navigate", handleExternalNav);
+      if (cleanupListenersRef.current) {
+        cleanupListenersRef.current();
+      }
+    };
+  }, [navigateToSection]);
+
+  const handleNavClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
+      e.preventDefault();
+      navigateToSection(sectionId);
+    },
+    [navigateToSection],
   );
 
   const handleThemeToggle = useCallback(() => {
@@ -164,10 +274,10 @@ const Navbar: React.FC<NavbarProps> = memo(({ sections = DEFAULT_SECTIONS }) => 
               href="#me"
               onClick={(e) => handleNavClick(e, "me")}
               className="nav-brand flex items-center gap-2.5 rounded-full focus-visible:outline-none"
-              aria-label="Nikshaan Shetty, back to top"
+              aria-label="Nikshaan — back to top"
             >
               <img
-                src={beeImage.src}
+                src={avatarSrc || beeImage.src}
                 alt=""
                 width={32}
                 height={32}
@@ -186,7 +296,7 @@ const Navbar: React.FC<NavbarProps> = memo(({ sections = DEFAULT_SECTIONS }) => 
                     key={id}
                     href={`#${id}`}
                     onClick={(e) => handleNavClick(e, id)}
-                    aria-label={`Navigate to ${label} section`}
+                    aria-label={`${label} section`}
                     aria-current={isActive ? "page" : undefined}
                     className={`nav-link relative cursor-pointer px-3 py-2 transition-colors duration-200${isActive ? " active" : ""
                       }`}

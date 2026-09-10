@@ -228,85 +228,28 @@
 }
 
 .skeletonGraph {
-  display: flex;
-  gap: 2px;
   width: 100%;
   overflow-x: auto;
   padding: 0.5rem 0;
-  justify-content: flex-start;
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) var(--surface-page);
-}
-
-@media (min-width: 768px) {
-  .skeletonGraph {
-    justify-content: stretch;
-    overflow-x: visible;
-  }
-}
-
-@media (min-width: 1024px) {
-  .skeletonGraph {
-    overflow-x: visible;
-  }
 }
 
 @media (max-width: 768px) {
   .skeletonGraph {
     scrollbar-width: none;
   }
-
   .skeletonGraph::-webkit-scrollbar {
     display: none;
   }
 }
 
-.skeletonWeek {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 0 0 auto;
-}
-
-.skeletonDay {
-  box-sizing: border-box;
-  flex-shrink: 0;
-  border-radius: 2px;
-  background: linear-gradient(
-    90deg,
-    var(--shimmer-from-1) 25%,
-    var(--shimmer-to-1) 50%,
-    var(--shimmer-from-1) 75%
-  );
-  background-size: 1200px 100%;
-  animation: shimmer 1.6s infinite linear;
-}
-
-@media (max-width: 1023px) {
-  .skeletonWeek {
-    min-width: auto;
-    width: 10px;
-  }
-
-  .skeletonDay {
-    width: 10px;
-    height: 10px;
-    min-width: 10px;
-    min-height: 10px;
-  }
-}
-
-@media (min-width: 640px) and (max-width: 1023px) {
-  .skeletonWeek {
-    width: 11px;
-  }
-
-  .skeletonDay {
-    width: 11px;
-    height: 11px;
-    min-width: 11px;
-    min-height: 11px;
-  }
+.skeletonSvg {
+  display: block;
+  width: 100%;
+  min-width: 580px;
+  height: 82px;
+  border-radius: 4px;
 }
 
 @media (min-width: 1024px) {
@@ -316,22 +259,11 @@
   .skeletonSubtitle {
     height: 1rem;
   }
-
-  .skeletonWeek {
-    flex: 1 1 0;
-    min-width: 0;
-    width: auto;
-    gap: 3px;
-  }
-
-  .skeletonDay {
-    width: 100%;
-    aspect-ratio: 1;
-    min-height: 12px;
+  .skeletonSvg {
     min-width: 0;
   }
+}
 
-  .skeletonGraph {
-    gap: 3px;
-  }
+.skeletonShimmerOverlay {
+  animation: shimmer 1.6s infinite linear;
 }

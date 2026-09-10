@@ -151,8 +151,8 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                     images[introCard.data.image].attributes?.srcset
                   }
                   sizes={BEE_IMAGE_SIZES}
-                  width={images[introCard.data.image].attributes?.width || 400}
-                  height={images[introCard.data.image].attributes?.height || 400}
+                  width={images[introCard.data.image].attributes?.width || 210}
+                  height={images[introCard.data.image].attributes?.height || 210}
                   alt="Nikshaan's profile avatar"
                   loading="eager"
                   fetchPriority="high"
@@ -190,66 +190,37 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
           </BentoCard>
         )}
 
-        <BentoCard span="quarter" href="/Nikshaan_Shetty_resume.pdf" target="_blank" rel="noopener noreferrer">
-          <div className="flex flex-col h-full items-center justify-center gap-2 text-center">
-            <FileText size={44} strokeWidth={1.5} className="text-[var(--text-secondary)]" aria-hidden="true" />
-            <h3 className="font-heading font-bold">Resume</h3>
-          </div>
-        </BentoCard>
-
-        {winCard && (
-          <BentoCard
-            span="winTile"
-            expandable
-            onActivate={() => setSelectedId("win")}
-            selected={selectedId === "win"}
-            layoutId="card-win"
-            aria-label="View hackathon wins"
-          >
+        <div className={`grid grid-cols-2 gap-[var(--bento-gap)] h-full ${SPANS.eduRight}`}>
+          <BentoCard span="subTile" href="/Nikshaan_Shetty_resume.pdf" target="_blank" rel="noopener noreferrer">
             <div className="flex flex-col h-full items-center justify-center gap-2 text-center">
-              <CardImage
-                image={images.winIcon}
-                alt=""
-                sizes="64px"
-                className="select-none w-[52px] h-[52px] sm:w-[64px] sm:h-[64px] object-contain"
-              />
-              <h3 className="font-heading font-bold">
-                Hackathon wins
-              </h3>
+              <FileText size={44} strokeWidth={1.5} className="text-[var(--text-secondary)]" aria-hidden="true" />
+              <h3 className="font-heading font-bold">Resume</h3>
             </div>
           </BentoCard>
-        )}
 
-        {experienceCard && (
-          <BentoCard
-            span="third"
-            expandable
-            onActivate={() => setSelectedId("experience")}
-            selected={selectedId === "experience"}
-            layoutId="card-experience"
-            aria-label="Experience — view full details"
-          >
-            <h3 className="font-heading font-bold mb-3">Experience</h3>
-            <div className="flex flex-col gap-3 flex-1 justify-center">
-              {experienceCard.data.items?.map((item: any, i: number) => (
-                <div key={i} className="flex items-center gap-3">
-                  <CardImage
-                    image={images[item.image]}
-                    alt=""
-                    sizes="32px"
-                    className="w-8 h-8 rounded-full object-contain shrink-0 bg-[var(--surface-raised)]"
-                  />
-                  <div className="min-w-0">
-                    <p className="type-body-sm truncate">{item.title}</p>
-                    <p className="type-caption text-[var(--text-tertiary)] truncate">
-                      {item.company} · {item.date}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </BentoCard>
-        )}
+          {winCard && (
+            <BentoCard
+              span="subTile"
+              expandable
+              onActivate={() => setSelectedId("win")}
+              selected={selectedId === "win"}
+              layoutId="card-win"
+              aria-label="View hackathon wins"
+            >
+              <div className="flex flex-col h-full items-center justify-center gap-2 text-center">
+                <CardImage
+                  image={images.winIcon}
+                  alt=""
+                  sizes="64px"
+                  className="select-none w-[52px] h-[52px] sm:w-[64px] sm:h-[64px] object-contain"
+                />
+                <h3 className="font-heading font-bold">
+                  Hackathon wins
+                </h3>
+              </div>
+            </BentoCard>
+          )}
+        </div>
 
         {extracurrCard && (
           <BentoCard span="third">
@@ -281,6 +252,37 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
               Certification: {extracurrCard.data.certification?.title} —{" "}
               {extracurrCard.data.certification?.issuer}
             </p>
+          </BentoCard>
+        )}
+
+        {experienceCard && (
+          <BentoCard
+            span="third"
+            expandable
+            onActivate={() => setSelectedId("experience")}
+            selected={selectedId === "experience"}
+            layoutId="card-experience"
+            aria-label="Experience — view full details"
+          >
+            <h3 className="font-heading font-bold mb-3">Experience</h3>
+            <div className="flex flex-col gap-3 flex-1 justify-center">
+              {experienceCard.data.items?.map((item: any, i: number) => (
+                <div key={i} className="flex items-center gap-3">
+                  <CardImage
+                    image={images[item.image]}
+                    alt=""
+                    sizes="32px"
+                    className="w-8 h-8 rounded-full object-contain shrink-0 bg-[var(--surface-raised)]"
+                  />
+                  <div className="min-w-0">
+                    <p className="type-body-sm truncate">{item.title}</p>
+                    <p className="type-caption text-[var(--text-tertiary)] truncate">
+                      {item.company} · {item.date}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </BentoCard>
         )}
 

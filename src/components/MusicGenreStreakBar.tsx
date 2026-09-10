@@ -77,7 +77,7 @@ export default memo(function MusicGenreStreakBar() {
                   ●
                 </span>
                 <span className="min-w-0 truncate">{capitalise(d.genre)}</span>
-                <span className="shrink-0 tabular-nums opacity-80 text-[var(--text-secondary)]">
+                <span className="shrink-0 tabular-nums text-[var(--text-secondary)]">
                   — {pct}%
                 </span>
               </span>

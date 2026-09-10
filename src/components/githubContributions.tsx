@@ -86,13 +86,26 @@ function HeatmapSkeleton() {
         <div className={styles.skeletonSubtitle} />
       </div>
       <div className={styles.skeletonGraph}>
-        {Array.from({ length: 53 }).map((_, wi) => (
-          <div key={wi} className={styles.skeletonWeek}>
-            {Array.from({ length: 7 }).map((_, di) => (
-              <div key={di} className={styles.skeletonDay} />
-            ))}
-          </div>
-        ))}
+        <svg
+          className={styles.skeletonSvg}
+          viewBox="0 0 636 82"
+          width="100%"
+          height="82"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <pattern id="contrib-skel-pat" width="12" height="12" patternUnits="userSpaceOnUse">
+              <rect width="10" height="10" rx="2" fill="var(--surface-raised)" stroke="var(--border-subtle)" strokeWidth="1" />
+            </pattern>
+            <linearGradient id="contrib-skel-shimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="transparent" />
+              <stop offset="50%" stopColor="var(--shimmer-to-1)" stopOpacity="0.45" />
+              <stop offset="100%" stopColor="transparent" />
+            </linearGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#contrib-skel-pat)" />
+          <rect className={styles.skeletonShimmerOverlay} width="100%" height="100%" fill="url(#contrib-skel-shimmer)" />
+        </svg>
       </div>
     </div>
   );
@@ -111,6 +124,11 @@ export default memo(function GithubContributions({
   );
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const graphRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -216,7 +234,9 @@ export default memo(function GithubContributions({
       setLoading(false);
     }
 
-    poll(0, false);
+    const initTimer = window.setTimeout(() => {
+      poll(0, false);
+    }, 300);
 
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") poll(0, true);
@@ -228,6 +248,7 @@ export default memo(function GithubContributions({
     document.addEventListener("visibilitychange", onVis);
 
     return () => {
+      window.clearTimeout(initTimer);
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVis);
     };
@@ -302,7 +323,7 @@ export default memo(function GithubContributions({
             </p>
           </>
         )}
-        {typeof document !== "undefined" &&
+        {mounted &&
           createPortal(
             <div
               ref={tooltipRef}

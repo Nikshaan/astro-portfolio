@@ -7,6 +7,7 @@ import { twMerge } from "tailwind-merge";
 import BentoGrid from "./bento/BentoGrid";
 import BentoCard from "./bento/BentoCard";
 import { SPANS } from "./bento/spans";
+import fancyboxCssUrl from "@fancyapps/ui/dist/fancybox/fancybox.css?url";
 
 const MusicStatsClient = lazy(() => import("./musicstats"));
 const RadialArtistHeatmap = lazy(() => import("./RadialArtistHeatmap"));
@@ -149,13 +150,22 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
     }
   }, []);
 
+  const ensureFancyboxCss = () => {
+    if (typeof document === "undefined" || document.getElementById("fancybox-css")) return;
+    const link = document.createElement("link");
+    link.id = "fancybox-css";
+    link.rel = "stylesheet";
+    link.href = fancyboxCssUrl;
+    document.head.appendChild(link);
+  };
+
   const initFancybox = async () => {
     if (initPromiseRef.current) return initPromiseRef.current;
 
     initPromiseRef.current = (async () => {
-      const [, , response] = await Promise.all([
+      ensureFancyboxCss();
+      const [, response] = await Promise.all([
         import("@fancyapps/ui"),
-        import("@fancyapps/ui/dist/fancybox/fancybox.css"),
         fetch("/api/gallery.json").then((res) => (res.ok ? res.json() : [])),
       ]);
       galleryDataRef.current = response;
@@ -175,8 +185,8 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
       const maxPrefetchImages = 3;
       preloadObserver = new IntersectionObserver(
         (entries) => {
-          if (!entries[0]?.isIntersecting) return;
           preloadObserver?.disconnect();
+          ensureFancyboxCss();
 
           const scheduleBatch =
             typeof requestIdleCallback === "function"
@@ -367,8 +377,8 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
                   width={image.width}
                   height={image.height}
                   alt={image.alt}
-                  loading={i < 2 ? "eager" : "lazy"}
-                  fetchPriority={i < 2 ? "high" : "auto"}
+                  loading="lazy"
+                  fetchPriority="low"
                   decoding="async"
                   sizes="(max-width: 1024px) 50vw, 25vw"
                   className={cn(

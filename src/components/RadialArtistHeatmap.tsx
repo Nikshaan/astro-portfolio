@@ -879,7 +879,7 @@ export default memo(function RadialArtistHeatmap() {
       <div className="flex w-full flex-1 min-h-[180px] min-w-0 items-center justify-center overflow-hidden p-3 lg:min-h-[250px]">
         <div ref={chartHostRef} className={chartInnerClass}>
           {showError ? (
-            <div className="flex h-full w-full items-center justify-center px-3 text-center type-body-sm text-red-400">
+            <div className="flex h-full w-full items-center justify-center px-3 text-center type-body-sm text-[var(--danger)]">
               {error}
             </div>
           ) : null}

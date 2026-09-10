@@ -96,6 +96,11 @@ const getProcessedContent = (content: string) => {
 
 function TechStack({ techstack }: { techstack?: string[] }) {
   const [hovered, setHovered] = useState<{ tech: string; x: number; y: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const showTooltip = useCallback((e: React.SyntheticEvent<HTMLDivElement>, tech: string) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -133,7 +138,7 @@ function TechStack({ techstack }: { techstack?: string[] }) {
           </div>
         );
       })}
-      {typeof document !== "undefined" &&
+      {mounted &&
         hovered &&
         createPortal(
           <div
@@ -298,7 +303,7 @@ const ProjectsBentoGrid: React.FC = () => {
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           className="project-card-action project-card-action--link"
-                          aria-label={`View live demo of ${project.data.name}`}
+                          aria-label={`Live demo: ${project.data.name}`}
                         >
                           <span className="project-card-action__icon" aria-hidden="true">
                             <ExternalLink size={14} />
@@ -314,7 +319,7 @@ const ProjectsBentoGrid: React.FC = () => {
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             className="project-card-action project-card-action--link"
-                            aria-label={`View source code of ${project.data.name} on GitHub`}
+                            aria-label={`GitHub repository: ${project.data.name}`}
                           >
                             <span className="project-card-action__icon" aria-hidden="true">
                               <Github size={14} />
@@ -323,14 +328,12 @@ const ProjectsBentoGrid: React.FC = () => {
                           </a>
                           {project.id === LLM_FROM_SCRATCH_ID &&
                             llmStars !== null && (
-                              <span
-                                className="project-card-action project-card-action--meta tabular-nums"
-                                aria-label={`${llmStars.toLocaleString()} GitHub stars`}
-                              >
+                              <span className="project-card-action project-card-action--meta tabular-nums">
                                 <span className="project-card-action__icon" aria-hidden="true">
                                   <Star size={14} />
                                 </span>
                                 {llmStars.toLocaleString()}
+                                <span className="sr-only"> GitHub stars</span>
                               </span>
                             )}
                         </span>

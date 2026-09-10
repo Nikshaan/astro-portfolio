@@ -1,8 +1,18 @@
 ---
 import Navbar from "./Navbar";
+import { getImage } from "astro:assets";
+import beeImage from "../data/bee.avif";
+
+const optimizedBee = await getImage({
+  src: beeImage,
+  format: "avif",
+  width: 64,
+  height: 64,
+  quality: 80,
+});
 ---
 
-<Navbar client:idle />
+<Navbar client:idle avatarSrc={optimizedBee.src} />
 
 <style is:global>
   .nav-shell {

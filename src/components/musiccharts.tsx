@@ -23,61 +23,91 @@ interface Placement {
 
 const W = 300;
 const H = 120;
-const PAD = 6;
+const PAD_X = 16;
+const PAD_Y = 14;
+const MIN_Y = 4;
+const MAX_Y = H - 4;
 const VIEWPORT_MARGIN = 10;
 const TOOLTIP_GAP = 10;
 
 function smoothPath(points: Point[]): string {
-  if (points.length < 2) return "";
-  if (points.length === 2) {
-    return `M${points[0].x},${points[0].y} L${points[1].x},${points[1].y}`;
+  const n = points.length;
+  if (n < 2) return "";
+  if (n === 2) {
+    return `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)} L${points[1].x.toFixed(2)},${points[1].y.toFixed(2)}`;
   }
-  let d = `M${points[0].x},${points[0].y}`;
-  for (let i = 0; i < points.length - 1; i++) {
+
+  let path = `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`;
+  for (let i = 0; i < n - 1; i++) {
     const p0 = points[i - 1] ?? points[i];
     const p1 = points[i];
     const p2 = points[i + 1];
     const p3 = points[i + 2] ?? p2;
-    const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
-    const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
-    d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+
+    let cp1x = p1.x + (p2.x - p0.x) / 6;
+    let cp1y = p1.y + (p2.y - p0.y) / 6;
+    let cp2x = p2.x - (p3.x - p1.x) / 6;
+    let cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    // Keep control points within safe bounds so curve never clips outside the SVG viewBox
+    cp1y = Math.min(Math.max(cp1y, MIN_Y), MAX_Y);
+    cp2y = Math.min(Math.max(cp2y, MIN_Y), MAX_Y);
+    cp1x = Math.min(Math.max(cp1x, 0), W);
+    cp2x = Math.min(Math.max(cp2x, 0), W);
+
+    path += ` C${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
   }
-  return d;
+  return path;
 }
 
 export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
   const isLightTheme = useIsLightTheme();
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [placement, setPlacement] = useState<Placement | null>(null);
+  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const isTouchRef = useRef(false);
+  const touchTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const hasData = !!data && data.length > 0;
 
-  const { points, maxValue } = useMemo(() => {
-    if (!hasData) return { points: [] as Point[], maxValue: 0 };
+  const { points, maxValue, stepX } = useMemo(() => {
+    if (!hasData) return { points: [] as Point[], maxValue: 0, stepX: 0 };
     const values = data.map((d) => d.scrobbles || 0);
     const max = Math.max(1, ...values);
-    const stepX = data.length > 1 ? (W - PAD * 2) / (data.length - 1) : 0;
+    const sx = data.length > 1 ? (W - PAD_X * 2) / (data.length - 1) : 0;
     const pts = values.map((v, i) => ({
-      x: PAD + i * stepX,
-      y: PAD + (H - PAD * 2) * (1 - v / max),
+      x: PAD_X + i * sx,
+      y: PAD_Y + (H - PAD_Y * 2) * (1 - v / max),
       v,
       name: data[i]?.name || "",
     }));
-    return { points: pts, maxValue: max };
+    return { points: pts, maxValue: max, stepX: sx };
   }, [data, hasData]);
 
   useEffect(() => {
-    const dismiss = (e: TouchEvent) => {
+    const dismiss = (e: TouchEvent | MouseEvent) => {
       const container = containerRef.current;
       if (!container || !(e.target instanceof Node) || container.contains(e.target)) return;
       setHoverIndex(null);
     };
+    const handleScroll = () => {
+      setHoverIndex(null);
+    };
     document.addEventListener("touchstart", dismiss, true);
-    return () => document.removeEventListener("touchstart", dismiss, true);
+    document.addEventListener("mousedown", dismiss, true);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", dismiss, true);
+      document.removeEventListener("mousedown", dismiss, true);
+      window.removeEventListener("scroll", handleScroll);
+      if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -110,30 +140,63 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
     setPlacement({ left, top, arrowLeft, above });
   }, [hoverIndex, points]);
 
-  const updateFromClientX = useCallback(
+  const getIndexFromClientX = useCallback(
     (clientX: number) => {
       const container = containerRef.current;
-      if (!container || points.length === 0) return;
+      if (!container || points.length === 0) return 0;
       const rect = container.getBoundingClientRect();
-      const frac = rect.width > 0 ? (clientX - rect.left) / rect.width : 0;
-      const idx = Math.round(Math.min(Math.max(frac, 0), 1) * (points.length - 1));
-      setHoverIndex(idx);
+      if (rect.width <= 0) return 0;
+      const svgX = ((clientX - rect.left) / rect.width) * W;
+      const idx = stepX > 0 ? Math.round((svgX - PAD_X) / stepX) : 0;
+      return Math.min(Math.max(idx, 0), points.length - 1);
     },
-    [points],
+    [points, stepX],
+  );
+
+  const markTouchActive = useCallback(() => {
+    isTouchRef.current = true;
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+    touchTimerRef.current = window.setTimeout(() => {
+      isTouchRef.current = false;
+    }, 800);
+  }, []);
+
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      markTouchActive();
+      const touch = e.touches[0];
+      if (touch) {
+        const idx = getIndexFromClientX(touch.clientX);
+        setHoverIndex((prev) => (prev === idx ? null : idx));
+      }
+    },
+    [getIndexFromClientX, markTouchActive],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      markTouchActive();
+      const touch = e.touches[0];
+      if (touch) {
+        const idx = getIndexFromClientX(touch.clientX);
+        setHoverIndex(idx);
+      }
+    },
+    [getIndexFromClientX, markTouchActive],
   );
 
   const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => updateFromClientX(e.clientX),
-    [updateFromClientX],
-  );
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent<HTMLDivElement>) => {
-      const touch = e.touches[0];
-      if (touch) updateFromClientX(touch.clientX);
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (isTouchRef.current) return;
+      setHoverIndex(getIndexFromClientX(e.clientX));
     },
-    [updateFromClientX],
+    [getIndexFromClientX],
   );
-  const hideTooltip = useCallback(() => setHoverIndex(null), []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (isTouchRef.current) return;
+    setHoverIndex(null);
+  }, []);
 
   if (!hasData) {
     return (
@@ -151,7 +214,10 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
   const textColor = isLightTheme ? "#57534E" : "#A3A3A3";
 
   const linePath = smoothPath(points);
-  const areaPath = `${linePath} L${points[points.length - 1].x},${H - PAD} L${points[0].x},${H - PAD} Z`;
+  const areaPath =
+    points.length > 0
+      ? `${linePath} L${points[points.length - 1].x.toFixed(2)},${H - PAD_Y} L${points[0].x.toFixed(2)},${H - PAD_Y} Z`
+      : "";
 
   const summary = points
     .map((p) => `${p.name}: ${p.v} scrobble${p.v === 1 ? "" : "s"}`)
@@ -173,9 +239,9 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
               key={tick.f}
               className="type-caption absolute right-0 tabular-nums"
               style={{
-                top: `${tick.f * 100}%`,
+                top: `${((PAD_Y + tick.f * (H - PAD_Y * 2)) / H) * 100}%`,
                 color: textColor,
-                transform: tick.f === 0 ? "none" : tick.f === 1 ? "translateY(-100%)" : "translateY(-50%)",
+                transform: "translateY(-50%)",
               }}
             >
               {tick.value}
@@ -186,17 +252,17 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
           <svg
             viewBox={`0 0 ${W} ${H}`}
             preserveAspectRatio="none"
-            className="w-full h-full"
+            className="w-full h-full overflow-visible"
             role="img"
             aria-label={`Daily scrobbles: ${summary}`}
           >
             {[0, 0.5, 1].map((f) => (
               <line
                 key={`h${f}`}
-                x1={PAD}
-                y1={PAD + f * (H - PAD * 2)}
-                x2={W - PAD}
-                y2={PAD + f * (H - PAD * 2)}
+                x1={PAD_X}
+                y1={PAD_Y + f * (H - PAD_Y * 2)}
+                x2={W - PAD_X}
+                y2={PAD_Y + f * (H - PAD_Y * 2)}
                 stroke={gridColor}
                 strokeWidth={1}
                 vectorEffect="non-scaling-stroke"
@@ -206,9 +272,9 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
               <line
                 key={`v${i}`}
                 x1={p.x}
-                y1={PAD}
+                y1={PAD_Y}
                 x2={p.x}
-                y2={H - PAD}
+                y2={H - PAD_Y}
                 stroke={gridColor}
                 strokeWidth={1}
                 opacity={0.5}
@@ -228,9 +294,9 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
             {active && (
               <line
                 x1={active.x}
-                y1={PAD}
+                y1={PAD_Y}
                 x2={active.x}
-                y2={H - PAD}
+                y2={H - PAD_Y}
                 stroke={strokeColor}
                 strokeWidth={1}
                 strokeDasharray="3 2"
@@ -260,28 +326,30 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
           <div
             className="absolute inset-0 cursor-default"
             onMouseMove={handleMouseMove}
-            onMouseLeave={hideTooltip}
-            onTouchStart={handleTouchMove}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
-            onTouchEnd={hideTooltip}
           />
         </div>
       </div>
-      <div className="flex gap-1.5 pt-1 shrink-0">
+      <div className="flex gap-1.5 pt-1.5 shrink-0">
         <div className="w-6 shrink-0 sm:w-7" aria-hidden />
-        <div className="flex flex-1 justify-between px-1">
+        <div className="relative h-5 flex-1">
           {points.map((p, i) => (
             <span
               key={i}
-              className="type-caption transition-colors"
-              style={{ color: hoverIndex === i ? strokeColor : textColor }}
+              className="type-caption absolute -translate-x-1/2 transition-colors whitespace-nowrap text-center"
+              style={{
+                left: `${(p.x / W) * 100}%`,
+                color: hoverIndex === i ? strokeColor : textColor,
+              }}
             >
               {p.name}
             </span>
           ))}
         </div>
       </div>
-      {typeof document !== "undefined" &&
+      {mounted &&
         active &&
         createPortal(
           <div

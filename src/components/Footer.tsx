@@ -11,20 +11,30 @@ const Footer = () => {
     (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
       e.preventDefault();
 
-      const targetSection = document.getElementById(sectionId);
-      if (targetSection) {
-        targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      const notHandled = window.dispatchEvent(
+        new CustomEvent("nav:navigate", { detail: sectionId, cancelable: true }),
+      );
 
-        setTimeout(() => {
-          if (window.location.hash) {
-            window.history.replaceState(
-              null,
-              "",
-              window.location.pathname + window.location.search,
-            );
+      if (notHandled) {
+        if (sectionId === "me") {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          const targetSection = document.getElementById(sectionId);
+          if (targetSection) {
+            targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
           }
-        }, 10);
+        }
       }
+
+      setTimeout(() => {
+        if (window.location.hash) {
+          window.history.replaceState(
+            null,
+            "",
+            window.location.pathname + window.location.search,
+          );
+        }
+      }, 10);
     },
     [],
   );
@@ -132,7 +142,7 @@ const Footer = () => {
                     key={link.name}
                     href={`#${link.href}`}
                     onClick={(e) => handleNavClick(e, link.href)}
-                    aria-label={`Navigate to ${link.name} section`}
+                    aria-label={`${link.name} section`}
                     className="px-4 md:px-6 py-2 rounded-full border border-[var(--border-subtle)] type-ui text-[var(--text-primary)] font-bold hover:bg-[var(--accent)] hover:text-[var(--accent-contrast)] hover:border-[var(--accent)] footer-transition"
                   >
                     {link.name}

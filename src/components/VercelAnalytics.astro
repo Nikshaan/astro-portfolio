@@ -1,5 +1,6 @@
 ---
 import Analytics from '@vercel/analytics/astro';
+const isVercel = import.meta.env.PROD && (process.env.VERCEL === "1" || !!process.env.VERCEL_ENV);
 ---
 
-<Analytics />
+{isVercel && <Analytics />}

@@ -358,6 +358,11 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
   const isLightTheme = useIsLightTheme();
   const shouldReduceMotion = useReducedMotion();
   const trapRef = useFocusTrap(portalVisible);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (cachedTopology) {
@@ -632,7 +637,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
         </motion.div>
       </div>
 
-      {typeof document !== "undefined" &&
+      {mounted &&
         createPortal(
           <AnimatePresence mode="popLayout" onExitComplete={handleExitComplete}>
             {portalVisible && (

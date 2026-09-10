@@ -10,6 +10,7 @@ const useIsomorphicLayoutEffect =
 
 export const InfoTooltip: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [placement, setPlacement] = useState<{
     left: number;
     top: number;
@@ -17,6 +18,10 @@ export const InfoTooltip: React.FC = () => {
     above: boolean;
     maxContentHeight: number;
   } | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -246,7 +251,7 @@ export const InfoTooltip: React.FC = () => {
         <Info className="w-4 h-4 text-[var(--text-tertiary)]" aria-hidden="true" />
       </button>
 
-      {typeof document !== "undefined" &&
+      {mounted &&
         isOpen &&
         createPortal(
           <div
