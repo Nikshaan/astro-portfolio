@@ -325,14 +325,36 @@ const IndiaMapModalMap = memo(function IndiaMapModalMap({
   );
 });
 
-async function loadIndiaTopology(): Promise<any> {
+const SESSION_CACHE_KEY = "nikshaan_india_topo_v1";
+
+function readSessionTopology(): any {
   if (cachedTopology) return cachedTopology;
+  if (typeof window !== "undefined" && window.sessionStorage) {
+    try {
+      const stored = window.sessionStorage.getItem(SESSION_CACHE_KEY);
+      if (stored) {
+        cachedTopology = JSON.parse(stored);
+        return cachedTopology;
+      }
+    } catch {}
+  }
+  return null;
+}
+
+async function loadIndiaTopology(): Promise<any> {
+  const existing = readSessionTopology();
+  if (existing) return existing;
   if (topologyInflight) return topologyInflight;
   topologyInflight = (async () => {
     const response = await fetch("/india-topo.json");
     if (!response.ok) throw new Error("Failed to load map data");
     const data = await response.json();
     cachedTopology = data;
+    if (typeof window !== "undefined" && window.sessionStorage) {
+      try {
+        window.sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(data));
+      } catch {}
+    }
     return data;
   })();
   try {
@@ -348,8 +370,9 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 }) => {
   const [portalVisible, setPortalVisible] = useState(false);
   const [layoutLock, setLayoutLock] = useState(false);
-  const [topology, setTopology] = useState<any>(cachedTopology);
-  const [loading, setLoading] = useState(!cachedTopology);
+  const initialTopo = readSessionTopology();
+  const [topology, setTopology] = useState<any>(initialTopo);
+  const [loading, setLoading] = useState(!initialTopo);
   const [hoveredPlace, setHoveredPlace] = useState<VisitedPlace | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(
     null,
@@ -365,8 +388,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
   }, []);
 
   useEffect(() => {
-    if (cachedTopology) {
-      setTopology(cachedTopology);
+    if (topology) {
       setLoading(false);
       return;
     }
@@ -383,7 +405,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     };
 
     fetchData();
-  }, []);
+  }, [topology]);
 
   const handleClose = useCallback(() => {
     setHoveredPlace(null);

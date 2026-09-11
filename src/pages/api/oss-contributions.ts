@@ -150,6 +150,12 @@ async function fetchContributions(): Promise<Contribution[]> {
   return contributions;
 }
 
+const CACHE_HEADERS = {
+  "Content-Type": "application/json",
+  "Cache-Control":
+    "public, max-age=120, s-maxage=1800, stale-while-revalidate=86400",
+};
+
 export const GET: APIRoute = async () => {
   if (!GH_TOKEN || !GH_USERNAME) {
     return new Response(
@@ -166,8 +172,7 @@ export const GET: APIRoute = async () => {
     return new Response(JSON.stringify(cachedData), {
       status: 200,
       headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=86400",
+        ...CACHE_HEADERS,
         "X-Cache-Status": "HIT",
       },
     });
@@ -179,8 +184,7 @@ export const GET: APIRoute = async () => {
       return new Response(JSON.stringify(data), {
         status: 200,
         headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=86400",
+          ...CACHE_HEADERS,
           "X-Cache-Status": "DEDUPED",
         },
       });
@@ -194,13 +198,20 @@ export const GET: APIRoute = async () => {
   });
 
   try {
-    const data = await run;
+    // If we have any existing cached data, race live fetch against 3500ms timeout
+    const data = cachedData
+      ? await Promise.race([
+          run,
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Timeout")), 3500),
+          ),
+        ])
+      : await run;
 
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=86400",
+        ...CACHE_HEADERS,
         "X-Cache-Status": "MISS",
       },
     });
@@ -209,8 +220,7 @@ export const GET: APIRoute = async () => {
       return new Response(JSON.stringify(cachedData), {
         status: 200,
         headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=86400",
+          ...CACHE_HEADERS,
           "X-Cache-Status": "STALE",
         },
       });

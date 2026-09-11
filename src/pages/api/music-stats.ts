@@ -51,7 +51,7 @@ interface MusicStatsResult {
   genreData: GenreEntry[];
 }
 
-const SERVER_CACHE_MS = 30 * 1000;
+const SERVER_CACHE_MS = 5 * 60 * 1000;
 const LOOKUP_CACHE_MS = 6 * 60 * 60 * 1000;
 const TOP_ARTIST_COUNT = 5;
 const TOP_TAGS_PER_ARTIST = 3;
@@ -64,7 +64,7 @@ let spotifyToken: { value: string; expiresAt: number } | null = null;
 
 const CACHE_HEADERS = {
   "Content-Type": "application/json",
-  "Cache-Control": "public, max-age=0, s-maxage=30, stale-while-revalidate=300",
+  "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=86400",
 } as const;
 
 const jsonResponse = (
@@ -253,6 +253,8 @@ async function buildStats(
   };
 }
 
+let pendingRequest: Promise<MusicStatsResult> | null = null;
+
 export const GET: APIRoute = async () => {
   if (!LASTFM_API_KEY || !LASTFM_USERNAME) {
     return jsonResponse(
@@ -270,10 +272,20 @@ export const GET: APIRoute = async () => {
     return jsonResponse(cache.data, 200, "HIT");
   }
 
-  const userStatsPromise = fetchUserStats(LASTFM_USERNAME, LASTFM_API_KEY);
+  if (pendingRequest) {
+    try {
+      const data = await pendingRequest;
+      return jsonResponse(data, 200, "DEDUPED");
+    } catch {}
+  }
 
-  try {
-    const timeline = await getTimeline(LASTFM_USERNAME, LASTFM_API_KEY, anchorSec);
+  const execute = async (): Promise<MusicStatsResult> => {
+    const userStatsPromise = fetchUserStats(LASTFM_USERNAME, LASTFM_API_KEY);
+    const timeline = await getTimeline(
+      LASTFM_USERNAME,
+      LASTFM_API_KEY,
+      anchorSec,
+    );
     const data = await buildStats(
       timeline,
       LASTFM_API_KEY,
@@ -282,6 +294,20 @@ export const GET: APIRoute = async () => {
       userStatsPromise,
     );
     cache = { data, timestamp: Date.now() };
+    return data;
+  };
+
+  const run = execute();
+  pendingRequest = run;
+  void run.catch(() => {}).finally(() => {
+    if (pendingRequest === run) pendingRequest = null;
+  });
+
+  try {
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Timeline fetch timeout")), 3500),
+    );
+    const data = await Promise.race([run, timeoutPromise]);
     return jsonResponse(data, 200, "FRESH");
   } catch (error) {
     if (cache) return jsonResponse(cache.data, 200, "STALE");
@@ -289,6 +315,10 @@ export const GET: APIRoute = async () => {
     const fallback = peekTimeline();
     if (fallback) {
       try {
+        const userStatsPromise = fetchUserStats(
+          LASTFM_USERNAME,
+          LASTFM_API_KEY,
+        );
         const data = await buildStats(
           fallback,
           LASTFM_API_KEY,
@@ -296,6 +326,7 @@ export const GET: APIRoute = async () => {
           SPOTIFY_CLIENT_SECRET ?? "",
           userStatsPromise,
         );
+        cache = { data, timestamp: Date.now() };
         return jsonResponse(data, 200, "STALE");
       } catch {}
     }

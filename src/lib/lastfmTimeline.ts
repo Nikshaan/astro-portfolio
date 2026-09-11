@@ -244,7 +244,7 @@ async function refresh(
   return { scrobbles: merged, coveredToSec: anchorSec, fetchedAt: Date.now() };
 }
 
-const TIMELINE_TTL_MS = 30 * 1000;
+const TIMELINE_TTL_MS = 5 * 60 * 1000;
 
 let state: TimelineState | null = null;
 let pending: Promise<TimelineState> | null = null;

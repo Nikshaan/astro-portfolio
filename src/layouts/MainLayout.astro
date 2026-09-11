@@ -137,8 +137,8 @@ const ogImageUrl = "https://nikshaan.dev/linkedin_banner.webp";
                     document.documentElement.classList.add("save-data");
                 }
 
-                window.addEventListener("vite:preloadError", function () {
-                    const reloadKey = "vite_chunk_err_reload";
+                function handleChunkError() {
+                    const reloadKey = "chunk_err_reload";
                     const lastReload = sessionStorage.getItem(reloadKey);
                     if (
                         !lastReload ||
@@ -150,7 +150,9 @@ const ogImageUrl = "https://nikshaan.dev/linkedin_banner.webp";
                         );
                         window.location.reload();
                     }
-                });
+                }
+
+                window.addEventListener("vite:preloadError", handleChunkError);
 
                 window.addEventListener("unhandledrejection", function (e) {
                     if (
@@ -161,18 +163,21 @@ const ogImageUrl = "https://nikshaan.dev/linkedin_banner.webp";
                         )
                     ) {
                         e.preventDefault();
-                        const reloadKey = "import_chunk_err_reload";
-                        const lastReload = sessionStorage.getItem(reloadKey);
-                        if (
-                            !lastReload ||
-                            Date.now() - parseInt(lastReload) > 10000
-                        ) {
-                            sessionStorage.setItem(
-                                reloadKey,
-                                Date.now().toString(),
-                            );
-                            window.location.reload();
-                        }
+                        handleChunkError();
+                    }
+                });
+
+                window.addEventListener("astro:hydration-error", function (e) {
+                    if (
+                        e.detail &&
+                        e.detail.error &&
+                        e.detail.error.message &&
+                        e.detail.error.message.includes(
+                            "Failed to fetch dynamically imported module",
+                        )
+                    ) {
+                        e.preventDefault();
+                        handleChunkError();
                     }
                 });
             })();

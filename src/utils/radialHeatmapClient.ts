@@ -1,3 +1,5 @@
+import { getPersistentCache, setPersistentCache } from "./persistentCache";
+
 export interface RadialHeatmapWeek {
   from: number;
   to: number;
@@ -13,12 +15,17 @@ export interface RadialHeatmapPayload {
   artists: RadialHeatmapArtistRow[];
 }
 
+const PERSISTENT_CACHE_KEY = "nikshaan_radial_heatmap_v1";
+const PERSISTENT_TTL_MS = 24 * 60 * 60 * 1000;
 const CLIENT_DEDUPE_MS = 20_000;
 const READ_CACHE_MS = 5 * 60 * 1000;
 export const RADIAL_POLL_MS = 5 * 60 * 1000;
 
-let cached: RadialHeatmapPayload | null = null;
-let cachedAt = 0;
+let cached: RadialHeatmapPayload | null = getPersistentCache<RadialHeatmapPayload>(
+  PERSISTENT_CACHE_KEY,
+  PERSISTENT_TTL_MS,
+);
+let cachedAt = cached ? Date.now() : 0;
 let inflightPromise: Promise<RadialHeatmapPayload> | null = null;
 
 function buildUrl(): string {
@@ -31,6 +38,15 @@ function buildUrl(): string {
 
 export function readRadialHeatmapCache(): RadialHeatmapPayload | null {
   if (cached && Date.now() - cachedAt < READ_CACHE_MS) return cached;
+  const disk = getPersistentCache<RadialHeatmapPayload>(
+    PERSISTENT_CACHE_KEY,
+    PERSISTENT_TTL_MS,
+  );
+  if (disk) {
+    cached = disk;
+    cachedAt = Date.now();
+    return disk;
+  }
   return null;
 }
 
@@ -58,13 +74,13 @@ export async function loadRadialHeatmapPayload(): Promise<RadialHeatmapPayload> 
 
   const run = async () => {
     const response = await fetch(buildUrl(), {
-      cache: "no-store",
       headers: { Accept: "application/json" },
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await parsePayload(response);
     cached = payload;
     cachedAt = Date.now();
+    setPersistentCache(PERSISTENT_CACHE_KEY, payload);
     return payload;
   };
 

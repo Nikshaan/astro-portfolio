@@ -1,15 +1,12 @@
 import { useEffect, useState } from "react";
 import {
   subscribeMusicStats,
+  getMusicStatsSnapshot,
   type MusicStatsSnapshot,
 } from "../utils/musicStatsClient";
 
 export function useMusicStatsLive(): MusicStatsSnapshot {
-  const [state, setState] = useState<MusicStatsSnapshot>({
-    data: null,
-    loading: true,
-    error: null,
-  });
+  const [state, setState] = useState<MusicStatsSnapshot>(getMusicStatsSnapshot);
 
   useEffect(() => subscribeMusicStats(setState), []);
 

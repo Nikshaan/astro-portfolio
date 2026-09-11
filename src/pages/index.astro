@@ -31,6 +31,32 @@ const optimizedBeeImage = await getImage({
   }
 </script>
 
+<script is:inline define:vars={{ baseUrl: import.meta.env.BASE_URL || "/" }}>
+  if (typeof window !== "undefined") {
+    var prewarm = function () {
+      var prefix = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
+      var urls = [
+        prefix + "api/github-contributions",
+        prefix + "api/music-stats",
+        prefix + "api/music-radial-heatmap",
+        prefix + "api/oss-contributions",
+        prefix + "api/llm-from-scratch-stars",
+        prefix + "india-topo.json",
+      ];
+      urls.forEach(function (url) {
+        try {
+          fetch(url, { priority: "low", headers: { Accept: "application/json" } }).catch(function () {});
+        } catch (e) {}
+      });
+    };
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(prewarm, { timeout: 2500 });
+    } else {
+      setTimeout(prewarm, 1800);
+    }
+  }
+</script>
+
 <MainLayout
   title="Nikshaan | Portfolio"
   description="I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style."

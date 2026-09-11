@@ -257,8 +257,9 @@ function cellOpacity(
 }
 
 export default memo(function RadialArtistHeatmap() {
-  const [shouldLoad, setShouldLoad] = useState(false);
-  const [data, setData] = useState<RadialHeatmapPayload | null>(null);
+  const initialCache = readRadialHeatmapCache();
+  const [shouldLoad, setShouldLoad] = useState(() => Boolean(initialCache));
+  const [data, setData] = useState<RadialHeatmapPayload | null>(() => initialCache);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isLightTheme = useIsLightTheme();
@@ -269,11 +270,11 @@ export default memo(function RadialArtistHeatmap() {
 
   useEffect(() => {
     const boot = readRadialHeatmapCache();
-    if (boot) {
+    if (boot && !data) {
       setData(boot);
       setShouldLoad(true);
     }
-  }, []);
+  }, [data]);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const chartHostRef = useRef<HTMLDivElement | null>(null);

@@ -1,4 +1,5 @@
 import { scheduleRadialHeatmapWarmup } from "../components/musicRadialHeatmapWarmup";
+import { getPersistentCache, setPersistentCache } from "./persistentCache";
 
 export interface GenreEntry {
   genre: string;
@@ -31,14 +32,19 @@ export interface MusicStatsSnapshot {
   error: string | null;
 }
 
+const PERSISTENT_CACHE_KEY = "nikshaan_music_stats_v1";
+const PERSISTENT_TTL_MS = 24 * 60 * 60 * 1000;
 const CLIENT_DEDUPE_MS = 20_000;
 const READ_CACHE_MS = 5 * 60 * 1000;
 const POLL_MS = 45_000;
 
 type StatsListener = (snapshot: MusicStatsSnapshot) => void;
 
-let cached: MusicStatsData | null = null;
-let cacheTimestamp = 0;
+let cached: MusicStatsData | null = getPersistentCache<MusicStatsData>(
+  PERSISTENT_CACHE_KEY,
+  PERSISTENT_TTL_MS,
+);
+let cacheTimestamp = cached ? Date.now() : 0;
 let inflight: Promise<MusicStatsData> | null = null;
 let liveRefreshStarted = false;
 let lastPollAt = 0;
@@ -46,10 +52,14 @@ let lastPollAt = 0;
 const listeners = new Set<StatsListener>();
 
 let snapshot: MusicStatsSnapshot = {
-  data: null,
-  loading: true,
+  data: cached,
+  loading: !cached,
   error: null,
 };
+
+export function getMusicStatsSnapshot(): MusicStatsSnapshot {
+  return snapshot;
+}
 
 function emit() {
   for (const listener of listeners) {
@@ -74,7 +84,6 @@ async function fetchMusicStatsPayload(): Promise<MusicStatsData> {
   scheduleRadialHeatmapWarmup();
 
   const response = await fetch(buildApiUrl(), {
-    cache: "no-store",
     headers: { Accept: "application/json" },
   });
   if (!response.ok) {
@@ -92,11 +101,21 @@ async function fetchMusicStatsPayload(): Promise<MusicStatsData> {
 
   cached = musicData;
   cacheTimestamp = Date.now();
+  setPersistentCache(PERSISTENT_CACHE_KEY, musicData);
   return musicData;
 }
 
 export function readMusicStatsCache(): MusicStatsData | null {
   if (cached && Date.now() - cacheTimestamp < READ_CACHE_MS) return cached;
+  const disk = getPersistentCache<MusicStatsData>(
+    PERSISTENT_CACHE_KEY,
+    PERSISTENT_TTL_MS,
+  );
+  if (disk) {
+    cached = disk;
+    cacheTimestamp = Date.now();
+    return disk;
+  }
   return null;
 }
 

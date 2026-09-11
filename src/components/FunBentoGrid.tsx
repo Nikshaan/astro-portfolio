@@ -12,7 +12,7 @@ import fancyboxCssUrl from "@fancyapps/ui/dist/fancybox/fancybox.css?url";
 const MusicStatsClient = lazy(() => import("./musicstats"));
 const RadialArtistHeatmap = lazy(() => import("./RadialArtistHeatmap"));
 const MusicGenreStreakBar = lazy(() => import("./MusicGenreStreakBar"));
-import IndiaMapCard from "./IndiaMapCard";
+const IndiaMapCard = lazy(() => import("./IndiaMapCard"));
 import ErrorBoundary from "./ErrorBoundary";
 import InfoTooltip from "./InfoTooltip";
 import {
@@ -356,10 +356,23 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
           </div>
         </BentoCard>
 
-        <IndiaMapCard
-          className={SPANS.quarter}
-          visitedPlaces={VISITED_PLACES}
-        />
+        <Suspense
+          fallback={
+            <div
+              className={cn(
+                "h-full min-h-[184px] w-full rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] animate-pulse",
+                SPANS.quarter,
+              )}
+            />
+          }
+        >
+          <ErrorBoundary>
+            <IndiaMapCard
+              className={SPANS.quarter}
+              visitedPlaces={VISITED_PLACES}
+            />
+          </ErrorBoundary>
+        </Suspense>
 
         {images.slice(0, visibleCount).map((image: Image, i: number) => (
           <div key={image.id} className={cn("h-full w-full", SPANS.quarter)}>

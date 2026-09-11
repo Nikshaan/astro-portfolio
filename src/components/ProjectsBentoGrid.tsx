@@ -196,10 +196,18 @@ const ProjectsBentoGrid: React.FC = () => {
     let cancelled = false;
     fetchOssContributionsData()
       .then((data) => {
-        if (!cancelled) setContributions(data);
+        if (!cancelled) {
+          setContributions(data);
+          setOssError(false);
+        }
       })
       .catch(() => {
-        if (!cancelled) setOssError(true);
+        if (!cancelled) {
+          setContributions((prev) => {
+            if (!prev) setOssError(true);
+            return prev;
+          });
+        }
       });
     return () => {
       cancelled = true;

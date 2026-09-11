@@ -44,7 +44,7 @@ function jsonResponse(stars: number, cacheStatus: string) {
     headers: {
       "Content-Type": "application/json",
       "Cache-Control":
-        "public, max-age=0, s-maxage=1800, stale-while-revalidate=86400",
+        "public, max-age=120, s-maxage=1800, stale-while-revalidate=86400",
       "X-Cache-Status": cacheStatus,
     },
   });

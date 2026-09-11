@@ -114,15 +114,17 @@ function HeatmapSkeleton() {
 export default memo(function GithubContributions({
   initialData,
 }: GithubContributionsProps) {
+  const initialPayload = initialData || readGithubContributionsCache();
+  const initialCalendar =
+    initialPayload?.data?.user?.contributionsCollection?.contributionCalendar;
+
   const [weeks, setWeeks] = useState<ContributionWeek[]>(
-    initialData?.data?.user?.contributionsCollection?.contributionCalendar
-      ?.weeks || [],
+    initialCalendar?.weeks || [],
   );
   const [totalContributions, setTotalContributions] = useState(
-    initialData?.data?.user?.contributionsCollection?.contributionCalendar
-      ?.totalContributions || 0,
+    initialCalendar?.totalContributions || 0,
   );
-  const [loading, setLoading] = useState(!initialData);
+  const [loading, setLoading] = useState(!initialCalendar);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 

@@ -3,11 +3,16 @@ import { GH_TOKEN, GH_USERNAME } from "astro:env/server";
 
 export const prerender = false;
 
-const CACHE_DURATION = 60 * 1000;
+const CACHE_DURATION = 15 * 60 * 1000;
 const REQUEST_TIMEOUT = 8000;
 let cachedData: GitHubResponse | null = null;
 let lastFetchTime = 0;
 let pendingRequest: Promise<GitHubResponse> | null = null;
+
+const CACHE_HEADERS = {
+  "Content-Type": "application/json",
+  "Cache-Control": "public, max-age=120, s-maxage=1800, stale-while-revalidate=86400",
+} as const;
 
 export type ContributionLevel =
   | "NONE"
@@ -101,8 +106,7 @@ export const GET: APIRoute = async () => {
     return new Response(JSON.stringify(cachedData), {
       status: 200,
       headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=600",
+        ...CACHE_HEADERS,
         "X-Cache-Status": "HIT",
       },
     });
@@ -114,8 +118,7 @@ export const GET: APIRoute = async () => {
       return new Response(JSON.stringify(data), {
         status: 200,
         headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=600",
+          ...CACHE_HEADERS,
           "X-Cache-Status": "DEDUPED",
         },
       });
@@ -164,8 +167,7 @@ export const GET: APIRoute = async () => {
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=600",
+        ...CACHE_HEADERS,
         "X-Cache-Status": "MISS",
       },
     });
@@ -174,8 +176,7 @@ export const GET: APIRoute = async () => {
       return new Response(JSON.stringify(cachedData), {
         status: 200,
         headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=600",
+          ...CACHE_HEADERS,
           "X-Cache-Status": "STALE",
         },
       });

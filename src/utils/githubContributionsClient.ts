@@ -1,3 +1,5 @@
+import { getPersistentCache, setPersistentCache } from "./persistentCache";
+
 export type ContributionLevel =
   | "NONE"
   | "FIRST_QUARTILE"
@@ -36,14 +38,28 @@ export interface GitHubAPIResponse {
   errors?: Array<{ message: string }>;
 }
 
-let inflight: Promise<GitHubAPIResponse> | null = null;
-let cached: GitHubAPIResponse | null = null;
-let cacheTimestamp = 0;
-
+const PERSISTENT_CACHE_KEY = "nikshaan_github_contributions_v1";
+const PERSISTENT_TTL_MS = 12 * 60 * 60 * 1000;
 const CLIENT_CACHE_MS = 60 * 1000;
+
+let inflight: Promise<GitHubAPIResponse> | null = null;
+let cached: GitHubAPIResponse | null = getPersistentCache<GitHubAPIResponse>(
+  PERSISTENT_CACHE_KEY,
+  PERSISTENT_TTL_MS,
+);
+let cacheTimestamp = cached ? Date.now() : 0;
 
 export function readGithubContributionsCache(): GitHubAPIResponse | null {
   if (cached && Date.now() - cacheTimestamp < CLIENT_CACHE_MS) return cached;
+  const disk = getPersistentCache<GitHubAPIResponse>(
+    PERSISTENT_CACHE_KEY,
+    PERSISTENT_TTL_MS,
+  );
+  if (disk) {
+    cached = disk;
+    cacheTimestamp = Date.now();
+    return disk;
+  }
   return null;
 }
 
@@ -66,13 +82,13 @@ export async function fetchGithubContributionsData(options?: {
       ? "api/github-contributions"
       : "/api/github-contributions";
     const response = await fetch(`${baseUrl}${apiPath}`, {
-      cache: "no-store",
       headers: { Accept: "application/json" },
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = (await response.json()) as GitHubAPIResponse;
     cached = data;
     cacheTimestamp = Date.now();
+    setPersistentCache(PERSISTENT_CACHE_KEY, data);
     return data;
   })();
 

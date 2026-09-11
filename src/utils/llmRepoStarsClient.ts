@@ -1,13 +1,29 @@
+import { getPersistentCache, setPersistentCache } from "./persistentCache";
+
+const PERSISTENT_CACHE_KEY = "nikshaan_llm_repo_stars_v1";
+const PERSISTENT_TTL_MS = 24 * 60 * 60 * 1000;
 const CLIENT_CACHE_MS = 30 * 60 * 1000;
 const POLL_MS = 30 * 60 * 1000;
 
 let inflight: Promise<number> | null = null;
-let cached: number | null = null;
-let cacheTimestamp = 0;
+let cached: number | null = getPersistentCache<number>(
+  PERSISTENT_CACHE_KEY,
+  PERSISTENT_TTL_MS,
+);
+let cacheTimestamp = cached !== null ? Date.now() : 0;
 
 export function readLlmRepoStarsCache(): number | null {
   if (cached !== null && Date.now() - cacheTimestamp < CLIENT_CACHE_MS) {
     return cached;
+  }
+  const disk = getPersistentCache<number>(
+    PERSISTENT_CACHE_KEY,
+    PERSISTENT_TTL_MS,
+  );
+  if (disk !== null) {
+    cached = disk;
+    cacheTimestamp = Date.now();
+    return disk;
   }
   return null;
 }
@@ -32,13 +48,13 @@ export async function fetchLlmRepoStars(options?: {
       ? "api/llm-from-scratch-stars"
       : "/api/llm-from-scratch-stars";
     const response = await fetch(`${baseUrl}${apiPath}`, {
-      cache: "no-store",
       headers: { Accept: "application/json" },
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = (await response.json()) as { stars: number };
     cached = data.stars;
     cacheTimestamp = Date.now();
+    setPersistentCache(PERSISTENT_CACHE_KEY, data.stars);
     return data.stars;
   })();
 
