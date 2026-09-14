@@ -25,6 +25,7 @@ export interface BentoCardProps {
   disableHoverMotion?: boolean;
   padded?: boolean;
   reveal?: boolean;
+  eager?: boolean;
   href?: string;
   target?: string;
   rel?: string;
@@ -46,6 +47,7 @@ const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
       disableHoverMotion = false,
       padded = true,
       reveal = true,
+      eager = false,
       href,
       target,
       rel,
@@ -119,7 +121,13 @@ const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
 
     return (
       <div
-        className={cn("h-full w-full bento-reveal", SPANS[span], className)}
+        className={cn(
+          "h-full w-full bento-reveal",
+          eager && "bento-reveal-eager",
+          SPANS[span],
+          className,
+        )}
+        suppressHydrationWarning
       >
         {body}
       </div>

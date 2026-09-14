@@ -62,4 +62,8 @@ const validImages = gridImages.filter(
 );
 ---
 
-<FunBentoGrid client:visible images={validImages} galleryImageCount={galleryImageCount} />
+<FunBentoGrid
+    client:visible={{ rootMargin: "300px" }}
+    images={validImages}
+    galleryImageCount={galleryImageCount}
+/>

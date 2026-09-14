@@ -65,6 +65,10 @@ export function getMusicStatsSnapshot(): MusicStatsSnapshot {
   return resource.getSnapshot();
 }
 
+export function getMusicStatsServerSnapshot(): MusicStatsSnapshot {
+  return resource.getServerSnapshot();
+}
+
 export function readMusicStatsCache(): MusicStatsData | null {
   return resource.read();
 }

@@ -48,16 +48,26 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
   } = options;
   const href = buildApiUrl(url);
 
-  const boot =
-    typeof window !== "undefined" ? getPersistentEntry<T>(key, maxAgeMs) : null;
-  let data: T | null = boot ? boot.data : null;
-  let fetchedAt = boot ? boot.timestamp : 0;
-  let inflight: Promise<T> | null = null;
-  let snapshot: LiveSnapshot<T> = {
-    data,
-    loading: data === null,
+  const SERVER_SNAPSHOT: LiveSnapshot<T> = Object.freeze({
+    data: null,
+    loading: true,
     error: null,
-  };
+  });
+  let data: T | null = null;
+  let fetchedAt = 0;
+  let diskBooted = false;
+  let inflight: Promise<T> | null = null;
+  let snapshot: LiveSnapshot<T> = SERVER_SNAPSHOT;
+
+  function bootFromDisk() {
+    if (diskBooted || typeof window === "undefined") return;
+    diskBooted = true;
+    const disk = getPersistentEntry<T>(key, maxAgeMs);
+    if (!disk) return;
+    data = disk.data;
+    fetchedAt = disk.timestamp;
+    snapshot = { data, loading: false, error: null };
+  }
 
   const listeners = new Set<Listener<T>>();
   let liveRefreshStarted = false;
@@ -104,15 +114,8 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
   }
 
   function read(): T | null {
-    if (data !== null) return data;
-    const disk = getPersistentEntry<T>(key, maxAgeMs);
-    if (disk) {
-      data = disk.data;
-      fetchedAt = disk.timestamp;
-      snapshot = { ...snapshot, data, loading: false };
-      return data;
-    }
-    return null;
+    bootFromDisk();
+    return data;
   }
 
   async function load(opts?: {
@@ -207,6 +210,7 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
   }
 
   function subscribe(listener: Listener<T>): () => void {
+    bootFromDisk();
     const isFirst = listeners.size === 0;
     listeners.add(listener);
     listener(snapshot);
@@ -223,8 +227,15 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
   }
 
   function getSnapshot(): LiveSnapshot<T> {
+    // Do not boot localStorage here. React 19 compares getSnapshot() to
+    // getServerSnapshot() during hydration; reading the cache would make
+    // them differ and regenerate the tree.
     return snapshot;
   }
 
-  return { read, load, subscribe, getSnapshot };
+  function getServerSnapshot(): LiveSnapshot<T> {
+    return SERVER_SNAPSHOT;
+  }
+
+  return { read, load, subscribe, getSnapshot, getServerSnapshot };
 }

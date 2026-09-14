@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
-  readGithubContributionsCache,
   subscribeGithubContributions,
   type ContributionDay,
   type ContributionLevel,
@@ -78,14 +77,32 @@ interface GithubContributionsProps {
   initialData?: GitHubAPIResponse;
 }
 
+const SKELETON_WEEK_COUNT = 53;
+const SKELETON_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
+const SKELETON_WEEKS = Array.from({ length: SKELETON_WEEK_COUNT }, (_, week) => week);
+
 function HeatmapSkeleton() {
   return (
     <div className={styles.skeleton} aria-hidden="true">
       <div className={styles.header}>
         <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
-        <Placeholder className="h-3.5 w-44 max-w-full md:h-4" />
+        <Placeholder
+          as="span"
+          className={`${styles.total} inline-block h-[1lh] w-[29ch] max-w-full`}
+        />
       </div>
-      <Placeholder className="h-[82px] w-full sm:h-[86px]" />
+      <div className={`${styles.graph} skel-pulse`}>
+        {SKELETON_WEEKS.map((week) => (
+          <div key={week} className={styles.week}>
+            {SKELETON_DAYS.map((day) => (
+              <div
+                key={day}
+                className={`${styles.day} ${styles.contributionLevel0}`}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -93,9 +110,8 @@ function HeatmapSkeleton() {
 export default memo(function GithubContributions({
   initialData,
 }: GithubContributionsProps) {
-  const initialPayload = initialData || readGithubContributionsCache();
   const initialCalendar =
-    initialPayload?.data?.user?.contributionsCollection?.contributionCalendar;
+    initialData?.data?.user?.contributionsCollection?.contributionCalendar;
 
   const [weeks, setWeeks] = useState<ContributionWeek[]>(
     initialCalendar?.weeks || [],
@@ -213,6 +229,7 @@ export default memo(function GithubContributions({
   return (
     <div
       data-bento-shell=""
+      suppressHydrationWarning
       className={cn(
         "bento-reveal relative p-5 rounded-[var(--radius-card)] border overflow-hidden h-full w-full flex flex-col justify-between",
         "bg-[var(--surface-card)] border-[var(--border-subtle)] text-[var(--text-primary)]",

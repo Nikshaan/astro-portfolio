@@ -4,14 +4,10 @@ import { LazyMotion, domAnimation } from "framer-motion";
 import { Github, ExternalLink, Star, MessageCircle } from "lucide-react";
 import cardsData from "../data/cardsdata.json";
 import {
-  readOssContributionsCache,
   subscribeOssContributions,
   type Contribution,
 } from "../utils/ossContributionsClient";
-import {
-  readLlmRepoStarsCache,
-  startLlmRepoStarsPolling,
-} from "../utils/llmRepoStarsClient";
+import { startLlmRepoStarsPolling } from "../utils/llmRepoStarsClient";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import reactjs from "../data/React.svg";
@@ -165,8 +161,23 @@ function formatContributionDate(iso: string): string {
   });
 }
 
-function OssShimmerBar({ width }: { width: number }) {
-  return <Placeholder className="h-3 max-w-full rounded-md" style={{ width }} />;
+function OssShimmerBar({
+  width,
+  tone = "body",
+}: {
+  width?: number;
+  tone?: "body" | "caption";
+}) {
+  return (
+    <Placeholder
+      className={
+        tone === "caption"
+          ? "h-[1lh] max-w-full rounded-md type-caption"
+          : "h-[1lh] max-w-full rounded-md type-body-sm"
+      }
+      style={width ? { width } : { width: "100%" }}
+    />
+  );
 }
 
 const ProjectsBentoGrid: React.FC = () => {
@@ -175,12 +186,10 @@ const ProjectsBentoGrid: React.FC = () => {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const [contributions, setContributions] = useState<Contribution[] | null>(
-    () => readOssContributionsCache(),
+    null,
   );
   const [ossError, setOssError] = useState(false);
-  const [llmStars, setLlmStars] = useState<number | null>(() =>
-    readLlmRepoStarsCache(),
-  );
+  const [llmStars, setLlmStars] = useState<number | null>(null);
 
   useEffect(() => {
     return subscribeOssContributions((snap) => {
@@ -323,7 +332,15 @@ const ProjectsBentoGrid: React.FC = () => {
                                 <span className="sr-only"> GitHub stars</span>
                               </span>
                             ) : (
-                              <Placeholder className="h-7 w-12 rounded-[var(--radius-control)]" />
+                              <span
+                                className="project-card-action project-card-action--meta"
+                                aria-hidden="true"
+                              >
+                                <span className="project-card-action__icon">
+                                  <Star size={14} />
+                                </span>
+                                <Placeholder className="h-[1lh] w-[4ch] rounded-sm" />
+                              </span>
                             ))}
                         </span>
                       )}
@@ -349,7 +366,7 @@ const ProjectsBentoGrid: React.FC = () => {
                     Merged contributions to organization-owned repos.
                   </p>
                   {!contributions && !ossError ? (
-                    <OssShimmerBar width={180} />
+                    <Placeholder className="h-[1lh] w-[22ch] max-w-full type-body-sm rounded-md" />
                   ) : ossError || contributions?.length === 0 ? (
                     <p className="type-body-sm text-[var(--text-tertiary)] italic">
                       No contributions yet — check back soon.
@@ -364,13 +381,19 @@ const ProjectsBentoGrid: React.FC = () => {
                 </div>
 
               {!contributions && !ossError ? (
-                <div className="flex flex-col gap-4">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="flex items-start gap-3">
+                <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="flex min-w-0 items-start gap-3 rounded-[var(--radius-control)] bg-[var(--surface-raised)]/40 p-3"
+                    >
                       <Placeholder className="h-9 w-9 shrink-0 rounded-full" />
-                      <div className="flex min-w-0 flex-1 flex-col gap-2">
-                        <OssShimmerBar width={220} />
-                        <OssShimmerBar width={120} />
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <OssShimmerBar />
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <OssShimmerBar width={96} tone="caption" />
+                          <OssShimmerBar width={40} tone="caption" />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -468,13 +491,19 @@ const ProjectsBentoGrid: React.FC = () => {
                   ? [0, 1, 2, 3].map((i) => (
                       <div
                         key={i}
-                        className="flex items-center gap-3 p-3 rounded-[var(--radius-control)] border border-[var(--border-subtle)]"
+                        className="group/row flex items-center gap-3 p-3 rounded-[var(--radius-control)] border border-[var(--border-subtle)]"
                       >
                         <Placeholder className="h-9 w-9 shrink-0 rounded-full" />
-                        <div className="flex min-w-0 flex-1 flex-col gap-2">
-                          <OssShimmerBar width={220} />
-                          <OssShimmerBar width={140} />
+                        <div className="min-w-0 flex-1">
+                          <OssShimmerBar />
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <OssShimmerBar width={110} tone="caption" />
+                            <OssShimmerBar width={36} tone="caption" />
+                            <OssShimmerBar width={28} tone="caption" />
+                            <OssShimmerBar width={72} tone="caption" />
+                          </div>
                         </div>
+                        <Placeholder className="h-3.5 w-3.5 shrink-0 rounded-sm" />
                       </div>
                     ))
                   : contributions?.map((c) => (

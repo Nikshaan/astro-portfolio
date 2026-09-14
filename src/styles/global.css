@@ -651,37 +651,54 @@ html.lenis body {
   }
 }
 
+/*
+ * Play-once card reveal: 0.4s, cubic-bezier(0.25, 0.1, 0.25, 1), y 16px.
+ * JS (html.bento-reveal-js) waits for viewport; without JS it plays on paint.
+ */
 .bento-reveal {
   animation: bento-reveal 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
 }
 
-@supports (animation-timeline: view()) {
-  .bento-reveal {
-    animation-timeline: view();
-    animation-range: entry 0% entry 25%;
+html.bento-reveal-js .bento-reveal:not(.bento-reveal-eager) {
+  animation: none;
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+html.bento-reveal-js .bento-reveal-eager {
+  animation: bento-reveal 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+
+@keyframes skel-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.62;
   }
 }
 
-/*
- * Scroll-driven animation-timeline re-plays every time an element crosses
- * back into its entry range, so it can fade out again on scroll-up. Once
- * JS confirms a card has been shown, .bento-revealed freezes it so it
- * behaves like a play-once reveal. Applied by the inline script in
- * index.astro; without JS, the scroll-linked reveal above still works.
- */
-.bento-reveal.bento-revealed {
-  animation: none;
-  opacity: 1;
-  transform: none;
+.skel-pulse {
+  animation: skel-pulse 1.5s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bento-reveal {
-    animation: none;
+  .bento-reveal,
+  html.bento-reveal-js .bento-reveal,
+  html.bento-reveal-js .bento-reveal:not(.bento-reveal-eager),
+  html.bento-reveal-js .bento-reveal-eager {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   .skel {
     animation: none;
     background-image: none;
+  }
+
+  .skel-pulse {
+    animation: none;
   }
 }

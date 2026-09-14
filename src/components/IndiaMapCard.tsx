@@ -372,9 +372,8 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 }) => {
   const [portalVisible, setPortalVisible] = useState(false);
   const [layoutLock, setLayoutLock] = useState(false);
-  const initialTopo = readSessionTopology();
-  const [topology, setTopology] = useState<any>(initialTopo);
-  const [loading, setLoading] = useState(!initialTopo);
+  const [topology, setTopology] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [hoveredPlace, setHoveredPlace] = useState<VisitedPlace | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(
     null,
@@ -565,7 +564,10 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 
   return (
     <>
-      <div className={cn("h-full w-full bento-reveal", className)}>
+      <div
+        className={cn("h-full w-full bento-reveal", className)}
+        suppressHydrationWarning
+      >
         <motion.div
           layoutId="india-map-card"
           data-bento-shell=""

@@ -178,3 +178,8 @@
   flex-direction: column;
 }
 
+.skeleton .day {
+  cursor: default;
+  pointer-events: none;
+}
+

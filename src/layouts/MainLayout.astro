@@ -110,6 +110,8 @@ const ogImageUrl = "https://nikshaan.dev/linkedin_banner.webp";
 
         <script is:inline>
             (function () {
+                document.documentElement.classList.add("bento-reveal-js");
+
                 try {
                     var stored = localStorage.getItem("theme");
                     var isLight =
@@ -184,6 +186,129 @@ const ogImageUrl = "https://nikshaan.dev/linkedin_banner.webp";
         </script>
     </head>
     <body class="h-full">
+        <script is:inline>
+            (function () {
+                var docEl = document.documentElement;
+                if (!docEl.classList.contains("bento-reveal-js")) return;
+                if (
+                    window.matchMedia &&
+                    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                ) {
+                    return;
+                }
+
+                var EASE =
+                    "opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)";
+                var playing = typeof WeakSet === "function" ? new WeakSet() : null;
+                var frozen = typeof WeakSet === "function" ? new WeakSet() : null;
+                var eagerQueued = typeof WeakSet === "function" ? new WeakSet() : null;
+
+                function isFrozen(el) {
+                    if (frozen && frozen.has(el)) return true;
+                    return (
+                        el.style.getPropertyValue("opacity") === "1" &&
+                        el.style.getPropertyValue("transform") === "translateY(0)" &&
+                        !el.style.getPropertyValue("transition")
+                    );
+                }
+
+                function freeze(el) {
+                    if (frozen) frozen.add(el);
+                    el.style.setProperty("opacity", "1");
+                    el.style.setProperty("transform", "translateY(0)");
+                    el.style.setProperty("animation", "none");
+                    el.style.removeProperty("transition");
+                    if (playing) playing.delete(el);
+                }
+
+                function play(el) {
+                    if (isFrozen(el)) return;
+                    if (playing && playing.has(el)) return;
+                    if (playing) playing.add(el);
+                    el.style.setProperty("animation", "none");
+                    el.style.setProperty("transition", "none");
+                    el.style.setProperty("opacity", "0");
+                    el.style.setProperty("transform", "translateY(16px)");
+                    void el.offsetWidth;
+                    el.style.setProperty("transition", EASE);
+                    el.style.setProperty("opacity", "1");
+                    el.style.setProperty("transform", "translateY(0)");
+                    window.setTimeout(function () {
+                        freeze(el);
+                    }, 450);
+                }
+
+                function trackEager(el) {
+                    if (isFrozen(el)) return;
+                    if (eagerQueued && eagerQueued.has(el)) return;
+                    if (eagerQueued) eagerQueued.add(el);
+                    window.setTimeout(function () {
+                        freeze(el);
+                    }, 450);
+                }
+
+                if (!("IntersectionObserver" in window)) {
+                    var fallback = document.querySelectorAll(".bento-reveal");
+                    for (var f = 0; f < fallback.length; f++) play(fallback[f]);
+                    return;
+                }
+
+                var io = new IntersectionObserver(
+                    function (entries) {
+                        for (var i = 0; i < entries.length; i++) {
+                            var entry = entries[i];
+                            if (!entry.isIntersecting) continue;
+                            io.unobserve(entry.target);
+                            play(entry.target);
+                        }
+                    },
+                    { threshold: 0.2, rootMargin: "80px 0px -10% 0px" },
+                );
+
+                function observe(el) {
+                    if (!el || el.nodeType !== 1 || !el.classList) return;
+                    if (!el.classList.contains("bento-reveal")) return;
+                    if (frozen && frozen.has(el)) {
+                        freeze(el);
+                        return;
+                    }
+                    if (isFrozen(el)) return;
+                    if (el.classList.contains("bento-reveal-eager")) {
+                        trackEager(el);
+                        return;
+                    }
+                    if (playing && playing.has(el)) return;
+                    io.observe(el);
+                }
+
+                function scan(root) {
+                    if (!root || root.nodeType !== 1) return;
+                    observe(root);
+                    var nodes = root.querySelectorAll(".bento-reveal");
+                    for (var i = 0; i < nodes.length; i++) observe(nodes[i]);
+                }
+
+                scan(docEl);
+
+                var mo = new MutationObserver(function (mutations) {
+                    for (var i = 0; i < mutations.length; i++) {
+                        var mutation = mutations[i];
+                        if (mutation.type === "attributes") {
+                            observe(mutation.target);
+                            continue;
+                        }
+                        var added = mutation.addedNodes;
+                        for (var j = 0; j < added.length; j++) scan(added[j]);
+                    }
+                });
+                mo.observe(docEl, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ["class"],
+                });
+            })();
+        </script>
         <slot />
         <Footer client:visible />
         <VercelAnalytics />

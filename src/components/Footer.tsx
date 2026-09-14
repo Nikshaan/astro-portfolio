@@ -41,6 +41,7 @@ const Footer = () => {
       <div
         id="main-footer"
         className="bento-reveal w-full max-w-[1400px] mx-auto rounded-[var(--radius-card)] border bg-[var(--surface-card)] border-[var(--border-subtle)] overflow-hidden footer-transition bento-card"
+        suppressHydrationWarning
       >
         <div className="p-8 md:p-12 border-b border-[var(--border-subtle)] footer-transition">
           <h2 className="type-footer-display uppercase text-[var(--text-primary)] footer-transition">

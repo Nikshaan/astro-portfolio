@@ -256,9 +256,8 @@ function cellOpacity(
 }
 
 export default memo(function RadialArtistHeatmap() {
-  const initialCache = readRadialHeatmapCache();
-  const [shouldLoad, setShouldLoad] = useState(() => Boolean(initialCache));
-  const [data, setData] = useState<RadialHeatmapPayload | null>(() => initialCache);
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const [data, setData] = useState<RadialHeatmapPayload | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isLightTheme = useIsLightTheme();

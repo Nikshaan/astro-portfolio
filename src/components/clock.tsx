@@ -33,7 +33,7 @@ const Clock = memo(function Clock({ inline = false }: ClockProps) {
     const skel = (
       <Placeholder
         as="span"
-        className="inline-block h-[1em] w-[9.5ch] align-middle"
+        className="inline-block h-[1lh] w-[11ch] align-baseline rounded-sm"
       />
     );
     if (inline) return skel;
