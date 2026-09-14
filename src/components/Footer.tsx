@@ -1,11 +1,8 @@
 import { useCallback } from "react";
 import { MoveRight, Github, Linkedin, Mail } from "lucide-react";
-import { motion } from "framer-motion";
-import useIsMobile from "../hooks/useIsMobile";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  const isMobile = useIsMobile();
 
   const handleNavClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
@@ -39,55 +36,20 @@ const Footer = () => {
     [],
   );
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: isMobile ? 0.3 : 0.5,
-        ease: [0.22, 1, 0.36, 1] as const,
-        staggerChildren: isMobile ? 0.05 : 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: isMobile ? 0.3 : 0.5,
-        ease: [0.22, 1, 0.36, 1] as const,
-      },
-    },
-  };
-
   return (
     <footer className="w-full p-4 pt-0 text-[var(--text-secondary)] bg-[var(--surface-page)]">
-      <motion.div
+      <div
         id="main-footer"
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2, margin: "0px 0px -10% 0px" }}
-        className="w-full max-w-[1400px] mx-auto rounded-[var(--radius-card)] border bg-[var(--surface-card)] border-[var(--border-subtle)] overflow-hidden footer-transition bento-card"
+        className="bento-reveal w-full max-w-[1400px] mx-auto rounded-[var(--radius-card)] border bg-[var(--surface-card)] border-[var(--border-subtle)] overflow-hidden footer-transition bento-card"
       >
-        <motion.div
-          variants={itemVariants}
-          className="p-8 md:p-12 border-b border-[var(--border-subtle)] footer-transition"
-        >
+        <div className="p-8 md:p-12 border-b border-[var(--border-subtle)] footer-transition">
           <h2 className="type-footer-display uppercase text-[var(--text-primary)] footer-transition">
             Let's Connect
           </h2>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2">
-          <motion.div
-            variants={itemVariants}
-            className="p-8 md:p-12 flex flex-col justify-between gap-8 border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)] overflow-hidden footer-transition"
-          >
+          <div className="p-8 md:p-12 flex flex-col justify-between gap-8 border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)] overflow-hidden footer-transition">
             <div>
               <a
                 href="mailto:nikshaanshetty06@gmail.com"
@@ -127,9 +89,9 @@ const Footer = () => {
                 <Mail className="w-5 h-5 text-[var(--text-primary)]" aria-hidden="true" />
               </a>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div variants={itemVariants} className="p-6 md:p-12 flex flex-col justify-between gap-8">
+          <div className="p-6 md:p-12 flex flex-col justify-between gap-8">
             <div className="flex flex-col gap-2">
               <p className="type-body text-[var(--text-tertiary)] mb-2">Navigation</p>
               <nav aria-label="Footer navigation" className="flex flex-wrap gap-2 md:gap-3">
@@ -162,9 +124,9 @@ const Footer = () => {
                 <span className="text-[var(--text-primary)]">React</span>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </footer>
   );
 };
