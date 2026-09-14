@@ -115,7 +115,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
   return (
     <LazyMotion features={domAnimation}>
       <BentoGrid id="me-grid">
-        <BentoCard span="hero" eager>
+        <BentoCard span="hero" reveal={false}>
           <div className="flex flex-col-reverse md:flex-row h-full justify-between gap-6 xl:gap-8 items-center md:items-stretch">
             <div className="flex flex-col gap-4 w-full md:flex-1 h-full justify-center type-body text-center md:text-left">
               <div>

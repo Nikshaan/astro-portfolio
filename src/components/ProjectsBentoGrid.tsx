@@ -45,6 +45,7 @@ import ProjectCardContent from "./ProjectCardContent";
 import BentoGrid from "./bento/BentoGrid";
 import BentoCard from "./bento/BentoCard";
 import BentoModal from "./bento/Modal";
+import { Placeholder } from "./Placeholder";
 
 const techstackIcons: Record<string, any> = {
   ReactJS: reactjs,
@@ -165,18 +166,7 @@ function formatContributionDate(iso: string): string {
 }
 
 function OssShimmerBar({ width }: { width: number }) {
-  return (
-    <div
-      className="h-3 rounded-md"
-      style={{
-        width,
-        backgroundImage:
-          "linear-gradient(90deg, var(--shimmer-from) 25%, var(--shimmer-to) 50%, var(--shimmer-from) 75%)",
-        backgroundSize: "400px 100%",
-        animation: "genreStreakShimmer 1.6s infinite linear",
-      }}
-    />
-  );
+  return <Placeholder className="h-3 max-w-full rounded-md" style={{ width }} />;
 }
 
 const ProjectsBentoGrid: React.FC = () => {
@@ -324,7 +314,7 @@ const ProjectsBentoGrid: React.FC = () => {
                             GitHub
                           </a>
                           {project.id === LLM_FROM_SCRATCH_ID &&
-                            llmStars !== null && (
+                            (llmStars !== null ? (
                               <span className="project-card-action project-card-action--meta tabular-nums">
                                 <span className="project-card-action__icon" aria-hidden="true">
                                   <Star size={14} />
@@ -332,7 +322,9 @@ const ProjectsBentoGrid: React.FC = () => {
                                 {llmStars.toLocaleString()}
                                 <span className="sr-only"> GitHub stars</span>
                               </span>
-                            )}
+                            ) : (
+                              <Placeholder className="h-7 w-12 rounded-[var(--radius-control)]" />
+                            ))}
                         </span>
                       )}
                     </div>
@@ -375,15 +367,7 @@ const ProjectsBentoGrid: React.FC = () => {
                 <div className="flex flex-col gap-4">
                   {[0, 1, 2].map((i) => (
                     <div key={i} className="flex items-start gap-3">
-                      <div
-                        className="h-9 w-9 shrink-0 rounded-full"
-                        style={{
-                          backgroundImage:
-                            "linear-gradient(90deg, var(--shimmer-from) 25%, var(--shimmer-to) 50%, var(--shimmer-from) 75%)",
-                          backgroundSize: "400px 100%",
-                          animation: "genreStreakShimmer 1.6s infinite linear",
-                        }}
-                      />
+                      <Placeholder className="h-9 w-9 shrink-0 rounded-full" />
                       <div className="flex min-w-0 flex-1 flex-col gap-2">
                         <OssShimmerBar width={220} />
                         <OssShimmerBar width={120} />
@@ -480,7 +464,20 @@ const ProjectsBentoGrid: React.FC = () => {
                 </p>
               </div>
               <div className="flex flex-col gap-3">
-                {contributions?.map((c) => (
+                {!contributions && !ossError
+                  ? [0, 1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 p-3 rounded-[var(--radius-control)] border border-[var(--border-subtle)]"
+                      >
+                        <Placeholder className="h-9 w-9 shrink-0 rounded-full" />
+                        <div className="flex min-w-0 flex-1 flex-col gap-2">
+                          <OssShimmerBar width={220} />
+                          <OssShimmerBar width={140} />
+                        </div>
+                      </div>
+                    ))
+                  : contributions?.map((c) => (
                   <a
                     key={c.id}
                     href={c.url}

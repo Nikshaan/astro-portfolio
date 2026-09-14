@@ -30,12 +30,8 @@
 
   --focus-ring: var(--accent);
 
-  --shimmer-from: #1f1f1f;
-  --shimmer-to: #2c2c2c;
-  --shimmer-from-1: #1a1a1a;
-  --shimmer-to-1: #262626;
-  --shimmer-from-2: #171717;
-  --shimmer-to-2: #212121;
+  --shimmer-from: var(--surface-raised);
+  --shimmer-to: color-mix(in oklab, var(--surface-raised) 82%, white);
 
   --chart-1: #ddd6fe;
   --chart-2: #c4b5fd;
@@ -74,12 +70,8 @@
   --danger: #c62020;
   --danger-quiet: color-mix(in oklab, var(--danger) 12%, transparent);
 
-  --shimmer-from: #ece9e6;
-  --shimmer-to: #ddd7d1;
-  --shimmer-from-1: #efece9;
-  --shimmer-to-1: #ded8d2;
-  --shimmer-from-2: #f2efec;
-  --shimmer-to-2: #e2dcd6;
+  --shimmer-from: var(--surface-raised);
+  --shimmer-to: color-mix(in oklab, var(--surface-raised) 78%, white);
 
   --chart-1: #ddd6fe;
   --chart-2: #c4b5fd;

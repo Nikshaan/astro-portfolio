@@ -3,6 +3,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useMusicStatsLive } from "../hooks/useMusicStatsLive";
 import type { GenreEntry, MusicStatsData } from "../utils/musicStatsClient";
+import { GenreStreakPlaceholder } from "./Placeholder";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -38,6 +39,10 @@ export default memo(function MusicGenreStreakBar() {
     [fullData],
   );
 
+  if (loading && !data) {
+    return <GenreStreakPlaceholder />;
+  }
+
   const streak = data?.listeningStreak ?? 0;
   const genreData = data?.genreData ?? [];
   const total = genreData.reduce((s, d) => s + d.count, 0);
@@ -50,18 +55,7 @@ export default memo(function MusicGenreStreakBar() {
       )}
     >
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5">
-        {loading ? (
-          <div
-            className="h-3 w-full max-w-md rounded"
-            style={{
-              backgroundImage:
-                "linear-gradient(90deg, var(--shimmer-from) 25%, var(--shimmer-to) 50%, var(--shimmer-from) 75%)",
-              backgroundSize: "400px 100%",
-              animation: "genreStreakShimmer 1.6s infinite linear",
-            }}
-            aria-hidden="true"
-          />
-        ) : genreData.length > 0 ? (
+        {genreData.length > 0 ? (
           genreData.map((d: GenreEntry, i: number) => {
             const pct = total > 0 ? Math.round((d.count / total) * 100) : 0;
             return (
@@ -100,18 +94,7 @@ export default memo(function MusicGenreStreakBar() {
         >
           ♪
         </span>
-        {loading ? (
-          <div
-            className="h-3 w-32 rounded"
-            style={{
-              backgroundImage:
-                "linear-gradient(90deg, var(--shimmer-from) 25%, var(--shimmer-to) 50%, var(--shimmer-from) 75%)",
-              backgroundSize: "400px 100%",
-              animation: "genreStreakShimmer 1.6s infinite linear",
-            }}
-            aria-hidden="true"
-          />
-        ) : streak > 0 ? (
+        {streak > 0 ? (
           <span className="type-body-sm font-bold text-[var(--text-primary)]">
             {streak} day listening streak
           </span>

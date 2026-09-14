@@ -19,6 +19,7 @@ import {
   MusicStatsLoadingShell,
   YearlyScrobblesLoadingShell,
 } from "./musicStatsLoadingShell";
+import { GenreStreakPlaceholder, IndiaMapPlaceholder } from "./Placeholder";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -342,13 +343,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
 
         <BentoCard span="wideShort" disableHoverMotion padded={false}>
           <div className="flex h-full w-full items-center">
-            <Suspense
-              fallback={
-                <div className="flex min-h-[64px] w-full items-center justify-center rounded-2xl border border-transparent type-caption text-[var(--text-tertiary)]">
-                  Loading genre streak…
-                </div>
-              }
-            >
+            <Suspense fallback={<GenreStreakPlaceholder />}>
               <ErrorBoundary>
                 <MusicGenreStreakBar />
               </ErrorBoundary>
@@ -358,12 +353,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
 
         <Suspense
           fallback={
-            <div
-              className={cn(
-                "h-full min-h-[184px] w-full rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] animate-pulse",
-                SPANS.quarter,
-              )}
-            />
+            <IndiaMapPlaceholder className={SPANS.quarter} framed />
           }
         >
           <ErrorBoundary>

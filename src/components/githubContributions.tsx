@@ -11,6 +11,7 @@ import {
   type GitHubAPIResponse,
 } from "../utils/githubContributionsClient";
 import styles from "./githubContributions.module.css";
+import { Placeholder } from "./Placeholder";
 
 const LEVEL_BY_ENUM: Record<ContributionLevel, number> = {
   NONE: 0,
@@ -80,32 +81,11 @@ interface GithubContributionsProps {
 function HeatmapSkeleton() {
   return (
     <div className={styles.skeleton} aria-hidden="true">
-      <div className={styles.skeletonHeader}>
-        <div className={styles.skeletonTitle} />
-        <div className={styles.skeletonSubtitle} />
+      <div className={styles.header}>
+        <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
+        <Placeholder className="h-3.5 w-44 max-w-full md:h-4" />
       </div>
-      <div className={styles.skeletonGraph}>
-        <svg
-          className={styles.skeletonSvg}
-          viewBox="0 0 636 82"
-          width="100%"
-          height="82"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <pattern id="contrib-skel-pat" width="12" height="12" patternUnits="userSpaceOnUse">
-              <rect width="10" height="10" rx="2" fill="var(--surface-raised)" stroke="var(--border-subtle)" strokeWidth="1" />
-            </pattern>
-            <linearGradient id="contrib-skel-shimmer" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="transparent" />
-              <stop offset="50%" stopColor="var(--shimmer-to-1)" stopOpacity="0.45" />
-              <stop offset="100%" stopColor="transparent" />
-            </linearGradient>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#contrib-skel-pat)" />
-          <rect className={styles.skeletonShimmerOverlay} width="100%" height="100%" fill="url(#contrib-skel-shimmer)" />
-        </svg>
-      </div>
+      <Placeholder className="h-[82px] w-full sm:h-[86px]" />
     </div>
   );
 }

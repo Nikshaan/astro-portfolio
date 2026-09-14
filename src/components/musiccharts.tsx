@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import useIsLightTheme from "../hooks/useTheme";
+import { Placeholder } from "./Placeholder";
 
 interface ChartData {
   name?: string;
@@ -200,8 +201,8 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
 
   if (!hasData) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="text-[var(--text-tertiary)] type-body-sm">Chart data loading...</div>
+      <div className="flex h-full w-full items-center justify-center">
+        <Placeholder className="h-full min-h-[6.5rem] w-full rounded-xl" />
       </div>
     );
   }

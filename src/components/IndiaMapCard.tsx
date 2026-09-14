@@ -15,7 +15,7 @@ import {
 } from "framer-motion";
 import { geoMercator, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
-import { X, Loader2, Maximize2 } from "lucide-react";
+import { X, Maximize2 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
@@ -25,6 +25,7 @@ import {
 } from "./bentoCardMotion";
 import useIsLightTheme from "../hooks/useTheme";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import { IndiaMapPlaceholder } from "./Placeholder";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -223,6 +224,7 @@ const IndiaMapModalMap = memo(function IndiaMapModalMap({
         delay: 0.06,
       }}
     >
+      {loading && <IndiaMapPlaceholder label={null} />}
       {!loading && baseMap.pathGenerator && (
         <svg
           ref={svgRef}
@@ -597,11 +599,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
           }
           onClick={handleCardClick}
         >
-          {loading && (
-            <div className="absolute inset-0 flex items-center justify-center text-[var(--text-tertiary)]">
-              <Loader2 className="animate-spin w-5 h-5" />
-            </div>
-          )}
+          {loading && <IndiaMapPlaceholder />}
 
           {!loading && baseMap.pathGenerator && (
             <motion.div

@@ -800,17 +800,14 @@ export default memo(function RadialArtistHeatmap() {
   const showSkeleton = !chartReady && !showError && !showEmpty;
 
   const chartInnerClass =
-    "relative aspect-square h-full max-h-full w-auto max-w-full min-h-0 overflow-hidden [contain:paint]";
+    "relative aspect-square h-full max-h-full w-auto max-w-full min-h-0 overflow-hidden [container-type:size] [contain:paint]";
   const legendSlotClass =
     "flex flex-wrap content-start justify-center gap-x-4 gap-y-2 px-1";
 
   return (
     <div
       ref={bindRoot}
-      className={cn(
-        "radial-heatmap-root relative flex h-full min-h-0 w-full min-w-0 flex-col gap-3 overflow-hidden pb-1 [contain:paint]",
-        showSkeleton && "yearly-scrobbles-loading",
-      )}
+      className="radial-heatmap-root relative flex h-full min-h-0 w-full min-w-0 flex-col gap-3 overflow-hidden pb-1 [contain:paint]"
     >
       <h2 id="radial-heatmap-heading" className="sr-only">
         Yearly scrobbles (week-wise): weekly listening intensity for your

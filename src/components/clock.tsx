@@ -1,4 +1,5 @@
 import { useEffect, useState, memo } from "react";
+import { Placeholder } from "./Placeholder";
 
 interface ClockProps {
   inline?: boolean;
@@ -28,12 +29,25 @@ const Clock = memo(function Clock({ inline = false }: ClockProps) {
     return () => clearInterval(timer);
   }, []);
 
-  const text = isMounted ? currentTime : "Loading...";
+  if (!isMounted) {
+    const skel = (
+      <Placeholder
+        as="span"
+        className="inline-block h-[1em] w-[9.5ch] align-middle"
+      />
+    );
+    if (inline) return skel;
+    return (
+      <div className="font-light text-center my-1">
+        <p className="text-nowrap type-body-sm">{skel}</p>
+      </div>
+    );
+  }
 
   if (inline) {
     return (
       <span className="text-nowrap font-light" suppressHydrationWarning>
-        {text}
+        {currentTime}
       </span>
     );
   }
@@ -44,7 +58,7 @@ const Clock = memo(function Clock({ inline = false }: ClockProps) {
         className="text-nowrap type-body-sm text-[var(--text-secondary)]"
         suppressHydrationWarning={true}
       >
-        {text}
+        {currentTime}
       </p>
     </div>
   );

@@ -610,32 +610,25 @@ html.lenis body {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-@keyframes musicShimmer {
+@keyframes skel-shimmer {
   0% {
-    background-position: -400px 0;
+    background-position: 100% 0;
   }
   100% {
-    background-position: 400px 0;
+    background-position: -100% 0;
   }
 }
 
-@keyframes genreStreakShimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: 200px 0;
-  }
-}
-
-.music-stats-loading .music-stats-skel-strong,
-.yearly-scrobbles-loading .music-stats-skel-strong {
-  background: var(--surface-raised);
-}
-
-.music-stats-loading .music-stats-skel-soft,
-.yearly-scrobbles-loading .music-stats-skel-soft {
-  background: var(--border-subtle);
+.skel {
+  background-color: var(--shimmer-from);
+  background-image: linear-gradient(
+    90deg,
+    var(--shimmer-from) 0%,
+    var(--shimmer-to) 45%,
+    var(--shimmer-from) 90%
+  );
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.5s ease-in-out infinite;
 }
 
 [data-bento-debug] {
@@ -663,7 +656,7 @@ html.lenis body {
 }
 
 @supports (animation-timeline: view()) {
-  .bento-reveal:not(.bento-reveal-eager) {
+  .bento-reveal {
     animation-timeline: view();
     animation-range: entry 0% entry 25%;
   }
@@ -685,5 +678,10 @@ html.lenis body {
 @media (prefers-reduced-motion: reduce) {
   .bento-reveal {
     animation: none;
+  }
+
+  .skel {
+    animation: none;
+    background-image: none;
   }
 }
