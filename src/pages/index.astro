@@ -57,6 +57,40 @@ const optimizedBeeImage = await getImage({
   }
 </script>
 
+<script is:inline>
+  (function () {
+    if (typeof window === "undefined" || !("IntersectionObserver" in window)) return;
+
+    function init() {
+      var observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            observer.unobserve(entry.target);
+            var el = entry.target;
+            // Pin the revealed state once the CSS reveal (0.4s) has had
+            // time to finish, so cards never fade out again on scroll-up.
+            window.setTimeout(function () {
+              el.classList.add("bento-revealed");
+            }, 450);
+          });
+        },
+        { threshold: 0, rootMargin: "80px 0px -10% 0px" },
+      );
+
+      document.querySelectorAll(".bento-reveal").forEach(function (el) {
+        observer.observe(el);
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
+</script>
+
 <MainLayout
   title="Nikshaan | Portfolio"
   description="I am a developer based in Mumbai, India. I am passionate about machine learning, deep learning and web development. This portfolio is made using astro and has a bento box style."

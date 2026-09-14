@@ -646,3 +646,44 @@ html.lenis body {
   outline: 1px dashed var(--accent);
   outline-offset: -1px;
 }
+
+@keyframes bento-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bento-reveal {
+  animation: bento-reveal 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+
+@supports (animation-timeline: view()) {
+  .bento-reveal:not(.bento-reveal-eager) {
+    animation-timeline: view();
+    animation-range: entry 0% entry 25%;
+  }
+}
+
+/*
+ * Scroll-driven animation-timeline re-plays every time an element crosses
+ * back into its entry range, so it can fade out again on scroll-up. Once
+ * JS confirms a card has been shown, .bento-revealed freezes it so it
+ * behaves like a play-once reveal. Applied by the inline script in
+ * index.astro; without JS, the scroll-linked reveal above still works.
+ */
+.bento-reveal.bento-revealed {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bento-reveal {
+    animation: none;
+  }
+}

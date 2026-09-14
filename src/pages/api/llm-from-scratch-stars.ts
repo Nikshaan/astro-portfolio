@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { GH_TOKEN } from "astro:env/server";
+import { jsonResponse } from "../../lib/apiResponse";
 
 export const prerender = false;
 
@@ -38,28 +39,22 @@ async function fetchStars(): Promise<number> {
   return stars;
 }
 
-function jsonResponse(stars: number, cacheStatus: string) {
-  return new Response(JSON.stringify({ stars }), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control":
-        "public, max-age=120, s-maxage=1800, stale-while-revalidate=86400",
-      "X-Cache-Status": cacheStatus,
-    },
-  });
+function respond(stars: number, cacheStatus: string, fetchedAt: number) {
+  const cdn =
+    cacheStatus === "STALE" || cacheStatus === "FALLBACK" ? "stale" : "default";
+  return jsonResponse({ stars }, { cacheStatus, fetchedAt, cdn });
 }
 
 export const GET: APIRoute = async () => {
   const now = Date.now();
   if (cachedStars !== null && now - lastFetchTime < CACHE_MS) {
-    return jsonResponse(cachedStars, "HIT");
+    return respond(cachedStars, "HIT", lastFetchTime);
   }
 
   if (pendingRequest) {
     try {
       const stars = await pendingRequest;
-      return jsonResponse(stars, "DEDUPED");
+      return respond(stars, "DEDUPED", lastFetchTime || Date.now());
     } catch {}
   }
 
@@ -71,12 +66,12 @@ export const GET: APIRoute = async () => {
 
   try {
     const stars = await run;
-    return jsonResponse(stars, "MISS");
+    return respond(stars, "MISS", lastFetchTime);
   } catch {
-    if (cachedStars !== null) return jsonResponse(cachedStars, "STALE");
-    return new Response(JSON.stringify({ error: "Failed to fetch stars" }), {
-      status: 503,
-      headers: { "Content-Type": "application/json" },
-    });
+    if (cachedStars !== null) return respond(cachedStars, "STALE", lastFetchTime);
+    return jsonResponse(
+      { error: "Failed to fetch stars" },
+      { status: 503, cacheStatus: "ERROR", fetchedAt: 0, cdn: "stale" },
+    );
   }
 };

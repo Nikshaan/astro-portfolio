@@ -1,4 +1,4 @@
-import { getPersistentCache, setPersistentCache } from "./persistentCache";
+import { createLiveResource } from "./liveResource";
 
 export interface RadialHeatmapWeek {
   from: number;
@@ -17,77 +17,47 @@ export interface RadialHeatmapPayload {
 
 const PERSISTENT_CACHE_KEY = "nikshaan_radial_heatmap_v1";
 const PERSISTENT_TTL_MS = 24 * 60 * 60 * 1000;
-const CLIENT_DEDUPE_MS = 20_000;
-const READ_CACHE_MS = 5 * 60 * 1000;
+const FRESH_MS = 10 * 60 * 1000;
 export const RADIAL_POLL_MS = 5 * 60 * 1000;
 
-let cached: RadialHeatmapPayload | null = getPersistentCache<RadialHeatmapPayload>(
-  PERSISTENT_CACHE_KEY,
-  PERSISTENT_TTL_MS,
-);
-let cachedAt = cached ? Date.now() : 0;
-let inflightPromise: Promise<RadialHeatmapPayload> | null = null;
-
-function buildUrl(): string {
-  const baseUrl = import.meta.env.BASE_URL || "/";
-  const slug = baseUrl.endsWith("/")
-    ? "api/music-radial-heatmap"
-    : "/api/music-radial-heatmap";
-  return `${baseUrl}${slug}`;
-}
-
-export function readRadialHeatmapCache(): RadialHeatmapPayload | null {
-  if (cached && Date.now() - cachedAt < READ_CACHE_MS) return cached;
-  const disk = getPersistentCache<RadialHeatmapPayload>(
-    PERSISTENT_CACHE_KEY,
-    PERSISTENT_TTL_MS,
-  );
-  if (disk) {
-    cached = disk;
-    cachedAt = Date.now();
-    return disk;
+function validateRadial(data: unknown): RadialHeatmapPayload {
+  if (typeof data !== "object" || data === null) {
+    throw new Error("Invalid radial heatmap payload");
   }
-  return null;
-}
-
-export function prefetchRadialHeatmapPayload(): void {
-  void loadRadialHeatmapPayload().catch(() => {});
-}
-
-async function parsePayload(response: Response): Promise<RadialHeatmapPayload> {
-  const parsed = (await response.json()) as Record<string, unknown>;
+  const parsed = data as Record<string, unknown>;
   if (
-    parsed?.error ||
-    !Array.isArray(parsed?.weeks) ||
-    !Array.isArray(parsed?.artists)
+    parsed.error ||
+    !Array.isArray(parsed.weeks) ||
+    !Array.isArray(parsed.artists)
   ) {
     throw new Error("Invalid radial heatmap payload");
   }
   return parsed as unknown as RadialHeatmapPayload;
 }
 
-export async function loadRadialHeatmapPayload(): Promise<RadialHeatmapPayload> {
-  const now = Date.now();
+const resource = createLiveResource<RadialHeatmapPayload>({
+  key: PERSISTENT_CACHE_KEY,
+  url: "api/music-radial-heatmap",
+  validate: validateRadial,
+  freshMs: FRESH_MS,
+  pollMs: RADIAL_POLL_MS,
+  maxAgeMs: PERSISTENT_TTL_MS,
+});
 
-  if (cached && now - cachedAt < CLIENT_DEDUPE_MS) return cached;
-  if (inflightPromise) return inflightPromise;
+export function readRadialHeatmapCache(): RadialHeatmapPayload | null {
+  return resource.read();
+}
 
-  const run = async () => {
-    const response = await fetch(buildUrl(), {
-      headers: { Accept: "application/json" },
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const payload = await parsePayload(response);
-    cached = payload;
-    cachedAt = Date.now();
-    setPersistentCache(PERSISTENT_CACHE_KEY, payload);
-    return payload;
-  };
+export function prefetchRadialHeatmapPayload(): void {
+  void resource.load().catch(() => {});
+}
 
-  inflightPromise = run();
-  try {
-    return await inflightPromise;
-  } finally {
-    inflightPromise = null;
-  }
+export function loadRadialHeatmapPayload(): Promise<RadialHeatmapPayload> {
+  return resource.load();
+}
+
+export function subscribeRadialHeatmap(
+  listener: Parameters<typeof resource.subscribe>[0],
+): () => void {
+  return resource.subscribe(listener);
 }

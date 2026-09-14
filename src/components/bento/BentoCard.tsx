@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { m, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Maximize2 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -119,23 +119,17 @@ const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
       );
     }
 
-    const revealTransition = { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const };
-    const revealProps = eager
-      ? {
-          initial: { opacity: 0, y: 16 },
-          animate: { opacity: 1, y: 0 },
-          transition: revealTransition,
-        }
-      : {
-          initial: { opacity: 0, y: 16 },
-          whileInView: { opacity: 1, y: 0, transition: revealTransition },
-          viewport: { once: true, amount: 0.2, margin: "80px 0px -10% 0px" },
-        };
-
     return (
-      <m.div className={cn("h-full w-full", SPANS[span], className)} {...revealProps}>
+      <div
+        className={cn(
+          "h-full w-full bento-reveal",
+          eager && "bento-reveal-eager",
+          SPANS[span],
+          className,
+        )}
+      >
         {body}
-      </m.div>
+      </div>
     );
   },
 );

@@ -25,6 +25,7 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vercel/analytics": "^1.6.1",
+    "@vercel/functions": "^3.9.7",
     "astro": "^6.3.7",
     "clsx": "^2.1.1",
     "d3-geo": "^3.1.1",

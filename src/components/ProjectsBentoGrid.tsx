@@ -4,8 +4,8 @@ import { LazyMotion, domAnimation } from "framer-motion";
 import { Github, ExternalLink, Star, MessageCircle } from "lucide-react";
 import cardsData from "../data/cardsdata.json";
 import {
-  fetchOssContributionsData,
   readOssContributionsCache,
+  subscribeOssContributions,
   type Contribution,
 } from "../utils/ossContributionsClient";
 import {
@@ -193,25 +193,14 @@ const ProjectsBentoGrid: React.FC = () => {
   );
 
   useEffect(() => {
-    let cancelled = false;
-    fetchOssContributionsData()
-      .then((data) => {
-        if (!cancelled) {
-          setContributions(data);
-          setOssError(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setContributions((prev) => {
-            if (!prev) setOssError(true);
-            return prev;
-          });
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
+    return subscribeOssContributions((snap) => {
+      if (snap.data) {
+        setContributions(snap.data);
+        setOssError(false);
+      } else if (snap.error && !snap.loading) {
+        setOssError(true);
+      }
+    });
   }, []);
 
   useEffect(() => {

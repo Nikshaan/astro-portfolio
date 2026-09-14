@@ -1,4 +1,4 @@
-import { getPersistentCache, setPersistentCache } from "./persistentCache";
+import { createLiveResource } from "./liveResource";
 
 export interface Contribution {
   id: string;
@@ -14,54 +14,35 @@ export interface Contribution {
 
 const PERSISTENT_CACHE_KEY = "nikshaan_oss_contributions_v1";
 const PERSISTENT_TTL_MS = 24 * 60 * 60 * 1000;
-const CLIENT_CACHE_MS = 30 * 60 * 1000;
+const FRESH_MS = 30 * 60 * 1000;
+const POLL_MS = 15 * 60 * 1000;
 
-let inflight: Promise<Contribution[]> | null = null;
-let cached: Contribution[] | null = getPersistentCache<Contribution[]>(
-  PERSISTENT_CACHE_KEY,
-  PERSISTENT_TTL_MS,
-);
-let cacheTimestamp = cached ? Date.now() : 0;
-
-export function readOssContributionsCache(): Contribution[] | null {
-  if (cached && Date.now() - cacheTimestamp < CLIENT_CACHE_MS) return cached;
-  const disk = getPersistentCache<Contribution[]>(
-    PERSISTENT_CACHE_KEY,
-    PERSISTENT_TTL_MS,
-  );
-  if (disk) {
-    cached = disk;
-    cacheTimestamp = Date.now();
-    return disk;
+function validateOss(data: unknown): Contribution[] {
+  if (!Array.isArray(data)) {
+    throw new Error("Invalid OSS contributions payload");
   }
-  return null;
+  return data as Contribution[];
 }
 
-export async function fetchOssContributionsData(): Promise<Contribution[]> {
-  const now = Date.now();
+const resource = createLiveResource<Contribution[]>({
+  key: PERSISTENT_CACHE_KEY,
+  url: "api/oss-contributions",
+  validate: validateOss,
+  freshMs: FRESH_MS,
+  pollMs: POLL_MS,
+  maxAgeMs: PERSISTENT_TTL_MS,
+});
 
-  if (cached && now - cacheTimestamp < CLIENT_CACHE_MS) return cached;
-  if (inflight) return inflight;
+export function readOssContributionsCache(): Contribution[] | null {
+  return resource.read();
+}
 
-  inflight = (async () => {
-    const baseUrl = import.meta.env.BASE_URL || "/";
-    const apiPath = baseUrl.endsWith("/")
-      ? "api/oss-contributions"
-      : "/api/oss-contributions";
-    const response = await fetch(`${baseUrl}${apiPath}`, {
-      headers: { Accept: "application/json" },
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = (await response.json()) as Contribution[];
-    cached = data;
-    cacheTimestamp = Date.now();
-    setPersistentCache(PERSISTENT_CACHE_KEY, data);
-    return data;
-  })();
+export function fetchOssContributionsData(): Promise<Contribution[]> {
+  return resource.load();
+}
 
-  try {
-    return await inflight;
-  } finally {
-    inflight = null;
-  }
+export function subscribeOssContributions(
+  listener: Parameters<typeof resource.subscribe>[0],
+): () => void {
+  return resource.subscribe(listener);
 }

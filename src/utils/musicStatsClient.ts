@@ -1,5 +1,5 @@
 import { scheduleRadialHeatmapWarmup } from "../components/musicRadialHeatmapWarmup";
-import { getPersistentCache, setPersistentCache } from "./persistentCache";
+import { createLiveResource, type LiveSnapshot } from "./liveResource";
 
 export interface GenreEntry {
   genre: string;
@@ -26,71 +26,21 @@ export interface MusicStatsData {
   genreData?: GenreEntry[];
 }
 
-export interface MusicStatsSnapshot {
-  data: MusicStatsData | null;
-  loading: boolean;
-  error: string | null;
-}
+export type MusicStatsSnapshot = LiveSnapshot<MusicStatsData>;
 
 const PERSISTENT_CACHE_KEY = "nikshaan_music_stats_v1";
 const PERSISTENT_TTL_MS = 24 * 60 * 60 * 1000;
-const CLIENT_DEDUPE_MS = 20_000;
-const READ_CACHE_MS = 5 * 60 * 1000;
+const FRESH_MS = 2 * 60 * 1000;
 const POLL_MS = 45_000;
 
-type StatsListener = (snapshot: MusicStatsSnapshot) => void;
-
-let cached: MusicStatsData | null = getPersistentCache<MusicStatsData>(
-  PERSISTENT_CACHE_KEY,
-  PERSISTENT_TTL_MS,
-);
-let cacheTimestamp = cached ? Date.now() : 0;
-let inflight: Promise<MusicStatsData> | null = null;
-let liveRefreshStarted = false;
-let lastPollAt = 0;
-
-const listeners = new Set<StatsListener>();
-
-let snapshot: MusicStatsSnapshot = {
-  data: cached,
-  loading: !cached,
-  error: null,
-};
-
-export function getMusicStatsSnapshot(): MusicStatsSnapshot {
-  return snapshot;
-}
-
-function emit() {
-  for (const listener of listeners) {
-    listener(snapshot);
+function validateMusicStats(data: unknown): MusicStatsData {
+  if (typeof data !== "object" || data === null) {
+    throw new Error("Invalid data structure received");
   }
-}
-
-function setSnapshot(patch: Partial<MusicStatsSnapshot>) {
-  snapshot = { ...snapshot, ...patch };
-  emit();
-}
-
-function buildApiUrl() {
-  const baseUrl = import.meta.env.BASE_URL || "/";
-  const apiPath = baseUrl.endsWith("/")
-    ? "api/music-stats"
-    : "/api/music-stats";
-  return `${baseUrl}${apiPath}`;
-}
-
-async function fetchMusicStatsPayload(): Promise<MusicStatsData> {
-  scheduleRadialHeatmapWarmup();
-
-  const response = await fetch(buildApiUrl(), {
-    headers: { Accept: "application/json" },
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: Failed to fetch music stats`);
+  const musicData = data as MusicStatsData & { error?: string };
+  if (musicData.error) {
+    throw new Error(musicData.error);
   }
-
-  const musicData = (await response.json()) as MusicStatsData;
   if (
     !musicData.weeklyScrobbles ||
     !musicData.upperStatsArray ||
@@ -98,95 +48,33 @@ async function fetchMusicStatsPayload(): Promise<MusicStatsData> {
   ) {
     throw new Error("Invalid data structure received");
   }
-
-  cached = musicData;
-  cacheTimestamp = Date.now();
-  setPersistentCache(PERSISTENT_CACHE_KEY, musicData);
   return musicData;
 }
 
+const resource = createLiveResource<MusicStatsData>({
+  key: PERSISTENT_CACHE_KEY,
+  url: "api/music-stats",
+  validate: validateMusicStats,
+  freshMs: FRESH_MS,
+  pollMs: POLL_MS,
+  maxAgeMs: PERSISTENT_TTL_MS,
+  onFetch: scheduleRadialHeatmapWarmup,
+});
+
+export function getMusicStatsSnapshot(): MusicStatsSnapshot {
+  return resource.getSnapshot();
+}
+
 export function readMusicStatsCache(): MusicStatsData | null {
-  if (cached && Date.now() - cacheTimestamp < READ_CACHE_MS) return cached;
-  const disk = getPersistentCache<MusicStatsData>(
-    PERSISTENT_CACHE_KEY,
-    PERSISTENT_TTL_MS,
-  );
-  if (disk) {
-    cached = disk;
-    cacheTimestamp = Date.now();
-    return disk;
-  }
-  return null;
+  return resource.read();
 }
 
-export async function loadMusicStatsData(): Promise<MusicStatsData> {
-  const now = Date.now();
-
-  if (cached && now - cacheTimestamp < CLIENT_DEDUPE_MS) return cached;
-  if (inflight) return inflight;
-
-  inflight = fetchMusicStatsPayload().finally(() => {
-    inflight = null;
-  });
-
-  return inflight;
+export function loadMusicStatsData(): Promise<MusicStatsData> {
+  return resource.load();
 }
 
-async function revalidateMusicStats(options?: { silent?: boolean }) {
-  const silent = options?.silent === true;
-
-  if (!silent || !cached) {
-    setSnapshot({ loading: !cached, error: null });
-  }
-
-  try {
-    const musicData = await loadMusicStatsData();
-    setSnapshot({ data: musicData, loading: false, error: null });
-    return musicData;
-  } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : "Failed to load music stats";
-    if (cached) {
-      setSnapshot({ data: cached, loading: false, error: null });
-      return cached;
-    }
-    setSnapshot({ data: null, loading: false, error: message });
-    throw err;
-  }
-}
-
-function poll(minGapMs: number) {
-  const now = Date.now();
-  if (minGapMs > 0 && now - lastPollAt < minGapMs) return;
-  lastPollAt = now;
-  void revalidateMusicStats({ silent: true }).catch(() => {});
-}
-
-function ensureMusicStatsLiveRefresh() {
-  if (liveRefreshStarted || typeof window === "undefined") return;
-  liveRefreshStarted = true;
-
-  window.setInterval(() => {
-    if (document.visibilityState === "visible") poll(0);
-  }, POLL_MS);
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState !== "visible") return;
-    poll(30_000);
-  });
-}
-
-export function subscribeMusicStats(listener: StatsListener) {
-  const isFirst = listeners.size === 0;
-  listeners.add(listener);
-  listener(snapshot);
-
-  if (isFirst) {
-    void revalidateMusicStats({ silent: false });
-    ensureMusicStatsLiveRefresh();
-  }
-
-  return () => {
-    listeners.delete(listener);
-  };
+export function subscribeMusicStats(
+  listener: (snapshot: MusicStatsSnapshot) => void,
+): () => void {
+  return resource.subscribe(listener);
 }

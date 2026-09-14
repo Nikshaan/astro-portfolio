@@ -1,101 +1,43 @@
-import { getPersistentCache, setPersistentCache } from "./persistentCache";
+import { createLiveResource } from "./liveResource";
 
 const PERSISTENT_CACHE_KEY = "nikshaan_llm_repo_stars_v1";
 const PERSISTENT_TTL_MS = 24 * 60 * 60 * 1000;
-const CLIENT_CACHE_MS = 30 * 60 * 1000;
+const FRESH_MS = 30 * 60 * 1000;
 const POLL_MS = 30 * 60 * 1000;
 
-let inflight: Promise<number> | null = null;
-let cached: number | null = getPersistentCache<number>(
-  PERSISTENT_CACHE_KEY,
-  PERSISTENT_TTL_MS,
-);
-let cacheTimestamp = cached !== null ? Date.now() : 0;
-
-export function readLlmRepoStarsCache(): number | null {
-  if (cached !== null && Date.now() - cacheTimestamp < CLIENT_CACHE_MS) {
-    return cached;
+function validateStars(data: unknown): number {
+  if (typeof data !== "object" || data === null) {
+    throw new Error("Invalid stars payload");
   }
-  const disk = getPersistentCache<number>(
-    PERSISTENT_CACHE_KEY,
-    PERSISTENT_TTL_MS,
-  );
-  if (disk !== null) {
-    cached = disk;
-    cacheTimestamp = Date.now();
-    return disk;
+  const parsed = data as { stars?: number; error?: string };
+  if (parsed.error) throw new Error(parsed.error);
+  if (typeof parsed.stars !== "number") {
+    throw new Error("Invalid stars payload");
   }
-  return null;
+  return parsed.stars;
 }
 
-export async function fetchLlmRepoStars(options?: {
-  force?: boolean;
-}): Promise<number> {
-  const force = options?.force === true;
-  const now = Date.now();
+const resource = createLiveResource<number>({
+  key: PERSISTENT_CACHE_KEY,
+  url: "api/llm-from-scratch-stars",
+  validate: validateStars,
+  freshMs: FRESH_MS,
+  pollMs: POLL_MS,
+  maxAgeMs: PERSISTENT_TTL_MS,
+});
 
-  if (!force && cached !== null && now - cacheTimestamp < CLIENT_CACHE_MS) {
-    return cached;
-  }
-  if (inflight) {
-    if (!force) return inflight;
-    await inflight.catch(() => {});
-  }
+export function readLlmRepoStarsCache(): number | null {
+  return resource.read();
+}
 
-  inflight = (async () => {
-    const baseUrl = import.meta.env.BASE_URL || "/";
-    const apiPath = baseUrl.endsWith("/")
-      ? "api/llm-from-scratch-stars"
-      : "/api/llm-from-scratch-stars";
-    const response = await fetch(`${baseUrl}${apiPath}`, {
-      headers: { Accept: "application/json" },
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = (await response.json()) as { stars: number };
-    cached = data.stars;
-    cacheTimestamp = Date.now();
-    setPersistentCache(PERSISTENT_CACHE_KEY, data.stars);
-    return data.stars;
-  })();
-
-  try {
-    return await inflight;
-  } finally {
-    inflight = null;
-  }
+export function fetchLlmRepoStars(options?: { force?: boolean }): Promise<number> {
+  return resource.load(options);
 }
 
 export function startLlmRepoStarsPolling(
   onStars: (stars: number) => void,
 ): () => void {
-  let cancelled = false;
-  let lastPollAt = 0;
-
-  const pull = (minGapMs: number, force: boolean) => {
-    const now = Date.now();
-    if (minGapMs > 0 && now - lastPollAt < minGapMs) return;
-    lastPollAt = now;
-    void fetchLlmRepoStars(force ? { force: true } : undefined)
-      .then((stars) => {
-        if (!cancelled) onStars(stars);
-      })
-      .catch(() => {});
-  };
-
-  pull(0, false);
-
-  const intervalId = window.setInterval(() => {
-    if (document.visibilityState === "visible") pull(0, true);
-  }, POLL_MS);
-
-  const onVis = () => {
-    if (document.visibilityState === "visible") pull(30_000, true);
-  };
-  document.addEventListener("visibilitychange", onVis);
-
-  return () => {
-    cancelled = true;
-    window.clearInterval(intervalId);
-    document.removeEventListener("visibilitychange", onVis);
-  };
+  return resource.subscribe((snap) => {
+    if (snap.data !== null) onStars(snap.data);
+  });
 }

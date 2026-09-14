@@ -22,6 +22,12 @@ interface SnapshotFile {
 
 const snapshot = snapshotData as SnapshotFile;
 
+export const SNAPSHOT_GENERATED_AT = snapshot.generatedAt;
+
+export function effectiveFetchedAt(timeline: Timeline): number {
+  return timeline.fetchedAt > 0 ? timeline.fetchedAt : SNAPSHOT_GENERATED_AT;
+}
+
 const PAGE_SIZE = 500;
 const MAX_PAGES = 40;
 const FETCH_CONCURRENCY = 4;
@@ -271,8 +277,9 @@ export async function getTimeline(
   if (pending) {
     try {
       return toTimeline(await pending, anchorSec);
-    } catch {
-      return toTimeline(state, anchorSec);
+    } catch (err) {
+      if (state.fetchedAt > 0) return toTimeline(state, anchorSec);
+      throw err;
     }
   }
 
@@ -289,7 +296,7 @@ export async function getTimeline(
   try {
     return toTimeline(await run, anchorSec);
   } catch (err) {
-    if (state) return toTimeline(state, anchorSec);
+    if (state.fetchedAt > 0) return toTimeline(state, anchorSec);
     throw err;
   }
 }

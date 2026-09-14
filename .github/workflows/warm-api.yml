@@ -1,0 +1,26 @@
+name: Warm API
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping live API routes
+        run: |
+          set +e
+          for path in \
+            api/music-stats \
+            api/music-radial-heatmap \
+            api/github-contributions \
+            api/oss-contributions \
+            api/llm-from-scratch-stars
+          do
+            curl -fsS -o /dev/null -w "%{http_code} %{url_effective} %{time_total}\\n" \
+              --max-time 30 \
+              "https://nikshaan.dev/${path}" \
+              || true
+          done

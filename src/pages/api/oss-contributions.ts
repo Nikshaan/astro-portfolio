@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { GH_TOKEN, GH_USERNAME } from "astro:env/server";
+import { jsonResponse, keepAlive } from "../../lib/apiResponse";
 
 export const prerender = false;
 
@@ -111,6 +112,17 @@ function toContribution(node: SearchNode): Contribution | null {
   };
 }
 
+function respond(
+  data: unknown,
+  cacheStatus: string,
+  fetchedAt: number,
+  status = 200,
+) {
+  const cdn =
+    cacheStatus === "STALE" || cacheStatus === "FALLBACK" ? "stale" : "default";
+  return jsonResponse(data, { status, cacheStatus, fetchedAt, cdn });
+}
+
 async function fetchContributions(): Promise<Contribution[]> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
@@ -150,55 +162,36 @@ async function fetchContributions(): Promise<Contribution[]> {
   return contributions;
 }
 
-const CACHE_HEADERS = {
-  "Content-Type": "application/json",
-  "Cache-Control":
-    "public, max-age=120, s-maxage=1800, stale-while-revalidate=86400",
-};
-
 export const GET: APIRoute = async () => {
   if (!GH_TOKEN || !GH_USERNAME) {
-    return new Response(
-      JSON.stringify({ error: "GitHub credentials not configured" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
+    return respond(
+      { error: "GitHub credentials not configured" },
+      "ERROR",
+      0,
+      500,
     );
   }
 
   const now = Date.now();
   if (cachedData && now - lastFetchTime < CACHE_DURATION) {
-    return new Response(JSON.stringify(cachedData), {
-      status: 200,
-      headers: {
-        ...CACHE_HEADERS,
-        "X-Cache-Status": "HIT",
-      },
-    });
+    return respond(cachedData, "HIT", lastFetchTime);
   }
 
   if (pendingRequest) {
     try {
       const data = await pendingRequest;
-      return new Response(JSON.stringify(data), {
-        status: 200,
-        headers: {
-          ...CACHE_HEADERS,
-          "X-Cache-Status": "DEDUPED",
-        },
-      });
+      return respond(data, "DEDUPED", lastFetchTime || Date.now());
     } catch {}
   }
 
   const run = fetchContributions();
   pendingRequest = run;
+  keepAlive(run);
   void run.catch(() => {}).finally(() => {
     if (pendingRequest === run) pendingRequest = null;
   });
 
   try {
-    // If we have any existing cached data, race live fetch against 3500ms timeout
     const data = cachedData
       ? await Promise.race([
           run,
@@ -208,30 +201,12 @@ export const GET: APIRoute = async () => {
         ])
       : await run;
 
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: {
-        ...CACHE_HEADERS,
-        "X-Cache-Status": "MISS",
-      },
-    });
+    return respond(data, "MISS", lastFetchTime);
   } catch {
     if (cachedData) {
-      return new Response(JSON.stringify(cachedData), {
-        status: 200,
-        headers: {
-          ...CACHE_HEADERS,
-          "X-Cache-Status": "STALE",
-        },
-      });
+      return respond(cachedData, "STALE", lastFetchTime);
     }
 
-    return new Response(JSON.stringify([]), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "X-Cache-Status": "FALLBACK",
-      },
-    });
+    return respond([], "FALLBACK", 0);
   }
 };

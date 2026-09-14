@@ -563,7 +563,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 
   return (
     <>
-      <div className={cn("h-full w-full", className)}>
+      <div className={cn("h-full w-full bento-reveal", className)}>
         <motion.div
           layoutId="india-map-card"
           data-bento-shell=""
@@ -585,6 +585,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
             contain:
               portalVisible || layoutLock ? "layout style paint" : undefined,
           }}
+          initial={false}
           whileHover={
             isHoverable ? getBentoCardHoverMotion({ compact: true }) : undefined
           }

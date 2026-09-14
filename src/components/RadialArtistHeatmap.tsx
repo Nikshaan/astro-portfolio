@@ -12,9 +12,8 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { RadialHeatmapPayload } from "../utils/radialHeatmapClient";
 import {
-  loadRadialHeatmapPayload,
   readRadialHeatmapCache,
-  RADIAL_POLL_MS,
+  subscribeRadialHeatmap,
 } from "../utils/radialHeatmapClient";
 import {
   YearlyScrobblesChartSkeletonInner,
@@ -397,75 +396,15 @@ export default memo(function RadialArtistHeatmap() {
 
   useEffect(() => {
     if (!shouldLoad) return;
-    let cancel = false;
-    const prefetch = readRadialHeatmapCache();
-    if (prefetch) {
-      setData(prefetch);
-      setError(null);
-      setLoading(false);
-    } else {
-      setLoading(true);
-    }
-    loadRadialHeatmapPayload()
-      .then((payload) => {
-        if (cancel) return;
-        setData(payload);
+    return subscribeRadialHeatmap((snap) => {
+      if (snap.data) {
+        setData(snap.data);
         setError(null);
-      })
-      .catch((err: unknown) => {
-        if (cancel) return;
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Failed to load yearly scrobbles";
-        setError(message);
-        const fallback = readRadialHeatmapCache();
-        if (fallback) {
-          setData(fallback);
-          setError(null);
-        }
-      })
-      .finally(() => {
-        if (!cancel) setLoading(false);
-      });
-    return () => {
-      cancel = true;
-    };
-  }, [shouldLoad]);
-
-  useEffect(() => {
-    if (!shouldLoad) return;
-    let cancelled = false;
-    const lastPullAt = { t: 0 };
-
-    const pull = (minGapMs: number) => {
-      const n = Date.now();
-      if (minGapMs > 0 && n - lastPullAt.t < minGapMs) return;
-      lastPullAt.t = n;
-      void loadRadialHeatmapPayload()
-        .then((payload) => {
-          if (!cancelled) {
-            setData(payload);
-            setError(null);
-          }
-        })
-        .catch(() => {});
-    };
-
-    const intervalId = window.setInterval(() => {
-      if (document.visibilityState === "visible") pull(0);
-    }, RADIAL_POLL_MS);
-
-    const onVis = () => {
-      if (document.visibilityState !== "visible") return;
-      pull(30_000);
-    };
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-      document.removeEventListener("visibilitychange", onVis);
-    };
+      } else if (snap.error) {
+        setError(snap.error);
+      }
+      setLoading(snap.loading && !snap.data);
+    });
   }, [shouldLoad]);
 
   useLayoutEffect(() => {

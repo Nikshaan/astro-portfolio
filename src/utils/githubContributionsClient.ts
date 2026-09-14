@@ -1,4 +1,4 @@
-import { getPersistentCache, setPersistentCache } from "./persistentCache";
+import { createLiveResource } from "./liveResource";
 
 export type ContributionLevel =
   | "NONE"
@@ -40,61 +40,45 @@ export interface GitHubAPIResponse {
 
 const PERSISTENT_CACHE_KEY = "nikshaan_github_contributions_v1";
 const PERSISTENT_TTL_MS = 12 * 60 * 60 * 1000;
-const CLIENT_CACHE_MS = 60 * 1000;
+const FRESH_MS = 10 * 60 * 1000;
+const POLL_MS = 5 * 60 * 1000;
 
-let inflight: Promise<GitHubAPIResponse> | null = null;
-let cached: GitHubAPIResponse | null = getPersistentCache<GitHubAPIResponse>(
-  PERSISTENT_CACHE_KEY,
-  PERSISTENT_TTL_MS,
-);
-let cacheTimestamp = cached ? Date.now() : 0;
-
-export function readGithubContributionsCache(): GitHubAPIResponse | null {
-  if (cached && Date.now() - cacheTimestamp < CLIENT_CACHE_MS) return cached;
-  const disk = getPersistentCache<GitHubAPIResponse>(
-    PERSISTENT_CACHE_KEY,
-    PERSISTENT_TTL_MS,
-  );
-  if (disk) {
-    cached = disk;
-    cacheTimestamp = Date.now();
-    return disk;
+function validateGithub(data: unknown): GitHubAPIResponse {
+  if (typeof data !== "object" || data === null) {
+    throw new Error("Invalid data structure received");
   }
-  return null;
+  const response = data as GitHubAPIResponse & { error?: string };
+  if (response.error) {
+    throw new Error(response.error);
+  }
+  if (response.errors) return response;
+  if (!response.data?.user?.contributionsCollection?.contributionCalendar) {
+    throw new Error("Invalid data structure received");
+  }
+  return response;
 }
 
-export async function fetchGithubContributionsData(options?: {
+const resource = createLiveResource<GitHubAPIResponse>({
+  key: PERSISTENT_CACHE_KEY,
+  url: "api/github-contributions",
+  validate: validateGithub,
+  freshMs: FRESH_MS,
+  pollMs: POLL_MS,
+  maxAgeMs: PERSISTENT_TTL_MS,
+});
+
+export function readGithubContributionsCache(): GitHubAPIResponse | null {
+  return resource.read();
+}
+
+export function fetchGithubContributionsData(options?: {
   force?: boolean;
 }): Promise<GitHubAPIResponse> {
-  const force = options?.force === true;
-  const now = Date.now();
+  return resource.load(options);
+}
 
-  if (!force && cached && now - cacheTimestamp < CLIENT_CACHE_MS) return cached;
-
-  if (inflight) {
-    if (!force) return inflight;
-    await inflight.catch(() => {});
-  }
-
-  inflight = (async () => {
-    const baseUrl = import.meta.env.BASE_URL || "/";
-    const apiPath = baseUrl.endsWith("/")
-      ? "api/github-contributions"
-      : "/api/github-contributions";
-    const response = await fetch(`${baseUrl}${apiPath}`, {
-      headers: { Accept: "application/json" },
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = (await response.json()) as GitHubAPIResponse;
-    cached = data;
-    cacheTimestamp = Date.now();
-    setPersistentCache(PERSISTENT_CACHE_KEY, data);
-    return data;
-  })();
-
-  try {
-    return await inflight;
-  } finally {
-    inflight = null;
-  }
+export function subscribeGithubContributions(
+  listener: Parameters<typeof resource.subscribe>[0],
+): () => void {
+  return resource.subscribe(listener);
 }

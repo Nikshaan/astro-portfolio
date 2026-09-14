@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef, memo, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { m, LazyMotion, domAnimation } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
-  fetchGithubContributionsData,
   readGithubContributionsCache,
+  subscribeGithubContributions,
   type ContributionDay,
   type ContributionLevel,
   type ContributionWeek,
@@ -209,52 +208,22 @@ export default memo(function GithubContributions({
       }
     };
 
-    let lastPollAt = 0;
-    const fetchContributions = async (force = false) => {
-      try {
-        const data = await fetchGithubContributionsData(
-          force ? { force: true } : undefined,
-        );
-        applyData(data);
-      } catch {
-        setError("Failed to load contributions");
-      } finally {
+    const hasInitial = Boolean(initialCalendar);
+
+    return subscribeGithubContributions((snap) => {
+      if (snap.data) {
+        applyData(snap.data);
         setLoading(false);
+        return;
       }
-    };
-
-    const poll = (minGapMs: number, force: boolean) => {
-      const now = Date.now();
-      if (minGapMs > 0 && now - lastPollAt < minGapMs) return;
-      lastPollAt = now;
-      void fetchContributions(force);
-    };
-
-    const cached = readGithubContributionsCache();
-    if (cached) {
-      applyData(cached);
-      setLoading(false);
-    }
-
-    const initTimer = window.setTimeout(() => {
-      poll(0, false);
-    }, 300);
-
-    const interval = window.setInterval(() => {
-      if (document.visibilityState === "visible") poll(0, true);
-    }, 5 * 60 * 1000);
-
-    const onVis = () => {
-      if (document.visibilityState === "visible") poll(60_000, true);
-    };
-    document.addEventListener("visibilitychange", onVis);
-
-    return () => {
-      window.clearTimeout(initTimer);
-      window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", onVis);
-    };
-  }, [initialData]);
+      if (snap.error && !hasInitial) {
+        setError("Failed to load contributions");
+        setLoading(false);
+      } else if (!hasInitial) {
+        setLoading(snap.loading);
+      }
+    });
+  }, [initialCalendar, initialData]);
 
   const summaryLabel =
     totalContributions > 0
@@ -262,17 +231,13 @@ export default memo(function GithubContributions({
       : "GitHub contribution graph";
 
   return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        data-bento-shell=""
-        className={cn(
-          "relative p-5 rounded-[var(--radius-card)] border overflow-hidden h-full w-full flex flex-col justify-between",
-          "bg-[var(--surface-card)] border-[var(--border-subtle)] text-[var(--text-primary)]",
-        )}
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] } }}
-        viewport={{ once: true, amount: 0.2, margin: "80px 0px -10% 0px" }}
-      >
+    <div
+      data-bento-shell=""
+      className={cn(
+        "bento-reveal relative p-5 rounded-[var(--radius-card)] border overflow-hidden h-full w-full flex flex-col justify-between",
+        "bg-[var(--surface-card)] border-[var(--border-subtle)] text-[var(--text-primary)]",
+      )}
+    >
         {loading ? (
           <HeatmapSkeleton />
         ) : error ? (
@@ -336,7 +301,6 @@ export default memo(function GithubContributions({
             />,
             document.body,
           )}
-      </m.div>
-    </LazyMotion>
+    </div>
   );
 });

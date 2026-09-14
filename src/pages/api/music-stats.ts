@@ -5,8 +5,10 @@ import {
   SPOTIFY_CLIENT_ID,
   SPOTIFY_CLIENT_SECRET,
 } from "astro:env/server";
+import { jsonResponse, keepAlive } from "../../lib/apiResponse";
 import {
   dailyBuckets,
+  effectiveFetchedAt,
   fetchWithRetry,
   getTimeline,
   istDayStartSec,
@@ -56,26 +58,26 @@ const LOOKUP_CACHE_MS = 6 * 60 * 60 * 1000;
 const TOP_ARTIST_COUNT = 5;
 const TOP_TAGS_PER_ARTIST = 3;
 
-let cache: { data: MusicStatsResult; timestamp: number } | null = null;
+let cache: {
+  data: MusicStatsResult;
+  timestamp: number;
+  fetchedAt: number;
+} | null = null;
 let userStatsCache: { value: number[]; timestamp: number } | null = null;
 const tagCache = new Map<string, { tags: GenreEntry[]; timestamp: number }>();
 const imageCache = new Map<string, { url: string; timestamp: number }>();
 let spotifyToken: { value: string; expiresAt: number } | null = null;
 
-const CACHE_HEADERS = {
-  "Content-Type": "application/json",
-  "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=86400",
-} as const;
-
-const jsonResponse = (
+function respond(
   data: unknown,
-  status: number,
   cacheStatus: string,
-): Response =>
-  new Response(JSON.stringify(data), {
-    status,
-    headers: { ...CACHE_HEADERS, "X-Cache-Status": cacheStatus },
-  });
+  fetchedAt: number,
+  status = 200,
+) {
+  const cdn =
+    cacheStatus === "STALE" || cacheStatus === "FALLBACK" ? "stale" : "music";
+  return jsonResponse(data, { status, cacheStatus, fetchedAt, cdn });
+}
 
 async function fetchUserStats(
   username: string,
@@ -257,10 +259,11 @@ let pendingRequest: Promise<MusicStatsResult> | null = null;
 
 export const GET: APIRoute = async () => {
   if (!LASTFM_API_KEY || !LASTFM_USERNAME) {
-    return jsonResponse(
+    return respond(
       { error: "Last.fm credentials not configured" },
-      500,
       "ERROR",
+      0,
+      500,
     );
   }
 
@@ -269,13 +272,13 @@ export const GET: APIRoute = async () => {
   const cacheAge = cache ? now - cache.timestamp : Number.POSITIVE_INFINITY;
 
   if (cache && cacheAge < SERVER_CACHE_MS) {
-    return jsonResponse(cache.data, 200, "HIT");
+    return respond(cache.data, "HIT", cache.fetchedAt);
   }
 
   if (pendingRequest) {
     try {
       const data = await pendingRequest;
-      return jsonResponse(data, 200, "DEDUPED");
+      return respond(data, "DEDUPED", cache?.fetchedAt ?? Date.now());
     } catch {}
   }
 
@@ -293,12 +296,17 @@ export const GET: APIRoute = async () => {
       SPOTIFY_CLIENT_SECRET ?? "",
       userStatsPromise,
     );
-    cache = { data, timestamp: Date.now() };
+    cache = {
+      data,
+      timestamp: Date.now(),
+      fetchedAt: effectiveFetchedAt(timeline),
+    };
     return data;
   };
 
   const run = execute();
   pendingRequest = run;
+  keepAlive(run);
   void run.catch(() => {}).finally(() => {
     if (pendingRequest === run) pendingRequest = null;
   });
@@ -308,9 +316,11 @@ export const GET: APIRoute = async () => {
       setTimeout(() => reject(new Error("Timeline fetch timeout")), 3500),
     );
     const data = await Promise.race([run, timeoutPromise]);
-    return jsonResponse(data, 200, "FRESH");
+    return respond(data, "FRESH", cache?.fetchedAt ?? Date.now());
   } catch (error) {
-    if (cache) return jsonResponse(cache.data, 200, "STALE");
+    if (cache && cache.timestamp > 0) {
+      return respond(cache.data, "STALE", cache.fetchedAt);
+    }
 
     const fallback = peekTimeline();
     if (fallback) {
@@ -326,18 +336,22 @@ export const GET: APIRoute = async () => {
           SPOTIFY_CLIENT_SECRET ?? "",
           userStatsPromise,
         );
-        cache = { data, timestamp: Date.now() };
-        return jsonResponse(data, 200, "STALE");
+        const fetchedAt = effectiveFetchedAt(fallback);
+        if (!cache || cache.timestamp === 0) {
+          cache = { data, timestamp: 0, fetchedAt };
+        }
+        return respond(data, "STALE", fetchedAt);
       } catch {}
     }
 
-    return jsonResponse(
+    return respond(
       {
         error: "Failed to fetch music stats",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      500,
       "ERROR",
+      0,
+      500,
     );
   }
 };
