@@ -363,7 +363,7 @@ const ProjectsBentoGrid: React.FC = () => {
               <div className="min-w-0 space-y-2">
                   <h3 className="font-bold">Open Source</h3>
                   <p className="type-body-sm text-[var(--text-secondary)]">
-                    Merged contributions to organization-owned repos.
+                    Merged PRs and issues on organization-owned repos.
                   </p>
                   {!contributions && !ossError ? (
                     <Placeholder className="h-[1lh] w-[22ch] max-w-full type-body-sm rounded-md" />
@@ -483,7 +483,7 @@ const ProjectsBentoGrid: React.FC = () => {
               <div className="pr-24">
                 <h2 id="project-modal-title">Open Source Contributions</h2>
                 <p className="type-body-sm text-[var(--text-tertiary)] mt-1">
-                  Merged pull requests and closed issues on organization-owned repos.
+                  Merged pull requests and issues on organization-owned repos.
                 </p>
               </div>
               <div className="flex flex-col gap-3">

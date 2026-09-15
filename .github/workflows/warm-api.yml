@@ -2,16 +2,30 @@ name: Warm API
 
 on:
   schedule:
+    # GitHub often delays public-repo cron; this is a best-effort warmer.
+    # Client polling + origin TTL are what surface new OSS items to visitors.
     - cron: "*/15 * * * *"
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: warm-api
+  cancel-in-progress: true
 
 jobs:
   warm:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Ping live API routes
         run: |
-          set +e
+          set -euo pipefail
+          failed=0
           for path in \
             api/music-stats \
             api/music-radial-heatmap \
@@ -19,8 +33,29 @@ jobs:
             api/oss-contributions \
             api/llm-from-scratch-stars
           do
-            curl -fsS -o /dev/null -w "%{http_code} %{url_effective} %{time_total}\\n" \
-              --max-time 30 \
-              "https://nikshaan.dev/${path}" \
-              || true
+            body="/tmp/$(basename "${path}").json"
+            headers="/tmp/$(basename "${path}").hdr"
+            code="$(
+              curl -sS -D "${headers}" -o "${body}" -w "%{http_code}" \
+                --max-time 30 \
+                "https://nikshaan.dev/${path}" || echo "000"
+            )"
+            cache="$(tr -d '\r' < "${headers}" | awk 'tolower($1)=="x-cache-status:" {print $2}')"
+            echo "${code} https://nikshaan.dev/${path} cache=${cache:-?}"
+            if [ "${code}" != "200" ]; then
+              echo "::error::${path} returned HTTP ${code}"
+              failed=1
+            fi
           done
+          if [ "${failed}" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Verify OSS PRs and issues independently
+        env:
+          GH_USERNAME: Nikshaan
+          OSS_API_URL: https://nikshaan.dev/api/oss-contributions
+          # Classic PAT from repo secrets — not GITHUB_TOKEN, which is repo-scoped
+          # and cannot independently list other organizations' PRs/issues.
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: node scripts/verify-oss-contributions.mjs

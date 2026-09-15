@@ -108,15 +108,13 @@ function weekFromSvgPoint(x: number, y: number): number | null {
   const dist = Math.hypot(dx, dy);
   const { ro } = ringOuterInner(0);
   const rim = innermostInnerR();
-  if (dist < rim * 0.98 || dist > ro * 1.015) return null;
+  if (dist < rim * 0.96 || dist > ro * 1.04) return null;
   let a = Math.atan2(dy, dx);
   let t = a + Math.PI / 2;
   if (t < 0) t += 2 * Math.PI;
   if (t >= 2 * Math.PI - 1e-10) t -= 2 * Math.PI;
   const wi = Math.floor(t / STRIDE_RAD);
   if (wi < 0 || wi >= N_WEEKS) return null;
-  const within = t - wi * STRIDE_RAD;
-  if (within > SWEEP_RAD) return null;
   return wi;
 }
 
@@ -799,7 +797,7 @@ export default memo(function RadialArtistHeatmap() {
   const showSkeleton = !chartReady && !showError && !showEmpty;
 
   const chartInnerClass =
-    "relative aspect-square h-full max-h-full w-auto max-w-full min-h-0 overflow-hidden [container-type:size] [contain:paint]";
+    "relative mx-auto aspect-square w-[min(100%,24rem,72svh)] min-h-0 overflow-hidden [container-type:size] [contain:paint] lg:h-full lg:w-auto lg:max-h-full lg:max-w-full";
   const legendSlotClass =
     "flex flex-wrap content-start justify-center gap-x-4 gap-y-2 px-1";
 
@@ -812,7 +810,7 @@ export default memo(function RadialArtistHeatmap() {
         Yearly scrobbles (week-wise): weekly listening intensity for your
         leading artists over the past year
       </h2>
-      <div className="flex w-full flex-1 min-h-[180px] min-w-0 items-center justify-center overflow-hidden p-3 lg:min-h-[250px]">
+      <div className="flex w-full flex-1 min-h-0 min-w-0 items-center justify-center overflow-hidden px-0 py-1 sm:p-2 lg:min-h-[250px] lg:p-3">
         <div ref={chartHostRef} className={chartInnerClass}>
           {showError ? (
             <div className="flex h-full w-full items-center justify-center px-3 text-center type-body-sm text-[var(--danger)]">

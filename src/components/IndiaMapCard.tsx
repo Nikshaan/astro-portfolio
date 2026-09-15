@@ -565,7 +565,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
   return (
     <>
       <div
-        className={cn("h-full w-full bento-reveal", className)}
+        className={cn("h-full w-full", className)}
         suppressHydrationWarning
       >
         <motion.div

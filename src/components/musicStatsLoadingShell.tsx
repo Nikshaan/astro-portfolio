@@ -114,8 +114,8 @@ export function YearlyScrobblesLoadingShell() {
       className="flex h-full min-h-0 w-full flex-col gap-3 pb-1"
       aria-hidden
     >
-      <div className="flex w-full flex-1 min-h-[180px] items-center justify-center overflow-hidden p-3 lg:min-h-[250px]">
-        <div className="relative aspect-square h-full max-h-full w-auto max-w-full min-h-0 overflow-hidden [contain:paint]">
+      <div className="flex w-full flex-1 min-h-0 items-center justify-center overflow-hidden px-0 py-1 sm:p-2 lg:min-h-[250px] lg:p-3">
+        <div className="relative mx-auto aspect-square w-[min(100%,24rem,72svh)] min-h-0 overflow-hidden [contain:paint] lg:h-full lg:w-auto lg:max-h-full lg:max-w-full">
           <YearlyScrobblesChartSkeletonInner />
         </div>
       </div>

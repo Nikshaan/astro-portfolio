@@ -116,7 +116,10 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
 
   useEffect(() => {
     if (isSlowConnection()) return;
-    const prefetch = () => void import("./RadialArtistHeatmap");
+    const prefetch = () => {
+      void import("./RadialArtistHeatmap");
+      void import("./IndiaMapCard");
+    };
     if (typeof requestIdleCallback === "function") {
       const id = requestIdleCallback(prefetch, { timeout: 2800 });
       return () => cancelIdleCallback(id);
@@ -351,18 +354,13 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
           </div>
         </BentoCard>
 
-        <Suspense
-          fallback={
-            <IndiaMapPlaceholder className={SPANS.quarter} framed />
-          }
-        >
-          <ErrorBoundary>
-            <IndiaMapCard
-              className={SPANS.quarter}
-              visitedPlaces={VISITED_PLACES}
-            />
-          </ErrorBoundary>
-        </Suspense>
+        <div className={cn("h-full w-full", SPANS.quarter)}>
+          <Suspense fallback={<IndiaMapPlaceholder framed />}>
+            <ErrorBoundary>
+              <IndiaMapCard visitedPlaces={VISITED_PLACES} />
+            </ErrorBoundary>
+          </Suspense>
+        </div>
 
         {images.slice(0, visibleCount).map((image: Image, i: number) => (
           <div key={image.id} className={cn("h-full w-full", SPANS.quarter)}>
