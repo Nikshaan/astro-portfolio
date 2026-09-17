@@ -422,6 +422,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     if (!layoutLock) {
       document.body.style.overflow = "";
       document.body.style.paddingRight = "";
+      document.documentElement.style.removeProperty("--scrollbar-width");
       return;
     }
 
@@ -445,6 +446,9 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     return () => {
       cancelAnimationFrame(scrollbarRaf);
       window.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+      document.documentElement.style.removeProperty("--scrollbar-width");
     };
   }, [layoutLock, handleClose]);
 

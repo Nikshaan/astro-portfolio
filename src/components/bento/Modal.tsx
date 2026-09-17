@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { m, motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
@@ -32,6 +32,32 @@ export default function BentoModal({
 }: BentoModalProps) {
   const trapRef = useFocusTrap(open);
 
+  // Retain last active values while exiting so shared layoutId and content do not break
+  const lastLayoutIdRef = useRef(layoutId);
+  const lastChildrenRef = useRef(children);
+  const lastHeaderActionsRef = useRef(headerActions);
+  const lastTitleIdRef = useRef(titleId);
+
+  if (open) {
+    if (layoutId) lastLayoutIdRef.current = layoutId;
+    if (children) lastChildrenRef.current = children;
+    if (headerActions) lastHeaderActionsRef.current = headerActions;
+    if (titleId) lastTitleIdRef.current = titleId;
+  }
+
+  const activeLayoutId = layoutId || lastLayoutIdRef.current;
+  const activeChildren = children ?? lastChildrenRef.current;
+  const activeHeaderActions = headerActions ?? lastHeaderActionsRef.current;
+  const activeTitleId = titleId || lastTitleIdRef.current;
+
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+      document.documentElement.style.removeProperty("--scrollbar-width");
+    };
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -46,13 +72,17 @@ export default function BentoModal({
     document.body.style.paddingRight = "var(--scrollbar-width, 0px)";
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
     };
   }, [open, onClose]);
 
+  const handleExitComplete = useCallback(() => {
+    document.body.style.overflow = "";
+    document.body.style.paddingRight = "";
+    document.documentElement.style.removeProperty("--scrollbar-width");
+  }, []);
+
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={handleExitComplete}>
       {open && (
         <m.div
           key="modal-overlay"
@@ -62,25 +92,26 @@ export default function BentoModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
             onClick={onClose}
             className="absolute inset-0 bg-[var(--surface-overlay)] backdrop-blur-md"
           />
 
           <motion.div
             ref={trapRef}
-            layoutId={layoutId}
+            layoutId={activeLayoutId}
             data-bento-shell=""
             data-bento-frozen=""
             role="dialog"
             aria-modal="true"
-            aria-labelledby={titleId}
+            aria-labelledby={activeTitleId}
             className={cn(
               "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-[var(--radius-card)] border shadow-2xl flex flex-col",
               "bg-[var(--surface-card)] border-[var(--border-strong)] text-[var(--text-primary)]",
             )}
           >
             <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-              {headerActions}
+              {activeHeaderActions}
               <button
                 data-autofocus
                 onClick={(e) => {
@@ -98,7 +129,7 @@ export default function BentoModal({
               ref={contentRef}
               className="flex-1 overflow-y-auto p-8 custom-scrollbar min-h-0"
             >
-              {children}
+              {activeChildren}
             </div>
           </motion.div>
         </m.div>
