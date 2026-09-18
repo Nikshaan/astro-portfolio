@@ -12,7 +12,7 @@ const optimizedBee = await getImage({
 });
 ---
 
-<Navbar client:idle avatarSrc={optimizedBee.src} />
+<Navbar client:load avatarSrc={optimizedBee.src} />
 
 <style is:global>
   .nav-shell {
