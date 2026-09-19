@@ -20,7 +20,7 @@ jobs:
       GH_USERNAME: ${{ secrets.GH_USERNAME }}
     steps:
       - name: Checkout your repository using git
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Install, build, and upload your site output
         uses: withastro/action@v4
 

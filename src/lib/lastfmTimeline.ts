@@ -38,6 +38,7 @@ const MAX_RATE_LIMIT_WAIT_MS = 15_000;
 export const SECONDS_PER_DAY = 86_400;
 const SECONDS_PER_WEEK = 604_800;
 export const ROLLING_DAYS = 365;
+export const OVERLAP_SEC = 2 * SECONDS_PER_DAY;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -230,24 +231,30 @@ async function refresh(
   anchorSec: number,
   base: TimelineState,
 ): Promise<TimelineState> {
-  const cutoffSec = anchorSec - ROLLING_DAYS * SECONDS_PER_DAY;
-  const needsFullFetch = base.coveredToSec <= 0 || base.coveredToSec < cutoffSec;
-  const fromSec = needsFullFetch ? cutoffSec : base.coveredToSec + 1;
+  const nowSec = Math.floor(Date.now() / 1000);
+  const upToSec = Math.min(anchorSec, nowSec);
+  const cutoffSec = upToSec - ROLLING_DAYS * SECONDS_PER_DAY;
+  const needsFullFetch =
+    base.coveredToSec <= 0 || base.coveredToSec < cutoffSec;
+  const fromSec = needsFullFetch
+    ? cutoffSec
+    : Math.max(cutoffSec, base.coveredToSec - OVERLAP_SEC);
 
-  if (fromSec > anchorSec) {
+  if (fromSec > upToSec) {
     return {
       scrobbles: pruneOld(base.scrobbles, cutoffSec),
       coveredToSec: base.coveredToSec,
-      fetchedAt: Date.now(),
+      fetchedAt: base.fetchedAt,
     };
   }
 
-  const delta = await fetchRangeOrThrow(username, apiKey, fromSec, anchorSec);
-  const merged = needsFullFetch
-    ? delta
-    : pruneOld(base.scrobbles, cutoffSec).concat(delta);
+  const delta = await fetchRangeOrThrow(username, apiKey, fromSec, upToSec);
+  const keptBase = needsFullFetch
+    ? []
+    : base.scrobbles.filter((s) => s.ts >= cutoffSec && s.ts < fromSec);
+  const merged = keptBase.concat(delta);
 
-  return { scrobbles: merged, coveredToSec: anchorSec, fetchedAt: Date.now() };
+  return { scrobbles: merged, coveredToSec: upToSec, fetchedAt: Date.now() };
 }
 
 const TIMELINE_TTL_MS = 5 * 60 * 1000;
@@ -325,10 +332,6 @@ function toIstDateString(ms: number): string {
 
 export function istDayStartSec(nowMs: number): number {
   return Math.floor(istMidnightUtcMs(istParts(nowMs)) / 1000);
-}
-
-export function istDayEndSec(nowMs: number): number {
-  return istDayStartSec(nowMs) + SECONDS_PER_DAY - 1;
 }
 
 export interface DailyScrobble {

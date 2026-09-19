@@ -5,7 +5,6 @@ import {
   calendarWeeks,
   effectiveFetchedAt,
   getTimeline,
-  istDayEndSec,
   peekTimeline,
   topArtists,
   weeklyPlayMatrix,
@@ -27,7 +26,7 @@ export interface RadialHeatmapResult {
   artists: RadialHeatmapArtist[];
 }
 
-const SERVER_CACHE_MS = 15 * 60 * 1000;
+const SERVER_CACHE_MS = 5 * 60 * 1000;
 const TARGET_WEEKS = 52;
 const TOP_N = 10;
 
@@ -44,7 +43,7 @@ function respond(
   status = 200,
 ) {
   const cdn =
-    cacheStatus === "STALE" || cacheStatus === "FALLBACK" ? "stale" : "default";
+    cacheStatus === "STALE" || cacheStatus === "FALLBACK" ? "stale" : "music";
   return jsonResponse(data, { status, cacheStatus, fetchedAt, cdn });
 }
 
@@ -73,7 +72,7 @@ export const GET: APIRoute = async () => {
   }
 
   const now = Date.now();
-  const anchorSec = istDayEndSec(now);
+  const anchorSec = Math.floor(now / 1000);
   const cacheAge = cache ? now - cache.timestamp : Number.POSITIVE_INFINITY;
 
   if (cache && cacheAge < SERVER_CACHE_MS) {

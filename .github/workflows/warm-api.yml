@@ -2,9 +2,11 @@ name: Warm API
 
 on:
   schedule:
-    # GitHub often delays public-repo cron; this is a best-effort warmer.
-    # Client polling + origin TTL are what surface new OSS items to visitors.
-    - cron: "*/15 * * * *"
+    # Best-effort only: GitHub throttles scheduled runs (observed ~3-4 h apart),
+    # worst on the :00/:15/:30/:45 slots, so use off-peak minutes.
+    # Freshness does NOT depend on this: the API TTLs (5 min) + client polling
+    # keep data current; this job warms the CDN and runs the sync verifiers.
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -20,7 +22,7 @@ jobs:
     timeout-minutes: 8
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Ping live API routes
         run: |
@@ -59,3 +61,13 @@ jobs:
           # and cannot independently list other organizations' PRs/issues.
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: node scripts/verify-oss-contributions.mjs
+
+      - name: Verify music sync independently
+        # Run even if the OSS verification above failed; checks are independent.
+        if: ${{ !cancelled() }}
+        env:
+          MUSIC_API_URL: https://nikshaan.dev/api/music-stats
+          RADIAL_API_URL: https://nikshaan.dev/api/music-radial-heatmap
+          LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+          LASTFM_USERNAME: ${{ secrets.LASTFM_USERNAME }}
+        run: node scripts/verify-music-sync.mjs
