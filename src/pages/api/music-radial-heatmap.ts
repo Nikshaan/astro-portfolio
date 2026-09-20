@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { LASTFM_API_KEY, LASTFM_USERNAME } from "astro:env/server";
 import { jsonResponse, keepAlive } from "../../lib/apiResponse";
+import { ROUTE_CACHE_MS } from "../../lib/freshness";
 import {
   calendarWeeks,
   effectiveFetchedAt,
@@ -26,7 +27,7 @@ export interface RadialHeatmapResult {
   artists: RadialHeatmapArtist[];
 }
 
-const SERVER_CACHE_MS = 5 * 60 * 1000;
+const SERVER_CACHE_MS = ROUTE_CACHE_MS;
 const TARGET_WEEKS = 52;
 const TOP_N = 10;
 

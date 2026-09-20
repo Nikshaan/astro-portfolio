@@ -6,6 +6,7 @@ import {
   SPOTIFY_CLIENT_SECRET,
 } from "astro:env/server";
 import { jsonResponse, keepAlive } from "../../lib/apiResponse";
+import { ROUTE_CACHE_MS, USER_STATS_TTL_MS } from "../../lib/freshness";
 import {
   dailyBuckets,
   effectiveFetchedAt,
@@ -53,7 +54,7 @@ interface MusicStatsResult {
   genreData: GenreEntry[];
 }
 
-const SERVER_CACHE_MS = 5 * 60 * 1000;
+const SERVER_CACHE_MS = ROUTE_CACHE_MS;
 const LOOKUP_CACHE_MS = 6 * 60 * 60 * 1000;
 const TOP_ARTIST_COUNT = 5;
 const TOP_TAGS_PER_ARTIST = 3;
@@ -84,7 +85,7 @@ async function fetchUserStats(
   apiKey: string,
 ): Promise<number[]> {
   const now = Date.now();
-  if (userStatsCache && now - userStatsCache.timestamp < SERVER_CACHE_MS) {
+  if (userStatsCache && now - userStatsCache.timestamp < USER_STATS_TTL_MS) {
     return userStatsCache.value;
   }
   try {

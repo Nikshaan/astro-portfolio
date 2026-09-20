@@ -15,6 +15,7 @@ const MusicGenreStreakBar = lazy(() => import("./MusicGenreStreakBar"));
 const IndiaMapCard = lazy(() => import("./IndiaMapCard"));
 import ErrorBoundary from "./ErrorBoundary";
 import InfoTooltip from "./InfoTooltip";
+import { MusicStatsFreshness } from "./FreshnessLabel";
 import {
   MusicStatsLoadingShell,
   YearlyScrobblesLoadingShell,
@@ -317,7 +318,10 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
       <BentoGrid id="fun-grid" containerRef={containerRef}>
         <BentoCard span="half" disableHoverMotion padded={false}>
           <div className="flex h-full min-h-0 w-full flex-col">
-            <h3 className="mb-3 shrink-0 p-5 pb-0 md:p-6 md:pb-0">Music Stats</h3>
+            <div className="mb-3 flex items-start justify-between shrink-0 p-5 pb-0 md:p-6 md:pb-0">
+              <h3>Music Stats</h3>
+              <MusicStatsFreshness />
+            </div>
             <div className={FUN_MUSIC_YEARLY_PAIR_BODY}>
               <Suspense fallback={<MusicStatsLoadingShell />}>
                 <ErrorBoundary>

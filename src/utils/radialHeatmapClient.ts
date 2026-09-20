@@ -1,3 +1,8 @@
+import {
+  CLIENT_FRESH_MS,
+  CLIENT_POLL_MS,
+  CLIENT_STALE_MS,
+} from "../lib/freshness";
 import { createLiveResource } from "./liveResource";
 
 export interface RadialHeatmapWeek {
@@ -15,10 +20,11 @@ export interface RadialHeatmapPayload {
   artists: RadialHeatmapArtistRow[];
 }
 
+
 const PERSISTENT_CACHE_KEY = "nikshaan_radial_heatmap_v1";
 const PERSISTENT_TTL_MS = 24 * 60 * 60 * 1000;
-const FRESH_MS = 10 * 60 * 1000;
-export const RADIAL_POLL_MS = 5 * 60 * 1000;
+const FRESH_MS = CLIENT_FRESH_MS;
+export const RADIAL_POLL_MS = CLIENT_POLL_MS;
 
 function validateRadial(data: unknown): RadialHeatmapPayload {
   if (typeof data !== "object" || data === null) {
@@ -40,6 +46,7 @@ const resource = createLiveResource<RadialHeatmapPayload>({
   url: "api/music-radial-heatmap",
   validate: validateRadial,
   freshMs: FRESH_MS,
+  staleAfterMs: CLIENT_STALE_MS,
   pollMs: RADIAL_POLL_MS,
   maxAgeMs: PERSISTENT_TTL_MS,
 });

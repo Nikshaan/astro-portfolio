@@ -4,14 +4,22 @@ export interface LiveSnapshot<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
+  fetchedAt: number | null;
 }
 
 export interface LiveResourceOptions<T> {
   key: string;
   url: string;
   validate: (data: unknown) => T;
+  /** Skip a load while data is younger than this. Keep it below `pollMs`. */
   freshMs: number;
   pollMs: number;
+  /**
+   * Data older than this after a fetch is treated as a stale CDN/cache copy and
+   * re-requested (bypassing the CDN). Must exceed the server's own max data age
+   * or it fires on every load. Defaults to `freshMs`.
+   */
+  staleAfterMs?: number;
   maxAgeMs?: number;
   onFetch?: () => void;
 }
@@ -29,11 +37,27 @@ function buildApiUrl(path: string): string {
   return `${baseUrl}${apiPath}`;
 }
 
-function parseFetchedAt(response: Response): number {
+/**
+ * When the server data was produced, expressed on the *client* clock.
+ *
+ * X-Fetched-At is a server timestamp, so comparing it to Date.now() breaks when
+ * the visitor's clock is off (skipped polls / endless forced refetches). Instead
+ * take the server-relative age (server "now" minus X-Fetched-At, both on the
+ * server clock) and subtract it from the client's receive time. Server "now" is
+ * `Date + Age`: on a CDN hit `Date` is the ORIGINAL generation time, not the
+ * delivery time.
+ */
+function parseFetchedAt(response: Response, receivedAt: number): number {
   const raw = response.headers.get("X-Fetched-At");
-  if (raw == null || raw === "") return Date.now();
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : Date.now();
+  const fetched = raw == null || raw === "" ? NaN : Number(raw);
+  if (!Number.isFinite(fetched) || fetched <= 0) return receivedAt;
+
+  const dateMs = Date.parse(response.headers.get("Date") ?? "");
+  if (!Number.isFinite(dateMs)) return Math.min(fetched, receivedAt);
+
+  const ageSec = Number(response.headers.get("Age"));
+  const serverNow = dateMs + (Number.isFinite(ageSec) ? ageSec * 1000 : 0);
+  return receivedAt - Math.max(0, serverNow - fetched);
 }
 
 export function createLiveResource<T>(options: LiveResourceOptions<T>) {
@@ -46,12 +70,14 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
     maxAgeMs = DEFAULT_MAX_AGE_MS,
     onFetch,
   } = options;
+  const staleAfterMs = options.staleAfterMs ?? freshMs;
   const href = buildApiUrl(url);
 
   const SERVER_SNAPSHOT: LiveSnapshot<T> = Object.freeze({
     data: null,
     loading: true,
     error: null,
+    fetchedAt: null,
   });
   let data: T | null = null;
   let fetchedAt = 0;
@@ -66,7 +92,7 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
     if (!disk) return;
     data = disk.data;
     fetchedAt = disk.timestamp;
-    snapshot = { data, loading: false, error: null };
+    snapshot = { data, loading: false, error: null, fetchedAt };
   }
 
   const listeners = new Set<Listener<T>>();
@@ -93,7 +119,7 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
   }
 
   function noteFetchedAt(at: number) {
-    if (Date.now() - at < freshMs) {
+    if (Date.now() - at < staleAfterMs) {
       staleRetryIndex = 0;
       clearStaleRetry();
       return;
@@ -109,7 +135,7 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
     staleRetryIndex += 1;
     staleRetryTimer = window.setTimeout(() => {
       staleRetryTimer = null;
-      void load({ force: true, cache: "no-cache" }).catch(() => {});
+      void load({ force: true, cache: "no-cache", bypassCdn: true }).catch(() => {});
     }, delay);
   }
 
@@ -121,6 +147,7 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
   async function load(opts?: {
     force?: boolean;
     cache?: RequestCache;
+    bypassCdn?: boolean;
   }): Promise<T> {
     const force = opts?.force === true;
     const now = Date.now();
@@ -131,7 +158,10 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
     onFetch?.();
 
     inflight = (async () => {
-      const response = await fetch(href, {
+      const fetchUrl = opts?.bypassCdn
+        ? `${href}${href.includes("?") ? "&" : "?"}_=${Date.now()}`
+        : href;
+      const response = await fetch(fetchUrl, {
         headers: { Accept: "application/json" },
         cache: opts?.cache,
       });
@@ -139,12 +169,12 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
         throw new Error(`HTTP ${response.status}`);
       }
       const parsed = validate(await response.json());
-      const at = parseFetchedAt(response);
+      const at = parseFetchedAt(response, Date.now());
       data = parsed;
       fetchedAt = at;
       setPersistentCache(key, parsed, at);
       noteFetchedAt(at);
-      setSnapshot({ data: parsed, loading: false, error: null });
+      setSnapshot({ data: parsed, loading: false, error: null, fetchedAt: at });
       return parsed;
     })();
 
@@ -169,7 +199,7 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
         setSnapshot({ data, loading: false, error: null });
         return data;
       }
-      setSnapshot({ data: null, loading: false, error: message });
+      setSnapshot({ data: null, loading: false, error: message, fetchedAt: null });
       throw err;
     }
   }

@@ -1,4 +1,5 @@
 import snapshotData from "../generated/lastfmSnapshot.json";
+import { TIMELINE_TTL_MS } from "./freshness";
 
 export interface Scrobble {
   ts: number;
@@ -256,8 +257,6 @@ async function refresh(
 
   return { scrobbles: merged, coveredToSec: upToSec, fetchedAt: Date.now() };
 }
-
-const TIMELINE_TTL_MS = 5 * 60 * 1000;
 
 let state: TimelineState | null = null;
 let pending: Promise<TimelineState> | null = null;

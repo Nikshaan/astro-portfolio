@@ -4,7 +4,7 @@ on:
   schedule:
     # Best-effort only: GitHub throttles scheduled runs (observed ~3-4 h apart),
     # worst on the :00/:15/:30/:45 slots, so use off-peak minutes.
-    # Freshness does NOT depend on this: the API TTLs (5 min) + client polling
+    # Freshness does NOT depend on this: the API TTLs (2 min) + client polling
     # keep data current; this job warms the CDN and runs the sync verifiers.
     - cron: "7,22,37,52 * * * *"
   workflow_dispatch:

@@ -1,4 +1,9 @@
 import { scheduleRadialHeatmapWarmup } from "../components/musicRadialHeatmapWarmup";
+import {
+  CLIENT_FRESH_MS,
+  CLIENT_POLL_MS,
+  CLIENT_STALE_MS,
+} from "../lib/freshness";
 import { createLiveResource, type LiveSnapshot } from "./liveResource";
 
 export interface GenreEntry {
@@ -30,8 +35,8 @@ export type MusicStatsSnapshot = LiveSnapshot<MusicStatsData>;
 
 const PERSISTENT_CACHE_KEY = "nikshaan_music_stats_v1";
 const PERSISTENT_TTL_MS = 24 * 60 * 60 * 1000;
-const FRESH_MS = 2 * 60 * 1000;
-const POLL_MS = 45_000;
+const FRESH_MS = CLIENT_FRESH_MS;
+const POLL_MS = CLIENT_POLL_MS;
 
 function validateMusicStats(data: unknown): MusicStatsData {
   if (typeof data !== "object" || data === null) {
@@ -56,6 +61,7 @@ const resource = createLiveResource<MusicStatsData>({
   url: "api/music-stats",
   validate: validateMusicStats,
   freshMs: FRESH_MS,
+  staleAfterMs: CLIENT_STALE_MS,
   pollMs: POLL_MS,
   maxAgeMs: PERSISTENT_TTL_MS,
   onFetch: scheduleRadialHeatmapWarmup,

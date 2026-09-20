@@ -8,7 +8,7 @@
  * path, so it keeps moving even when the shared scrobble timeline is frozen.
  *
  * Scrobbles newer than GRACE_SEC are ignored because the API legitimately lags
- * by route cache (5 min) + timeline TTL (5 min) + CDN s-maxage/swr.
+ * by route cache (2 min) + timeline TTL (2 min, aligned with it) + CDN s-maxage/swr (~1 min) + Last.fm ingestion.
  * Only the API *under*-counting fails the check (deleted scrobbles can make it
  * over-count).
  */
@@ -26,7 +26,7 @@ if (!USERNAME || !API_KEY) {
   process.exit(1);
 }
 
-const GRACE_SEC = Number(process.env.SYNC_GRACE_SEC || 25 * 60);
+const GRACE_SEC = Number(process.env.SYNC_GRACE_SEC || 8 * 60);
 const CHECK_DAYS = 3; // matches OVERLAP_SEC (2 days) + today in lastfmTimeline.ts
 const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_PAGES = 10;

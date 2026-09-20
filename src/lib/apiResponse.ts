@@ -3,7 +3,7 @@ import { waitUntil } from "@vercel/functions";
 export type CdnProfile = "music" | "default" | "stale";
 
 const CDN: Record<CdnProfile, { sMaxAge: number; swr: number }> = {
-  music: { sMaxAge: 60, swr: 600 },
+  music: { sMaxAge: 30, swr: 30 },
   default: { sMaxAge: 300, swr: 1800 },
   stale: { sMaxAge: 10, swr: 30 },
 };
