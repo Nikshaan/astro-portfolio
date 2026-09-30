@@ -11,7 +11,7 @@ function cn(...inputs: ClassValue[]) {
 
 const HOVER_TRANSITION = { duration: 0.22, ease: [0.25, 0.1, 0.25, 1] as const };
 const HOVER_LIFT = { y: -2 };
-const TAP_LIFT = { y: 0 };
+const TAP_LIFT = { scale: 0.988, y: 0 };
 
 export interface BentoCardProps {
   span: SpanName;
@@ -31,6 +31,7 @@ export interface BentoCardProps {
   rel?: string;
   download?: boolean | string;
   "aria-label"?: string;
+  onClick?: (e?: any) => void;
 }
 
 const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
@@ -52,6 +53,7 @@ const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
       target,
       rel,
       download,
+      onClick,
       ...aria
     },
     ref,
@@ -71,15 +73,15 @@ const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
 
     const Comp: any = href ? motion.a : motion.div;
     const interactiveProps = href
-      ? { href, target, rel, download }
+      ? { href, target, rel, download, onClick, "data-astro-prefetch": "hover" }
       : expandable
         ? {
             role: "button" as const,
             tabIndex: 0,
-            onClick: onActivate,
+            onClick: onActivate || onClick,
             onKeyDown: handleKeyDown,
           }
-        : {};
+        : { onClick };
 
     const body = (
       <Comp

@@ -2,28 +2,15 @@
 
 @custom-variant dark (&:where(:root:not([data-theme="light"]) &));
 
-@import "@fontsource/ibm-plex-serif/latin-400.css";
-@import "@fontsource/ibm-plex-serif/latin-600.css";
-@import "@fontsource/ibm-plex-serif/latin-700.css";
-@import "@fontsource/ia-writer-quattro/latin-400.css";
-@import "@fontsource/ia-writer-quattro/latin-700.css";
+@import "@fontsource-variable/space-grotesk/index.css";
+@import "@fontsource-variable/inter/index.css";
+@import "@fontsource-variable/jetbrains-mono/index.css";
 
-@font-face {
-  font-family: "Quattro Fallback";
-  src: local("Arial");
-  ascent-override: 85.4%;
-  descent-override: 22.91%;
-  line-gap-override: 0%;
-  size-adjust: 120.02%;
-}
-
-@font-face {
-  font-family: "Plex Serif Fallback";
-  src: local("Arial");
-  ascent-override: 96.26%;
-  descent-override: 25.82%;
-  line-gap-override: 0%;
-  size-adjust: 106.49%;
+@theme {
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+  --font-sans: var(--font-body);
 }
 
 @import "./tokens.css";
@@ -31,8 +18,9 @@
 @import "./project-links.css";
 
 :root {
-  --font-heading: "IBM Plex Serif", "Plex Serif Fallback", ui-serif, Georgia, serif;
-  --font-body: "iA Writer Quattro", "Quattro Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Space Grotesk Variable", "Inter Variable", system-ui, -apple-system, sans-serif;
+  --font-body: "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --type-h1: clamp(1.5rem, 1.4rem + 0.4vw, 1.875rem);
   --type-h2: clamp(1.3125rem, 1.25rem + 0.3vw, 1.5rem);
@@ -95,17 +83,26 @@
     font-synthesis-weight: none;
     background-color: var(--surface-page);
     overscroll-behavior: none;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    overflow-x: clip;
+    max-width: 100%;
   }
 
   body {
     margin: 0;
     font-family: var(--font-body);
     font-size: 1rem;
-    line-height: 1.6;
+    line-height: 1.65;
     font-weight: 400;
     background-color: var(--surface-page);
     color: var(--text-primary);
     cursor: auto;
+    overflow-x: hidden;
+    overflow-x: clip;
+    max-width: 100%;
+    width: 100%;
+    position: relative;
   }
 
   h1,
@@ -115,27 +112,28 @@
   h5,
   h6 {
     font-family: var(--font-heading);
+    letter-spacing: -0.02em;
   }
 
   h1 {
     font-size: var(--type-h1);
     font-weight: 700;
     line-height: 1.12;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.02em;
   }
 
   h2 {
     font-size: var(--type-h2);
     font-weight: 700;
     line-height: 1.18;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.02em;
   }
 
   h3 {
     font-size: var(--type-h3);
     font-weight: 600;
     line-height: 1.28;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
   h4 {
@@ -158,9 +156,16 @@
   }
 
   nav a {
-    font-family: var(--font-body);
-    font-weight: 400;
+    font-family: var(--font-heading);
+    font-weight: 500;
     font-size: var(--type-nav);
+  }
+
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: var(--font-mono);
   }
 
   p,
@@ -702,3 +707,254 @@ html.bento-reveal-js .bento-reveal-eager {
     animation: none;
   }
 }
+
+/* Blog Prose Styles */
+.post-prose {
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--text-primary);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+@media (min-width: 768px) {
+  .post-prose {
+    font-size: 1.125rem;
+  }
+}
+
+.post-prose p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  color: var(--text-primary);
+  opacity: 0.92;
+}
+
+.post-prose p strong,
+.post-prose strong {
+  color: var(--text-primary);
+  opacity: 1;
+  font-weight: 600;
+}
+
+.post-prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.15s ease;
+}
+
+.post-prose a:hover {
+  opacity: 0.85;
+}
+
+.post-prose h2 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin-top: 2.5em;
+  margin-bottom: 0.75em;
+  color: var(--text-primary);
+  scroll-margin-top: 6rem;
+  position: relative;
+}
+
+.post-prose h3 {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+  color: var(--text-primary);
+  scroll-margin-top: 6rem;
+  position: relative;
+}
+
+.post-prose h4 {
+  font-family: var(--font-heading);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin-top: 1.75em;
+  margin-bottom: 0.5em;
+  color: var(--text-primary);
+  scroll-margin-top: 6rem;
+  position: relative;
+}
+
+.post-prose .heading-anchor {
+  opacity: 0;
+  margin-left: 0.4rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 400;
+  transition: opacity 0.15s ease;
+}
+
+.post-prose h2:hover .heading-anchor,
+.post-prose h3:hover .heading-anchor,
+.post-prose h4:hover .heading-anchor,
+.post-prose .heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+.post-prose ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  color: var(--text-primary);
+  opacity: 0.92;
+}
+
+.post-prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  color: var(--text-primary);
+  opacity: 0.92;
+}
+
+.post-prose li {
+  margin-top: 0.35em;
+  margin-bottom: 0.35em;
+  padding-left: 0.25em;
+}
+
+.post-prose blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 0.75rem 1.25rem;
+  margin: 1.75em 0;
+  color: var(--text-primary);
+  opacity: 0.95;
+  font-style: italic;
+  background-color: var(--accent-quiet);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+}
+
+.post-prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  padding: 0.15em 0.35em;
+  border-radius: var(--radius-control);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  color: var(--accent-strong);
+}
+
+[data-theme="light"] .post-prose code:not(pre code) {
+  color: var(--accent);
+  background-color: var(--surface-raised);
+  border-color: var(--border-strong);
+}
+
+[data-theme="light"] .post-prose p,
+[data-theme="light"] .post-prose ul,
+[data-theme="light"] .post-prose ol,
+[data-theme="light"] .post-prose li,
+[data-theme="light"] .post-prose td,
+[data-theme="light"] .post-prose blockquote {
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+/* Shiki Dual Themes support: dark by default, light in light theme */
+pre.astro-code {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  padding: 1rem 3rem 1rem 1.25rem;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-card) !important;
+  color: var(--shiki-dark, var(--text-primary)) !important;
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  margin: 1.75em 0;
+  scrollbar-width: thin;
+}
+
+pre.astro-code span {
+  color: var(--shiki-dark, inherit) !important;
+}
+
+[data-theme="light"] pre.astro-code {
+  background-color: var(--surface-card) !important;
+  color: var(--shiki-light, var(--text-primary)) !important;
+}
+
+[data-theme="light"] pre.astro-code span {
+  color: var(--shiki-light, inherit) !important;
+}
+
+/* Responsive Table Wrapper */
+.table-scroll-wrapper {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 2em 0;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-card);
+}
+
+.table-scroll-wrapper table {
+  display: table !important;
+  width: 100% !important;
+  min-width: 480px;
+  margin: 0 !important;
+  border: none !important;
+}
+
+.post-prose table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 2em 0;
+  font-size: 0.9375rem;
+  overflow-x: auto;
+  display: block;
+  box-sizing: border-box;
+}
+
+.post-prose th,
+.post-prose td {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-subtle);
+  text-align: left;
+}
+
+.post-prose th {
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+.post-prose td {
+  color: var(--text-primary);
+  opacity: 0.9;
+}
+
+.post-prose tr:nth-child(even) {
+  background-color: var(--surface-card);
+}
+
+.post-prose hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 3em 0;
+}
+

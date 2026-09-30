@@ -6,11 +6,16 @@ import ProjectsBentoGridWrapper from "../components/ProjectsBentoGridWrapper.ast
 import FunBentoGridWrapper from "../components/FunBentoGridWrapper.astro";
 
 import MeBentoGridWrapper from "../components/MeBentoGridWrapper.astro";
+import WritingBentoGridWrapper from "../components/WritingBentoGridWrapper.astro";
 import beeImage from "../data/bee.avif";
 import { getImage } from "astro:assets";
+import { getCollection } from "astro:content";
 import { BEE_IMAGE_SIZES } from "../lib/imageSizes";
 
 export const prerender = true;
+
+const publishedPosts = await getCollection("blog", ({ data }) => !data.draft);
+const hasPublishedPosts = publishedPosts.length > 0;
 
 const optimizedBeeImage = await getImage({
   src: beeImage,
@@ -87,6 +92,17 @@ const optimizedBeeImage = await getImage({
         <ProjectsBentoGridWrapper />
       </section>
 
+      {hasPublishedPosts && (
+        <section
+          id="blogs"
+          class="w-full flex flex-col gap-2 flex-1 scroll-mt-20"
+          data-section="blogs"
+          aria-labelledby="blogs-heading"
+        >
+          <WritingBentoGridWrapper />
+        </section>
+      )}
+
       <section
         id="fun"
         class="w-full flex flex-col lg:flex-row gap-2 flex-1 scroll-mt-20"
@@ -97,6 +113,68 @@ const optimizedBeeImage = await getImage({
       </section>
     </div>
   </main>
+
+  <script is:inline>
+    (function () {
+      if (typeof window === "undefined") return;
+
+      var hash = window.location.hash;
+      var returnTo = null;
+      try {
+        returnTo = window.sessionStorage.getItem("portfolio_return_to");
+      } catch (e) {}
+
+      var shouldAlignToBlogs = hash === "#blogs" || returnTo === "blogs";
+
+      if (shouldAlignToBlogs) {
+        if ("scrollRestoration" in history) {
+          history.scrollRestoration = "manual";
+        }
+
+        function instantAlignToBlogs() {
+          var el = document.getElementById("blogs");
+          if (!el) return;
+          var rect = el.getBoundingClientRect();
+          var targetY = window.scrollY + rect.top - 80;
+          if (Math.abs(rect.top - 80) > 4) {
+            window.scrollTo({ top: Math.max(0, targetY), behavior: "instant" });
+          }
+        }
+
+        // Execute immediately during parsing before first paint
+        instantAlignToBlogs();
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", instantAlignToBlogs, { once: true });
+        }
+
+        window.addEventListener("pageshow", function () {
+          instantAlignToBlogs();
+          setTimeout(function () {
+            if ("scrollRestoration" in history) {
+              history.scrollRestoration = "auto";
+            }
+            try {
+              window.sessionStorage.removeItem("portfolio_return_to");
+            } catch (e) {}
+          }, 150);
+        }, { once: true });
+
+        document.addEventListener("astro:page-load", instantAlignToBlogs);
+        document.addEventListener("astro:after-swap", instantAlignToBlogs);
+      }
+
+      // Smooth scroll for subsequent in-page hash changes
+      window.addEventListener("hashchange", function () {
+        if (window.location.hash === "#blogs") {
+          var el = document.getElementById("blogs");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }
+      });
+    })();
+  </script>
 </MainLayout>
 
 <style>

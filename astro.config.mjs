@@ -1,5 +1,6 @@
 import { defineConfig, envField } from "astro/config";
 import react from "@astrojs/react";
+import mdx from "@astrojs/mdx";
 import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
@@ -7,6 +8,19 @@ import sitemap from "@astrojs/sitemap";
 export default defineConfig({
   site: "https://nikshaan.dev",
   output: "static",
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: "hover",
+  },
+  markdown: {
+    shikiConfig: {
+      themes: {
+        light: "github-light",
+        dark: "github-dark",
+      },
+      defaultColor: false,
+    },
+  },
   env: {
     schema: {
       GH_TOKEN: envField.string({ context: "server", access: "secret" }),
@@ -46,6 +60,6 @@ export default defineConfig({
       ],
     },
   },
-  integrations: [react(), sitemap()],
+  integrations: [react(), sitemap(), mdx()],
   adapter: vercel({ maxDuration: 30 }),
 });

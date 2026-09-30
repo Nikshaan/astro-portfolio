@@ -7,15 +7,24 @@ import "../styles/global.css";
     title="404 - Page Not Found | Nikshaan"
     description="The page you're looking for doesn't exist. Return to homepage."
 >
-    <div class="min-h-[100svh] w-full bg-[var(--surface-page)] text-[var(--text-primary)] flex flex-col justify-center items-center gap-4 p-4">
+    <div class="min-h-[100svh] w-full bg-[var(--surface-page)] text-[var(--text-primary)] flex flex-col justify-center items-center gap-4 p-4 text-center">
         <h1 class="type-hero-display">404</h1>
-        <p class="type-h4 font-normal text-[var(--text-secondary)]">Page does not exist!</p>
-        <a
-            class="cursor-pointer px-6 py-3 bg-[var(--accent)] text-[var(--accent-contrast)] hover:opacity-90 rounded-full transition-opacity type-body font-bold"
-            href="/"
-            aria-label="Go back home"
-        >
-            Go back home
-        </a>
+        <p class="type-h4 font-normal text-[var(--text-secondary)]">The page you were looking for doesn't exist.</p>
+        <div class="flex items-center gap-3 mt-2">
+            <a
+                class="cursor-pointer px-5 py-2.5 bg-[var(--surface-card)] border border-[var(--border-subtle)] text-[var(--text-primary)] hover:border-[var(--border-strong)] rounded-full transition-colors type-body font-medium"
+                href="/"
+                aria-label="Return to portfolio homepage"
+            >
+                Home
+            </a>
+            <a
+                class="cursor-pointer px-5 py-2.5 bg-[var(--accent)] text-[var(--accent-contrast)] hover:opacity-90 rounded-full transition-opacity type-body font-medium"
+                href="/blog"
+                aria-label="Visit engineering blog"
+            >
+                Visit blog
+            </a>
+        </div>
     </div>
 </MainLayout>

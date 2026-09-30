@@ -205,7 +205,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
               onActivate={() => setSelectedId("win")}
               selected={selectedId === "win"}
               layoutId="card-win"
-              aria-label="View hackathon wins"
+              aria-label="View achievements"
             >
               <div className="flex flex-col h-full items-center justify-center gap-2 text-center">
                 <CardImage
@@ -215,7 +215,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                   className="select-none w-[52px] h-[52px] sm:w-[64px] sm:h-[64px] object-contain"
                 />
                 <h3 className="font-heading font-bold">
-                  Hackathon wins
+                  Achievements
                 </h3>
               </div>
             </BentoCard>
@@ -358,7 +358,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
         {selectedItem && (
           <div className="flex flex-col gap-6">
             <h2 id="me-modal-title" className="pr-12">
-              {selectedItem.id === "win" ? "Hackathon wins" : "Experience"}
+              {selectedItem.id === "win" ? "Achievements" : "Experience"}
             </h2>
             <div className="prose max-w-none">
               <div

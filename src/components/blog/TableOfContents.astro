@@ -1,0 +1,192 @@
+---
+export interface HeadingItem {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: HeadingItem[];
+  variant?: "mobile" | "desktop" | "all";
+}
+
+const { headings, variant = "all" } = Astro.props;
+const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+
+const showMobile = variant === "mobile" || variant === "all";
+const showDesktop = variant === "desktop" || variant === "all";
+---
+
+{tocHeadings.length > 0 && (
+  <>
+    {/* Mobile disclosure */}
+    {showMobile && (
+      <div class="lg:hidden my-6 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-4 w-full max-w-full min-w-0">
+        <details class="group toc-mobile-details">
+          <summary class="flex items-center justify-between cursor-pointer list-none text-sm font-medium text-[var(--text-primary)] focus-visible:outline-none">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-[var(--accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+              In this page
+            </span>
+            <svg class="w-4 h-4 transition-transform duration-200 group-open:rotate-180 text-[var(--text-tertiary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </summary>
+          <nav class="mt-3 pt-3 border-t border-[var(--border-subtle)]" aria-label="In this page">
+            <ul class="space-y-1.5 text-sm">
+              {tocHeadings.map((h) => (
+                <li class={h.depth === 3 ? "pl-4" : ""}>
+                  <a
+                    href={`#${h.slug}`}
+                    class="block py-1 text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors break-words"
+                    data-mobile-toc-link={h.slug}
+                  >
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </details>
+      </div>
+    )}
+
+    {/* Desktop sticky sidebar */}
+    {showDesktop && (
+      <nav
+        class="sticky top-24 self-start w-full max-w-[260px] max-h-[calc(100vh-7rem)] overflow-y-auto pr-3 text-sm scrollbar-thin"
+        aria-label="In this page"
+      >
+        <div class="mb-3 font-heading text-xs uppercase tracking-wider text-[var(--text-tertiary)] font-semibold flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-[var(--accent)]"></span>
+          In this page
+        </div>
+        <ul class="space-y-1 border-l border-[var(--border-subtle)] text-[13px] leading-relaxed">
+          {tocHeadings.map((h) => (
+            <li class="relative">
+              <a
+                href={`#${h.slug}`}
+                class={`block transition-all duration-150 border-l-2 -ml-[1px] border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] ${
+                  h.depth === 3 ? "pl-5 text-[12px]" : "pl-3.5"
+                }`}
+                data-toc-link={h.slug}
+              >
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+  </>
+)}
+
+{showDesktop && (
+  <script is:inline>
+    (function () {
+      if (typeof window === "undefined") return;
+
+      function initTocSpy() {
+        var links = document.querySelectorAll("[data-toc-link]");
+        var mobileLinks = document.querySelectorAll("[data-mobile-toc-link]");
+        var detailsEl = document.querySelector(".toc-mobile-details");
+
+        // Mobile click handler to close accordion and smooth scroll
+        mobileLinks.forEach(function (ml) {
+          ml.addEventListener("click", function (e) {
+            var slug = ml.getAttribute("data-mobile-toc-link");
+            var el = document.getElementById(slug);
+            if (el) {
+              e.preventDefault();
+              if (detailsEl) detailsEl.removeAttribute("open");
+              var top = el.getBoundingClientRect().top + window.scrollY - 90;
+              window.scrollTo({ top: top, behavior: "smooth" });
+              try { history.pushState(null, "", "#" + slug); } catch(err) {}
+            }
+          });
+        });
+
+        if (!links.length) return;
+
+        var headings = [];
+        links.forEach(function (link) {
+          var slug = link.getAttribute("data-toc-link");
+          var el = document.getElementById(slug);
+          if (el) headings.push({ slug: slug, el: el, link: link });
+        });
+
+        if (!headings.length) return;
+
+        function setActive(slug) {
+          if (!slug) return;
+          links.forEach(function (l) {
+            if (l.getAttribute("data-toc-link") === slug) {
+              l.classList.add("border-[var(--accent)]", "text-[var(--accent)]", "font-medium");
+              l.classList.remove("border-transparent", "text-[var(--text-secondary)]");
+            } else {
+              l.classList.remove("border-[var(--accent)]", "text-[var(--accent)]", "font-medium");
+              l.classList.add("border-transparent", "text-[var(--text-secondary)]");
+            }
+          });
+        }
+
+        function onScroll() {
+          var scrollY = window.scrollY;
+          var innerHeight = window.innerHeight;
+          var docHeight = document.documentElement.scrollHeight;
+
+          // If scrolled to bottom of page, activate last heading
+          if (scrollY + innerHeight >= docHeight - 40) {
+            setActive(headings[headings.length - 1].slug);
+            return;
+          }
+
+          var current = headings[0].slug;
+          for (var i = 0; i < headings.length; i++) {
+            var rect = headings[i].el.getBoundingClientRect();
+            // Heading passed threshold below navbar
+            if (rect.top <= 140) {
+              current = headings[i].slug;
+            } else {
+              break;
+            }
+          }
+          setActive(current);
+        }
+
+        // Desktop smooth click handler
+        links.forEach(function (l) {
+          l.addEventListener("click", function (e) {
+            var slug = l.getAttribute("data-toc-link");
+            var el = document.getElementById(slug);
+            if (el) {
+              e.preventDefault();
+              setActive(slug);
+              var top = el.getBoundingClientRect().top + window.scrollY - 90;
+              window.scrollTo({ top: top, behavior: "smooth" });
+              try { history.pushState(null, "", "#" + slug); } catch(err) {}
+            }
+          });
+        });
+
+        window.addEventListener("scroll", onScroll, { passive: true });
+        onScroll();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initTocSpy);
+      } else {
+        initTocSpy();
+      }
+      document.addEventListener("astro:page-load", initTocSpy);
+      document.addEventListener("astro:after-swap", initTocSpy);
+    })();
+  </script>
+)}

@@ -14,11 +14,17 @@ const Footer = () => {
 
       if (notHandled) {
         if (sectionId === "me") {
+          if (window.location.pathname !== "/") {
+            window.location.href = "/";
+            return;
+          }
           window.scrollTo({ top: 0, behavior: "smooth" });
         } else {
           const targetSection = document.getElementById(sectionId);
           if (targetSection) {
             targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
+          } else {
+            window.location.href = `/#${sectionId}`;
           }
         }
       }
@@ -97,15 +103,16 @@ const Footer = () => {
               <p className="type-body text-[var(--text-tertiary)] mb-2">Navigation</p>
               <nav aria-label="Footer navigation" className="flex flex-wrap gap-2 md:gap-3">
                 {[
-                  { name: "me", href: "me" },
-                  { name: "projects", href: "projects" },
-                  { name: "fun", href: "fun" },
+                  { name: "me", href: "me", isAnchor: true },
+                  { name: "projects", href: "projects", isAnchor: true },
+                  { name: "blogs", href: "/blog", isAnchor: false },
+                  { name: "fun", href: "fun", isAnchor: true },
                 ].map((link) => (
                   <a
                     key={link.name}
-                    href={`#${link.href}`}
-                    onClick={(e) => handleNavClick(e, link.href)}
-                    aria-label={`${link.name} section`}
+                    href={link.isAnchor ? `#${link.href}` : link.href}
+                    onClick={link.isAnchor ? (e) => handleNavClick(e, link.href) : undefined}
+                    aria-label={`${link.name} ${link.isAnchor ? "section" : "page"}`}
                     className="px-4 md:px-6 py-2 rounded-full border border-[var(--border-subtle)] type-ui text-[var(--text-primary)] font-bold hover:bg-[var(--accent)] hover:text-[var(--accent-contrast)] hover:border-[var(--accent)] footer-transition"
                   >
                     {link.name}

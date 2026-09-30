@@ -1,0 +1,74 @@
+---
+import { getCollection } from "astro:content";
+import MainLayout from "../../../layouts/MainLayout.astro";
+import NavbarWrapper from "../../../components/NavbarWrapper.astro";
+
+const isDev = import.meta.env.DEV;
+const posts = await getCollection("blog", ({ data }) => (isDev ? true : !data.draft));
+
+const tagCounts = new Map<string, number>();
+
+posts.forEach((post) => {
+  (post.data.tags || []).forEach((tag) => {
+    const key = tag.trim();
+    tagCounts.set(key, (tagCounts.get(key) || 0) + 1);
+  });
+});
+
+const sortedTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+---
+
+<MainLayout
+  title="Tags | Nikshaan Shetty's Blog"
+  description="Explore blog posts and articles by technical topic and tag."
+>
+  <NavbarWrapper />
+
+  <main id="main-content" class="bg-[var(--surface-page)] text-[var(--text-primary)] min-h-[100svh] w-full pt-24 pb-20 px-4">
+    <div class="w-full max-w-[1400px] mx-auto min-w-0">
+      {/* Breadcrumb */}
+      <div class="mb-8">
+        <a
+          href="/blog"
+          class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors focus-visible:outline-none"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          All posts
+        </a>
+      </div>
+
+      <header class="mb-10">
+        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)] mb-3">
+          Tags
+        </h1>
+        <p class="text-base text-[var(--text-secondary)]">
+          Browse technical writeups, architecture notes, and case studies by topic.
+        </p>
+      </header>
+
+      {sortedTags.length === 0 ? (
+        <div class="p-8 text-center rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)]">
+          <p class="text-sm text-[var(--text-secondary)]">No tags found.</p>
+        </div>
+      ) : (
+        <div class="flex flex-wrap gap-3">
+          {sortedTags.map(([tag, count]) => (
+            <a
+              href={`/blog/tags/${tag.toLowerCase()}`}
+              class="group flex items-center gap-2 px-4 py-2 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:border-[var(--accent)] transition-all hover:-translate-y-0.5"
+            >
+              <span class="font-heading font-medium text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                #{tag}
+              </span>
+              <span class="text-xs font-mono px-2 py-0.5 rounded-full bg-[var(--surface-raised)] text-[var(--text-tertiary)] border border-[var(--border-subtle)]">
+                {count}
+              </span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  </main>
+</MainLayout>

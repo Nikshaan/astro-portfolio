@@ -1,0 +1,289 @@
+---
+import type { CollectionEntry } from "astro:content";
+import type { MarkdownHeading } from "astro";
+import MainLayout from "./MainLayout.astro";
+import TableOfContents from "../components/blog/TableOfContents.astro";
+import CodeCopy from "../components/blog/CodeCopy.astro";
+import NavbarWrapper from "../components/NavbarWrapper.astro";
+import { getReadingTime } from "../utils/readingTime";
+import beeImage from "../data/bee.avif";
+
+interface Props {
+  post: CollectionEntry<"blog">;
+  headings: MarkdownHeading[];
+  prevPost?: CollectionEntry<"blog"> | null;
+  nextPost?: CollectionEntry<"blog"> | null;
+}
+
+const { post, headings, prevPost, nextPost } = Astro.props;
+const readingStats = getReadingTime(post.body || "");
+
+const canonicalUrl = post.data.canonicalURL || new URL(`/blog/${post.id}`, Astro.site || "https://nikshaan.dev").href;
+const ogImage = post.data.ogImage || "https://nikshaan.dev/linkedin_banner.webp";
+
+const formattedDate = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+}).format(post.data.pubDate);
+
+const formattedUpdatedDate = post.data.updatedDate
+  ? new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(post.data.updatedDate)
+  : null;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.pubDate.toISOString(),
+  dateModified: (post.data.updatedDate || post.data.pubDate).toISOString(),
+  author: {
+    "@type": "Person",
+    name: "Nikshaan Shetty",
+    url: "https://nikshaan.dev",
+  },
+  publisher: {
+    "@type": "Person",
+    name: "Nikshaan Shetty",
+  },
+  url: canonicalUrl,
+  image: ogImage,
+  keywords: post.data.tags.join(", "),
+};
+---
+
+<MainLayout
+  title={`${post.data.title} | Nikshaan Shetty`}
+  description={post.data.description}
+  canonicalUrl={canonicalUrl}
+  ogImage={ogImage}
+  ogType="article"
+  publishedTime={post.data.pubDate.toISOString()}
+  modifiedTime={post.data.updatedDate ? post.data.updatedDate.toISOString() : undefined}
+>
+  <Fragment slot="head">
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+  </Fragment>
+
+  <NavbarWrapper />
+
+  <main id="main-content" class="bg-[var(--surface-page)] text-[var(--text-primary)] min-h-[100svh] w-full pt-24 pb-20 px-4">
+    <div class="w-full max-w-[1400px] mx-auto min-w-0">
+      {/* Breadcrumb / Back Link */}
+      <div class="mb-8">
+        <a
+          href="/blog"
+          class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors focus-visible:outline-none group"
+        >
+          <svg class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          All posts
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 min-w-0">
+        {/* Desktop Sticky TOC on Left */}
+        <aside class="hidden lg:block lg:col-span-3 xl:col-span-3 min-w-0" data-pagefind-ignore>
+          <TableOfContents headings={headings} variant="desktop" />
+        </aside>
+
+        {/* Main Post Column on Right */}
+        <article class="lg:col-span-9 xl:col-span-9 min-w-0 max-w-full overflow-hidden" data-pagefind-body>
+          {/* Post Header */}
+          <header class="mb-10 pb-8 border-b border-[var(--border-subtle)]">
+            {post.data.tags && post.data.tags.length > 0 && (
+              <div class="flex flex-wrap gap-2 mb-4">
+                {post.data.tags.map((tag) => (
+                  <a
+                    href={`/blog/tags/${tag.toLowerCase()}`}
+                    class="text-xs px-2.5 py-0.5 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors font-mono"
+                  >
+                    #{tag}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[var(--text-primary)] leading-tight mb-4 break-words">
+              {post.data.title}
+            </h1>
+
+            <p class="text-base sm:text-lg text-[var(--text-secondary)] leading-relaxed mb-6 font-normal break-words">
+              {post.data.description}
+            </p>
+
+            <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-[var(--text-tertiary)] font-mono">
+              <time datetime={post.data.pubDate.toISOString()}>{formattedDate}</time>
+              <span>•</span>
+              <span>{readingStats.text}</span>
+              {formattedUpdatedDate && (
+                <>
+                  <span>•</span>
+                  <span>Updated {formattedUpdatedDate}</span>
+                </>
+              )}
+              {post.data.draft && (
+                <>
+                  <span>•</span>
+                  <span class="px-2 py-0.5 rounded bg-[var(--danger-quiet)] text-[var(--danger)] border border-[var(--danger)] text-xs uppercase tracking-wider font-semibold">
+                    Draft
+                  </span>
+                </>
+              )}
+            </div>
+          </header>
+
+          {/* Mobile TOC disclosure */}
+          <TableOfContents headings={headings} variant="mobile" />
+
+          {/* Article Prose Body */}
+          <div class="post-prose w-full max-w-full min-w-0">
+            <slot />
+          </div>
+
+          {/* Post Footer */}
+          <footer class="mt-14 pt-8 border-t border-[var(--border-subtle)]">
+            {/* Author note */}
+            <div class="p-3.5 sm:p-4 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div class="flex items-center gap-3 min-w-0">
+                <img
+                  src={beeImage.src}
+                  alt="Nikshaan Shetty"
+                  width={40}
+                  height={40}
+                  class="w-10 h-10 rounded-full object-cover border border-[var(--border-strong)] shrink-0"
+                />
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <h3 class="font-heading font-semibold text-sm text-[var(--text-primary)]">Nikshaan Shetty</h3>
+                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--surface-raised)] text-[var(--text-tertiary)] border border-[var(--border-subtle)] uppercase">Author</span>
+                  </div>
+                  <p class="text-xs text-[var(--text-secondary)] mt-0.5 truncate sm:text-clip">
+                    AI/ML Student &amp; Software Developer in Mumbai.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 text-xs font-mono shrink-0">
+                <a
+                  href="https://github.com/Nikshaan"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="px-2.5 py-1 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-raised)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors flex items-center gap-1.5"
+                  aria-label="GitHub profile"
+                >
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                  </svg>
+                  <span>GitHub</span>
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/nikshaan-shetty/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="px-2.5 py-1 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-raised)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors flex items-center gap-1.5"
+                  aria-label="LinkedIn profile"
+                >
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                    <rect x="2" y="9" width="4" height="12"></rect>
+                    <circle cx="4" cy="4" r="2"></circle>
+                  </svg>
+                  <span>LinkedIn</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Prev / Next Pagination */}
+            {(prevPost || nextPost) && (
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {prevPost ? (
+                  <a
+                    href={`/blog/${prevPost.id}`}
+                    class="p-4 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:border-[var(--accent)] transition-colors group flex flex-col justify-between"
+                  >
+                    <span class="text-xs font-mono uppercase tracking-wider text-[var(--text-tertiary)] mb-1">
+                      ← Previous
+                    </span>
+                    <span class="font-heading font-medium text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] line-clamp-2">
+                      {prevPost.data.title}
+                    </span>
+                  </a>
+                ) : (
+                  <div />
+                )}
+
+                {nextPost ? (
+                  <a
+                    href={`/blog/${nextPost.id}`}
+                    class="p-4 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:border-[var(--accent)] transition-colors group flex flex-col justify-between sm:text-right"
+                  >
+                    <span class="text-xs font-mono uppercase tracking-wider text-[var(--text-tertiary)] mb-1">
+                      Next →
+                    </span>
+                    <span class="font-heading font-medium text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] line-clamp-2">
+                      {nextPost.data.title}
+                    </span>
+                  </a>
+                ) : (
+                  <div />
+                )}
+              </div>
+            )}
+          </footer>
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <CodeCopy />
+
+  <script is:inline>
+    (function () {
+      if (typeof window === "undefined") return;
+
+      function setupHeadingAnchors() {
+        var headings = document.querySelectorAll(".post-prose h2, .post-prose h3, .post-prose h4");
+        headings.forEach(function (h) {
+          if (!h.id || h.querySelector(".heading-anchor")) return;
+          var anchor = document.createElement("a");
+          anchor.className = "heading-anchor";
+          anchor.href = "#" + h.id;
+          anchor.setAttribute("aria-label", "Anchor link for " + h.textContent);
+          anchor.textContent = "#";
+          h.appendChild(anchor);
+        });
+      }
+
+      function wrapTables() {
+        var tables = document.querySelectorAll(".post-prose table:not([data-wrapped])");
+        tables.forEach(function (table) {
+          table.setAttribute("data-wrapped", "true");
+          var wrapper = document.createElement("div");
+          wrapper.className = "table-scroll-wrapper";
+          table.parentNode.insertBefore(wrapper, table);
+          wrapper.appendChild(table);
+        });
+      }
+
+      function initArticle() {
+        setupHeadingAnchors();
+        wrapTables();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initArticle);
+      } else {
+        initArticle();
+      }
+      document.addEventListener("astro:page-load", initArticle);
+      document.addEventListener("astro:after-swap", initArticle);
+    })();
+  </script>
+</MainLayout>

@@ -1,0 +1,259 @@
+<script is:inline>
+  (function () {
+    if (typeof window === "undefined") return;
+
+    // Bulletproof clipboard copy with modern API and legacy fallback for non-secure / LAN / mobile
+    async function copyTextToClipboard(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch (e) {
+          // Fall through to textarea fallback
+        }
+      }
+      try {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "0";
+        textArea.style.top = "0";
+        textArea.style.width = "2rem";
+        textArea.style.height = "2rem";
+        textArea.style.padding = "0";
+        textArea.style.border = "none";
+        textArea.style.outline = "none";
+        textArea.style.boxShadow = "none";
+        textArea.style.background = "transparent";
+        textArea.style.opacity = "0";
+        textArea.setAttribute("readonly", "");
+        document.body.appendChild(textArea);
+
+        if (/ipad|iphone|ipod/i.test(navigator.userAgent)) {
+          var range = document.createRange();
+          range.selectNodeContents(textArea);
+          var sel = window.getSelection();
+          if (sel) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+          textArea.setSelectionRange(0, 999999);
+        } else {
+          textArea.focus();
+          textArea.select();
+        }
+
+        var success = document.execCommand("copy");
+        document.body.removeChild(textArea);
+        return !!success;
+      } catch (err) {
+        return false;
+      }
+    }
+
+    function extractCodeText(wrapper) {
+      if (!wrapper) return "";
+      var pre = wrapper.querySelector("pre");
+      if (!pre) return "";
+      
+      // Clone to safely remove any copy buttons if they were somehow inside pre
+      var clone = pre.cloneNode(true);
+      var buttons = clone.querySelectorAll(".copy-code-btn");
+      buttons.forEach(function (btn) {
+        btn.remove();
+      });
+      
+      var code = clone.querySelector("code") || clone;
+      var text = code.innerText || code.textContent || "";
+      return text.replace(/\n$/, "");
+    }
+
+    function initCodeCopyButtons() {
+      var codeBlocks = document.querySelectorAll(".post-prose pre, article pre, main pre");
+
+      codeBlocks.forEach(function (pre) {
+        if (pre.getAttribute("data-has-copy-btn") === "true") return;
+
+        // If already inside a code-block-container, mark and return
+        if (pre.closest(".code-block-container")) {
+          pre.setAttribute("data-has-copy-btn", "true");
+          return;
+        }
+
+        var parent = pre.parentNode;
+        if (!parent) return;
+
+        pre.setAttribute("data-has-copy-btn", "true");
+
+        // Wrap pre in an outer container so the copy button stays pinned top-right
+        // regardless of pre's horizontal scroll position
+        var wrapper = document.createElement("div");
+        wrapper.className = "code-block-container relative w-full max-w-full min-w-0 my-6 group";
+        parent.insertBefore(wrapper, pre);
+        wrapper.appendChild(pre);
+
+        // Create copy button matching user specification
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "copy-code-btn";
+        button.setAttribute("aria-label", "Copy code to clipboard");
+        button.setAttribute("title", "Copy code");
+        button.innerHTML = [
+          '<span class="copy-icon" aria-hidden="true">',
+          '  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">',
+          '    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>',
+          '    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>',
+          '  </svg>',
+          '</span>',
+          '<span class="copied-icon hidden" aria-hidden="true">',
+          '  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400">',
+          '    <polyline points="20 6 9 17 4 12"></polyline>',
+          '  </svg>',
+          '</span>',
+          '<span class="copy-feedback-text hidden text-[11px] font-mono font-medium text-emerald-400 ml-1.5" aria-hidden="true">Copied!</span>',
+          '<span class="sr-only">Copy code</span>'
+        ].join("");
+
+        wrapper.appendChild(button);
+      });
+    }
+
+    // Global event delegation for copy click
+    document.addEventListener("click", async function (e) {
+      var button = e.target.closest(".copy-code-btn");
+      if (!button) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      var wrapper = button.closest(".code-block-container");
+      var textToCopy = extractCodeText(wrapper);
+
+      if (!textToCopy) return;
+
+      var success = await copyTextToClipboard(textToCopy);
+      if (!success) return;
+
+      var copyIcon = button.querySelector(".copy-icon");
+      var copiedIcon = button.querySelector(".copied-icon");
+      var feedbackText = button.querySelector(".copy-feedback-text");
+
+      if (button._copyTimeout) {
+        clearTimeout(button._copyTimeout);
+      }
+
+      if (copyIcon && copiedIcon) {
+        copyIcon.classList.add("hidden");
+        copiedIcon.classList.remove("hidden");
+        if (feedbackText) feedbackText.classList.remove("hidden");
+        button.setAttribute("aria-label", "Code copied");
+        button.classList.add("copied-active");
+
+        button._copyTimeout = setTimeout(function () {
+          copyIcon.classList.remove("hidden");
+          copiedIcon.classList.add("hidden");
+          if (feedbackText) feedbackText.classList.add("hidden");
+          button.setAttribute("aria-label", "Copy code to clipboard");
+          button.classList.remove("copied-active");
+          button._copyTimeout = null;
+        }, 2000);
+      }
+    });
+
+    // Lifecycle triggers
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initCodeCopyButtons);
+    } else {
+      initCodeCopyButtons();
+    }
+
+    document.addEventListener("astro:page-load", initCodeCopyButtons);
+    document.addEventListener("astro:after-swap", initCodeCopyButtons);
+    window.addEventListener("pageshow", initCodeCopyButtons);
+  })();
+</script>
+
+<style is:global>
+  .code-block-container {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .code-block-container pre {
+    margin: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .copy-code-btn {
+    position: absolute;
+    top: 0.625rem;
+    right: 0.625rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    min-height: 1.875rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-control);
+    background-color: var(--surface-raised);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    cursor: pointer;
+    z-index: 10;
+    pointer-events: auto;
+    transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Desktop: Reveal on container hover/focus/active */
+  @media (min-width: 769px) {
+    .copy-code-btn {
+      opacity: 0;
+    }
+    .code-block-container:hover .copy-code-btn,
+    .copy-code-btn:focus-visible,
+    .copy-code-btn.copied-active {
+      opacity: 1;
+    }
+  }
+
+  /* Touch / Mobile / Tablet: Always visible so users know they can copy */
+  @media (max-width: 768px), (hover: none) {
+    .copy-code-btn {
+      opacity: 0.85;
+    }
+    .copy-code-btn:active,
+    .copy-code-btn.copied-active {
+      opacity: 1;
+    }
+  }
+
+  .copy-code-btn:hover {
+    color: var(--text-primary);
+    background-color: var(--surface-card);
+    border-color: var(--border-strong);
+  }
+
+  .copy-code-btn.copied-active {
+    color: #34d399 !important;
+    border-color: rgba(52, 211, 153, 0.4) !important;
+    background-color: var(--surface-card) !important;
+  }
+
+  .copy-code-btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .copy-code-btn svg {
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+</style>

@@ -1,7 +1,15 @@
 ---
 import Navbar from "./Navbar";
 import { getImage } from "astro:assets";
+import { getCollection } from "astro:content";
 import beeImage from "../data/bee.avif";
+
+interface Props {
+  isHome?: boolean;
+}
+
+const currentPath = Astro.url.pathname;
+const isHome = Astro.props.isHome ?? (currentPath === "/" || currentPath === "");
 
 const optimizedBee = await getImage({
   src: beeImage,
@@ -10,9 +18,27 @@ const optimizedBee = await getImage({
   height: 64,
   quality: 80,
 });
+
+const publishedPosts = await getCollection("blog", ({ data }) => !data.draft);
+const hasPublishedPosts = publishedPosts.length > 0;
+
+const sections = [
+  { id: "me", label: "me", href: isHome ? "#me" : "/#me" },
+  { id: "projects", label: "projects", href: isHome ? "#projects" : "/#projects" },
+  ...(hasPublishedPosts
+    ? [
+        {
+          id: "blogs",
+          label: "blogs",
+          href: isHome ? "#blogs" : "/#blogs",
+        },
+      ]
+    : []),
+  { id: "fun", label: "fun", href: isHome ? "#fun" : "/#fun" },
+];
 ---
 
-<Navbar client:load avatarSrc={optimizedBee.src} />
+<Navbar client:load avatarSrc={optimizedBee.src} sections={sections} isHome={isHome} />
 
 <style is:global>
   .nav-shell {
@@ -20,14 +46,21 @@ const optimizedBee = await getImage({
     max-width: 1400px;
     margin-inline: auto;
     padding-inline: 1rem;
-    padding-top: max(0.75rem, env(safe-area-inset-top));
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+    box-sizing: border-box;
     transition:
       max-width 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
       padding 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
   }
 
+  @media (min-width: 640px) {
+    .nav-shell {
+      padding-top: max(0.75rem, env(safe-area-inset-top));
+    }
+  }
+
   .nav-shell[data-scrolled="true"] {
-    max-width: 100vw;
+    max-width: 100%;
     padding-inline: 0;
     padding-top: 0;
   }
@@ -60,9 +93,9 @@ const optimizedBee = await getImage({
   .nav-link {
     position: relative;
     color: var(--text-secondary);
-    font-family: var(--font-body);
+    font-family: var(--font-heading);
     font-size: var(--type-nav);
-    font-weight: 400;
+    font-weight: 500;
   }
 
   .nav-link:hover {

@@ -1,0 +1,43 @@
+---
+interface Props {
+  type?: "note" | "warning" | "tip";
+  title?: string;
+}
+
+const { type = "note", title } = Astro.props;
+
+const styles = {
+  note: {
+    container: "bg-[var(--surface-card)] border-[var(--border-strong)] text-[var(--text-primary)]",
+    badge: "text-[var(--accent)] border-[var(--accent-quiet)] bg-[var(--accent-quiet)]",
+    defaultTitle: "Note",
+  },
+  warning: {
+    container: "bg-[var(--surface-card)] border-[var(--danger)] text-[var(--text-primary)]",
+    badge: "text-[var(--danger)] border-[var(--danger-quiet)] bg-[var(--danger-quiet)]",
+    defaultTitle: "Warning",
+  },
+  tip: {
+    container: "bg-[var(--surface-card)] border-[var(--accent)] text-[var(--text-primary)]",
+    badge: "text-[var(--accent)] border-[var(--accent-quiet)] bg-[var(--accent-quiet)]",
+    defaultTitle: "Tip",
+  },
+};
+
+const currentStyle = styles[type] || styles.note;
+const displayTitle = title || currentStyle.defaultTitle;
+---
+
+<aside
+  class={`my-6 rounded-[var(--radius-card)] border p-4.5 sm:p-5 text-[15px] leading-relaxed ${currentStyle.container}`}
+  role={type === "warning" ? "alert" : "note"}
+>
+  <div class="flex items-center gap-2 mb-2 font-medium">
+    <span class={`text-xs px-2 py-0.5 rounded-[var(--radius-control)] border font-mono uppercase tracking-wider ${currentStyle.badge}`}>
+      {displayTitle}
+    </span>
+  </div>
+  <div class="prose-callout text-[var(--text-primary)] opacity-90 [&>p]:mb-2 [&>p:last-child]:mb-0 [&>p]:leading-relaxed">
+    <slot />
+  </div>
+</aside>

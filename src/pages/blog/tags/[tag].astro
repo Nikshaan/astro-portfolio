@@ -1,0 +1,139 @@
+---
+import { getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import MainLayout from "../../../layouts/MainLayout.astro";
+import NavbarWrapper from "../../../components/NavbarWrapper.astro";
+import { getReadingTime } from "../../../utils/readingTime";
+
+export async function getStaticPaths() {
+  const isDev = import.meta.env.DEV;
+  const posts = await getCollection("blog", ({ data }) => (isDev ? true : !data.draft));
+
+  const allTags = new Set<string>();
+  posts.forEach((post) => {
+    (post.data.tags || []).forEach((t) => allTags.add(t.toLowerCase()));
+  });
+
+  return Array.from(allTags).map((tag) => {
+    const filteredPosts = posts
+      .filter((post) => (post.data.tags || []).some((t) => t.toLowerCase() === tag))
+      .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+
+    // Find original casing for display
+    const originalTag = posts
+      .flatMap((p) => p.data.tags || [])
+      .find((t) => t.toLowerCase() === tag) || tag;
+
+    return {
+      params: { tag },
+      props: { posts: filteredPosts, tagName: originalTag },
+    };
+  });
+}
+
+interface Props {
+  posts: CollectionEntry<"blog">[];
+  tagName: string;
+}
+
+const { posts, tagName } = Astro.props;
+---
+
+<MainLayout
+  title={`Posts tagged #${tagName} | Nikshaan Shetty`}
+  description={`Articles and technical writeups tagged with #${tagName}.`}
+>
+  <NavbarWrapper />
+
+  <main id="main-content" class="bg-[var(--surface-page)] text-[var(--text-primary)] min-h-[100svh] w-full pt-24 pb-20 px-4">
+    <div class="w-full max-w-[1400px] mx-auto min-w-0">
+      {/* Back Link */}
+      <div class="mb-8 flex items-center justify-between">
+        <a
+          href="/blog/tags"
+          class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors focus-visible:outline-none group"
+          aria-label="Go back to all tags"
+        >
+          <svg class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>All tags</span>
+        </a>
+        <a
+          href="/blog"
+          class="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+        >
+          All posts →
+        </a>
+      </div>
+
+      <header class="mb-10">
+        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)] mb-3 break-words">
+          #{tagName}
+        </h1>
+        <p class="text-base text-[var(--text-secondary)] break-words">
+          {posts.length} {posts.length === 1 ? "article" : "articles"} filed under this topic.
+        </p>
+      </header>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 min-w-0">
+        {posts.map((post) => {
+          const readingStats = getReadingTime(post.body || "");
+          const formattedDate = new Intl.DateTimeFormat("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }).format(post.data.pubDate);
+
+          return (
+            <article class="group relative rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 sm:p-6 transition-all duration-200 hover:border-[var(--border-strong)] hover:-translate-y-0.5 active:scale-[0.99] active:transition-transform active:duration-75 min-w-0 max-w-full overflow-hidden flex flex-col justify-between h-full">
+              <a href={`/blog/${post.id}`} class="absolute inset-0 z-10" aria-label={`Read ${post.data.title}`} data-astro-prefetch="hover">
+                <span class="sr-only">Read {post.data.title}</span>
+              </a>
+
+              <div>
+                <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-[var(--text-tertiary)] mb-2.5">
+                  <div class="flex items-center gap-2">
+                    <time datetime={post.data.pubDate.toISOString()}>{formattedDate}</time>
+                    <span>•</span>
+                    <span>{readingStats.text}</span>
+                  </div>
+                  {post.data.draft && (
+                    <span class="px-2 py-0.5 rounded bg-[var(--danger-quiet)] text-[var(--danger)] border border-[var(--danger)] text-xs uppercase tracking-wider font-semibold">
+                      Draft
+                    </span>
+                  )}
+                </div>
+
+                <h2 class="font-heading text-lg sm:text-xl font-bold tracking-tight text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors mb-2 break-words">
+                  {post.data.title}
+                </h2>
+
+                <p class="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-2 mb-4 font-normal break-words">
+                  {post.data.description}
+                </p>
+              </div>
+
+              {post.data.tags && post.data.tags.length > 0 && (
+                <div class="relative z-20 flex flex-wrap gap-1.5 mt-auto pt-2">
+                  {post.data.tags.slice(0, 3).map((t) => (
+                    <a
+                      href={`/blog/tags/${t.toLowerCase()}`}
+                      class={`text-xs px-2.5 py-0.5 rounded-[var(--radius-control)] border transition-colors font-mono ${
+                        t.toLowerCase() === tagName.toLowerCase()
+                          ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-quiet)]"
+                          : "border-[var(--border-subtle)] bg-[var(--surface-raised)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)]"
+                      }`}
+                    >
+                      #{t}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  </main>
+</MainLayout>

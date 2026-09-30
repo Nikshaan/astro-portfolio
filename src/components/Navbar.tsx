@@ -5,20 +5,42 @@ import { Sun, Moon } from "lucide-react";
 import beeImage from "../data/bee.avif";
 import BeeToggle from "./navbar/BeeToggle";
 
-interface NavbarProps {
-  sections?: Array<{ id: string; label: string }>;
-  avatarSrc?: string;
+export interface NavSection {
+  id: string;
+  label: string;
+  href?: string;
 }
 
-const DEFAULT_SECTIONS = [
-  { id: "me", label: "me" },
-  { id: "projects", label: "projects" },
-  { id: "fun", label: "fun" },
+interface NavbarProps {
+  sections?: NavSection[];
+  avatarSrc?: string;
+  isHome?: boolean;
+}
+
+const DEFAULT_SECTIONS: NavSection[] = [
+  { id: "me", label: "me", href: "#me" },
+  { id: "projects", label: "projects", href: "#projects" },
+  { id: "fun", label: "fun", href: "#fun" },
 ];
 
 const Navbar: React.FC<NavbarProps> = memo(
-  ({ sections = DEFAULT_SECTIONS, avatarSrc }) => {
-    const [activeSection, setActiveSection] = useState<string>("me");
+  ({ sections = DEFAULT_SECTIONS, avatarSrc, isHome = true }) => {
+    const [activeSection, setActiveSection] = useState<string>(() => {
+      if (typeof window !== "undefined") {
+        if (window.location.pathname.startsWith("/blog")) {
+          return "blogs";
+        }
+        try {
+          if (
+            window.location.hash === "#blogs" ||
+            window.sessionStorage.getItem("portfolio_return_to") === "blogs"
+          ) {
+            return "blogs";
+          }
+        } catch (e) {}
+      }
+      return isHome ? "me" : "blogs";
+    });
     const shellRef = useRef<HTMLDivElement>(null);
     const shouldReduceMotion = useReducedMotion();
 
@@ -122,6 +144,19 @@ const Navbar: React.FC<NavbarProps> = memo(
     }, []);
 
     useEffect(() => {
+      if (window.location.hash === "#blogs") {
+        const timer = setTimeout(() => {
+          if (window.location.hash) {
+            window.history.replaceState(
+              null,
+              "",
+              window.location.pathname + window.location.search,
+            );
+          }
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+
       if (window.location.hash) {
         window.history.replaceState(
           null,
@@ -131,6 +166,7 @@ const Navbar: React.FC<NavbarProps> = memo(
       }
 
       const handleHashChange = () => {
+        if (window.location.hash === "#blogs") return;
         if (window.location.hash) {
           window.history.replaceState(
             null,
@@ -295,11 +331,20 @@ const Navbar: React.FC<NavbarProps> = memo(
     }, [navigateToSection]);
 
     const handleNavClick = useCallback(
-      (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
-        e.preventDefault();
-        navigateToSection(sectionId);
+      (e: React.MouseEvent<HTMLAnchorElement>, section: NavSection) => {
+        if (!isHome) {
+          // Cross-page navigation: allow default browser link handling to href
+          return;
+        }
+
+        const targetId = section.id;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl || targetId === "me") {
+          e.preventDefault();
+          navigateToSection(targetId);
+        }
       },
-      [navigateToSection],
+      [isHome, navigateToSection],
     );
 
     const handleThemeToggle = useCallback(() => {
@@ -320,11 +365,20 @@ const Navbar: React.FC<NavbarProps> = memo(
             aria-label="Primary"
             className="nav-card relative flex items-center justify-between h-14 bg-[var(--surface-card)] border border-[var(--border-subtle)] rounded-[var(--radius-card)]"
           >
-            <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-5 flex items-center justify-between">
+            <div className="w-full max-w-[1400px] mx-auto px-2 sm:px-5 flex items-center justify-between min-w-0">
               <a
-                href="#me"
-                onClick={(e) => handleNavClick(e, "me")}
-                className="nav-brand flex items-center gap-2.5 rounded-full focus-visible:outline-none"
+                href={isHome ? "#me" : "/"}
+                onClick={
+                  isHome
+                    ? (e) =>
+                        handleNavClick(e, {
+                          id: "me",
+                          label: "me",
+                          href: "#me",
+                        })
+                    : undefined
+                }
+                className="nav-brand flex items-center gap-2 rounded-full focus-visible:outline-none shrink-0"
                 aria-label="Nikshaan — back to top"
               >
                 <img
@@ -339,17 +393,20 @@ const Navbar: React.FC<NavbarProps> = memo(
                 </span>
               </a>
 
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                {sections.map(({ id, label }) => {
+              <div className="flex items-center gap-0.5 sm:gap-1.5 shrink-0">
+                {sections.map((section) => {
+                  const { id, label, href } = section;
                   const isActive = activeSection === id;
+                  const linkHref = href || `#${id}`;
+
                   return (
                     <a
                       key={id}
-                      href={`#${id}`}
-                      onClick={(e) => handleNavClick(e, id)}
+                      href={linkHref}
+                      onClick={(e) => handleNavClick(e, section)}
                       aria-label={`${label} section`}
                       aria-current={isActive ? "page" : undefined}
-                      className={`nav-link relative cursor-pointer px-3 py-2 transition-colors duration-200${
+                      className={`nav-link relative cursor-pointer px-1.5 sm:px-3 py-1.5 sm:py-2 text-[12px] sm:text-sm transition-colors duration-200${
                         isActive ? " active" : ""
                       }`}
                       data-section={id}
@@ -371,7 +428,7 @@ const Navbar: React.FC<NavbarProps> = memo(
                 })}
 
                 <div
-                  className="h-5 w-px bg-[var(--border-subtle)] mx-1.5 sm:mx-2"
+                  className="h-5 w-px bg-[var(--border-subtle)] mx-0.5 sm:mx-2 shrink-0"
                   aria-hidden="true"
                 />
 

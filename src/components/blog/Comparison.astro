@@ -1,0 +1,27 @@
+---
+interface Props {
+  leftTitle?: string;
+  rightTitle?: string;
+}
+
+const { leftTitle = "Before", rightTitle = "After" } = Astro.props;
+---
+
+<div class="my-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-4 sm:p-5">
+    <div class="mb-3 text-xs font-mono uppercase tracking-wider text-[var(--text-tertiary)] border-b border-[var(--border-subtle)] pb-2 font-medium">
+      {leftTitle}
+    </div>
+    <div class="comparison-content text-[15px] text-[var(--text-primary)] opacity-90 space-y-2 [&>pre]:my-2">
+      <slot name="left" />
+    </div>
+  </div>
+  <div class="rounded-[var(--radius-card)] border border-[var(--border-strong)] bg-[var(--surface-card)] p-4 sm:p-5">
+    <div class="mb-3 text-xs font-mono uppercase tracking-wider text-[var(--accent)] border-b border-[var(--border-subtle)] pb-2 font-medium">
+      {rightTitle}
+    </div>
+    <div class="comparison-content text-[15px] text-[var(--text-primary)] opacity-90 space-y-2 [&>pre]:my-2">
+      <slot name="right" />
+    </div>
+  </div>
+</div>

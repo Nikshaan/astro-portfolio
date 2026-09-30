@@ -2,6 +2,11 @@
 interface Props {
     title: string;
     description: string;
+    canonicalUrl?: string;
+    ogImage?: string;
+    ogType?: string;
+    publishedTime?: string;
+    modifiedTime?: string;
     preloadImageSrc?: string;
     preloadImageSrcSet?: string;
     preloadImageSizes?: string;
@@ -12,10 +17,22 @@ import { getImage } from "astro:assets";
 import VercelAnalytics from "../components/VercelAnalytics.astro";
 import Footer from "../components/Footer";
 import "../styles/global.css";
-import iaWriterQuattroWoff2 from "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-400-normal.woff2?url";
-import ibmPlexSerifWoff2 from "@fontsource/ibm-plex-serif/files/ibm-plex-serif-latin-700-normal.woff2?url";
+import spaceGroteskWoff2 from "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url";
+import interWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import jetbrainsMonoWoff2 from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url";
 
-const { title, description, preloadImageSrc, preloadImageSrcSet, preloadImageSizes } = Astro.props;
+const {
+    title,
+    description,
+    canonicalUrl = new URL(Astro.url.pathname, Astro.site || "https://nikshaan.dev").href,
+    ogImage,
+    ogType = "website",
+    publishedTime,
+    modifiedTime,
+    preloadImageSrc,
+    preloadImageSrcSet,
+    preloadImageSizes,
+} = Astro.props;
 
 const favicon = await getImage({
     src: beeImage,
@@ -31,7 +48,9 @@ const appleTouchIcon = await getImage({
     height: 180,
 });
 
-const ogImageUrl = "https://nikshaan.dev/linkedin_banner.webp";
+const resolvedOgImage = ogImage
+    ? new URL(ogImage, Astro.site || "https://nikshaan.dev").href
+    : "https://nikshaan.dev/linkedin_banner.webp";
 ---
 
 <!doctype html>
@@ -46,27 +65,36 @@ const ogImageUrl = "https://nikshaan.dev/linkedin_banner.webp";
         <meta content={description} name="description" />
         <meta content="Nikshaan Shetty" name="author" />
         <meta content="index, follow" name="robots" />
-        <link rel="canonical" href="https://nikshaan.dev/" />
+        <link rel="canonical" href={canonicalUrl} />
+        <link
+            rel="alternate"
+            type="application/rss+xml"
+            title="Nikshaan Shetty's Blog"
+            href={new URL("rss.xml", Astro.site || "https://nikshaan.dev")}
+        />
 
         <meta content={title} property="og:title" />
         <meta content={description} property="og:description" />
-        <meta content="website" property="og:type" />
-        <meta content="https://nikshaan.dev/" property="og:url" />
-        <meta content={ogImageUrl} property="og:image" />
-        <meta content={ogImageUrl} property="og:image:secure_url" />
+        <meta content={ogType} property="og:type" />
+        <meta content={canonicalUrl} property="og:url" />
+        <meta content={resolvedOgImage} property="og:image" />
+        <meta content={resolvedOgImage} property="og:image:secure_url" />
         <meta content="1200" property="og:image:width" />
         <meta content="630" property="og:image:height" />
         <meta content="Nikshaan" property="og:image:alt" />
         <meta content="image/webp" property="og:image:type" />
         <meta content="en_IN" property="og:locale" />
-        <meta content="Nikshaan Shetty Portfolio" property="og:site_name" />
+        <meta content="Nikshaan Shetty" property="og:site_name" />
+
+        {publishedTime && <meta content={publishedTime} property="article:published_time" />}
+        {modifiedTime && <meta content={modifiedTime} property="article:modified_time" />}
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         <meta
             name="twitter:image"
-            content={ogImageUrl}
+            content={resolvedOgImage}
         />
 
         <meta name="theme-color" content="#0a0a0a" id="meta-theme-color" />
@@ -80,8 +108,10 @@ const ogImageUrl = "https://nikshaan.dev/linkedin_banner.webp";
         <meta name="apple-mobile-web-app-title" content="Nikshaan" />
         <link rel="apple-touch-icon" sizes="180x180" href={appleTouchIcon.src} />
 
-        <link rel="preload" as="font" type="font/woff2" href={iaWriterQuattroWoff2} crossorigin />
-        <link rel="preload" as="font" type="font/woff2" href={ibmPlexSerifWoff2} crossorigin />
+        <link rel="preload" as="font" type="font/woff2" href={spaceGroteskWoff2} crossorigin />
+        <link rel="preload" as="font" type="font/woff2" href={interWoff2} crossorigin />
+        <link rel="preload" as="font" type="font/woff2" href={jetbrainsMonoWoff2} crossorigin />
+        <slot name="head" />
 
         {
             preloadImageSrc && (
@@ -99,9 +129,27 @@ const ogImageUrl = "https://nikshaan.dev/linkedin_banner.webp";
 
         <script type="speculationrules" is:inline>
             {
+                "prerender": [
+                    {
+                        "where": {
+                            "and": [
+                                { "href_matches": "/*" },
+                                { "not": { "href_matches": "/api/*" } },
+                                { "not": { "href_matches": "/rss.xml" } }
+                            ]
+                        },
+                        "eagerness": "moderate"
+                    }
+                ],
                 "prefetch": [
                     {
-                        "urls": ["https://nikshaan.dev/"],
+                        "where": {
+                            "and": [
+                                { "href_matches": "/*" },
+                                { "not": { "href_matches": "/api/*" } },
+                                { "not": { "href_matches": "/rss.xml" } }
+                            ]
+                        },
                         "eagerness": "moderate"
                     }
                 ]
@@ -355,6 +403,7 @@ const ogImageUrl = "https://nikshaan.dev/linkedin_banner.webp";
 <style>
     body {
         overflow-x: hidden;
+        overflow-x: clip;
         margin: 0;
         padding: 0;
     }
