@@ -13,16 +13,21 @@ const Footer = () => {
       );
 
       if (notHandled) {
+        const behavior: ScrollBehavior = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches
+          ? "auto"
+          : "smooth";
         if (sectionId === "me") {
           if (window.location.pathname !== "/") {
             window.location.href = "/";
             return;
           }
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          window.scrollTo({ top: 0, behavior });
         } else {
           const targetSection = document.getElementById(sectionId);
           if (targetSection) {
-            targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
+            targetSection.scrollIntoView({ behavior, block: "start" });
           } else {
             window.location.href = `/#${sectionId}`;
           }

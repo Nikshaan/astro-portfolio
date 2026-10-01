@@ -84,13 +84,6 @@ const SKELETON_WEEKS = Array.from({ length: SKELETON_WEEK_COUNT }, (_, week) => 
 function HeatmapSkeleton() {
   return (
     <div className={styles.skeleton} aria-hidden="true">
-      <div className={styles.header}>
-        <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
-        <Placeholder
-          as="span"
-          className={`${styles.total} inline-block h-[1lh] w-[29ch] max-w-full`}
-        />
-      </div>
       <div className={`${styles.graph} skel-pulse`}>
         {SKELETON_WEEKS.map((week) => (
           <div key={week} className={styles.week}>
@@ -231,29 +224,37 @@ export default memo(function GithubContributions({
       data-bento-shell=""
       suppressHydrationWarning
       className={cn(
-        "bento-reveal relative p-5 rounded-[var(--radius-card)] border overflow-hidden h-full w-full flex flex-col justify-between",
+        "bento-reveal relative p-5 rounded-[var(--radius-card)] border overflow-hidden h-full w-full flex flex-col",
+        // The skeleton sits directly under the header; loaded content spreads out.
+        loading ? "justify-start" : "justify-between",
         "bg-[var(--surface-card)] border-[var(--border-subtle)] text-[var(--text-primary)]",
       )}
     >
+        {/* One header element for every state, so the heading isn't re-created
+            (and re-painted as a new element) when the data arrives. */}
+        <div className={styles.header}>
+          <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
+          {loading ? (
+            <Placeholder
+              as="span"
+              className={`${styles.total} inline-block h-[1lh] w-[29ch] max-w-full`}
+            />
+          ) : (
+            !error &&
+            weeks.length > 0 &&
+            totalContributions > 0 && (
+              <span className={styles.total}>
+                {totalContributions} contributions in the last year
+              </span>
+            )
+          )}
+        </div>
         {loading ? (
           <HeatmapSkeleton />
         ) : error ? (
-          <>
-            <div className={styles.header}>
-              <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
-            </div>
-            <p className="type-body-sm text-[var(--text-tertiary)] text-center py-4">{error}</p>
-          </>
+          <p className="type-body-sm text-[var(--text-tertiary)] text-center py-4">{error}</p>
         ) : weeks.length > 0 ? (
           <>
-            <div className={styles.header}>
-              <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
-              {totalContributions > 0 && (
-                <span className={styles.total}>
-                  {totalContributions} contributions in the last year
-                </span>
-              )}
-            </div>
             <div
               className={styles.graph}
               ref={graphRef}
@@ -278,14 +279,9 @@ export default memo(function GithubContributions({
             </div>
           </>
         ) : (
-          <>
-            <div className={styles.header}>
-              <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
-            </div>
-            <p className="type-body-sm text-[var(--text-tertiary)] text-center py-4">
-              No contribution data available
-            </p>
-          </>
+          <p className="type-body-sm text-[var(--text-tertiary)] text-center py-4">
+            No contribution data available
+          </p>
         )}
         {mounted &&
           createPortal(

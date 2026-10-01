@@ -23,6 +23,9 @@ const DEFAULT_SECTIONS: NavSection[] = [
   { id: "fun", label: "fun", href: "#fun" },
 ];
 
+/** Section anchors (and the skip link) the site scrolls to; these hashes are removed from the URL. */
+const NAV_SECTION_HASHES = new Set(["me", "projects", "blogs", "fun", "main-content"]);
+
 const Navbar: React.FC<NavbarProps> = memo(
   ({ sections = DEFAULT_SECTIONS, avatarSrc, isHome = true }) => {
     const [activeSection, setActiveSection] = useState<string>(() => {
@@ -157,7 +160,13 @@ const Navbar: React.FC<NavbarProps> = memo(
         return () => clearTimeout(timer);
       }
 
-      if (window.location.hash) {
+      // Only the navbar's own section anchors are tidied away. Any other hash
+      // (e.g. a blog heading permalink) stays in the address bar so it can be
+      // copied and shared.
+      const isSectionHash = (hash: string) =>
+        NAV_SECTION_HASHES.has(hash.replace(/^#/, ""));
+
+      if (window.location.hash && isSectionHash(window.location.hash)) {
         window.history.replaceState(
           null,
           "",
@@ -167,7 +176,7 @@ const Navbar: React.FC<NavbarProps> = memo(
 
       const handleHashChange = () => {
         if (window.location.hash === "#blogs") return;
-        if (window.location.hash) {
+        if (window.location.hash && isSectionHash(window.location.hash)) {
           window.history.replaceState(
             null,
             "",

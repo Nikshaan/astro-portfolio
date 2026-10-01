@@ -1,4 +1,5 @@
-import { memo, useMemo } from "react";
+import { memo, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import ProjectDemoVideo, { type DemoVideoSource } from "./ProjectDemoVideo";
 import vocalopsPoster from "../data/vocalops-poster.webp";
 import productwizzPoster from "../data/productwizz-poster.webp";
@@ -39,7 +40,8 @@ const DEMO_VIDEOS: Record<string, DemoVideo> = {
   },
 };
 
-const SLOT_PATTERN = /(\{\{[A-Z_]+\}\})/g;
+const SLOT_PATTERN = /\{\{[A-Z_]+\}\}/g;
+const SLOT_ATTR = "data-demo-video-slot";
 
 interface ProjectCardContentProps {
   html: string;
@@ -48,22 +50,43 @@ interface ProjectCardContentProps {
 export default memo(function ProjectCardContent({
   html,
 }: ProjectCardContentProps) {
-  const parts = useMemo(() => html.split(SLOT_PATTERN).filter(Boolean), [html]);
+  // Video placeholders often sit inside an open section (<div class="mb-8">
+  // … {{VIDEO}} … </div>). Splitting the HTML around them left those sections
+  // cut in half, so instead each placeholder becomes an empty slot element in
+  // the parsed markup and the player is portalled into it, in place.
+  const markedHtml = useMemo(
+    () =>
+      html.replace(SLOT_PATTERN, (token) =>
+        DEMO_VIDEOS[token] ? `<div ${SLOT_ATTR}="${token}"></div>` : token,
+      ),
+    [html],
+  );
+  // Stable object on purpose: React re-applies innerHTML whenever this prop's
+  // identity changes, which would wipe out the portalled players.
+  const innerHtml = useMemo(() => ({ __html: markedHtml }), [markedHtml]);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [slots, setSlots] = useState<{ node: Element; token: string }[]>([]);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    setSlots(
+      Array.from(container.querySelectorAll(`[${SLOT_ATTR}]`)).map((node) => ({
+        node,
+        token: node.getAttribute(SLOT_ATTR) ?? "",
+      })),
+    );
+  }, [markedHtml]);
 
   return (
     <>
-      {parts.map((part, index) => {
-        const video = DEMO_VIDEOS[part];
-        if (video) {
-          return <ProjectDemoVideo key={`${part}-${index}`} {...video} />;
-        }
-
-        return (
-          <div
-            key={`html-${index}`}
-            dangerouslySetInnerHTML={{ __html: part }}
-          />
-        );
+      <div ref={containerRef} dangerouslySetInnerHTML={innerHtml} />
+      {slots.map(({ node, token }, index) => {
+        const video = DEMO_VIDEOS[token];
+        return video
+          ? createPortal(<ProjectDemoVideo {...video} />, node, `${token}-${index}`)
+          : null;
       })}
     </>
   );

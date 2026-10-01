@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { GH_TOKEN, GH_USERNAME } from "astro:env/server";
-import { jsonResponse } from "../../lib/apiResponse";
+import { jsonResponse, logApiError } from "../../lib/apiResponse";
 
 export const prerender = false;
 
@@ -9,6 +9,13 @@ const REQUEST_TIMEOUT = 8000;
 let cachedData: GitHubResponse | null = null;
 let lastFetchTime = 0;
 let pendingRequest: Promise<GitHubResponse> | null = null;
+
+/** GraphQL reported errors (rate limit, bad login...): usable body, never cache it. */
+class GraphQLErrorsResponse extends Error {
+  constructor(readonly body: GitHubResponse) {
+    super(body.errors?.map((e) => e.message).join("; ") || "GraphQL errors");
+  }
+}
 
 export type ContributionLevel =
   | "NONE"
@@ -58,7 +65,11 @@ function respond(
   status = 200,
 ) {
   const cdn =
-    cacheStatus === "STALE" || cacheStatus === "FALLBACK" ? "stale" : "default";
+    cacheStatus === "STALE" ||
+    cacheStatus === "FALLBACK" ||
+    cacheStatus === "UPSTREAM_ERROR"
+      ? "stale"
+      : "default";
   return jsonResponse(data, { status, cacheStatus, fetchedAt, cdn });
 }
 
@@ -140,7 +151,10 @@ export const GET: APIRoute = async () => {
     const data: unknown = await response.json();
 
     if (!isValidGitHubResponse(data)) {
-      throw new Error("Invalid API response structure");
+      throw new Error(`Invalid API response structure (HTTP ${response.status})`);
+    }
+    if (data.errors) {
+      throw new GraphQLErrorsResponse(data);
     }
 
     cachedData = data;
@@ -156,9 +170,16 @@ export const GET: APIRoute = async () => {
   try {
     const data = await run;
     return respond(data, "MISS", lastFetchTime);
-  } catch {
+  } catch (error) {
+    logApiError("github-contributions", "graphql", error);
     if (cachedData) {
       return respond(cachedData, "STALE", lastFetchTime);
+    }
+
+    // Same body the client has always received for GraphQL errors, but served
+    // with the short "stale" CDN profile and without poisoning the server cache.
+    if (error instanceof GraphQLErrorsResponse) {
+      return respond(error.body, "UPSTREAM_ERROR", 0);
     }
 
     return respond(FALLBACK_DATA, "FALLBACK", 0);

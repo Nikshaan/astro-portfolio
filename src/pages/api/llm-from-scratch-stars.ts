@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { GH_TOKEN } from "astro:env/server";
-import { jsonResponse } from "../../lib/apiResponse";
+import { jsonResponse, logApiError } from "../../lib/apiResponse";
 
 export const prerender = false;
 
@@ -67,7 +67,8 @@ export const GET: APIRoute = async () => {
   try {
     const stars = await run;
     return respond(stars, "MISS", lastFetchTime);
-  } catch {
+  } catch (error) {
+    logApiError("llm-from-scratch-stars", "repo", error);
     if (cachedStars !== null) return respond(cachedStars, "STALE", lastFetchTime);
     return jsonResponse(
       { error: "Failed to fetch stars" },

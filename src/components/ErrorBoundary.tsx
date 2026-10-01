@@ -4,6 +4,8 @@ import type { ErrorInfo, ReactNode } from "react";
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  /** What failed, for the default message ("<label> unavailable"). */
+  label?: string;
 }
 
 interface State {
@@ -29,7 +31,7 @@ class ErrorBoundary extends Component<Props, State> {
         this.props.fallback || (
           <div className="w-full h-full flex items-center justify-center text-center p-4">
             <div className="text-[var(--text-tertiary)]">
-              <p className="type-body-sm">Music stats unavailable</p>
+              <p className="type-body-sm">{this.props.label ?? "This section"} unavailable</p>
               <p className="type-caption mt-1">Please try again later</p>
             </div>
           </div>

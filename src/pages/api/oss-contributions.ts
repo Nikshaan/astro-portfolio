@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { GH_TOKEN, GH_USERNAME } from "astro:env/server";
-import { jsonResponse } from "../../lib/apiResponse";
+import { jsonResponse, logApiError } from "../../lib/apiResponse";
 
 export const prerender = false;
 
@@ -134,6 +134,11 @@ async function searchIssues(
     });
     const url = `https://api.github.com/search/issues?${params}`;
     const data = await githubJsonPreferAuth<SearchResponse>(url, signal);
+    // GitHub search can time out internally and still answer 200 with a
+    // partial (often empty) item list. Never mistake that for the truth.
+    if (data.incomplete_results === true) {
+      throw new Error("GitHub search returned incomplete results");
+    }
     const batch = Array.isArray(data.items) ? data.items : [];
     total = typeof data.total_count === "number" ? data.total_count : batch.length;
     items.push(...batch);
@@ -205,7 +210,11 @@ function toContribution(
     commentCount: item.comments ?? 0,
     repoName,
     repoStars: meta?.stars ?? 0,
-    orgLogo: meta?.orgLogo || `https://github.com/${owner}.png`,
+    // avatars.githubusercontent.com serves the same image as github.com/<owner>.png
+    // and, unlike github.com, is allowed by the site's img-src CSP.
+    orgLogo:
+      meta?.orgLogo ||
+      `https://avatars.githubusercontent.com/${encodeURIComponent(owner)}`,
   };
 }
 
@@ -247,6 +256,13 @@ async function fetchContributions(): Promise<Contribution[]> {
       .map((item) => toContribution(item, metaByRepo))
       .filter((c): c is Contribution => c !== null)
       .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+
+    // A cold instance has no baseline for the 50%-drop guard below. An empty
+    // result there is far more likely a GitHub search hiccup than reality
+    // (observed 2026-09-29: 0 served vs 12 real), so fail instead of caching it.
+    if (contributions.length === 0 && !cachedData?.length) {
+      throw new Error("GitHub search returned no contributions");
+    }
 
     if (
       cachedData &&
@@ -296,7 +312,8 @@ export const GET: APIRoute = async () => {
   try {
     const data = await run;
     return respond(data, "MISS", lastFetchTime);
-  } catch {
+  } catch (error) {
+    logApiError("oss-contributions", "search", error);
     if (cachedData) {
       return respond(cachedData, "STALE", lastFetchTime);
     }

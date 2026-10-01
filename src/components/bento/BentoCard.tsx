@@ -61,6 +61,9 @@ const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent) => {
         if (!expandable || !onActivate) return;
+        // Only the card itself opens the modal. Enter/Space on a link or
+        // control inside it (GitHub, Live, tech tiles) keeps its own behavior.
+        if (e.target !== e.currentTarget) return;
         if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
           e.preventDefault();
           onActivate();

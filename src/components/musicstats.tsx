@@ -19,7 +19,9 @@ export default memo(function MusicStatsClient() {
       <div
         className={`${MUSIC_STATS_SHELL} shrink-0 items-center justify-center`}
       >
-        <div className="type-body-sm text-[var(--danger)]">{error}</div>
+        <div className="type-body-sm text-[var(--text-tertiary)]">
+          Couldn't load music stats right now.
+        </div>
       </div>
     );
   }

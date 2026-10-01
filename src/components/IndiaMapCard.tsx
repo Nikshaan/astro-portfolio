@@ -25,6 +25,7 @@ import {
 } from "./bentoCardMotion";
 import useIsLightTheme from "../hooks/useTheme";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import { lockPageScroll, unlockPageScroll } from "../utils/pageScrollLock";
 import { IndiaMapPlaceholder } from "./Placeholder";
 
 function cn(...inputs: ClassValue[]) {
@@ -204,6 +205,8 @@ const IndiaMapModalMap = memo(function IndiaMapModalMap({
 }) {
   const isPresent = useIsPresent();
   const shouldReduceMotion = useReducedMotion();
+  // Marker whose tooltip was opened by keyboard focus (not by mouse or touch).
+  const keyboardShownRef = useRef<string | null>(null);
   if (!isPresent) return null;
 
   return (
@@ -264,6 +267,35 @@ const IndiaMapModalMap = memo(function IndiaMapModalMap({
                     cy={coords[1]}
                     r={tapTargetRadius}
                     className="fill-transparent cursor-pointer pointer-events-auto"
+                    tabIndex={0}
+                    role="button"
+                    aria-label={place.name}
+                    onFocus={(e) => {
+                      // Mouse/touch focus is handled by the pointer and click
+                      // handlers below; only keyboard focus opens the tooltip here.
+                      if (!e.currentTarget.matches(":focus-visible")) return;
+                      keyboardShownRef.current = place.name;
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setTooltipPos({
+                        x: rect.left + rect.width / 2,
+                        y: rect.top + rect.height / 2,
+                      });
+                      setHoveredPlace(place);
+                    }}
+                    onBlur={() => {
+                      if (keyboardShownRef.current !== place.name) return;
+                      keyboardShownRef.current = null;
+                      setTooltipPos(null);
+                      setHoveredPlace(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.currentTarget.dispatchEvent(
+                          new MouseEvent("click", { bubbles: true }),
+                        );
+                      }
+                    }}
                     onPointerEnter={(e) => {
                       if (e.pointerType === "mouse") {
                         const rect = e.currentTarget.getBoundingClientRect();
@@ -331,9 +363,9 @@ const SESSION_CACHE_KEY = "nikshaan_india_topo_v1";
 
 function readSessionTopology(): any {
   if (cachedTopology) return cachedTopology;
-  if (typeof window !== "undefined" && window.sessionStorage) {
+  if (typeof window !== "undefined") {
     try {
-      const stored = window.sessionStorage.getItem(SESSION_CACHE_KEY);
+      const stored = window.sessionStorage?.getItem(SESSION_CACHE_KEY);
       if (stored) {
         cachedTopology = JSON.parse(stored);
         return cachedTopology;
@@ -352,9 +384,9 @@ async function loadIndiaTopology(): Promise<any> {
     if (!response.ok) throw new Error("Failed to load map data");
     const data = await response.json();
     cachedTopology = data;
-    if (typeof window !== "undefined" && window.sessionStorage) {
+    if (typeof window !== "undefined") {
       try {
-        window.sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(data));
+        window.sessionStorage?.setItem(SESSION_CACHE_KEY, JSON.stringify(data));
       } catch {}
     }
     return data;
@@ -374,10 +406,25 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
   const [layoutLock, setLayoutLock] = useState(false);
   const [topology, setTopology] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [hoveredPlace, setHoveredPlace] = useState<VisitedPlace | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(
     null,
   );
+
+  const fetchTopology = useCallback(async () => {
+    setLoadFailed(false);
+    setLoading(true);
+    try {
+      const data = await loadIndiaTopology();
+      setTopology(data);
+    } catch {
+      setTopology(null);
+      setLoadFailed(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const isLightTheme = useIsLightTheme();
   const shouldReduceMotion = useReducedMotion();
@@ -394,18 +441,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
       return;
     }
 
-    const fetchData = async () => {
-      try {
-        const data = await loadIndiaTopology();
-        setTopology(data);
-      } catch {
-        setTopology(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchTopology();
   }, [topology]);
 
   const handleClose = useCallback(() => {
@@ -420,21 +456,12 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
 
   useEffect(() => {
     if (!layoutLock) {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-      document.documentElement.style.removeProperty("--scrollbar-width");
+      unlockPageScroll();
       return;
     }
 
     let scrollbarRaf = 0;
-    scrollbarRaf = requestAnimationFrame(() => {
-      document.documentElement.style.setProperty(
-        "--scrollbar-width",
-        `${window.innerWidth - document.documentElement.clientWidth}px`,
-      );
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = "var(--scrollbar-width, 0px)";
-    });
+    scrollbarRaf = requestAnimationFrame(lockPageScroll);
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.code === "Escape") {
@@ -446,9 +473,7 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
     return () => {
       cancelAnimationFrame(scrollbarRaf);
       window.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-      document.documentElement.style.removeProperty("--scrollbar-width");
+      unlockPageScroll();
     };
   }, [layoutLock, handleClose]);
 
@@ -553,6 +578,11 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
   const isHoverable = !portalVisible && !layoutLock;
 
   const handleCardClick = () => {
+    // Nothing to expand without map data; a click retries the download instead.
+    if (!baseMap.pathGenerator) {
+      if (loadFailed && !loading) void fetchTopology();
+      return;
+    }
     if (!portalVisible) {
       setLayoutLock(true);
       setPortalVisible(true);
@@ -578,7 +608,11 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
           data-bento-frozen={layoutLock ? "" : undefined}
           role="button"
           tabIndex={0}
-          aria-label={`Travels — open map, ${visitedPlaces.length} cities visited`}
+          aria-label={
+            loadFailed
+              ? "Travels — map couldn't load, activate to retry"
+              : `Travels — open map, ${visitedPlaces.length} cities visited`
+          }
           onKeyDown={handleCardKeyDown}
           className={cn(
             "relative h-full w-full rounded-[var(--radius-card)] border overflow-hidden bento-card group cursor-pointer",
@@ -606,6 +640,18 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
           onClick={handleCardClick}
         >
           {loading && <IndiaMapPlaceholder />}
+
+          {!loading && loadFailed && (
+            <div className="absolute inset-0 p-4 flex flex-col">
+              <span className="type-bento-eyebrow text-[var(--text-tertiary)]">
+                Travels
+              </span>
+              <div className="flex flex-1 flex-col items-center justify-center text-center text-[var(--text-tertiary)]">
+                <p className="type-body-sm">Couldn't load the map right now.</p>
+                <p className="type-caption mt-1">Tap to try again</p>
+              </div>
+            </div>
+          )}
 
           {!loading && baseMap.pathGenerator && (
             <motion.div

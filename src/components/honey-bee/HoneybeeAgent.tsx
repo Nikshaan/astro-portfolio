@@ -4,6 +4,9 @@ import { useBeeBrain } from "./useBeeBrain";
 import { renderBee } from "./renderBee";
 import { getBeeCaption } from "./telemetryFormatters";
 
+/** Half the side of the square around the bee that counts as hovering it. */
+const HOVER_HALF_SIZE = 20;
+
 export interface HoneybeeAgentProps {
   isExiting?: boolean;
   onExitFinished?: () => void;
@@ -46,7 +49,13 @@ export const HoneybeeAgent: React.FC<HoneybeeAgentProps> = ({
   });
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const hitBoxRef = useRef<HTMLDivElement | null>(null);
+  // Last cursor position (null when the cursor has left the window) and
+  // whether it is currently over the bee. Hover is hit-tested in the render
+  // loop instead of with an overlay element, so the bee never blocks clicks.
+  const pointerRef = useRef<{ x: number; y: number } | null>(null);
+  const overBeeRef = useRef<boolean>(false);
+  const hoverEnterRef = useRef<() => void>(() => {});
+  const hoverLeaveRef = useRef<() => void>(() => {});
   const boundsRef = useRef<Bounds>({ width: 0, height: 0 });
   const rafIdRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number>(0);
@@ -150,12 +159,18 @@ export const HoneybeeAgent: React.FC<HoneybeeAgentProps> = ({
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     const onMouseMove = (e: MouseEvent) => {
+      pointerRef.current = { x: e.clientX, y: e.clientY };
       if (!deathPhaseRef.current.active) {
         brain.handleMouseMove(e.clientX, e.clientY);
       }
     };
 
+    const onPointerLeaveWindow = () => {
+      pointerRef.current = null;
+    };
+
     window.addEventListener("mousemove", onMouseMove, { passive: true });
+    document.documentElement.addEventListener("mouseleave", onPointerLeaveWindow);
 
     const renderLoop = (timestamp: number) => {
       if (!isTabVisibleRef.current) {
@@ -222,12 +237,17 @@ export const HoneybeeAgent: React.FC<HoneybeeAgentProps> = ({
         deathProgress,
       });
 
-      if (hitBoxRef.current) {
-        if (deathPhaseRef.current.active) {
-          hitBoxRef.current.style.display = "none";
-        } else {
-          hitBoxRef.current.style.display = "block";
-          hitBoxRef.current.style.transform = `translate3d(${Math.round(kin.x - 20)}px, ${Math.round(kin.y - 20)}px, 0)`;
+      if (!deathPhaseRef.current.active) {
+        // Same 40x40 area the old hover overlay covered, centred on the bee.
+        const pointer = pointerRef.current;
+        const over =
+          pointer !== null &&
+          Math.abs(pointer.x - kin.x) <= HOVER_HALF_SIZE &&
+          Math.abs(pointer.y - kin.y) <= HOVER_HALF_SIZE;
+        if (over !== overBeeRef.current) {
+          overBeeRef.current = over;
+          if (over) hoverEnterRef.current();
+          else hoverLeaveRef.current();
         }
       }
 
@@ -247,6 +267,10 @@ export const HoneybeeAgent: React.FC<HoneybeeAgentProps> = ({
       window.removeEventListener("resize", resizeCanvas);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("mousemove", onMouseMove);
+      document.documentElement.removeEventListener(
+        "mouseleave",
+        onPointerLeaveWindow,
+      );
       document.removeEventListener("astro:page-load", handleAstroPageLoad);
     };
   }, [brain, onExitFinished]);
@@ -288,6 +312,9 @@ export const HoneybeeAgent: React.FC<HoneybeeAgentProps> = ({
     }, 200);
   }, [brain]);
 
+  hoverEnterRef.current = handleHitBoxEnter;
+  hoverLeaveRef.current = handleHitBoxLeave;
+
   const viewportW = typeof window !== "undefined" ? window.innerWidth : 1200;
   const viewportH = typeof window !== "undefined" ? window.innerHeight : 800;
 
@@ -315,26 +342,11 @@ export const HoneybeeAgent: React.FC<HoneybeeAgentProps> = ({
         className="fixed inset-0 pointer-events-none z-40 select-none"
       />
 
-      <div
-        ref={hitBoxRef}
-        aria-hidden="true"
-        role="presentation"
-        onMouseEnter={handleHitBoxEnter}
-        onMouseLeave={handleHitBoxLeave}
-        className="fixed top-0 left-0 w-10 h-10 z-[45] pointer-events-auto cursor-crosshair select-none"
-        style={{
-          willChange: "transform",
-          transform: "translate3d(-100px, -100px, 0)",
-        }}
-      />
-
       {isHovered && telemetry && !deathPhaseRef.current.active && (
         <aside
           role="status"
           aria-live="polite"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={handleHitBoxLeave}
-          className="fixed z-[60] pointer-events-auto w-max max-w-[270px] rounded-[var(--radius-card)] border border-[var(--border-strong)] bg-[var(--surface-card)]/95 px-3 py-2 text-xs shadow-2xl backdrop-blur-md transition-opacity duration-150 text-[var(--text-primary)]"
+          className="fixed z-[60] pointer-events-none w-max max-w-[270px] rounded-[var(--radius-card)] border border-[var(--border-strong)] bg-[var(--surface-card)]/95 px-3 py-2 text-xs shadow-2xl backdrop-blur-md transition-opacity duration-150 text-[var(--text-primary)]"
           style={{
             left: `${hudLeft}px`,
             top: `${hudTop}px`,

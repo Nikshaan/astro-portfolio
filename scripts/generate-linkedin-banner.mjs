@@ -6,6 +6,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const portraitSrc = path.join(root, "src/data/bee.avif");
 const outPath = path.join(root, "public/linkedin_banner.webp");
+// PNG copy for og:image/twitter:image: some link-preview crawlers (LinkedIn
+// among them) don't reliably render WebP.
+const pngOutPath = path.join(root, "public/linkedin_banner.png");
 
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -81,7 +84,7 @@ const overlay = Buffer.from(`<svg width="${WIDTH}" height="${HEIGHT}" xmlns="htt
   />
 </svg>`);
 
-await sharp({
+const banner = await sharp({
   create: {
     width: WIDTH,
     height: HEIGHT,
@@ -93,7 +96,10 @@ await sharp({
     { input: overlay, top: 0, left: 0 },
     { input: portrait, top: PORTRAIT_TOP, left: PORTRAIT_LEFT },
   ])
-  .webp({ quality: 92 })
-  .toFile(outPath);
+  .png()
+  .toBuffer();
 
-console.log(`Wrote ${outPath}`);
+await sharp(banner).webp({ quality: 92 }).toFile(outPath);
+await sharp(banner).png({ compressionLevel: 9 }).toFile(pngOutPath);
+
+console.log(`Wrote ${outPath} and ${pngOutPath}`);

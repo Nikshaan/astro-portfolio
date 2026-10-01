@@ -64,6 +64,14 @@ async function mapWithConcurrency<T, R>(
   return results;
 }
 
+/** Thrown for failures that retrying cannot fix (4xx, exhausted 429 budget). */
+class NonRetryableError extends Error {}
+
+/** Strip credentials from a URL before it lands in an error message or log. */
+function redactUrl(url: string): string {
+  return url.replace(/([?&]api_key=)[^&]*/gi, "$1[REDACTED]");
+}
+
 export async function fetchWithRetry(
   url: string,
   maxRetries = 3,
@@ -91,7 +99,9 @@ export async function fetchWithRetry(
           rateLimitRetries >= MAX_RATE_LIMIT_RETRIES ||
           rateLimitWaitMs >= MAX_RATE_LIMIT_WAIT_MS
         ) {
-          throw new Error("HTTP 429: rate limit retry budget exhausted");
+          throw new NonRetryableError(
+            "HTTP 429: rate limit retry budget exhausted",
+          );
         }
         const retryAfterSec = parseInt(
           response.headers.get("Retry-After") || "3",
@@ -109,11 +119,14 @@ export async function fetchWithRetry(
       }
       if (response.ok) return response;
       if (response.status >= 400 && response.status < 500) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new NonRetryableError(`HTTP ${response.status}`);
       }
       lastError = new Error(`Unexpected HTTP status ${response.status}`);
     } catch (err) {
       clearTimeout(timeoutId);
+      if (err instanceof NonRetryableError) {
+        throw new Error(`Request failed for ${redactUrl(url)}: ${err.message}`);
+      }
       lastError = err;
       if (attempt === maxRetries - 1) break;
     }
@@ -121,7 +134,23 @@ export async function fetchWithRetry(
     await sleep(Math.min(1000 * Math.pow(2, attempt), 4000));
   }
 
-  throw new Error(`Max retries exceeded for ${url}: ${String(lastError)}`);
+  throw new Error(
+    `Max retries exceeded for ${redactUrl(url)}: ${String(lastError)}`,
+  );
+}
+
+/**
+ * Last.fm reports some failures (rate limit, bad key, unknown user) as a JSON
+ * `{ error, message }` body, sometimes with HTTP 200. Treat those as failures
+ * instead of as "no scrobbles", which would blank the overlap window.
+ */
+export function assertLastFmOk(json: unknown): void {
+  const body = json as { error?: unknown; message?: unknown } | null;
+  if (body && typeof body === "object" && body.error != null) {
+    throw new Error(
+      `Last.fm error ${String(body.error)}: ${String(body.message ?? "")}`,
+    );
+  }
 }
 
 function recentTracksUrl(
@@ -173,12 +202,24 @@ async function fetchRangeOrThrow(
     recentTracksUrl(username, apiKey, fromSec, toSec, 1, 1),
   );
   const probeJson = await probe.json();
+  assertLastFmOk(probeJson);
   const total = parseInt(
     String(probeJson?.recenttracks?.["@attr"]?.total ?? "0"),
     10,
   );
 
   if (!Number.isFinite(total) || total <= 0) return [];
+
+  if (total > PAGE_SIZE * MAX_PAGES) {
+    console.warn(
+      JSON.stringify({
+        scope: "lastfm-timeline",
+        msg: "scrobble count exceeds fetch cap; oldest scrobbles in range are dropped",
+        total,
+        cap: PAGE_SIZE * MAX_PAGES,
+      }),
+    );
+  }
 
   const pages = Math.min(Math.ceil(total / PAGE_SIZE), MAX_PAGES);
   const pageNumbers = Array.from({ length: pages }, (_, i) => i + 1);
@@ -188,7 +229,12 @@ async function fetchRangeOrThrow(
     (page) =>
       fetchWithRetry(
         recentTracksUrl(username, apiKey, fromSec, toSec, PAGE_SIZE, page),
-      ).then((r) => r.json()),
+      )
+        .then((r) => r.json())
+        .then((json) => {
+          assertLastFmOk(json);
+          return json;
+        }),
   );
 
   const scrobbles: Scrobble[] = [];

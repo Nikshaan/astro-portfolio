@@ -21,11 +21,11 @@ export function getPersistentEntry<T>(
   key: string,
   maxAgeMs: number,
 ): PersistentEntry<T> | null {
-  if (typeof window === "undefined" || !window.localStorage) {
-    return null;
-  }
+  if (typeof window === "undefined") return null;
 
   try {
+    // The localStorage getter itself throws (SecurityError) when site data is blocked.
+    if (!window.localStorage) return null;
     const raw = window.localStorage.getItem(key);
     if (!raw) return null;
 
@@ -59,11 +59,10 @@ export function setPersistentCache<T>(
   data: T,
   timestamp = Date.now(),
 ): void {
-  if (typeof window === "undefined" || !window.localStorage) {
-    return;
-  }
+  if (typeof window === "undefined") return;
 
   try {
+    if (!window.localStorage) return;
     const envelope: CacheEnvelope<T> = {
       version: CURRENT_CACHE_VERSION,
       timestamp,

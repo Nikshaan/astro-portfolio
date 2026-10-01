@@ -1,4 +1,5 @@
 ---
+import { tagSlug } from "../utils/tagSlug";
 import type { CollectionEntry } from "astro:content";
 import type { MarkdownHeading } from "astro";
 import MainLayout from "./MainLayout.astro";
@@ -17,9 +18,13 @@ interface Props {
 
 const { post, headings, prevPost, nextPost } = Astro.props;
 const readingStats = getReadingTime(post.body || "");
+// Same filter TableOfContents applies; without any, drop the empty TOC column
+// and centre the article instead.
+const hasToc = headings.some((h) => h.depth === 2 || h.depth === 3);
 
-const canonicalUrl = post.data.canonicalURL || new URL(`/blog/${post.id}`, Astro.site || "https://nikshaan.dev").href;
-const ogImage = post.data.ogImage || "https://nikshaan.dev/linkedin_banner.webp";
+// Trailing slash matches the built directory URL, the sitemap and the RSS feed.
+const canonicalUrl = post.data.canonicalURL || new URL(`/blog/${post.id}/`, Astro.site || "https://nikshaan.dev").href;
+const ogImage = post.data.ogImage || "https://nikshaan.dev/linkedin_banner.png";
 
 const formattedDate = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
@@ -65,9 +70,10 @@ const jsonLd = {
   ogType="article"
   publishedTime={post.data.pubDate.toISOString()}
   modifiedTime={post.data.updatedDate ? post.data.updatedDate.toISOString() : undefined}
+  preloadMonoFont
 >
   <Fragment slot="head">
-    <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd).replace(/</g, "\\u003c")} />
   </Fragment>
 
   <NavbarWrapper />
@@ -89,19 +95,27 @@ const jsonLd = {
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 min-w-0">
         {/* Desktop Sticky TOC on Left */}
-        <aside class="hidden lg:block lg:col-span-3 xl:col-span-3 min-w-0" data-pagefind-ignore>
-          <TableOfContents headings={headings} variant="desktop" />
-        </aside>
+        {hasToc && (
+          <aside class="hidden lg:block lg:col-span-3 xl:col-span-3 min-w-0" data-pagefind-ignore>
+            <TableOfContents headings={headings} variant="desktop" />
+          </aside>
+        )}
 
         {/* Main Post Column on Right */}
-        <article class="lg:col-span-9 xl:col-span-9 min-w-0 max-w-full overflow-hidden" data-pagefind-body>
+        <article
+          class:list={[
+            "min-w-0 max-w-full overflow-hidden",
+            hasToc ? "lg:col-span-9 xl:col-span-9" : "lg:col-span-8 lg:col-start-3",
+          ]}
+          data-pagefind-body
+        >
           {/* Post Header */}
           <header class="mb-10 pb-8 border-b border-[var(--border-subtle)]">
             {post.data.tags && post.data.tags.length > 0 && (
               <div class="flex flex-wrap gap-2 mb-4">
                 {post.data.tags.map((tag) => (
                   <a
-                    href={`/blog/tags/${tag.toLowerCase()}`}
+                    href={`/blog/tags/${tagSlug(tag)}`}
                     class="text-xs px-2.5 py-0.5 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors font-mono"
                   >
                     #{tag}
@@ -165,7 +179,7 @@ const jsonLd = {
                     <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--surface-raised)] text-[var(--text-tertiary)] border border-[var(--border-subtle)] uppercase">Author</span>
                   </div>
                   <p class="text-xs text-[var(--text-secondary)] mt-0.5 truncate sm:text-clip">
-                    AI/ML Student &amp; Software Developer in Mumbai.
+                    AI/ML engineer &amp; software developer in Mumbai.
                   </p>
                 </div>
               </div>

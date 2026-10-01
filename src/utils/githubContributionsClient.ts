@@ -62,6 +62,10 @@ const resource = createLiveResource<GitHubAPIResponse>({
   key: PERSISTENT_CACHE_KEY,
   url: "api/github-contributions",
   validate: validateGithub,
+  isUsable: (response) =>
+    !response.errors &&
+    (response.data?.user?.contributionsCollection?.contributionCalendar?.weeks
+      ?.length ?? 0) > 0,
   freshMs: FRESH_MS,
   pollMs: POLL_MS,
   maxAgeMs: PERSISTENT_TTL_MS,

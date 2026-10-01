@@ -54,11 +54,14 @@ function CardImage({
   alt,
   sizes,
   className,
+  eager = false,
 }: {
   image: any;
   alt: string;
   sizes: string;
   className?: string;
+  /** Above-the-fold images: fetch right away instead of after layout. */
+  eager?: boolean;
 }) {
   return (
     <img
@@ -68,7 +71,7 @@ function CardImage({
       width={image.attributes?.width}
       height={image.attributes?.height}
       alt={alt}
-      loading="lazy"
+      loading={eager ? "eager" : "lazy"}
       decoding="async"
       className={className}
     />
@@ -173,6 +176,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                   image={images[educationCard.data.image]}
                   alt="Dwarkadas J. Sanghvi College of Engineering logo"
                   sizes="90px"
+                  eager
                   className="select-none w-[70px] h-[70px] sm:w-[90px] sm:h-[90px] object-contain"
                 />
               </div>
@@ -212,6 +216,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                   image={images.winIcon}
                   alt=""
                   sizes="64px"
+                  eager
                   className="select-none w-[52px] h-[52px] sm:w-[64px] sm:h-[64px] object-contain"
                 />
                 <h3 className="font-heading font-bold">

@@ -4,6 +4,7 @@ import type { CollectionEntry } from "astro:content";
 import MainLayout from "../../../layouts/MainLayout.astro";
 import NavbarWrapper from "../../../components/NavbarWrapper.astro";
 import { getReadingTime } from "../../../utils/readingTime";
+import { tagSlug } from "../../../utils/tagSlug";
 
 export async function getStaticPaths() {
   const isDev = import.meta.env.DEV;
@@ -11,18 +12,20 @@ export async function getStaticPaths() {
 
   const allTags = new Set<string>();
   posts.forEach((post) => {
-    (post.data.tags || []).forEach((t) => allTags.add(t.toLowerCase()));
+    (post.data.tags || []).forEach((t) => {
+      if (tagSlug(t)) allTags.add(tagSlug(t));
+    });
   });
 
   return Array.from(allTags).map((tag) => {
     const filteredPosts = posts
-      .filter((post) => (post.data.tags || []).some((t) => t.toLowerCase() === tag))
+      .filter((post) => (post.data.tags || []).some((t) => tagSlug(t) === tag))
       .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
 
     // Find original casing for display
     const originalTag = posts
       .flatMap((p) => p.data.tags || [])
-      .find((t) => t.toLowerCase() === tag) || tag;
+      .find((t) => tagSlug(t) === tag)?.trim() || tag;
 
     return {
       params: { tag },
@@ -42,6 +45,7 @@ const { posts, tagName } = Astro.props;
 <MainLayout
   title={`Posts tagged #${tagName} | Nikshaan Shetty`}
   description={`Articles and technical writeups tagged with #${tagName}.`}
+  preloadMonoFont
 >
   <NavbarWrapper />
 

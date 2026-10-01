@@ -118,8 +118,15 @@ function weekFromSvgPoint(x: number, y: number): number | null {
   return wi;
 }
 
+/**
+ * Dial position (0-51) of the Monday-start week beginning at `fromSec`.
+ * A week belongs to the year its Sunday falls in, so the week holding Jan 1 is
+ * slot 0. Years with 53 Sundays have one extra week at the end; it shares slot
+ * 51 with the week before (see the merge in the model) instead of wrapping onto
+ * slot 0 and overwriting the first week of the next year.
+ */
 function getWeekSlotOfYear(fromSec: number): number {
-  const d = new Date(fromSec * 1000);
+  const d = new Date((fromSec + 6 * 86400) * 1000);
   const dateStr = d.toLocaleDateString("en-US", {
     timeZone: IST_TIME_ZONE,
     year: "numeric",
@@ -136,7 +143,7 @@ function getWeekSlotOfYear(fromSec: number): number {
 
   const diffSec = fromSec - jan1MonStartSec;
   const weekIdx = Math.floor(diffSec / (7 * 86400));
-  return Math.min(51, Math.max(0, ((weekIdx % 52) + 52) % 52));
+  return Math.min(N_WEEKS - 1, Math.max(0, weekIdx));
 }
 
 const FIXED_MONTHS = [
@@ -497,15 +504,35 @@ export default memo(function RadialArtistHeatmap() {
       const wk = rawWk[i];
       if (!wk) continue;
       const slot = getWeekSlotOfYear(wk.from);
-      alignedWeeks[slot] = wk;
+      const existing = alignedWeeks[slot];
+      // Only a 53-week year's last week lands on an occupied slot: combine the
+      // two weeks rather than dropping one.
+      alignedWeeks[slot] = existing
+        ? {
+            from: Math.min(existing.from, wk.from),
+            to: Math.max(existing.to, wk.to),
+          }
+        : wk;
       for (let r = 0; r < N_RINGS; r++) {
-        alignedArtists[r].plays[slot] = rawArtists[r]?.plays[i] ?? 0;
+        alignedArtists[r].plays[slot] += rawArtists[r]?.plays[i] ?? 0;
       }
     }
 
+    // A slot left empty by such a merge sits at the seam between the newest
+    // and oldest week; label it with the out-of-window week that belongs there.
+    const WEEK_SEC = 7 * 86400;
+    const seamCandidates = [
+      rawWk[0].from - WEEK_SEC,
+      rawWk[0].from - 2 * WEEK_SEC,
+      rawWk[N_WEEKS - 1].from + WEEK_SEC,
+    ];
     for (let s = 0; s < N_WEEKS; s++) {
       if (!alignedWeeks[s]) {
-        alignedWeeks[s] = rawWk[s] ?? { from: 0, to: 0 };
+        const from = seamCandidates.find((c) => getWeekSlotOfYear(c) === s);
+        alignedWeeks[s] =
+          from !== undefined
+            ? { from, to: from + WEEK_SEC - 1 }
+            : (rawWk[s] ?? { from: 0, to: 0 });
       }
     }
 
@@ -813,8 +840,8 @@ export default memo(function RadialArtistHeatmap() {
       <div className="flex w-full flex-1 min-h-0 min-w-0 items-center justify-center overflow-hidden px-0 py-1 sm:p-2 lg:min-h-[250px] lg:p-3">
         <div ref={chartHostRef} className={chartInnerClass}>
           {showError ? (
-            <div className="flex h-full w-full items-center justify-center px-3 text-center type-body-sm text-[var(--danger)]">
-              {error}
+            <div className="flex h-full w-full items-center justify-center px-3 text-center type-body-sm text-[var(--text-tertiary)]">
+              Couldn't load listening history right now.
             </div>
           ) : null}
           {showSkeleton ? <YearlyScrobblesChartSkeletonInner /> : null}

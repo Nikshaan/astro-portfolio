@@ -1,6 +1,7 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { assertLastFmOk, redactUrl } from "./lib/lastfm.mjs";
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "generated");
 const OUT_FILE = join(OUT_DIR, "lastfmSnapshot.json");
@@ -43,15 +44,17 @@ async function fetchWithRetry(url, maxRetries = 3) {
         continue;
       }
       if (response.ok) return response;
-      throw new Error(`HTTP ${response.status}`);
+      lastError = new Error(`HTTP ${response.status}`);
+      // A 4xx (bad key, unknown user) won't fix itself on retry.
+      if (response.status >= 400 && response.status < 500) break;
     } catch (err) {
       clearTimeout(timeoutId);
       lastError = err;
-      if (attempt === maxRetries - 1) break;
     }
+    if (attempt === maxRetries - 1) break;
     await sleep(Math.min(1000 * 2 ** attempt, 4000));
   }
-  throw new Error(`Max retries exceeded for ${url}: ${String(lastError)}`);
+  throw new Error(`Request failed for ${redactUrl(url)}: ${String(lastError)}`);
 }
 
 function recentTracksUrl(username, apiKey, fromSec, toSec, limit, page) {
@@ -114,6 +117,7 @@ async function main() {
   try {
     const probe = await fetchWithRetry(recentTracksUrl(username, apiKey, fromSec, toSec, 1, 1));
     const probeJson = await probe.json();
+    assertLastFmOk(probeJson);
     const total = parseInt(String(probeJson?.recenttracks?.["@attr"]?.total ?? "0"), 10);
 
     if (!Number.isFinite(total) || total <= 0) {
@@ -122,13 +126,20 @@ async function main() {
       return;
     }
 
+    if (total > PAGE_SIZE * MAX_PAGES) {
+      console.warn(
+        `[lastfm-snapshot] ${total} scrobbles in range exceeds the ${PAGE_SIZE * MAX_PAGES} fetch cap; oldest are dropped`,
+      );
+    }
     const pages = Math.min(Math.ceil(total / PAGE_SIZE), MAX_PAGES);
     const pageNumbers = Array.from({ length: pages }, (_, i) => i + 1);
     const responses = await mapWithConcurrency(pageNumbers, CONCURRENCY, async (page) => {
       const res = await fetchWithRetry(
         recentTracksUrl(username, apiKey, fromSec, toSec, PAGE_SIZE, page),
       );
-      return res.json();
+      const json = await res.json();
+      assertLastFmOk(json);
+      return json;
     });
 
     const scrobbles = [];

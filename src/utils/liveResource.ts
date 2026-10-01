@@ -22,11 +22,19 @@ export interface LiveResourceOptions<T> {
   staleAfterMs?: number;
   maxAgeMs?: number;
   onFetch?: () => void;
+  /**
+   * False for payloads that are well-formed but carry no real data (upstream
+   * error bodies, empty fallbacks). Such payloads never replace or persist
+   * over data that was usable.
+   */
+  isUsable?: (data: T) => boolean;
 }
 
 const DEFAULT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const VISIBILITY_MIN_GAP_MS = 30_000;
 const STALE_RETRY_MS = [2500, 8000] as const;
+/** X-Cache-Status values whose body is a placeholder, not upstream data. */
+const DEGRADED_CACHE_STATUSES = new Set(["FALLBACK", "UPSTREAM_ERROR", "ERROR"]);
 
 type Listener<T> = (snapshot: LiveSnapshot<T>) => void;
 
@@ -69,6 +77,7 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
     pollMs,
     maxAgeMs = DEFAULT_MAX_AGE_MS,
     onFetch,
+    isUsable,
   } = options;
   const staleAfterMs = options.staleAfterMs ?? freshMs;
   const href = buildApiUrl(url);
@@ -80,6 +89,7 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
     fetchedAt: null,
   });
   let data: T | null = null;
+  let dataIsUsable = false;
   let fetchedAt = 0;
   let diskBooted = false;
   let inflight: Promise<T> | null = null;
@@ -91,6 +101,7 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
     const disk = getPersistentEntry<T>(key, maxAgeMs);
     if (!disk) return;
     data = disk.data;
+    dataIsUsable = isUsable ? isUsable(disk.data) : true;
     fetchedAt = disk.timestamp;
     snapshot = { data, loading: false, error: null, fetchedAt };
   }
@@ -169,11 +180,26 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
         throw new Error(`HTTP ${response.status}`);
       }
       const parsed = validate(await response.json());
+      const degraded =
+        DEGRADED_CACHE_STATUSES.has(
+          response.headers.get("X-Cache-Status") ?? "",
+        ) || (isUsable ? !isUsable(parsed) : false);
+
+      // Keep showing real data rather than swapping it for a placeholder.
+      // fetchedAt is left alone, so the next poll retries.
+      if (degraded && data !== null && dataIsUsable) {
+        setSnapshot({ loading: false, error: null });
+        return data;
+      }
+
       const at = parseFetchedAt(response, Date.now());
       data = parsed;
+      dataIsUsable = !degraded;
       fetchedAt = at;
-      setPersistentCache(key, parsed, at);
-      noteFetchedAt(at);
+      if (!degraded) {
+        setPersistentCache(key, parsed, at);
+        noteFetchedAt(at);
+      }
       setSnapshot({ data: parsed, loading: false, error: null, fetchedAt: at });
       return parsed;
     })();

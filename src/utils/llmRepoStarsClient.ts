@@ -36,8 +36,11 @@ export function fetchLlmRepoStars(options?: { force?: boolean }): Promise<number
 
 export function startLlmRepoStarsPolling(
   onStars: (stars: number) => void,
+  onFailedChange?: (failed: boolean) => void,
 ): () => void {
   return resource.subscribe((snap) => {
     if (snap.data !== null) onStars(snap.data);
+    // Failed with nothing to show: lets the card drop its loading shimmer.
+    onFailedChange?.(snap.data === null && !snap.loading && snap.error !== null);
   });
 }

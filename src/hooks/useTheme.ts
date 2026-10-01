@@ -43,15 +43,23 @@ export function toggleThemeWithTransition(duration = 400) {
 
   if (isLight) {
     html.removeAttribute("data-theme");
-    localStorage.setItem("theme", "dark");
+    persistTheme("dark");
     meta?.setAttribute("content", "#0a0a0a");
   } else {
     html.setAttribute("data-theme", "light");
-    localStorage.setItem("theme", "light");
+    persistTheme("light");
     meta?.setAttribute("content", "#faf9f7");
   }
 
   window.setTimeout(() => {
     html.classList.remove("theme-transitioning");
   }, duration);
+}
+
+function persistTheme(theme: "light" | "dark") {
+  try {
+    localStorage.setItem("theme", theme);
+  } catch {
+    // Storage blocked or full: the theme still applies for this page view.
+  }
 }

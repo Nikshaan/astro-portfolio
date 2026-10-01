@@ -17,14 +17,16 @@ export default function BlogSearch() {
   const [isIndexReady, setIsIndexReady] = useState(true);
   const pagefindRef = useRef<any>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const latestSearchRef = useRef(0);
 
   // Lazy-load pagefind only when user focuses or types in search
   const loadPagefind = useCallback(async () => {
     if (pagefindRef.current) return pagefindRef.current;
     try {
-      // Runtime dynamic browser import for Pagefind static bundle
-      const dynamicImport = new Function("path", "return import(path)");
-      const pf = await dynamicImport("/pagefind/pagefind.js");
+      // Pagefind is generated after the Vite build, so keep the import opaque to
+      // Vite. A plain import() (unlike new Function) works under the site CSP.
+      const pagefindPath = "/pagefind/pagefind.js";
+      const pf = await import(/* @vite-ignore */ pagefindPath);
       await pf.init();
       pagefindRef.current = pf;
       setIsIndexReady(true);
@@ -37,6 +39,11 @@ export default function BlogSearch() {
 
   const handleSearch = useCallback(
     async (text: string) => {
+      // Each keystroke starts a search; only the newest one may touch state,
+      // so a slow earlier query can't overwrite newer results.
+      const searchId = ++latestSearchRef.current;
+      const isLatest = () => searchId === latestSearchRef.current;
+
       setQuery(text);
       if (!text.trim()) {
         setResults([]);
@@ -47,7 +54,7 @@ export default function BlogSearch() {
       setIsLoading(true);
       const pf = await loadPagefind();
       if (!pf) {
-        setIsLoading(false);
+        if (isLatest()) setIsLoading(false);
         return;
       }
 
@@ -55,11 +62,11 @@ export default function BlogSearch() {
         const search = await pf.search(text);
         const dataPromises = search.results.slice(0, 8).map((r: any) => r.data());
         const data = await Promise.all(dataPromises);
-        setResults(data);
+        if (isLatest()) setResults(data);
       } catch (err) {
         console.error("Search error: ", err);
       } finally {
-        setIsLoading(false);
+        if (isLatest()) setIsLoading(false);
       }
     },
     [loadPagefind],
@@ -121,6 +128,7 @@ export default function BlogSearch() {
             type="button"
             aria-label="Clear search"
             onClick={() => {
+              latestSearchRef.current++;
               setQuery("");
               setResults([]);
               searchInputRef.current?.focus();

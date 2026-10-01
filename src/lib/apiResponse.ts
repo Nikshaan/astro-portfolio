@@ -41,3 +41,24 @@ export function jsonResponse(
 export function keepAlive(task: Promise<unknown>): void {
   waitUntil(task.then(() => undefined, () => undefined));
 }
+
+/**
+ * One structured line per upstream failure, so Vercel runtime logs can be
+ * filtered by route/stage. Never pass URLs containing credentials.
+ */
+export function logApiError(
+  route: string,
+  stage: string,
+  error: unknown,
+  extra?: Record<string, unknown>,
+): void {
+  console.error(
+    JSON.stringify({
+      level: "error",
+      route,
+      stage,
+      message: error instanceof Error ? error.message : String(error),
+      ...extra,
+    }),
+  );
+}

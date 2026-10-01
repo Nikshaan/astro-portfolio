@@ -190,6 +190,7 @@ const ProjectsBentoGrid: React.FC = () => {
   );
   const [ossError, setOssError] = useState(false);
   const [llmStars, setLlmStars] = useState<number | null>(null);
+  const [llmStarsFailed, setLlmStarsFailed] = useState(false);
 
   useEffect(() => {
     return subscribeOssContributions((snap) => {
@@ -203,7 +204,7 @@ const ProjectsBentoGrid: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    return startLlmRepoStarsPolling(setLlmStars);
+    return startLlmRepoStarsPolling(setLlmStars, setLlmStarsFailed);
   }, []);
 
   const orgLogos = useMemo(() => {
@@ -331,7 +332,7 @@ const ProjectsBentoGrid: React.FC = () => {
                                 {llmStars.toLocaleString()}
                                 <span className="sr-only"> GitHub stars</span>
                               </span>
-                            ) : (
+                            ) : llmStarsFailed ? null : (
                               <span
                                 className="project-card-action project-card-action--meta"
                                 aria-hidden="true"
@@ -367,7 +368,11 @@ const ProjectsBentoGrid: React.FC = () => {
                   </p>
                   {!contributions && !ossError ? (
                     <Placeholder className="h-[1lh] w-[22ch] max-w-full type-body-sm rounded-md" />
-                  ) : ossError || contributions?.length === 0 ? (
+                  ) : ossError ? (
+                    <p className="type-body-sm text-[var(--text-tertiary)] italic">
+                      Couldn't load contributions right now.
+                    </p>
+                  ) : contributions?.length === 0 ? (
                     <p className="type-body-sm text-[var(--text-tertiary)] italic">
                       No contributions yet — check back soon.
                     </p>
@@ -506,7 +511,13 @@ const ProjectsBentoGrid: React.FC = () => {
                         <Placeholder className="h-3.5 w-3.5 shrink-0 rounded-sm" />
                       </div>
                     ))
-                  : contributions?.map((c) => (
+                  : ossError && !contributions
+                    ? (
+                        <p className="type-body-sm text-[var(--text-tertiary)] italic">
+                          Couldn't load contributions right now. Try again in a minute.
+                        </p>
+                      )
+                    : contributions?.map((c) => (
                   <a
                     key={c.id}
                     href={c.url}

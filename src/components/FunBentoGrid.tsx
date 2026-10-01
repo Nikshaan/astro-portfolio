@@ -167,17 +167,35 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
   const initFancybox = async () => {
     if (initPromiseRef.current) return initPromiseRef.current;
 
-    initPromiseRef.current = (async () => {
+    let galleryOk = false;
+    const init = (async () => {
       ensureFancyboxCss();
       const [, response] = await Promise.all([
         import("@fancyapps/ui"),
-        fetch("/api/gallery.json").then((res) => (res.ok ? res.json() : [])),
+        fetch("/api/gallery.json").then((res) => {
+          galleryOk = res.ok;
+          return res.ok ? res.json() : [];
+        }),
       ]);
       galleryDataRef.current = response;
-      fancyboxLoadedRef.current = true;
+      fancyboxLoadedRef.current = galleryOk;
     })();
+    initPromiseRef.current = init;
 
-    return initPromiseRef.current;
+    // A failed or empty load is not memoised, so the next interaction retries
+    // instead of every later click silently doing nothing.
+    init.then(
+      () => {
+        if (!galleryOk && initPromiseRef.current === init) {
+          initPromiseRef.current = null;
+        }
+      },
+      () => {
+        if (initPromiseRef.current === init) initPromiseRef.current = null;
+      },
+    );
+
+    return init;
   };
 
   useEffect(() => {
@@ -190,6 +208,9 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
       const maxPrefetchImages = 3;
       preloadObserver = new IntersectionObserver(
         (entries) => {
+          // observe() always delivers an initial entry; only act once the
+          // gallery is actually within the root margin.
+          if (!entries.some((entry) => entry.isIntersecting)) return;
           preloadObserver?.disconnect();
           ensureFancyboxCss();
 
@@ -234,7 +255,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
     }
 
     const loadOnInteraction = () => {
-      initFancybox();
+      initFancybox().catch(() => {});
       container.removeEventListener("mouseenter", loadOnInteraction, true);
       container.removeEventListener("focus", loadOnInteraction, true);
     };
@@ -263,6 +284,13 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
 
       const { Fancybox } = await import("@fancyapps/ui");
 
+      // Fancybox hides the scrollbar and pads the page itself, but the fixed
+      // navbar only follows --scrollbar-width (transitions.css).
+      document.documentElement.style.setProperty(
+        "--scrollbar-width",
+        `${window.innerWidth - document.documentElement.clientWidth}px`,
+      );
+
       const startIndex = galleryDataRef.current.findIndex(
         (img: any) => img.src === src,
       );
@@ -289,6 +317,9 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
           on: {
             close: () => {
               (document.activeElement as HTMLElement | null)?.blur();
+            },
+            destroy: () => {
+              document.documentElement.style.removeProperty("--scrollbar-width");
             },
           },
         } as any,
@@ -324,7 +355,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
             </div>
             <div className={FUN_MUSIC_YEARLY_PAIR_BODY}>
               <Suspense fallback={<MusicStatsLoadingShell />}>
-                <ErrorBoundary>
+                <ErrorBoundary label="Music stats">
                   <MusicStatsClient />
                 </ErrorBoundary>
               </Suspense>
@@ -340,7 +371,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
             </div>
             <div className={FUN_MUSIC_YEARLY_PAIR_BODY}>
               <Suspense fallback={<YearlyScrobblesLoadingShell />}>
-                <ErrorBoundary>
+                <ErrorBoundary label="Listening history">
                   <RadialArtistHeatmap />
                 </ErrorBoundary>
               </Suspense>
@@ -351,7 +382,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
         <BentoCard span="wideShort" disableHoverMotion padded={false}>
           <div className="flex h-full w-full items-center">
             <Suspense fallback={<GenreStreakPlaceholder />}>
-              <ErrorBoundary>
+              <ErrorBoundary label="Genre stats">
                 <MusicGenreStreakBar />
               </ErrorBoundary>
             </Suspense>
@@ -360,13 +391,13 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
 
         <div className={cn("h-full w-full", SPANS.quarter)}>
           <Suspense fallback={<IndiaMapPlaceholder framed />}>
-            <ErrorBoundary>
+            <ErrorBoundary label="Travel map">
               <IndiaMapCard visitedPlaces={VISITED_PLACES} />
             </ErrorBoundary>
           </Suspense>
         </div>
 
-        {images.slice(0, visibleCount).map((image: Image, i: number) => (
+        {images.slice(0, visibleCount).map((image: Image) => (
           <div key={image.id} className={cn("h-full w-full", SPANS.quarter)}>
             <a
               href={image.fullSrc || image.src}

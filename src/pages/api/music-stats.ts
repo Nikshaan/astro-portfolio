@@ -5,9 +5,10 @@ import {
   SPOTIFY_CLIENT_ID,
   SPOTIFY_CLIENT_SECRET,
 } from "astro:env/server";
-import { jsonResponse, keepAlive } from "../../lib/apiResponse";
+import { jsonResponse, keepAlive, logApiError } from "../../lib/apiResponse";
 import { ROUTE_CACHE_MS, USER_STATS_TTL_MS } from "../../lib/freshness";
 import {
+  assertLastFmOk,
   dailyBuckets,
   effectiveFetchedAt,
   fetchWithRetry,
@@ -92,6 +93,7 @@ async function fetchUserStats(
     const url = `https://ws.audioscrobbler.com/2.0/?method=user.getinfo&user=${encodeURIComponent(username)}&api_key=${apiKey}&format=json`;
     const response = await fetchWithRetry(url);
     const data = await response.json();
+    assertLastFmOk(data);
     const user = data?.user as LastFmUser | undefined;
     const value = [
       parseInt(user?.playcount || "0", 10),
@@ -101,7 +103,8 @@ async function fetchUserStats(
     ];
     userStatsCache = { value, timestamp: now };
     return value;
-  } catch {
+  } catch (error) {
+    logApiError("music-stats", "user.getinfo", error);
     return userStatsCache?.value ?? cache?.data.upperStatsArray ?? [0, 0, 0, 0];
   }
 }
@@ -118,6 +121,7 @@ async function fetchArtistTags(
     const url = `https://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&artist=${encodeURIComponent(artist)}&api_key=${apiKey}&format=json`;
     const res = await fetchWithRetry(url);
     const json = await res.json();
+    assertLastFmOk(json);
     const raw = json?.toptags?.tag;
     const list = (Array.isArray(raw) ? raw : raw ? [raw] : []) as {
       name?: string;
@@ -129,7 +133,8 @@ async function fetchArtistTags(
     }));
     tagCache.set(key, { tags, timestamp: Date.now() });
     return tags;
-  } catch {
+  } catch (error) {
+    logApiError("music-stats", "artist.gettoptags", error);
     return hit?.tags ?? [];
   }
 }
@@ -215,7 +220,8 @@ async function fetchArtistImage(
     const url = matches ? (item?.images?.[0]?.url ?? "") : "";
     imageCache.set(key, { url, timestamp: Date.now() });
     return url;
-  } catch {
+  } catch (error) {
+    logApiError("music-stats", "spotify", error);
     return hit?.url ?? cache?.data.topArtistImageUrl ?? "";
   }
 }
@@ -319,6 +325,7 @@ export const GET: APIRoute = async () => {
     const data = await Promise.race([run, timeoutPromise]);
     return respond(data, "FRESH", cache?.fetchedAt ?? Date.now());
   } catch (error) {
+    logApiError("music-stats", "timeline", error);
     if (cache && cache.timestamp > 0) {
       return respond(cache.data, "STALE", cache.fetchedAt);
     }
@@ -342,14 +349,13 @@ export const GET: APIRoute = async () => {
           cache = { data, timestamp: 0, fetchedAt };
         }
         return respond(data, "STALE", fetchedAt);
-      } catch {}
+      } catch (fallbackError) {
+        logApiError("music-stats", "fallback", fallbackError);
+      }
     }
 
     return respond(
-      {
-        error: "Failed to fetch music stats",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Failed to fetch music stats" },
       "ERROR",
       0,
       500,

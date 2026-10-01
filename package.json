@@ -5,12 +5,13 @@
   "scripts": {
     "snapshot:lastfm": "node scripts/build-lastfm-snapshot.mjs",
     "generate:linkedin-banner": "node scripts/generate-linkedin-banner.mjs",
+    "index:search": "pagefind --site dist/client --output-path .vercel/output/static/pagefind",
     "predev": "npm run snapshot:lastfm && npm run generate:linkedin-banner",
     "prebuild": "npm run snapshot:lastfm && npm run generate:linkedin-banner",
     "dev": "astro dev",
-    "build": "astro check && astro build && pagefind --site dist",
-    "build:prod": "npm run snapshot:lastfm && astro build && pagefind --site dist",
-    "build:fast": "npm run snapshot:lastfm && astro build --no-minify && pagefind --site dist",
+    "build": "astro check && astro build && npm run index:search",
+    "build:prod": "npm run snapshot:lastfm && npm run generate:linkedin-banner && astro build && npm run index:search",
+    "build:fast": "npm run snapshot:lastfm && npm run generate:linkedin-banner && astro build --no-minify && npm run index:search",
     "preview": "astro preview",
     "astro": "astro"
   },

@@ -2,15 +2,21 @@
 import { getCollection } from "astro:content";
 import MainLayout from "../../../layouts/MainLayout.astro";
 import NavbarWrapper from "../../../components/NavbarWrapper.astro";
+import { tagSlug } from "../../../utils/tagSlug";
 
 const isDev = import.meta.env.DEV;
 const posts = await getCollection("blog", ({ data }) => (isDev ? true : !data.draft));
 
+// Grouped by slug (so "AI" and "ai" are one tag); first spelling seen is shown.
 const tagCounts = new Map<string, number>();
+const labelBySlug = new Map<string, string>();
 
 posts.forEach((post) => {
   (post.data.tags || []).forEach((tag) => {
-    const key = tag.trim();
+    const slug = tagSlug(tag);
+    if (!slug) return;
+    if (!labelBySlug.has(slug)) labelBySlug.set(slug, tag.trim());
+    const key = labelBySlug.get(slug)!;
     tagCounts.set(key, (tagCounts.get(key) || 0) + 1);
   });
 });
@@ -21,6 +27,8 @@ const sortedTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1] ||
 <MainLayout
   title="Tags | Nikshaan Shetty's Blog"
   description="Explore blog posts and articles by technical topic and tag."
+  noindex={posts.length === 0}
+  preloadMonoFont
 >
   <NavbarWrapper />
 
@@ -56,7 +64,7 @@ const sortedTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1] ||
         <div class="flex flex-wrap gap-3">
           {sortedTags.map(([tag, count]) => (
             <a
-              href={`/blog/tags/${tag.toLowerCase()}`}
+              href={`/blog/tags/${tagSlug(tag)}`}
               class="group flex items-center gap-2 px-4 py-2 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:border-[var(--accent)] transition-all hover:-translate-y-0.5"
             >
               <span class="font-heading font-medium text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">

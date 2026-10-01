@@ -1,4 +1,5 @@
 ---
+import { tagSlug } from "../../utils/tagSlug";
 import { getCollection } from "astro:content";
 import MainLayout from "../../layouts/MainLayout.astro";
 import NavbarWrapper from "../../components/NavbarWrapper.astro";
@@ -19,6 +20,8 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
 <MainLayout
   title="Blogs & Engineering Notes | Nikshaan Shetty"
   description="Engineering postmortems, architecture breakdowns, and technical articles on AI/ML and software engineering."
+  noindex={allPosts.length === 0}
+  preloadMonoFont
 >
   <NavbarWrapper />
 
@@ -113,7 +116,7 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
                   <div class="relative z-20 flex flex-wrap gap-1.5 mt-auto pt-2">
                     {post.data.tags.slice(0, 3).map((tag) => (
                       <a
-                        href={`/blog/tags/${tag.toLowerCase()}`}
+                        href={`/blog/tags/${tagSlug(tag)}`}
                         class="text-xs px-2.5 py-0.5 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-raised)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors font-mono"
                       >
                         #{tag}

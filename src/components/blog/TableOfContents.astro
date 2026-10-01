@@ -93,6 +93,20 @@ const showDesktop = variant === "desktop" || variant === "all";
     (function () {
       if (typeof window === "undefined") return;
 
+      var reduceMotion =
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // Scroll to a heading (instantly when reduced motion is on), record it
+      // in the URL and move keyboard focus there so Tab continues from it.
+      function goToHeading(el, slug) {
+        var top = el.getBoundingClientRect().top + window.scrollY - 90;
+        window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
+        try { history.pushState(null, "", "#" + slug); } catch(err) {}
+        if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
+        el.focus({ preventScroll: true });
+      }
+
       function initTocSpy() {
         var links = document.querySelectorAll("[data-toc-link]");
         var mobileLinks = document.querySelectorAll("[data-mobile-toc-link]");
@@ -106,9 +120,7 @@ const showDesktop = variant === "desktop" || variant === "all";
             if (el) {
               e.preventDefault();
               if (detailsEl) detailsEl.removeAttribute("open");
-              var top = el.getBoundingClientRect().top + window.scrollY - 90;
-              window.scrollTo({ top: top, behavior: "smooth" });
-              try { history.pushState(null, "", "#" + slug); } catch(err) {}
+              goToHeading(el, slug);
             }
           });
         });
@@ -169,14 +181,23 @@ const showDesktop = variant === "desktop" || variant === "all";
             if (el) {
               e.preventDefault();
               setActive(slug);
-              var top = el.getBoundingClientRect().top + window.scrollY - 90;
-              window.scrollTo({ top: top, behavior: "smooth" });
-              try { history.pushState(null, "", "#" + slug); } catch(err) {}
+              goToHeading(el, slug);
             }
           });
         });
 
-        window.addEventListener("scroll", onScroll, { passive: true });
+        // At most one layout read per frame while scrolling.
+        var scrollQueued = false;
+        function onScrollThrottled() {
+          if (scrollQueued) return;
+          scrollQueued = true;
+          requestAnimationFrame(function () {
+            scrollQueued = false;
+            onScroll();
+          });
+        }
+
+        window.addEventListener("scroll", onScrollThrottled, { passive: true });
         onScroll();
       }
 

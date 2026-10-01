@@ -43,6 +43,10 @@ export const BeeToggle: React.FC = () => {
     };
 
     window.addEventListener("resize", handleResizeOrMotion, { passive: true });
+    // Switching on "reduce motion" in the OS takes effect immediately, not
+    // only on the next resize.
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    motionQuery.addEventListener?.("change", handleResizeOrMotion);
 
     if (isEnabled) {
       import("../honey-bee/HoneybeeAgent")
@@ -57,6 +61,7 @@ export const BeeToggle: React.FC = () => {
 
     return () => {
       window.removeEventListener("resize", handleResizeOrMotion);
+      motionQuery.removeEventListener?.("change", handleResizeOrMotion);
     };
   }, []);
 

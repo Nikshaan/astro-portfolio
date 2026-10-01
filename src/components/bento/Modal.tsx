@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { lockPageScroll, unlockPageScroll } from "../../utils/pageScrollLock";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -51,11 +52,7 @@ export default function BentoModal({
   const activeTitleId = titleId || lastTitleIdRef.current;
 
   useEffect(() => {
-    return () => {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-      document.documentElement.style.removeProperty("--scrollbar-width");
-    };
+    return () => unlockPageScroll();
   }, []);
 
   useEffect(() => {
@@ -64,21 +61,14 @@ export default function BentoModal({
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handleKeyDown);
-    document.documentElement.style.setProperty(
-      "--scrollbar-width",
-      `${window.innerWidth - document.documentElement.clientWidth}px`,
-    );
-    document.body.style.overflow = "hidden";
-    document.body.style.paddingRight = "var(--scrollbar-width, 0px)";
+    lockPageScroll();
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [open, onClose]);
 
   const handleExitComplete = useCallback(() => {
-    document.body.style.overflow = "";
-    document.body.style.paddingRight = "";
-    document.documentElement.style.removeProperty("--scrollbar-width");
+    unlockPageScroll();
   }, []);
 
   return (

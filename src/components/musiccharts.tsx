@@ -33,7 +33,9 @@ const TOOLTIP_GAP = 10;
 
 function smoothPath(points: Point[]): string {
   const n = points.length;
-  if (n < 2) return "";
+  if (n === 0) return "";
+  // A lone point still needs a move-to, or the area path built from it is invalid SVG.
+  if (n === 1) return `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`;
   if (n === 2) {
     return `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)} L${points[1].x.toFixed(2)},${points[1].y.toFixed(2)}`;
   }
@@ -221,9 +223,11 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
     .join(", ");
 
   const active = hoverIndex !== null ? points[hoverIndex] : null;
+  // Below 2 there is no whole number halfway (a quiet week would read 1 / 1 / 0),
+  // so the middle label is dropped.
   const yAxisTicks = [
     { f: 0, value: maxValue },
-    { f: 0.5, value: Math.round(maxValue / 2) },
+    ...(maxValue >= 2 ? [{ f: 0.5, value: Math.round(maxValue / 2) }] : []),
     { f: 1, value: 0 },
   ];
 

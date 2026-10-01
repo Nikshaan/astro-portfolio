@@ -10,6 +10,10 @@ interface Props {
     preloadImageSrc?: string;
     preloadImageSrcSet?: string;
     preloadImageSizes?: string;
+    /** Keep the page out of search indexes (404, empty listings). Also drops the canonical link. */
+    noindex?: boolean;
+    /** Preload the monospace font: only pages with monospace text near the top need it. */
+    preloadMonoFont?: boolean;
 }
 
 import beeImage from "../data/bee.avif";
@@ -32,7 +36,13 @@ const {
     preloadImageSrc,
     preloadImageSrcSet,
     preloadImageSizes,
+    noindex = false,
+    preloadMonoFont = false,
 } = Astro.props;
+
+// JSON.stringify doesn't escape "<", so "</script>" in any value would end the
+// script element early. \u003c is the same character to a JSON parser.
+const toJsonLd = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
 
 const favicon = await getImage({
     src: beeImage,
@@ -50,7 +60,7 @@ const appleTouchIcon = await getImage({
 
 const resolvedOgImage = ogImage
     ? new URL(ogImage, Astro.site || "https://nikshaan.dev").href
-    : "https://nikshaan.dev/linkedin_banner.webp";
+    : "https://nikshaan.dev/linkedin_banner.png";
 ---
 
 <!doctype html>
@@ -64,8 +74,8 @@ const resolvedOgImage = ogImage
         <title>{title}</title>
         <meta content={description} name="description" />
         <meta content="Nikshaan Shetty" name="author" />
-        <meta content="index, follow" name="robots" />
-        <link rel="canonical" href={canonicalUrl} />
+        <meta content={noindex ? "noindex, follow" : "index, follow"} name="robots" />
+        {!noindex && <link rel="canonical" href={canonicalUrl} />}
         <link
             rel="alternate"
             type="application/rss+xml"
@@ -82,7 +92,7 @@ const resolvedOgImage = ogImage
         <meta content="1200" property="og:image:width" />
         <meta content="630" property="og:image:height" />
         <meta content="Nikshaan" property="og:image:alt" />
-        <meta content="image/webp" property="og:image:type" />
+        <meta content={resolvedOgImage.endsWith(".webp") ? "image/webp" : resolvedOgImage.endsWith(".png") ? "image/png" : "image/jpeg"} property="og:image:type" />
         <meta content="en_IN" property="og:locale" />
         <meta content="Nikshaan Shetty" property="og:site_name" />
 
@@ -110,7 +120,7 @@ const resolvedOgImage = ogImage
 
         <link rel="preload" as="font" type="font/woff2" href={spaceGroteskWoff2} crossorigin />
         <link rel="preload" as="font" type="font/woff2" href={interWoff2} crossorigin />
-        <link rel="preload" as="font" type="font/woff2" href={jetbrainsMonoWoff2} crossorigin />
+        {preloadMonoFont && <link rel="preload" as="font" type="font/woff2" href={jetbrainsMonoWoff2} crossorigin />}
         <slot name="head" />
 
         {
@@ -363,7 +373,7 @@ const resolvedOgImage = ogImage
         <script
             type="application/ld+json"
             is:inline
-            set:html={JSON.stringify({
+            set:html={toJsonLd({
                 "@context": "https://schema.org",
                 "@type": "Person",
                 name: "Nikshaan Shetty",
@@ -373,7 +383,7 @@ const resolvedOgImage = ogImage
                     "https://www.linkedin.com/in/nikshaan-shetty/",
                     "https://github.com/Nikshaan",
                 ],
-                jobTitle: "AI/ML Student & Software Developer",
+                jobTitle: "AI/ML Engineer & Software Developer",
                 worksFor: {
                     "@type": "Organization",
                     name: "Mentoria",

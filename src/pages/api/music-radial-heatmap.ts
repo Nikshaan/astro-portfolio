@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { LASTFM_API_KEY, LASTFM_USERNAME } from "astro:env/server";
-import { jsonResponse, keepAlive } from "../../lib/apiResponse";
+import { jsonResponse, keepAlive, logApiError } from "../../lib/apiResponse";
 import { ROUTE_CACHE_MS } from "../../lib/freshness";
 import {
   calendarWeeks,
@@ -116,6 +116,7 @@ export const GET: APIRoute = async () => {
     const data = await Promise.race([run, timeoutPromise]);
     return respond(data, "FRESH", cache?.fetchedAt ?? Date.now());
   } catch (error) {
+    logApiError("music-radial-heatmap", "timeline", error);
     if (cache && cache.timestamp > 0) {
       return respond(cache.data, "STALE", cache.fetchedAt);
     }
@@ -131,10 +132,7 @@ export const GET: APIRoute = async () => {
     }
 
     return respond(
-      {
-        error: "Failed to fetch radial heatmap",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Failed to fetch radial heatmap" },
       "ERROR",
       0,
       500,
