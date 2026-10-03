@@ -48,7 +48,7 @@ export function toggleThemeWithTransition(duration = 400) {
   } else {
     html.setAttribute("data-theme", "light");
     persistTheme("light");
-    meta?.setAttribute("content", "#faf9f7");
+    meta?.setAttribute("content", "#efeef3");
   }
 
   window.setTimeout(() => {

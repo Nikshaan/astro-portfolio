@@ -190,25 +190,44 @@ const resolvedOgImage = ogImage
                     }
                 } catch (e) {}
 
-                try {
-                    var stored = localStorage.getItem("theme");
-                    var isLight =
-                        stored === "light" ||
-                        (stored === null &&
-                            window.matchMedia &&
-                            window.matchMedia("(prefers-color-scheme: light)")
-                                .matches);
-                    if (isLight) {
-                        document.documentElement.setAttribute(
-                            "data-theme",
-                            "light",
-                        );
+                function applyStoredTheme(sync) {
+                    try {
+                        var root = document.documentElement;
+                        var stored = localStorage.getItem("theme");
+                        var isLight =
+                            stored === "light" ||
+                            (stored === null &&
+                                window.matchMedia &&
+                                window.matchMedia("(prefers-color-scheme: light)")
+                                    .matches);
+                        if (sync && isLight === (root.getAttribute("data-theme") === "light")) {
+                            return;
+                        }
+                        if (sync) root.classList.add("theme-sync");
                         var meta = document.getElementById("meta-theme-color");
-                        if (meta) meta.setAttribute("content", "#efeef3");
-                    } else {
-                        document.documentElement.removeAttribute("data-theme");
-                    }
-                } catch (e) {}
+                        if (isLight) {
+                            root.setAttribute("data-theme", "light");
+                            if (meta) meta.setAttribute("content", "#efeef3");
+                        } else {
+                            root.removeAttribute("data-theme");
+                            if (sync && meta) meta.setAttribute("content", "#0a0a0a");
+                        }
+                        if (sync) {
+                            void root.offsetHeight;
+                            requestAnimationFrame(function () {
+                                root.classList.remove("theme-sync");
+                            });
+                        }
+                    } catch (e) {}
+                }
+
+                applyStoredTheme(false);
+                document.addEventListener("prerenderingchange", function () {
+                    applyStoredTheme(true);
+                });
+                window.addEventListener("pageshow", function (event) {
+                    if (event.persisted) applyStoredTheme(true);
+                });
 
                 if (
                     "connection" in navigator &&
