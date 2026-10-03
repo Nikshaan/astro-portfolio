@@ -106,7 +106,7 @@ function TechStack({ techstack }: { techstack?: string[] }) {
   const hideTooltip = useCallback(() => setHovered(null), []);
 
   return (
-    <div className="grid grid-cols-4 lg:grid-cols-3 gap-2 w-full">
+    <div className="flex flex-wrap gap-2 w-full">
       {techstack?.map((tech, i) => {
         const icon = techstackIcons[tech];
         return (
@@ -119,15 +119,15 @@ function TechStack({ techstack }: { techstack?: string[] }) {
             onFocus={(e) => showTooltip(e, tech)}
             onBlur={hideTooltip}
             aria-label={tech}
-            className="flex items-center justify-center p-1 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-raised)] w-full h-12 relative hover:border-[var(--accent)] transition-colors"
+            className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-1 relative hover:border-[var(--accent)] transition-colors"
           >
             {icon && (
               <img
                 src={icon.src}
-                width={icon.width}
-                height={icon.height}
+                width={32}
+                height={32}
                 alt=""
-                className="w-full h-full object-contain"
+                className="size-full object-contain"
                 loading="lazy"
                 decoding="async"
               />
@@ -392,7 +392,7 @@ const ProjectsBentoGrid: React.FC = () => {
                       key={i}
                       className="flex min-w-0 items-start gap-3 rounded-[var(--radius-control)] bg-[var(--surface-raised)]/40 p-3"
                     >
-                      <Placeholder className="h-9 w-9 shrink-0 rounded-full" />
+                      <Placeholder className="size-8 shrink-0 rounded-full" />
                       <div className="min-w-0 flex-1 space-y-1">
                         <OssShimmerBar />
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -417,7 +417,7 @@ const ProjectsBentoGrid: React.FC = () => {
                         alt=""
                         loading="lazy"
                         decoding="async"
-                        className="h-9 w-9 shrink-0 rounded-full object-cover bg-[var(--surface-raised)]"
+                        className="size-8 shrink-0 rounded-full object-cover bg-[var(--surface-raised)]"
                       />
                       <div className="min-w-0 flex-1 space-y-1">
                         <p className="type-body-sm font-bold truncate text-[var(--text-primary)]">
@@ -498,7 +498,7 @@ const ProjectsBentoGrid: React.FC = () => {
                         key={i}
                         className="group/row flex items-center gap-3 p-3 rounded-[var(--radius-control)] border border-[var(--border-subtle)]"
                       >
-                        <Placeholder className="h-9 w-9 shrink-0 rounded-full" />
+                        <Placeholder className="size-8 shrink-0 rounded-full" />
                         <div className="min-w-0 flex-1">
                           <OssShimmerBar />
                           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -530,7 +530,7 @@ const ProjectsBentoGrid: React.FC = () => {
                       alt=""
                       loading="lazy"
                       decoding="async"
-                      className="w-9 h-9 rounded-full shrink-0 object-cover bg-[var(--surface-raised)]"
+                      className="size-8 shrink-0 rounded-full object-cover bg-[var(--surface-raised)]"
                     />
                     <div className="min-w-0 flex-1">
                       <p className="type-body-sm font-bold truncate group-hover/row:text-[var(--accent)] transition-colors">

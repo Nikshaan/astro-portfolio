@@ -40,7 +40,6 @@ export function startLlmRepoStarsPolling(
 ): () => void {
   return resource.subscribe((snap) => {
     if (snap.data !== null) onStars(snap.data);
-    // Failed with nothing to show: lets the card drop its loading shimmer.
     onFailedChange?.(snap.data === null && !snap.loading && snap.error !== null);
   });
 }

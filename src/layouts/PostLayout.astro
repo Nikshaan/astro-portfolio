@@ -18,11 +18,8 @@ interface Props {
 
 const { post, headings, prevPost, nextPost } = Astro.props;
 const readingStats = getReadingTime(post.body || "");
-// Same filter TableOfContents applies; without any, drop the empty TOC column
-// and centre the article instead.
 const hasToc = headings.some((h) => h.depth === 2 || h.depth === 3);
 
-// Trailing slash matches the built directory URL, the sitemap and the RSS feed.
 const canonicalUrl = post.data.canonicalURL || new URL(`/blog/${post.id}/`, Astro.site || "https://nikshaan.dev").href;
 const ogImage = post.data.ogImage || "https://nikshaan.dev/linkedin_banner.png";
 
@@ -80,28 +77,26 @@ const jsonLd = {
 
   <main id="main-content" class="bg-[var(--surface-page)] text-[var(--text-primary)] min-h-[100svh] w-full pt-24 pb-20 px-4">
     <div class="w-full max-w-[1400px] mx-auto min-w-0">
-      {/* Breadcrumb / Back Link */}
       <div class="mb-8">
         <a
-          href="/blog"
+          id="post-back-link"
+          href="/"
           class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors focus-visible:outline-none group"
         >
           <svg class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
-          All posts
+          Back
         </a>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 min-w-0">
-        {/* Desktop Sticky TOC on Left */}
         {hasToc && (
           <aside class="hidden lg:block lg:col-span-3 xl:col-span-3 min-w-0" data-pagefind-ignore>
             <TableOfContents headings={headings} variant="desktop" />
           </aside>
         )}
 
-        {/* Main Post Column on Right */}
         <article
           class:list={[
             "min-w-0 max-w-full overflow-hidden",
@@ -109,7 +104,6 @@ const jsonLd = {
           ]}
           data-pagefind-body
         >
-          {/* Post Header */}
           <header class="mb-10 pb-8 border-b border-[var(--border-subtle)]">
             {post.data.tags && post.data.tags.length > 0 && (
               <div class="flex flex-wrap gap-2 mb-4">
@@ -153,17 +147,35 @@ const jsonLd = {
             </div>
           </header>
 
-          {/* Mobile TOC disclosure */}
           <TableOfContents headings={headings} variant="mobile" />
 
-          {/* Article Prose Body */}
           <div class="post-prose w-full max-w-full min-w-0">
             <slot />
           </div>
 
-          {/* Post Footer */}
-          <footer class="mt-14 pt-8 border-t border-[var(--border-subtle)]">
-            {/* Author note */}
+          <figure class="post-signoff" data-pagefind-ignore>
+            <img
+              src="/blog/mona-hifive.gif"
+              alt="Two octocats giving a high five"
+              width="128"
+              height="48"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>You made it to the end!</figcaption>
+          </figure>
+
+          <footer class="post-footer border-t border-[var(--border-subtle)]">
+            <button
+              type="button"
+              id="post-back-to-top"
+              class="inline-flex items-center gap-1.5 mb-8 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors focus-visible:outline-none"
+            >
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>
+              Back to top
+            </button>
             <div class="p-3.5 sm:p-4 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
               <div class="flex items-center gap-3 min-w-0">
                 <img
@@ -214,7 +226,6 @@ const jsonLd = {
               </div>
             </div>
 
-            {/* Prev / Next Pagination */}
             {(prevPost || nextPost) && (
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {prevPost ? (
@@ -286,9 +297,52 @@ const jsonLd = {
         });
       }
 
+      function setupBackToTop() {
+        var button = document.getElementById("post-back-to-top");
+        if (!button || button.dataset.bound) return;
+        button.dataset.bound = "true";
+        button.addEventListener("click", function () {
+          var reduce =
+            window.matchMedia &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+        });
+      }
+
+      function setupBackLink() {
+        var back = document.getElementById("post-back-link");
+        if (!back || back.dataset.bound) return;
+        back.dataset.bound = "true";
+        back.addEventListener("click", function (event) {
+          var saved = null;
+          try {
+            saved = sessionStorage.getItem("portfolio_home_scroll");
+          } catch (err) {
+            saved = null;
+          }
+          if (saved !== null && saved !== "") {
+            event.preventDefault();
+            window.location.assign("/");
+            return;
+          }
+          var referrer = "";
+          try {
+            referrer = document.referrer ? new URL(document.referrer).origin : "";
+          } catch (err) {
+            referrer = "";
+          }
+          if (referrer === window.location.origin && window.history.length > 1) {
+            event.preventDefault();
+            window.history.back();
+          }
+        });
+      }
+
       function initArticle() {
         setupHeadingAnchors();
         wrapTables();
+        setupBackLink();
+        setupBackToTop();
       }
 
       if (document.readyState === "loading") {

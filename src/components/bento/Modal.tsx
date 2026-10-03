@@ -33,7 +33,6 @@ export default function BentoModal({
 }: BentoModalProps) {
   const trapRef = useFocusTrap(open);
 
-  // Retain last active values while exiting so shared layoutId and content do not break
   const lastLayoutIdRef = useRef(layoutId);
   const lastChildrenRef = useRef(children);
   const lastHeaderActionsRef = useRef(headerActions);

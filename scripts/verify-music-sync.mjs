@@ -1,18 +1,3 @@
-/**
- * Independently query Last.fm (user.getrecenttracks) and verify that the
- * timeline-derived music endpoints did not freeze or lag:
- *   - /api/music-stats          -> per-day scrobble counts (last 3 IST days)
- *   - /api/music-radial-heatmap -> current-week plays per top artist
- *
- * user.getinfo playcount is NOT used as a signal: the API fetches it on its own
- * path, so it keeps moving even when the shared scrobble timeline is frozen.
- *
- * Scrobbles newer than GRACE_SEC are ignored because the API legitimately lags
- * by route cache (2 min) + timeline TTL (2 min, aligned with it) + CDN s-maxage/swr (~1 min) + Last.fm ingestion.
- * Only the API *under*-counting fails the check (deleted scrobbles can make it
- * over-count).
- */
-
 const USERNAME = process.env.LASTFM_USERNAME || "";
 const API_KEY = process.env.LASTFM_API_KEY || "";
 const STATS_URL =
@@ -27,7 +12,7 @@ if (!USERNAME || !API_KEY) {
 }
 
 const GRACE_SEC = Number(process.env.SYNC_GRACE_SEC || 8 * 60);
-const CHECK_DAYS = 3; // matches OVERLAP_SEC (2 days) + today in lastfmTimeline.ts
+const CHECK_DAYS = 3;
 const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_PAGES = 10;
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -84,7 +69,6 @@ async function fetchApi(url) {
   };
 }
 
-/** Last.fm `from` is inclusive, `to` is exclusive. */
 async function fetchLastFmScrobbles(fromSec, toSec) {
   const out = [];
   let totalPages = 1;
@@ -155,7 +139,6 @@ console.log(
 
 const errors = [];
 
-// --- music-stats: per-day counts -------------------------------------------
 const apiByLabel = new Map(weekly.map((d) => [d?.name, d?.scrobbles ?? 0]));
 for (let i = 0; i < CHECK_DAYS; i++) {
   const dayStart = todayStart - i * DAY_SEC;
@@ -164,7 +147,6 @@ for (let i = 0; i < CHECK_DAYS; i++) {
     (s) => s.ts >= dayStart && s.ts < dayStart + DAY_SEC,
   ).length;
   if (!apiByLabel.has(label)) {
-    // API served from before IST midnight (cache lag) — cannot compare this day.
     console.log(`stats ${label}: not in API window yet, skipped`);
     continue;
   }
@@ -177,7 +159,6 @@ for (let i = 0; i < CHECK_DAYS; i++) {
   }
 }
 
-// --- radial: current-week plays per artist ----------------------------------
 const expectedByArtist = new Map();
 for (const s of scrobbles) {
   if (s.ts < currentWeek.from || s.ts > currentWeek.to) continue;

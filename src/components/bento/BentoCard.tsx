@@ -32,6 +32,8 @@ export interface BentoCardProps {
   download?: boolean | string;
   "aria-label"?: string;
   onClick?: (e?: any) => void;
+  onPointerDown?: React.PointerEventHandler<HTMLElement>;
+  prefetch?: "tap" | "hover" | "viewport" | "load";
 }
 
 const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
@@ -54,6 +56,8 @@ const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
       rel,
       download,
       onClick,
+      onPointerDown,
+      prefetch = "hover",
       ...aria
     },
     ref,
@@ -61,8 +65,6 @@ const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent) => {
         if (!expandable || !onActivate) return;
-        // Only the card itself opens the modal. Enter/Space on a link or
-        // control inside it (GitHub, Live, tech tiles) keeps its own behavior.
         if (e.target !== e.currentTarget) return;
         if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
           e.preventDefault();
@@ -76,15 +78,16 @@ const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
 
     const Comp: any = href ? motion.a : motion.div;
     const interactiveProps = href
-      ? { href, target, rel, download, onClick, "data-astro-prefetch": "hover" }
+      ? { href, target, rel, download, onClick, onPointerDown, "data-astro-prefetch": prefetch }
       : expandable
         ? {
             role: "button" as const,
             tabIndex: 0,
             onClick: onActivate || onClick,
+            onPointerDown,
             onKeyDown: handleKeyDown,
           }
-        : { onClick };
+        : { onClick, onPointerDown };
 
     const body = (
       <Comp

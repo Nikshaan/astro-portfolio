@@ -205,7 +205,6 @@ const IndiaMapModalMap = memo(function IndiaMapModalMap({
 }) {
   const isPresent = useIsPresent();
   const shouldReduceMotion = useReducedMotion();
-  // Marker whose tooltip was opened by keyboard focus (not by mouse or touch).
   const keyboardShownRef = useRef<string | null>(null);
   if (!isPresent) return null;
 
@@ -271,8 +270,6 @@ const IndiaMapModalMap = memo(function IndiaMapModalMap({
                     role="button"
                     aria-label={place.name}
                     onFocus={(e) => {
-                      // Mouse/touch focus is handled by the pointer and click
-                      // handlers below; only keyboard focus opens the tooltip here.
                       if (!e.currentTarget.matches(":focus-visible")) return;
                       keyboardShownRef.current = place.name;
                       const rect = e.currentTarget.getBoundingClientRect();
@@ -578,7 +575,6 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
   const isHoverable = !portalVisible && !layoutLock;
 
   const handleCardClick = () => {
-    // Nothing to expand without map data; a click retries the download instead.
     if (!baseMap.pathGenerator) {
       if (loadFailed && !loading) void fetchTopology();
       return;

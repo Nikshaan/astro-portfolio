@@ -10,7 +10,6 @@ let cachedData: GitHubResponse | null = null;
 let lastFetchTime = 0;
 let pendingRequest: Promise<GitHubResponse> | null = null;
 
-/** GraphQL reported errors (rate limit, bad login...): usable body, never cache it. */
 class GraphQLErrorsResponse extends Error {
   constructor(readonly body: GitHubResponse) {
     super(body.errors?.map((e) => e.message).join("; ") || "GraphQL errors");
@@ -176,8 +175,6 @@ export const GET: APIRoute = async () => {
       return respond(cachedData, "STALE", lastFetchTime);
     }
 
-    // Same body the client has always received for GraphQL errors, but served
-    // with the short "stale" CDN profile and without poisoning the server cache.
     if (error instanceof GraphQLErrorsResponse) {
       return respond(error.body, "UPSTREAM_ERROR", 0);
     }

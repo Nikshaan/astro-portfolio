@@ -3,11 +3,11 @@ import { getCollection } from "astro:content";
 import MainLayout from "../../../layouts/MainLayout.astro";
 import NavbarWrapper from "../../../components/NavbarWrapper.astro";
 import { tagSlug } from "../../../utils/tagSlug";
+import { BLOG_ARCHIVE_ENABLED } from "../../../lib/blogArchive";
 
 const isDev = import.meta.env.DEV;
 const posts = await getCollection("blog", ({ data }) => (isDev ? true : !data.draft));
 
-// Grouped by slug (so "AI" and "ai" are one tag); first spelling seen is shown.
 const tagCounts = new Map<string, number>();
 const labelBySlug = new Map<string, string>();
 
@@ -34,10 +34,9 @@ const sortedTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1] ||
 
   <main id="main-content" class="bg-[var(--surface-page)] text-[var(--text-primary)] min-h-[100svh] w-full pt-24 pb-20 px-4">
     <div class="w-full max-w-[1400px] mx-auto min-w-0">
-      {/* Breadcrumb */}
       <div class="mb-8">
         <a
-          href="/blog"
+          href={BLOG_ARCHIVE_ENABLED ? "/blog" : "/#blogs"}
           class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors focus-visible:outline-none"
         >
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

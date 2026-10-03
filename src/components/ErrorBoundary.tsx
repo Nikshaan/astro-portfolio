@@ -4,7 +4,6 @@ import type { ErrorInfo, ReactNode } from "react";
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
-  /** What failed, for the default message ("<label> unavailable"). */
   label?: string;
 }
 

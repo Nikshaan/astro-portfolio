@@ -60,7 +60,6 @@ function CardImage({
   alt: string;
   sizes: string;
   className?: string;
-  /** Above-the-fold images: fetch right away instead of after layout. */
   eager?: boolean;
 }) {
   return (

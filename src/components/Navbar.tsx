@@ -3,7 +3,6 @@ import { toggleThemeWithTransition } from "../hooks/useTheme";
 import { motion, useReducedMotion } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 import beeImage from "../data/bee.avif";
-import BeeToggle from "./navbar/BeeToggle";
 
 export interface NavSection {
   id: string;
@@ -23,7 +22,6 @@ const DEFAULT_SECTIONS: NavSection[] = [
   { id: "fun", label: "fun", href: "#fun" },
 ];
 
-/** Section anchors (and the skip link) the site scrolls to; these hashes are removed from the URL. */
 const NAV_SECTION_HASHES = new Set(["me", "projects", "blogs", "fun", "main-content"]);
 
 const Navbar: React.FC<NavbarProps> = memo(
@@ -160,9 +158,6 @@ const Navbar: React.FC<NavbarProps> = memo(
         return () => clearTimeout(timer);
       }
 
-      // Only the navbar's own section anchors are tidied away. Any other hash
-      // (e.g. a blog heading permalink) stays in the address bar so it can be
-      // copied and shared.
       const isSectionHash = (hash: string) =>
         NAV_SECTION_HASHES.has(hash.replace(/^#/, ""));
 
@@ -342,7 +337,6 @@ const Navbar: React.FC<NavbarProps> = memo(
     const handleNavClick = useCallback(
       (e: React.MouseEvent<HTMLAnchorElement>, section: NavSection) => {
         if (!isHome) {
-          // Cross-page navigation: allow default browser link handling to href
           return;
         }
 
@@ -440,8 +434,6 @@ const Navbar: React.FC<NavbarProps> = memo(
                   className="h-5 w-px bg-[var(--border-subtle)] mx-0.5 sm:mx-2 shrink-0"
                   aria-hidden="true"
                 />
-
-                <BeeToggle />
 
                 <button
                   id="theme-toggle"

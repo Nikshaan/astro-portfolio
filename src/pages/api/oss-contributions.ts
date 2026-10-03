@@ -134,8 +134,6 @@ async function searchIssues(
     });
     const url = `https://api.github.com/search/issues?${params}`;
     const data = await githubJsonPreferAuth<SearchResponse>(url, signal);
-    // GitHub search can time out internally and still answer 200 with a
-    // partial (often empty) item list. Never mistake that for the truth.
     if (data.incomplete_results === true) {
       throw new Error("GitHub search returned incomplete results");
     }
@@ -162,8 +160,6 @@ async function fetchRepoMeta(
   const url = `https://api.github.com/repos/${repoName}`;
   let data: RepoResponse | null = null;
 
-  // Authenticated REST first (classic PATs can read public org repos).
-  // Unauthenticated fallback covers fine-grained tokens that cannot.
   try {
     data = await githubJsonPreferAuth<RepoResponse>(url, signal);
   } catch {
@@ -210,8 +206,6 @@ function toContribution(
     commentCount: item.comments ?? 0,
     repoName,
     repoStars: meta?.stars ?? 0,
-    // avatars.githubusercontent.com serves the same image as github.com/<owner>.png
-    // and, unlike github.com, is allowed by the site's img-src CSP.
     orgLogo:
       meta?.orgLogo ||
       `https://avatars.githubusercontent.com/${encodeURIComponent(owner)}`,
@@ -257,9 +251,6 @@ async function fetchContributions(): Promise<Contribution[]> {
       .filter((c): c is Contribution => c !== null)
       .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 
-    // A cold instance has no baseline for the 50%-drop guard below. An empty
-    // result there is far more likely a GitHub search hiccup than reality
-    // (observed 2026-09-29: 0 served vs 12 real), so fail instead of caching it.
     if (contributions.length === 0 && !cachedData?.length) {
       throw new Error("GitHub search returned no contributions");
     }

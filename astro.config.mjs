@@ -4,13 +4,11 @@ import mdx from "@astrojs/mdx";
 import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { BLOG_ARCHIVE_ENABLED } from "./src/lib/blogArchive.ts";
+import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// True when src/content/blog holds at least one post without `draft: true`.
-// Until then the /blog pages are empty listings: keep them out of the sitemap
-// (they also render with noindex).
 function hasPublishedPosts(
   dir = fileURLToPath(new URL("./src/content/blog/", import.meta.url)),
 ) {
@@ -26,12 +24,40 @@ function hasPublishedPosts(
 
 const blogIsLive = hasPublishedPosts();
 
+function openExternalLinks() {
+  return (tree) => {
+    const walk = (node) => {
+      if (!node || typeof node !== "object") return;
+      if (node.type === "element" && node.tagName === "a") {
+        const href = node.properties?.href;
+        if (typeof href === "string" && /^https?:\/\//i.test(href)) {
+          node.properties.target = "_blank";
+          const rel = new Set(
+            String(node.properties.rel || "")
+              .split(/\s+/)
+              .filter(Boolean),
+          );
+          rel.add("noopener");
+          rel.add("noreferrer");
+          node.properties.rel = [...rel].join(" ");
+        }
+      }
+      if (Array.isArray(node.children)) node.children.forEach(walk);
+    };
+    walk(tree);
+  };
+}
+
 export default defineConfig({
   site: "https://nikshaan.dev",
   output: "static",
+  redirects: {
+    "/blog/seo-first-blog-on-a-static-host": {
+      status: 308,
+      destination: "/blog/react-spa-seo-static-host-prerendering/",
+    },
+  },
   build: {
-    // One small stylesheet: inlining it removes the render-blocking request
-    // that otherwise delays first paint on slow mobile connections.
     inlineStylesheets: "always",
   },
   prefetch: {
@@ -39,6 +65,7 @@ export default defineConfig({
     defaultStrategy: "hover",
   },
   markdown: {
+    rehypePlugins: [openExternalLinks],
     shikiConfig: {
       themes: {
         light: "github-light",
@@ -87,10 +114,30 @@ export default defineConfig({
     },
   },
   integrations: [
+    {
+      name: "hide-blog-index",
+      hooks: {
+        "astro:build:done": ({ dir }) => {
+          if (BLOG_ARCHIVE_ENABLED) return;
+          const removeIndex = () => {
+            const built = fileURLToPath(new URL("./blog/index.html", dir));
+            const copied = join(process.cwd(), ".vercel/output/static/blog/index.html");
+            for (const file of [built, copied]) {
+              if (existsSync(file)) unlinkSync(file);
+            }
+          };
+          removeIndex();
+          process.once("beforeExit", removeIndex);
+        },
+      },
+    },
     react(),
     sitemap({
-      filter: (page) =>
-        blogIsLive || !new URL(page).pathname.startsWith("/blog"),
+      filter: (page) => {
+        const path = new URL(page).pathname.replace(/\/$/, "") || "/";
+        if (!BLOG_ARCHIVE_ENABLED && path === "/blog") return false;
+        return blogIsLive || !path.startsWith("/blog");
+      },
     }),
     mdx(),
   ],

@@ -16,6 +16,18 @@ export const prerender = true;
 
 const publishedPosts = await getCollection("blog", ({ data }) => !data.draft);
 const hasPublishedPosts = publishedPosts.length > 0;
+const blogPrerenderUrls = [...publishedPosts]
+  .sort((a, b) => {
+    if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
+    if (a.data.featured && b.data.featured) {
+      const orderA = a.data.featuredOrder ?? Infinity;
+      const orderB = b.data.featuredOrder ?? Infinity;
+      if (orderA !== orderB) return orderA - orderB;
+    }
+    return b.data.pubDate.getTime() - a.data.pubDate.getTime();
+  })
+  .slice(0, 3)
+  .map((post) => `/blog/${post.id}`);
 
 const optimizedBeeImage = await getImage({
   src: beeImage,
@@ -27,12 +39,54 @@ const optimizedBeeImage = await getImage({
 ---
 
 <script is:inline>
+  var savedHomeScroll = null;
+  var nav = performance.getEntriesByType("navigation")[0];
+  var isReload = nav && nav.type === "reload";
+  try {
+    if (isReload) {
+      sessionStorage.removeItem("portfolio_home_scroll");
+      sessionStorage.removeItem("portfolio_return_to");
+    } else {
+      savedHomeScroll = sessionStorage.getItem("portfolio_home_scroll");
+    }
+  } catch (e) {}
+  var restoreY = savedHomeScroll === null || savedHomeScroll === "" ? NaN : Number(savedHomeScroll);
+  var shouldRestoreHomeScroll = !isReload && Number.isFinite(restoreY) && restoreY >= 0;
+
   if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
   }
-  var nav = performance.getEntriesByType("navigation")[0];
-  if (!nav || nav.type !== "back_forward") {
+  if (!shouldRestoreHomeScroll && (!nav || nav.type !== "back_forward")) {
     window.scrollTo(0, 0);
+  }
+
+  if (shouldRestoreHomeScroll) {
+    var restoreAttempts = 0;
+    var lastHeight = -1;
+    var stableFrames = 0;
+    var restoreHomeScroll = function () {
+      var maxScroll = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight,
+      );
+      var y = Math.min(restoreY, maxScroll);
+      window.scrollTo(0, y);
+      var height = document.documentElement.scrollHeight;
+      if (height === lastHeight) stableFrames += 1;
+      else stableFrames = 0;
+      lastHeight = height;
+      restoreAttempts += 1;
+      var blogs = document.getElementById("blogs");
+      if ((blogs && stableFrames >= 2) || restoreAttempts > 40) {
+        document.documentElement.classList.remove("restore-pending");
+        try {
+          sessionStorage.removeItem("portfolio_home_scroll");
+        } catch (e) {}
+        return;
+      }
+      requestAnimationFrame(restoreHomeScroll);
+    };
+    restoreHomeScroll();
   }
 </script>
 
@@ -95,7 +149,7 @@ const optimizedBeeImage = await getImage({
       {hasPublishedPosts && (
         <section
           id="blogs"
-          class="w-full flex flex-col gap-2 flex-1 scroll-mt-20"
+          class="blogs-section w-full flex flex-col gap-2 flex-1 scroll-mt-20"
           data-section="blogs"
           aria-labelledby="blogs-heading"
         >
@@ -124,7 +178,21 @@ const optimizedBeeImage = await getImage({
         returnTo = window.sessionStorage.getItem("portfolio_return_to");
       } catch (e) {}
 
-      var shouldAlignToBlogs = hash === "#blogs" || returnTo === "blogs";
+      var navEntry = performance.getEntriesByType("navigation")[0];
+      var isReload = navEntry && navEntry.type === "reload";
+      var savedScroll = null;
+      try {
+        if (!isReload) {
+          savedScroll = window.sessionStorage.getItem("portfolio_home_scroll");
+        }
+      } catch (e) {}
+      var restoringExactScroll =
+        !isReload &&
+        savedScroll !== null &&
+        savedScroll !== "" &&
+        Number.isFinite(Number(savedScroll));
+      var shouldAlignToBlogs =
+        !isReload && !restoringExactScroll && (hash === "#blogs" || returnTo === "blogs");
 
       if (shouldAlignToBlogs) {
         if ("scrollRestoration" in history) {
@@ -141,7 +209,6 @@ const optimizedBeeImage = await getImage({
           }
         }
 
-        // Execute immediately during parsing before first paint
         instantAlignToBlogs();
 
         if (document.readyState === "loading") {
@@ -164,7 +231,6 @@ const optimizedBeeImage = await getImage({
         document.addEventListener("astro:after-swap", instantAlignToBlogs);
       }
 
-      // Smooth scroll for subsequent in-page hash changes
       window.addEventListener("hashchange", function () {
         if (window.location.hash === "#blogs") {
           var el = document.getElementById("blogs");
@@ -175,9 +241,68 @@ const optimizedBeeImage = await getImage({
       });
     })();
   </script>
+
+  <script is:inline define:vars={{ blogPrerenderUrls }}>
+    (function () {
+      var urls = blogPrerenderUrls;
+      if (!urls || !urls.length || !window.HTMLScriptElement) return;
+      try {
+        if (navigator.connection && navigator.connection.saveData) return;
+      } catch (e) {}
+      var start = function () {
+        if (document.querySelector("script[data-blog-prerender]")) return;
+        var rules = document.createElement("script");
+        rules.type = "speculationrules";
+        rules.setAttribute("data-blog-prerender", "");
+        rules.textContent = JSON.stringify({
+          prerender: [{ urls: [urls[0]], eagerness: "immediate" }],
+          prefetch: [{ urls: urls, eagerness: "immediate" }],
+        });
+        document.head.appendChild(rules);
+      };
+      var whenIdle = function (fn) {
+        if ("requestIdleCallback" in window) requestIdleCallback(fn, { timeout: 1000 });
+        else setTimeout(fn, 200);
+      };
+      var afterLoad = function (fn) {
+        if (document.readyState === "complete") fn();
+        else window.addEventListener("load", fn, { once: true });
+      };
+      var section = document.getElementById("blogs");
+      if (!section || !("IntersectionObserver" in window)) {
+        afterLoad(function () { setTimeout(start, 3000); });
+        return;
+      }
+      var io = new IntersectionObserver(
+        function (entries) {
+          if (!entries.some(function (e) { return e.isIntersecting; })) return;
+          io.disconnect();
+          afterLoad(function () { whenIdle(start); });
+        },
+        { rootMargin: "50% 0px" },
+      );
+      io.observe(section);
+    })();
+  </script>
 </MainLayout>
 
 <style>
+  .blogs-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 264px;
+    overflow-clip-margin: 48px;
+  }
+  @media (min-width: 640px) {
+    .blogs-section {
+      contain-intrinsic-size: auto 253px;
+    }
+  }
+  @media (min-width: 1280px) {
+    .blogs-section {
+      contain-intrinsic-size: auto 232px;
+    }
+  }
+
   .save-data img {
     image-rendering: auto;
   }

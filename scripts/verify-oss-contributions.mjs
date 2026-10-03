@@ -1,7 +1,3 @@
-/**
- * Independently rebuild the expected org PR + issue list from GitHub Search
- * and compare it to /api/oss-contributions. Used by Warm API CI.
- */
 import { spawnSync } from "node:child_process";
 
 const USERNAME = process.env.GH_USERNAME || "Nikshaan";

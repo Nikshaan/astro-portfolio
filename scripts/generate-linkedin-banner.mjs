@@ -6,8 +6,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const portraitSrc = path.join(root, "src/data/bee.avif");
 const outPath = path.join(root, "public/linkedin_banner.webp");
-// PNG copy for og:image/twitter:image: some link-preview crawlers (LinkedIn
-// among them) don't reliably render WebP.
 const pngOutPath = path.join(root, "public/linkedin_banner.png");
 
 const WIDTH = 1200;

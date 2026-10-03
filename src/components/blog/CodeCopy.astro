@@ -2,14 +2,12 @@
   (function () {
     if (typeof window === "undefined") return;
 
-    // Bulletproof clipboard copy with modern API and legacy fallback for non-secure / LAN / mobile
     async function copyTextToClipboard(text) {
       if (navigator.clipboard && window.isSecureContext) {
         try {
           await navigator.clipboard.writeText(text);
           return true;
         } catch (e) {
-          // Fall through to textarea fallback
         }
       }
       try {
@@ -56,7 +54,6 @@
       var pre = wrapper.querySelector("pre");
       if (!pre) return "";
       
-      // Clone to safely remove any copy buttons if they were somehow inside pre
       var clone = pre.cloneNode(true);
       var buttons = clone.querySelectorAll(".copy-code-btn");
       buttons.forEach(function (btn) {
@@ -74,7 +71,6 @@
       codeBlocks.forEach(function (pre) {
         if (pre.getAttribute("data-has-copy-btn") === "true") return;
 
-        // If already inside a code-block-container, mark and return
         if (pre.closest(".code-block-container")) {
           pre.setAttribute("data-has-copy-btn", "true");
           return;
@@ -85,14 +81,11 @@
 
         pre.setAttribute("data-has-copy-btn", "true");
 
-        // Wrap pre in an outer container so the copy button stays pinned top-right
-        // regardless of pre's horizontal scroll position
         var wrapper = document.createElement("div");
         wrapper.className = "code-block-container relative w-full max-w-full min-w-0 my-6 group";
         parent.insertBefore(wrapper, pre);
         wrapper.appendChild(pre);
 
-        // Create copy button matching user specification
         var button = document.createElement("button");
         button.type = "button";
         button.className = "copy-code-btn";
@@ -118,7 +111,6 @@
       });
     }
 
-    // Global event delegation for copy click
     document.addEventListener("click", async function (e) {
       var button = e.target.closest(".copy-code-btn");
       if (!button) return;
@@ -160,7 +152,6 @@
       }
     });
 
-    // Lifecycle triggers
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initCodeCopyButtons);
     } else {
@@ -212,7 +203,6 @@
     -webkit-user-select: none;
   }
 
-  /* Desktop: Reveal on container hover/focus/active */
   @media (min-width: 769px) {
     .copy-code-btn {
       opacity: 0;
@@ -224,7 +214,6 @@
     }
   }
 
-  /* Touch / Mobile / Tablet: Always visible so users know they can copy */
   @media (max-width: 768px), (hover: none) {
     .copy-code-btn {
       opacity: 0.85;

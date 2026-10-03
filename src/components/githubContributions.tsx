@@ -225,13 +225,10 @@ export default memo(function GithubContributions({
       suppressHydrationWarning
       className={cn(
         "bento-reveal relative p-5 rounded-[var(--radius-card)] border overflow-hidden h-full w-full flex flex-col",
-        // The skeleton sits directly under the header; loaded content spreads out.
         loading ? "justify-start" : "justify-between",
         "bg-[var(--surface-card)] border-[var(--border-subtle)] text-[var(--text-primary)]",
       )}
     >
-        {/* One header element for every state, so the heading isn't re-created
-            (and re-painted as a new element) when the data arrives. */}
         <div className={styles.header}>
           <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
           {loading ? (

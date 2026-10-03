@@ -6,24 +6,16 @@ import { getReadingTime } from "../utils/readingTime";
 
 const publishedPosts = await getCollection("blog", ({ data }) => !data.draft);
 
-// Empty state rule: if there are no published posts, do not render the Writing section
-if (publishedPosts.length === 0) {
-  // Empty
-}
-
 const sortedPosts = [...publishedPosts].sort((a, b) => {
-  // 1. Featured posts first
   if (a.data.featured && !b.data.featured) return -1;
   if (!a.data.featured && b.data.featured) return 1;
 
-  // 2. featuredOrder if both featured
   if (a.data.featured && b.data.featured) {
     const orderA = a.data.featuredOrder ?? Infinity;
     const orderB = b.data.featuredOrder ?? Infinity;
     if (orderA !== orderB) return orderA - orderB;
   }
 
-  // 3. Fall back to newest
   return b.data.pubDate.getTime() - a.data.pubDate.getTime();
 });
 

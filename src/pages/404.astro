@@ -1,6 +1,7 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
 import "../styles/global.css";
+import { BLOG_ARCHIVE_ENABLED } from "../lib/blogArchive";
 ---
 
 <MainLayout
@@ -19,6 +20,7 @@ import "../styles/global.css";
             >
                 Home
             </a>
+            {BLOG_ARCHIVE_ENABLED && (
             <a
                 class="cursor-pointer px-5 py-2.5 bg-[var(--accent)] text-[var(--accent-contrast)] hover:opacity-90 rounded-full transition-opacity type-body font-medium"
                 href="/blog"
@@ -26,6 +28,7 @@ import "../styles/global.css";
             >
                 Visit blog
             </a>
+            )}
         </div>
     </div>
 </MainLayout>

@@ -48,8 +48,6 @@ const resource = createLiveResource<Contribution[]>({
   key: PERSISTENT_CACHE_KEY,
   url: "api/oss-contributions",
   validate: validateOss,
-  // An empty list never replaces a non-empty one (GitHub search can come back
-  // empty on a bad day; see api/oss-contributions.ts).
   isUsable: (items) => items.length > 0,
   freshMs: FRESH_MS,
   pollMs: POLL_MS,

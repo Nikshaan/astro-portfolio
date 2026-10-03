@@ -1,5 +1,12 @@
 {
   "framework": "astro",
+  "redirects": [
+    {
+      "source": "/blog/seo-first-blog-on-a-static-host/",
+      "destination": "/blog/react-spa-seo-static-host-prerendering/",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

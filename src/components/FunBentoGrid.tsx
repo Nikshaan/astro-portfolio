@@ -182,8 +182,6 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
     })();
     initPromiseRef.current = init;
 
-    // A failed or empty load is not memoised, so the next interaction retries
-    // instead of every later click silently doing nothing.
     init.then(
       () => {
         if (!galleryOk && initPromiseRef.current === init) {
@@ -208,8 +206,6 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
       const maxPrefetchImages = 3;
       preloadObserver = new IntersectionObserver(
         (entries) => {
-          // observe() always delivers an initial entry; only act once the
-          // gallery is actually within the root margin.
           if (!entries.some((entry) => entry.isIntersecting)) return;
           preloadObserver?.disconnect();
           ensureFancyboxCss();
@@ -284,8 +280,6 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
 
       const { Fancybox } = await import("@fancyapps/ui");
 
-      // Fancybox hides the scrollbar and pads the page itself, but the fixed
-      // navbar only follows --scrollbar-width (transitions.css).
       document.documentElement.style.setProperty(
         "--scrollbar-width",
         `${window.innerWidth - document.documentElement.clientWidth}px`,
@@ -379,7 +373,7 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
           </div>
         </BentoCard>
 
-        <BentoCard span="wideShort" disableHoverMotion padded={false}>
+        <BentoCard span="wideShort" disableHoverMotion padded={false} className="bento-reveal-lead">
           <div className="flex h-full w-full items-center">
             <Suspense fallback={<GenreStreakPlaceholder />}>
               <ErrorBoundary label="Genre stats">

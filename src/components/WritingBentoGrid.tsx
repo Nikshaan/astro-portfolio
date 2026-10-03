@@ -4,6 +4,7 @@ import BentoGrid from "./bento/BentoGrid";
 import BentoCard from "./bento/BentoCard";
 import type { SpanName } from "./bento/spans";
 import { ArrowRight, BookOpen } from "lucide-react";
+import { BLOG_ARCHIVE_ENABLED } from "../lib/blogArchive";
 
 export interface WritingPostSummary {
   id: string;
@@ -23,11 +24,15 @@ const WritingBentoGrid: React.FC<WritingBentoGridProps> = memo(({ posts }) => {
     return null;
   }
 
-  // If 3 or more posts: display the 3 latest posts evenly across 12 cols (span="third", 4 cols each)
-  // If 2 posts: 2 posts + 1 archive CTA = 3 items (span="third")
-  // If 1 post: 1 post + 1 archive CTA = 2 items (span="half", 6 cols each)
-  const showCtaCard = posts.length < 3;
-  const span: SpanName = posts.length === 1 ? "half" : "third";
+  const showCtaCard = BLOG_ARCHIVE_ENABLED && posts.length < 3;
+  const span: SpanName =
+    posts.length >= 3 || (showCtaCard && posts.length !== 1)
+      ? "third"
+      : showCtaCard
+        ? "half"
+        : posts.length === 1
+          ? "wide"
+          : "half";
   const displayPosts = posts.slice(0, 3);
 
   return (
@@ -39,19 +44,21 @@ const WritingBentoGrid: React.FC<WritingBentoGridProps> = memo(({ posts }) => {
               Blogs
             </h2>
           </div>
-          <a
-            href="/blog"
-            onClick={() => {
-              try {
-                sessionStorage.setItem("portfolio_return_to", "blogs");
-              } catch (e) {}
-            }}
-            className="text-xs font-mono uppercase tracking-wider text-[var(--accent)] hover:underline flex items-center gap-1.5 focus-visible:outline-none"
-            aria-label="View all blogs"
-          >
-            <span>View all blogs</span>
-            <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-          </a>
+          {BLOG_ARCHIVE_ENABLED && (
+            <a
+              href="/blog"
+              onClick={() => {
+                try {
+                  sessionStorage.setItem("portfolio_return_to", "blogs");
+                } catch (e) {}
+              }}
+              className="text-xs font-mono uppercase tracking-wider text-[var(--accent)] hover:underline flex items-center gap-1.5 focus-visible:outline-none"
+              aria-label="View all blogs"
+            >
+              <span>View all blogs</span>
+              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </a>
+          )}
         </div>
 
         <BentoGrid id="blogs-panel" aria-labelledby="blogs-heading">
@@ -60,11 +67,21 @@ const WritingBentoGrid: React.FC<WritingBentoGridProps> = memo(({ posts }) => {
               key={post.id}
               span={span}
               href={`/blog/${post.id}`}
+              prefetch="viewport"
               aria-label={`Read ${post.title}`}
               className="flex flex-col justify-between"
+              onPointerDown={() => {
+                try {
+                  sessionStorage.setItem("portfolio_home_scroll", String(window.scrollY));
+                } catch (e) {}
+              }}
               onClick={() => {
                 try {
+                  if ("scrollRestoration" in history) {
+                    history.scrollRestoration = "manual";
+                  }
                   sessionStorage.setItem("portfolio_return_to", "blogs");
+                  sessionStorage.setItem("portfolio_home_scroll", String(window.scrollY));
                 } catch (e) {}
               }}
             >
@@ -101,7 +118,6 @@ const WritingBentoGrid: React.FC<WritingBentoGridProps> = memo(({ posts }) => {
             </BentoCard>
           ))}
 
-          {/* Archive CTA Card (only shown when fewer than 3 posts exist, to complete the row) */}
           {showCtaCard && (
             <BentoCard
               span={span}

@@ -45,7 +45,6 @@ async function fetchWithRetry(url, maxRetries = 3) {
       }
       if (response.ok) return response;
       lastError = new Error(`HTTP ${response.status}`);
-      // A 4xx (bad key, unknown user) won't fix itself on retry.
       if (response.status >= 400 && response.status < 500) break;
     } catch (err) {
       clearTimeout(timeoutId);

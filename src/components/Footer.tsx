@@ -1,7 +1,8 @@
 import { useCallback } from "react";
 import { MoveRight, Github, Linkedin, Mail } from "lucide-react";
+import { BLOG_ARCHIVE_ENABLED } from "../lib/blogArchive";
 
-const Footer = () => {
+const Footer = ({ revealEarly = false }: { revealEarly?: boolean }) => {
   const currentYear = new Date().getFullYear();
 
   const handleNavClick = useCallback(
@@ -51,7 +52,7 @@ const Footer = () => {
     <footer className="w-full p-4 pt-0 text-[var(--text-secondary)] bg-[var(--surface-page)]">
       <div
         id="main-footer"
-        className="bento-reveal w-full max-w-[1400px] mx-auto rounded-[var(--radius-card)] border bg-[var(--surface-card)] border-[var(--border-subtle)] overflow-hidden footer-transition bento-card"
+        className={`bento-reveal${revealEarly ? " bento-reveal-early" : ""} w-full max-w-[1400px] mx-auto rounded-[var(--radius-card)] border bg-[var(--surface-card)] border-[var(--border-subtle)] overflow-hidden footer-transition bento-card`}
         suppressHydrationWarning
       >
         <div className="p-8 md:p-12 border-b border-[var(--border-subtle)] footer-transition">
@@ -110,7 +111,11 @@ const Footer = () => {
                 {[
                   { name: "me", href: "me", isAnchor: true },
                   { name: "projects", href: "projects", isAnchor: true },
-                  { name: "blogs", href: "/blog", isAnchor: false },
+                  {
+                    name: "blogs",
+                    href: BLOG_ARCHIVE_ENABLED ? "/blog" : "blogs",
+                    isAnchor: !BLOG_ARCHIVE_ENABLED,
+                  },
                   { name: "fun", href: "fun", isAnchor: true },
                 ].map((link) => (
                   <a

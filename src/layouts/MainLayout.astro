@@ -10,9 +10,7 @@ interface Props {
     preloadImageSrc?: string;
     preloadImageSrcSet?: string;
     preloadImageSizes?: string;
-    /** Keep the page out of search indexes (404, empty listings). Also drops the canonical link. */
     noindex?: boolean;
-    /** Preload the monospace font: only pages with monospace text near the top need it. */
     preloadMonoFont?: boolean;
 }
 
@@ -40,8 +38,6 @@ const {
     preloadMonoFont = false,
 } = Astro.props;
 
-// JSON.stringify doesn't escape "<", so "</script>" in any value would end the
-// script element early. \u003c is the same character to a JSON parser.
 const toJsonLd = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
 
 const favicon = await getImage({
@@ -169,6 +165,30 @@ const resolvedOgImage = ogImage
         <script is:inline>
             (function () {
                 document.documentElement.classList.add("bento-reveal-js");
+                try {
+                    var path = window.location.pathname;
+                    var isHome = path === "/" || path === "";
+                    if (isHome) {
+                        var navEntry = performance.getEntriesByType("navigation")[0];
+                        var isReload = navEntry && navEntry.type === "reload";
+                        var savedHomeScroll = sessionStorage.getItem("portfolio_home_scroll");
+                        if (isReload) {
+                            sessionStorage.removeItem("portfolio_home_scroll");
+                            sessionStorage.removeItem("portfolio_return_to");
+                            savedHomeScroll = null;
+                        }
+                        var returning =
+                            !isReload &&
+                            ((navEntry && navEntry.type === "back_forward") ||
+                                (savedHomeScroll !== null && savedHomeScroll !== ""));
+                        if (returning) {
+                            document.documentElement.classList.add("bento-reveal-settled");
+                            if (savedHomeScroll !== null && savedHomeScroll !== "") {
+                                document.documentElement.classList.add("restore-pending");
+                            }
+                        }
+                    }
+                } catch (e) {}
 
                 try {
                     var stored = localStorage.getItem("theme");
@@ -323,9 +343,37 @@ const resolvedOgImage = ogImage
                     { threshold: 0.2, rootMargin: "80px 0px -10% 0px" },
                 );
 
+                var earlyIo = new IntersectionObserver(
+                    function (entries) {
+                        for (var i = 0; i < entries.length; i++) {
+                            var entry = entries[i];
+                            if (!entry.isIntersecting) continue;
+                            earlyIo.unobserve(entry.target);
+                            play(entry.target);
+                        }
+                    },
+                    { threshold: 0, rootMargin: "0px" },
+                );
+
+                var leadIo = new IntersectionObserver(
+                    function (entries) {
+                        for (var i = 0; i < entries.length; i++) {
+                            var entry = entries[i];
+                            if (!entry.isIntersecting) continue;
+                            leadIo.unobserve(entry.target);
+                            play(entry.target);
+                        }
+                    },
+                    { threshold: 0, rootMargin: "0px 0px 128px 0px" },
+                );
+
                 function observe(el) {
                     if (!el || el.nodeType !== 1 || !el.classList) return;
                     if (!el.classList.contains("bento-reveal")) return;
+                    if (docEl.classList.contains("bento-reveal-settled")) {
+                        freeze(el);
+                        return;
+                    }
                     if (frozen && frozen.has(el)) {
                         freeze(el);
                         return;
@@ -336,6 +384,14 @@ const resolvedOgImage = ogImage
                         return;
                     }
                     if (playing && playing.has(el)) return;
+                    if (el.classList.contains("bento-reveal-early")) {
+                        earlyIo.observe(el);
+                        return;
+                    }
+                    if (el.classList.contains("bento-reveal-lead")) {
+                        leadIo.observe(el);
+                        return;
+                    }
                     io.observe(el);
                 }
 
@@ -368,7 +424,10 @@ const resolvedOgImage = ogImage
             })();
         </script>
         <slot />
-        <Footer client:visible />
+        <Footer
+            client:visible={{ rootMargin: "480px" }}
+            revealEarly={Astro.url.pathname.startsWith("/blog")}
+        />
         <VercelAnalytics />
         <script
             type="application/ld+json"

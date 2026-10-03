@@ -35,16 +35,13 @@ export const InfoTooltip: React.FC = () => {
     const triggerRect = trigger.getBoundingClientRect();
     const ttRect = tooltip.getBoundingClientRect();
 
-    // Use documentElement client dimensions to account for scrollbars accurately
     const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
     const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
 
-    // Detect navbar clearance
     const navbar = typeof document !== "undefined" ? document.getElementById("navbar") : null;
     const navBottom = navbar ? navbar.getBoundingClientRect().bottom : 56;
     const topSafeMargin = Math.max(VIEWPORT_MARGIN, navBottom + TOOLTIP_GAP);
 
-    // If trigger button has scrolled off screen or under/behind the navbar, dismiss immediately
     if (
       triggerRect.bottom <= navBottom ||
       triggerRect.top >= viewportHeight ||
@@ -55,32 +52,22 @@ export const InfoTooltip: React.FC = () => {
       return;
     }
 
-    // Center of trigger button along horizontal axis
     const px = triggerRect.left + triggerRect.width / 2;
 
-    // Available width clamped between minimum readable width and viewport bounds
     const maxAvailableWidth = Math.max(180, viewportWidth - 2 * VIEWPORT_MARGIN);
     const ttWidth = Math.min(ttRect.width || 320, maxAvailableWidth);
 
-    // Horizontal clamping: ensure tooltip never overflows left or right margins
     const minLeft = VIEWPORT_MARGIN;
     const maxLeft = Math.max(minLeft, viewportWidth - ttWidth - VIEWPORT_MARGIN);
     const left = Math.min(Math.max(px - ttWidth / 2, minLeft), maxLeft);
 
-    // Arrow positioning relative to tooltip container (keep inside rounded corners)
     const arrowLeft = Math.min(Math.max(px - left, 14), Math.max(ttWidth - 14, 14));
 
-    // Vertical space available above and below trigger, respecting topSafeMargin
     const spaceAbove = triggerRect.top - TOOLTIP_GAP - topSafeMargin;
     const spaceBelow = viewportHeight - triggerRect.bottom - TOOLTIP_GAP - VIEWPORT_MARGIN;
 
-    // Measured natural height of the tooltip
     const naturalHeight = ttRect.height || 260;
 
-    // Placement decision:
-    // 1. If it fits cleanly below, place below
-    // 2. Else if it fits cleanly above, place above
-    // 3. Otherwise, place on whichever side offers more vertical room
     let above = false;
     if (spaceBelow >= naturalHeight) {
       above = false;
@@ -91,10 +78,8 @@ export const InfoTooltip: React.FC = () => {
     }
 
     const availableSpace = above ? spaceAbove : spaceBelow;
-    // Leave a small buffer for outer padding / arrow
     const maxContentHeight = Math.max(100, Math.floor(availableSpace - 16));
 
-    // Compute top position
     let top = 0;
     if (above) {
       const renderedHeight = Math.min(naturalHeight, Math.max(0, spaceAbove));
@@ -103,7 +88,6 @@ export const InfoTooltip: React.FC = () => {
       top = triggerRect.bottom + TOOLTIP_GAP;
     }
 
-    // Safety clamp: guarantees the tooltip can NEVER bleed into navbar or past bottom of viewport
     const maxTop = Math.max(
       topSafeMargin,
       viewportHeight - VIEWPORT_MARGIN - Math.min(naturalHeight, maxContentHeight + 16)
@@ -153,12 +137,10 @@ export const InfoTooltip: React.FC = () => {
     updatePosition();
   }, [isOpen, updatePosition]);
 
-  // Dismiss tooltip on page scroll, update on window resize
   useEffect(() => {
     if (!isOpen) return;
 
     const handleScroll = (e: Event) => {
-      // If the scroll happened inside the tooltip itself, don't close
       if (
         tooltipRef.current &&
         e.target instanceof Node &&
@@ -179,7 +161,6 @@ export const InfoTooltip: React.FC = () => {
     };
   }, [isOpen, updatePosition]);
 
-  // Re-measure if tooltip size changes (e.g. font loaded, text reflow)
   useEffect(() => {
     if (!isOpen || !tooltipRef.current || typeof ResizeObserver === "undefined") {
       return;
@@ -191,7 +172,6 @@ export const InfoTooltip: React.FC = () => {
     return () => observer.disconnect();
   }, [isOpen, updatePosition]);
 
-  // Dismiss on outside click / tap
   useEffect(() => {
     if (!isOpen) return;
     const onDocPointerDown = (e: MouseEvent | TouchEvent) => {
@@ -217,7 +197,6 @@ export const InfoTooltip: React.FC = () => {
     };
   }, [isOpen]);
 
-  // Escape key listener to dismiss
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {

@@ -118,13 +118,6 @@ function weekFromSvgPoint(x: number, y: number): number | null {
   return wi;
 }
 
-/**
- * Dial position (0-51) of the Monday-start week beginning at `fromSec`.
- * A week belongs to the year its Sunday falls in, so the week holding Jan 1 is
- * slot 0. Years with 53 Sundays have one extra week at the end; it shares slot
- * 51 with the week before (see the merge in the model) instead of wrapping onto
- * slot 0 and overwriting the first week of the next year.
- */
 function getWeekSlotOfYear(fromSec: number): number {
   const d = new Date((fromSec + 6 * 86400) * 1000);
   const dateStr = d.toLocaleDateString("en-US", {
@@ -505,8 +498,6 @@ export default memo(function RadialArtistHeatmap() {
       if (!wk) continue;
       const slot = getWeekSlotOfYear(wk.from);
       const existing = alignedWeeks[slot];
-      // Only a 53-week year's last week lands on an occupied slot: combine the
-      // two weeks rather than dropping one.
       alignedWeeks[slot] = existing
         ? {
             from: Math.min(existing.from, wk.from),
@@ -518,8 +509,6 @@ export default memo(function RadialArtistHeatmap() {
       }
     }
 
-    // A slot left empty by such a merge sits at the seam between the newest
-    // and oldest week; label it with the out-of-window week that belongs there.
     const WEEK_SEC = 7 * 86400;
     const seamCandidates = [
       rawWk[0].from - WEEK_SEC,

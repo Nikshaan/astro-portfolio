@@ -19,7 +19,6 @@ const showDesktop = variant === "desktop" || variant === "all";
 
 {tocHeadings.length > 0 && (
   <>
-    {/* Mobile disclosure */}
     {showMobile && (
       <div class="lg:hidden my-6 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-4 w-full max-w-full min-w-0">
         <details class="group toc-mobile-details">
@@ -58,7 +57,6 @@ const showDesktop = variant === "desktop" || variant === "all";
       </div>
     )}
 
-    {/* Desktop sticky sidebar */}
     {showDesktop && (
       <nav
         class="sticky top-24 self-start w-full max-w-[260px] max-h-[calc(100vh-7rem)] overflow-y-auto pr-3 text-sm scrollbar-thin"
@@ -97,8 +95,6 @@ const showDesktop = variant === "desktop" || variant === "all";
         window.matchMedia &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      // Scroll to a heading (instantly when reduced motion is on), record it
-      // in the URL and move keyboard focus there so Tab continues from it.
       function goToHeading(el, slug) {
         var top = el.getBoundingClientRect().top + window.scrollY - 90;
         window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
@@ -112,7 +108,6 @@ const showDesktop = variant === "desktop" || variant === "all";
         var mobileLinks = document.querySelectorAll("[data-mobile-toc-link]");
         var detailsEl = document.querySelector(".toc-mobile-details");
 
-        // Mobile click handler to close accordion and smooth scroll
         mobileLinks.forEach(function (ml) {
           ml.addEventListener("click", function (e) {
             var slug = ml.getAttribute("data-mobile-toc-link");
@@ -138,15 +133,19 @@ const showDesktop = variant === "desktop" || variant === "all";
 
         function setActive(slug) {
           if (!slug) return;
-          links.forEach(function (l) {
-            if (l.getAttribute("data-toc-link") === slug) {
-              l.classList.add("border-[var(--accent)]", "text-[var(--accent)]", "font-medium");
-              l.classList.remove("border-transparent", "text-[var(--text-secondary)]");
-            } else {
-              l.classList.remove("border-[var(--accent)]", "text-[var(--accent)]", "font-medium");
-              l.classList.add("border-transparent", "text-[var(--text-secondary)]");
-            }
-          });
+          function paint(list, attr) {
+            list.forEach(function (l) {
+              if (l.getAttribute(attr) === slug) {
+                l.classList.add("border-[var(--accent)]", "text-[var(--accent)]", "font-medium");
+                l.classList.remove("border-transparent", "text-[var(--text-secondary)]");
+              } else {
+                l.classList.remove("border-[var(--accent)]", "text-[var(--accent)]", "font-medium");
+                l.classList.add("border-transparent", "text-[var(--text-secondary)]");
+              }
+            });
+          }
+          paint(links, "data-toc-link");
+          paint(mobileLinks, "data-mobile-toc-link");
         }
 
         function onScroll() {
@@ -154,17 +153,16 @@ const showDesktop = variant === "desktop" || variant === "all";
           var innerHeight = window.innerHeight;
           var docHeight = document.documentElement.scrollHeight;
 
-          // If scrolled to bottom of page, activate last heading
           if (scrollY + innerHeight >= docHeight - 40) {
             setActive(headings[headings.length - 1].slug);
             return;
           }
 
+          var midpoint = innerHeight / 2;
           var current = headings[0].slug;
           for (var i = 0; i < headings.length; i++) {
             var rect = headings[i].el.getBoundingClientRect();
-            // Heading passed threshold below navbar
-            if (rect.top <= 140) {
+            if (rect.top <= midpoint) {
               current = headings[i].slug;
             } else {
               break;
@@ -173,7 +171,6 @@ const showDesktop = variant === "desktop" || variant === "all";
           setActive(current);
         }
 
-        // Desktop smooth click handler
         links.forEach(function (l) {
           l.addEventListener("click", function (e) {
             var slug = l.getAttribute("data-toc-link");
@@ -186,7 +183,6 @@ const showDesktop = variant === "desktop" || variant === "all";
           });
         });
 
-        // At most one layout read per frame while scrolling.
         var scrollQueued = false;
         function onScrollThrottled() {
           if (scrollQueued) return;

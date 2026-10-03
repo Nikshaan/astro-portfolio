@@ -1,9 +1,3 @@
-/**
- * Safe client-side persistent cache helper for SWR (Stale-While-Revalidate) patterns.
- * Wraps localStorage with TTL validation, error-handling (private mode/quota limit),
- * and silent fallbacks.
- */
-
 interface CacheEnvelope<T> {
   version: number;
   timestamp: number;
@@ -24,7 +18,6 @@ export function getPersistentEntry<T>(
   if (typeof window === "undefined") return null;
 
   try {
-    // The localStorage getter itself throws (SecurityError) when site data is blocked.
     if (!window.localStorage) return null;
     const raw = window.localStorage.getItem(key);
     if (!raw) return null;
@@ -69,7 +62,5 @@ export function setPersistentCache<T>(
       data,
     };
     window.localStorage.setItem(key, JSON.stringify(envelope));
-  } catch {
-    // Quota exceeded or private browsing mode - silently ignore
-  }
+  } catch {}
 }

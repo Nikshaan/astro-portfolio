@@ -5,6 +5,7 @@ import MainLayout from "../../../layouts/MainLayout.astro";
 import NavbarWrapper from "../../../components/NavbarWrapper.astro";
 import { getReadingTime } from "../../../utils/readingTime";
 import { tagSlug } from "../../../utils/tagSlug";
+import { BLOG_ARCHIVE_ENABLED } from "../../../lib/blogArchive";
 
 export async function getStaticPaths() {
   const isDev = import.meta.env.DEV;
@@ -22,7 +23,6 @@ export async function getStaticPaths() {
       .filter((post) => (post.data.tags || []).some((t) => tagSlug(t) === tag))
       .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
 
-    // Find original casing for display
     const originalTag = posts
       .flatMap((p) => p.data.tags || [])
       .find((t) => tagSlug(t) === tag)?.trim() || tag;
@@ -51,7 +51,6 @@ const { posts, tagName } = Astro.props;
 
   <main id="main-content" class="bg-[var(--surface-page)] text-[var(--text-primary)] min-h-[100svh] w-full pt-24 pb-20 px-4">
     <div class="w-full max-w-[1400px] mx-auto min-w-0">
-      {/* Back Link */}
       <div class="mb-8 flex items-center justify-between">
         <a
           href="/blog/tags"
@@ -64,7 +63,7 @@ const { posts, tagName } = Astro.props;
           <span>All tags</span>
         </a>
         <a
-          href="/blog"
+          href={BLOG_ARCHIVE_ENABLED ? "/blog" : "/#blogs"}
           class="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
         >
           All posts →

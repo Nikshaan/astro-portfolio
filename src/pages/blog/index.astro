@@ -5,6 +5,11 @@ import MainLayout from "../../layouts/MainLayout.astro";
 import NavbarWrapper from "../../components/NavbarWrapper.astro";
 import BlogSearch from "../../components/blog/BlogSearch";
 import { getReadingTime } from "../../utils/readingTime";
+import { BLOG_ARCHIVE_ENABLED } from "../../lib/blogArchive";
+
+if (!BLOG_ARCHIVE_ENABLED) {
+  Astro.response.status = 404;
+}
 
 const isDev = import.meta.env.DEV;
 const allPosts = await getCollection("blog", ({ data }) => (isDev ? true : !data.draft));
@@ -13,10 +18,10 @@ const sortedPosts = allPosts.sort(
   (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
 );
 
-// Collect all unique tags for the tag pills
 const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).sort();
 ---
 
+{BLOG_ARCHIVE_ENABLED && (
 <MainLayout
   title="Blogs & Engineering Notes | Nikshaan Shetty"
   description="Engineering postmortems, architecture breakdowns, and technical articles on AI/ML and software engineering."
@@ -27,7 +32,6 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
 
   <main id="main-content" class="bg-[var(--surface-page)] text-[var(--text-primary)] min-h-[100svh] w-full pt-24 pb-20 px-4">
     <div class="w-full max-w-[1400px] mx-auto min-w-0">
-      {/* Go Back Link */}
       <div class="mb-8">
         <a
           id="back-to-home-link"
@@ -43,7 +47,6 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
         </a>
       </div>
 
-      {/* Header */}
       <header class="mb-12">
         <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)] mb-3 break-words">
           Blogs
@@ -62,7 +65,6 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
         </div>
       </header>
 
-      {/* Posts List */}
       {sortedPosts.length === 0 ? (
         <div class="p-12 text-center rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)]">
           <p class="text-base text-[var(--text-secondary)]">No posts published yet.</p>
@@ -158,3 +160,4 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
     })();
   </script>
 </MainLayout>
+)}

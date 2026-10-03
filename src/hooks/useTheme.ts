@@ -59,7 +59,5 @@ export function toggleThemeWithTransition(duration = 400) {
 function persistTheme(theme: "light" | "dark") {
   try {
     localStorage.setItem("theme", theme);
-  } catch {
-    // Storage blocked or full: the theme still applies for this page view.
-  }
+  } catch {}
 }

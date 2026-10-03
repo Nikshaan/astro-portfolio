@@ -64,10 +64,6 @@ export const FreshnessLabel: React.FC<FreshnessLabelProps> = ({
   );
 };
 
-/**
- * Wrappers own the store subscription so poll updates re-render only the tiny
- * label, never the parent card grid (which holds the whole photo gallery).
- */
 export const MusicStatsFreshness: React.FC = () => (
   <FreshnessLabel fetchedAt={useMusicStatsLive().fetchedAt} />
 );

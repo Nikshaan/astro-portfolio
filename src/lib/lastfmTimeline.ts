@@ -64,10 +64,8 @@ async function mapWithConcurrency<T, R>(
   return results;
 }
 
-/** Thrown for failures that retrying cannot fix (4xx, exhausted 429 budget). */
 class NonRetryableError extends Error {}
 
-/** Strip credentials from a URL before it lands in an error message or log. */
 function redactUrl(url: string): string {
   return url.replace(/([?&]api_key=)[^&]*/gi, "$1[REDACTED]");
 }
@@ -139,11 +137,6 @@ export async function fetchWithRetry(
   );
 }
 
-/**
- * Last.fm reports some failures (rate limit, bad key, unknown user) as a JSON
- * `{ error, message }` body, sometimes with HTTP 200. Treat those as failures
- * instead of as "no scrobbles", which would blank the overlap window.
- */
 export function assertLastFmOk(json: unknown): void {
   const body = json as { error?: unknown; message?: unknown } | null;
   if (body && typeof body === "object" && body.error != null) {

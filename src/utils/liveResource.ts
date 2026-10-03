@@ -11,29 +11,17 @@ export interface LiveResourceOptions<T> {
   key: string;
   url: string;
   validate: (data: unknown) => T;
-  /** Skip a load while data is younger than this. Keep it below `pollMs`. */
   freshMs: number;
   pollMs: number;
-  /**
-   * Data older than this after a fetch is treated as a stale CDN/cache copy and
-   * re-requested (bypassing the CDN). Must exceed the server's own max data age
-   * or it fires on every load. Defaults to `freshMs`.
-   */
   staleAfterMs?: number;
   maxAgeMs?: number;
   onFetch?: () => void;
-  /**
-   * False for payloads that are well-formed but carry no real data (upstream
-   * error bodies, empty fallbacks). Such payloads never replace or persist
-   * over data that was usable.
-   */
   isUsable?: (data: T) => boolean;
 }
 
 const DEFAULT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const VISIBILITY_MIN_GAP_MS = 30_000;
 const STALE_RETRY_MS = [2500, 8000] as const;
-/** X-Cache-Status values whose body is a placeholder, not upstream data. */
 const DEGRADED_CACHE_STATUSES = new Set(["FALLBACK", "UPSTREAM_ERROR", "ERROR"]);
 
 type Listener<T> = (snapshot: LiveSnapshot<T>) => void;
@@ -45,16 +33,7 @@ function buildApiUrl(path: string): string {
   return `${baseUrl}${apiPath}`;
 }
 
-/**
- * When the server data was produced, expressed on the *client* clock.
- *
- * X-Fetched-At is a server timestamp, so comparing it to Date.now() breaks when
- * the visitor's clock is off (skipped polls / endless forced refetches). Instead
- * take the server-relative age (server "now" minus X-Fetched-At, both on the
- * server clock) and subtract it from the client's receive time. Server "now" is
- * `Date + Age`: on a CDN hit `Date` is the ORIGINAL generation time, not the
- * delivery time.
- */
+
 function parseFetchedAt(response: Response, receivedAt: number): number {
   const raw = response.headers.get("X-Fetched-At");
   const fetched = raw == null || raw === "" ? NaN : Number(raw);
@@ -185,8 +164,6 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
           response.headers.get("X-Cache-Status") ?? "",
         ) || (isUsable ? !isUsable(parsed) : false);
 
-      // Keep showing real data rather than swapping it for a placeholder.
-      // fetchedAt is left alone, so the next poll retries.
       if (degraded && data !== null && dataIsUsable) {
         setSnapshot({ loading: false, error: null });
         return data;
@@ -283,9 +260,6 @@ export function createLiveResource<T>(options: LiveResourceOptions<T>) {
   }
 
   function getSnapshot(): LiveSnapshot<T> {
-    // Do not boot localStorage here. React 19 compares getSnapshot() to
-    // getServerSnapshot() during hydration; reading the cache would make
-    // them differ and regenerate the tree.
     return snapshot;
   }
 
