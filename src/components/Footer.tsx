@@ -38,7 +38,7 @@ const Footer = ({ revealEarly = false }: { revealEarly?: boolean }) => {
       setTimeout(() => {
         if (window.location.hash) {
           window.history.replaceState(
-            null,
+            window.history.state,
             "",
             window.location.pathname + window.location.search,
           );
@@ -110,12 +110,12 @@ const Footer = ({ revealEarly = false }: { revealEarly?: boolean }) => {
               <nav aria-label="Footer navigation" className="flex flex-wrap gap-2 md:gap-3">
                 {[
                   { name: "me", href: "me", isAnchor: true },
-                  { name: "projects", href: "projects", isAnchor: true },
                   {
                     name: "blogs",
-                    href: BLOG_ARCHIVE_ENABLED ? "/blog" : "blogs",
+                    href: BLOG_ARCHIVE_ENABLED ? "/blog/" : "blogs",
                     isAnchor: !BLOG_ARCHIVE_ENABLED,
                   },
+                  { name: "projects", href: "projects", isAnchor: true },
                   { name: "fun", href: "fun", isAnchor: true },
                 ].map((link) => (
                   <a

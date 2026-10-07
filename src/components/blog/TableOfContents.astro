@@ -59,7 +59,7 @@ const showDesktop = variant === "desktop" || variant === "all";
 
     {showDesktop && (
       <nav
-        class="sticky top-24 self-start w-full max-w-[260px] max-h-[calc(100vh-7rem)] overflow-y-auto pr-3 text-sm scrollbar-thin"
+        class="w-full max-w-[260px] text-sm"
         aria-label="In this page"
       >
         <div class="mb-3 font-heading text-xs uppercase tracking-wider text-[var(--text-tertiary)] font-semibold flex items-center gap-2">
@@ -98,7 +98,7 @@ const showDesktop = variant === "desktop" || variant === "all";
       function goToHeading(el, slug) {
         var top = el.getBoundingClientRect().top + window.scrollY - 90;
         window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
-        try { history.pushState(null, "", "#" + slug); } catch(err) {}
+        try { history.replaceState(history.state, "", "#" + slug); } catch(err) {}
         if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
         el.focus({ preventScroll: true });
       }

@@ -132,6 +132,7 @@ const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(
         className={cn(
           "h-full w-full bento-reveal",
           eager && "bento-reveal-eager",
+          span === "hero" && "bento-reveal-hero",
           SPANS[span],
           className,
         )}

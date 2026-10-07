@@ -84,6 +84,19 @@ body {
     box-shadow 0.22s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
+.bento-card.tile-hover {
+  transition:
+    transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1),
+    border-color 0.22s cubic-bezier(0.25, 0.1, 0.25, 1),
+    background-color 0.22s cubic-bezier(0.25, 0.1, 0.25, 1),
+    box-shadow 0.22s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.bento-card.tile-hover:hover:not([data-bento-frozen]),
+.bento-card.tile-hover:focus-visible:not([data-bento-frozen]) {
+  transform: translateY(-2px);
+}
+
 .bento-card:hover:not([data-bento-frozen]),
 .bento-card:focus-visible:not([data-bento-frozen]) {
   border-color: var(--border-strong);

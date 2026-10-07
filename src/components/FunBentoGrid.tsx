@@ -373,8 +373,8 @@ const FunBentoGrid: React.FC<FunBentoGridProps> = ({
           </div>
         </BentoCard>
 
-        <BentoCard span="wideShort" disableHoverMotion padded={false} className="bento-reveal-lead">
-          <div className="flex h-full w-full items-center">
+        <BentoCard span="wideShort" disableHoverMotion padded={false} className="h-auto bento-reveal-lead">
+          <div className="flex w-full items-center">
             <Suspense fallback={<GenreStreakPlaceholder />}>
               <ErrorBoundary label="Genre stats">
                 <MusicGenreStreakBar />

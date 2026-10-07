@@ -183,3 +183,97 @@
   pointer-events: none;
 }
 
+.compact {
+  padding: 0.5rem 0.625rem 0.25rem;
+  min-height: 0;
+}
+
+.compact .header {
+  margin-bottom: 0.35rem;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+}
+
+.compact .title {
+  margin: 0;
+  min-width: 0;
+  font-family: var(--font-heading);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact .total {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.compact .graph {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-block: 0;
+}
+
+.compact .week {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  height: auto;
+}
+
+.compact .day {
+  width: 8px;
+  height: 8px;
+  aspect-ratio: auto;
+  flex: none;
+}
+
+@media (min-width: 1024px) {
+  .compact .skeleton {
+    flex: 1 1 0%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .compact .graph {
+    container-type: size;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 2px;
+    padding-block: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .compact .week {
+    flex: 0 0 auto;
+    width: calc((100cqh - 12px) / 7);
+    height: auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 2px;
+  }
+
+  .compact .day {
+    flex: none;
+    width: 100%;
+    height: calc((100cqh - 12px) / 7);
+    aspect-ratio: 1;
+    min-width: 0;
+  }
+}
+

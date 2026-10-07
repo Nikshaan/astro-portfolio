@@ -17,6 +17,7 @@ export interface BentoModalProps {
   titleId: string;
   closeLabel: string;
   contentRef?: React.RefObject<HTMLDivElement | null>;
+  initialScrollTop?: number;
   headerActions?: React.ReactNode;
   children: React.ReactNode;
 }
@@ -28,10 +29,13 @@ export default function BentoModal({
   titleId,
   closeLabel,
   contentRef,
+  initialScrollTop = 0,
   headerActions,
   children,
 }: BentoModalProps) {
   const trapRef = useFocusTrap(open);
+  const localContentRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = contentRef ?? localContentRef;
 
   const lastLayoutIdRef = useRef(layoutId);
   const lastChildrenRef = useRef(children);
@@ -66,6 +70,14 @@ export default function BentoModal({
     };
   }, [open, onClose]);
 
+  useEffect(() => {
+    if (!open || initialScrollTop <= 0) return;
+    const frame = requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = initialScrollTop;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [open, initialScrollTop, scrollRef]);
+
   const handleExitComplete = useCallback(() => {
     unlockPageScroll();
   }, []);
@@ -93,6 +105,7 @@ export default function BentoModal({
             data-bento-frozen=""
             role="dialog"
             aria-modal="true"
+            data-history-modal={activeLayoutId}
             aria-labelledby={activeTitleId}
             className={cn(
               "relative w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-[var(--radius-card)] border shadow-2xl flex flex-col",
@@ -115,7 +128,8 @@ export default function BentoModal({
             </div>
 
             <div
-              ref={contentRef}
+              ref={scrollRef}
+              data-modal-scroll=""
               className="flex-1 overflow-y-auto p-8 custom-scrollbar min-h-0"
             >
               {activeChildren}

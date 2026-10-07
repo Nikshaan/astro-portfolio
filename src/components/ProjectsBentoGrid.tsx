@@ -42,6 +42,7 @@ import BentoGrid from "./bento/BentoGrid";
 import BentoCard from "./bento/BentoCard";
 import BentoModal from "./bento/Modal";
 import { Placeholder } from "./Placeholder";
+import { rememberUiState, restoredUiState, takeRestoredModal } from "../utils/restoredPageState";
 
 const techstackIcons: Record<string, any> = {
   ReactJS: reactjs,
@@ -183,6 +184,27 @@ function OssShimmerBar({
 const ProjectsBentoGrid: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<"web" | "aiml">("aiml");
+  const [restoredScroll, setRestoredScroll] = useState(0);
+
+  useEffect(() => {
+    if (restoredUiState("projectsCategory") === "web") setActiveCategory("web");
+    const restored = takeRestoredModal(
+      (modal) =>
+        modal === `card-${OSS_MODAL_ID}` ||
+        cardsData.some((card) => card.type === "project" && `card-${card.id}` === modal),
+    );
+    if (!restored?.modal) return;
+    const id = restored.modal.slice("card-".length);
+    const card = cardsData.find((item) => item.id === id);
+    if (card?.category === "web" || card?.category === "aiml") setActiveCategory(card.category);
+    setRestoredScroll(restored.modalScroll ?? 0);
+    setSelectedId(id);
+  }, []);
+
+  const selectCategory = useCallback((category: "web" | "aiml") => {
+    setActiveCategory(category);
+    rememberUiState("projectsCategory", category);
+  }, []);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const [contributions, setContributions] = useState<Contribution[] | null>(
@@ -235,7 +257,10 @@ const ProjectsBentoGrid: React.FC = () => {
     [activeCategory],
   );
 
-  const handleClose = useCallback(() => setSelectedId(null), []);
+  const handleClose = useCallback(() => {
+    setSelectedId(null);
+    setRestoredScroll(0);
+  }, []);
 
   return (
     <LazyMotion features={domAnimation}>
@@ -252,7 +277,7 @@ const ProjectsBentoGrid: React.FC = () => {
             {(["aiml", "web"] as const).map((cat) => (
               <button
                 key={cat}
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => selectCategory(cat)}
                 role="tab"
                 aria-selected={activeCategory === cat}
                 id={`tab-${cat}`}
@@ -452,6 +477,7 @@ const ProjectsBentoGrid: React.FC = () => {
               : "Close project details"
           }
           contentRef={wrapperRef}
+          initialScrollTop={restoredScroll}
           headerActions={
             selectedItem ? (
               <>

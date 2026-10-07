@@ -1,0 +1,92 @@
+---
+interface Props {
+  title: string;
+  text: string;
+  url: string;
+}
+
+const { title, text, url } = Astro.props;
+---
+
+<div data-pagefind-ignore>
+  <button
+    type="button"
+    class="post-share inline-flex items-center gap-1.5 min-h-8 whitespace-nowrap text-xs px-2.5 py-1.5 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] transition-colors font-mono cursor-pointer"
+    data-share-title={title}
+    data-share-text={text}
+    data-share-url={url}
+  >
+    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="18" cy="5" r="3"></circle>
+      <circle cx="6" cy="12" r="3"></circle>
+      <circle cx="18" cy="19" r="3"></circle>
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+    </svg>
+    <span class="post-share-label">Share this post</span>
+  </button>
+  <span class="sr-only" role="status" aria-live="polite" data-share-status></span>
+</div>
+
+<script>
+  async function copyLink(url: string) {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(url);
+        return true;
+      } catch {}
+    }
+    const field = document.createElement("textarea");
+    field.value = url;
+    field.setAttribute("readonly", "");
+    field.style.position = "fixed";
+    field.style.opacity = "0";
+    document.body.appendChild(field);
+    field.select();
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } catch {}
+    field.remove();
+    return copied;
+  }
+
+  function initShareButtons() {
+    document.querySelectorAll<HTMLButtonElement>(".post-share").forEach((button) => {
+      if (button.dataset.bound) return;
+      button.dataset.bound = "true";
+      const label = button.querySelector(".post-share-label");
+      const status = button.parentElement?.querySelector("[data-share-status]");
+      const idleText = label?.textContent ?? "";
+      let resetTimer = 0;
+
+      button.addEventListener("click", async () => {
+        const data = {
+          title: button.dataset.shareTitle ?? document.title,
+          text: button.dataset.shareText ?? "",
+          url: button.dataset.shareUrl ?? location.href,
+        };
+        if (navigator.share && (!navigator.canShare || navigator.canShare(data))) {
+          try {
+            await navigator.share(data);
+            return;
+          } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") return;
+          }
+        }
+        const copied = await copyLink(data.url);
+        const message = copied ? "Link copied" : "Copy failed";
+        if (label) label.textContent = message;
+        if (status) status.textContent = message;
+        window.clearTimeout(resetTimer);
+        resetTimer = window.setTimeout(() => {
+          if (label) label.textContent = idleText;
+          if (status) status.textContent = "";
+        }, 2000);
+      });
+    });
+  }
+
+  initShareButtons();
+  document.addEventListener("astro:page-load", initShareButtons);
+</script>

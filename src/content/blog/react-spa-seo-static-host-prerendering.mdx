@@ -1,0 +1,148 @@
+---
+title: "How I Made a React SPA SEO-Friendly on a Static Host"
+description: "How I made a client-side React SPA SEO-friendly on a static host: build-time prerendering, JSON-LD, redirects and an auto-publishing CMS, for ~$0."
+pubDate: 2026-08-28T12:00:00.000Z
+tags:
+  - React
+  - SEO
+  - Frontend
+  - System Design
+ogImage: /blog/og/react-spa-seo-static-host-prerendering.png
+ogImageAlt: "How I Made a React SPA SEO-Friendly on a Static Host: build-time prerendering, JSON-LD, redirects and an auto-publishing CMS for about $0, above the publishing pipeline."
+---
+
+import Figure from "../../components/blog/Figure.astro";
+import blogArchitecture from "../../assets/blog/blog-architecture.webp";
+import blogEditor from "../../assets/blog/blog-editor.webp";
+import seoPreviewChecks from "../../assets/blog/seo-preview-checks.webp";
+import seoMetadataFields from "../../assets/blog/seo-metadata-fields.webp";
+import richResultsArticle from "../../assets/blog/rich-results-article.webp";
+import searchConsoleTrending from "../../assets/blog/search-console-trending.webp";
+
+<aside class="post-alert" role="note">
+  <p>Arya's frontend has since moved to Next.js as part of <a href="/blog/migrating-26000-users-to-supabase/">Arya 2.0</a>, a rebuild for site-wide SEO. This post covers the 1.0 system, which shipped in two days and carried the blog until then; its posts and URLs moved over intact.</p>
+</aside>
+
+Arya's blog was invisible to Google. The site was a React app on a static host, so crawlers saw an empty page, and I had two days to fix that without adding a single new service.
+
+At Mentoria, I built [Arya's blog](https://arya.mentoria.com/blog) end to end, including the CMS, public reader, SEO layer and publishing pipeline. I shipped the first version within those two days, in July 2026, with the blog working end to end. The next four weeks went into hardening it, as a scalability rework so it would hold up at the 500+ posts it was designed for. It has 21 today. The only additions were a deploy hook and a rebuild-delay setting, for about $0 of added infrastructure.
+
+The brief also required a real `/blog` subfolder on Arya's main domain, good Google rankings and no third-party CMS. And because the frontend was a client-rendered app on a Render static site, the host couldn't return a real 301 or 404 either.
+
+## What a static host can't do
+
+| SEO needs | The static host gives | What I built instead |
+| --- | --- | --- |
+| Real HTML for crawlers | An empty page, until JavaScript runs | Every post prerendered to static HTML at build time |
+| Per-post titles, descriptions and social cards | One shared head section for every page | Head tags and structured data baked into each page |
+| 301 redirects for renamed posts | No per-URL redirects | A slug history and a redirect page for every old URL |
+| Real 404s | The app shell, with a 200, for any unknown URL | `noindex` not-found pages for removed posts |
+| Fresh content on publish | Nothing changes until a redeploy | A publish-triggered, debounced rebuild |
+
+The obvious alternative was to move the whole frontend to a server-rendered framework like Next.js. That didn't fit the brief. Next.js server rendering needs a running server, and the brief ruled out adding any new hosted service. Re-platforming the entire app for a blog of a couple of dozen posts would also be a massive undertaking. So I kept the stack and solved each gap at build time.
+
+If you're stuck with a client-rendered app on a static host, my advice is to move every decision a server would normally make, like redirects, 404s and head tags, into the build. Once the build owns those, the static host stops being a problem almost everywhere. The one thing it still can't give you is a true 301.
+
+## How it fits together
+
+Everything lives inside Arya's existing stack. That's FastAPI, Postgres, Redis and Celery on the backend, and the React app's own build on the frontend.
+
+<Figure
+  src={blogArchitecture}
+  alt="Blog architecture: writer publishes, FastAPI and Postgres, Redis debounce, deploy hook, build and prerender, build outputs, static host, readers and crawlers"
+  caption="Publishing a post rebuilds static, crawler-ready pages with no server. New posts flow left to right, and readers flow back along the bottom."
+/>
+
+## The CMS
+
+Writers get a [TipTap](https://tiptap.dev) rich-text editor with image upload, categories, draft and publish states, author permissions, and an SEO helper for each post's metadata.
+
+<Figure
+  src={blogEditor}
+  shotWidth={1024}
+  alt="The post editor, with the title, slug, and body of a published post open."
+  caption="The editor reopens the saved post: title, slug, and body."
+/>
+
+The key decision was how to store a post, and I kept two forms of it.
+
+- [TipTap](https://tiptap.dev) JSON is the source of truth. It's structured, so the editor always reopens exactly what was saved.
+- Sanitised HTML is a server-rendered cache. The backend renders the JSON once, adds heading IDs for the table of contents, and sanitises it against an allowlist (`nh3`). That way, the reader never renders raw user HTML.
+
+<Figure
+  src={seoPreviewChecks}
+  shotWidth={482}
+  alt="SEO helper showing the search preview and focus-keyphrase checks, all passing, including featured-image alt text."
+  caption="The SEO helper checks the preview, the keyphrase, and the featured image before publish."
+/>
+
+## SEO-grade HTML from a client-side app
+
+I wrote a build-time prerender that renders the real React blog pages to static HTML, so the page a crawler reads and the page a user sees come from the same components. Each prerendered page carries:
+
+- Its own title, meta description and canonical URL
+- Open Graph tags for link previews
+- `Article` structured data for rich results, plus `FAQPage` markup, which helps machines understand the page even though Google stopped showing FAQ rich results for most sites in 2023
+- A table of contents built from the heading IDs
+- An entry in a generated `sitemap.xml`
+
+<Figure
+  src={seoMetadataFields}
+  shotWidth={718}
+  alt="SEO fields for meta title, meta description, focus keyphrase, canonical URL, Open Graph overrides, and an FAQ section."
+  caption="Each post stores its own title, description, social card, and FAQ block."
+/>
+
+The hard part is making the static HTML and the live app match exactly. If there's any difference, React throws the page away and re-renders it. I injected the hashed CSS from Vite's build manifest so pages don't flash unstyled. Blog routes load eagerly so the server and client trees match. And date formatting is pinned to one timezone, so the build machine and the reader's browser print the same date.
+
+<Figure
+  src={richResultsArticle}
+  shotWidth={957}
+  desktop
+  alt="Google Rich Results Test showing one valid Article item for How to Get More Interview Calls in India."
+  caption="The prerendered HTML validates as an Article in Google's Rich Results Test, with no public URL required."
+/>
+
+## Redirects and 404s without a server
+
+URLs change. A writer renames a post, a post gets unpublished, or an old link lives on in Google's index. On a static host whose catch-all rule serves the app shell for any unknown URL, each of these returns a 200 instead of a redirect or a 404, and that quietly hurts rankings. So I moved these decisions into the build.
+
+- When a post's slug changes, the old one goes into a slug history. At build time, each old URL gets a tiny page that instantly redirects to the new one.
+- Unpublished posts get a not-found page marked `noindex`, so they drop out of search instead of lingering.
+- Paginated index pages and per-category archives, with previous and next links, make every post reachable through links and not just through the sitemap.
+- To avoid duplicate pages, `/blog/page/1` redirects to `/blog`, and drafts never show up in any public listing.
+
+## Publishing without a human
+
+On a static site, publishing changes nothing until the site rebuilds. I wanted "Publish" to mean live. Nobody should have to run a deploy, and five quick edits shouldn't trigger five full builds.
+
+1. Publish marks a rebuild as pending in Redis.
+2. A 45-second debounce window collects further edits, so a burst of changes becomes one build.
+3. The deploy hook fires, and the pending flag clears only after it succeeds, so a failed trigger is never lost.
+4. A guaranteed follow-up job in Celery catches edits made while a build was already running.
+
+The most important decision was to fail open when Redis is unavailable. That was a deliberate call, and I made it by comparing the two ways this can fail. A redundant build costs a minute, while a silently skipped one leaves a published post invisible with nobody noticing.
+
+The build fetches posts 12 at a time with 30-second timeouts. Fetch time still grows with the number of posts, just up to 12 times more slowly than fetching them one by one.
+
+## Results
+
+Between 24 July and 4 September 2026, 21 posts across 4 categories went out through this system. Each one was prerendered, listed in the sitemap and carried its own structured data. When Arya 2.0 moved the whole site to Next.js, all 21 posts and their URLs carried over intact, and they're still climbing in Google Search.
+
+<Figure
+  src={searchConsoleTrending}
+  shotWidth={1024}
+  desktop
+  alt="Google Search Console trending blog posts, with click growth on Arya blog URLs."
+  caption="Search Console, after the pages were live: blog URLs trending up on clicks."
+/>
+
+## Trade-offs and what's next
+
+- Redirect pages aren't true 301s. They redirect instantly, and search engines typically follow them, but a real 301 is the cleaner signal. That was the cost of a static host with no edge layer.
+- Every publish redeploys the whole frontend, not just `/blog`. The deploy hook triggers the full static-site build from `main`, which builds the entire app, then the SSR bundle, then prerenders every blog page. That's simple and cheap for now. As the blog grows, I'd regenerate only the pages that changed.
+- Images go up as uploaded. Automatic resizing and WebP conversion at upload time is the next performance win.
+
+## Built with
+
+React 18 and Vite with a custom Node prerender, [react-helmet-async](https://github.com/staylor/react-helmet-async) for head tags, [TipTap](https://tiptap.dev) for the editor, and FastAPI, SQLAlchemy, Alembic, Postgres, Redis and Celery on the backend, hosted on Render.

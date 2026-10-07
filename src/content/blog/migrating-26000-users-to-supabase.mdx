@@ -1,0 +1,191 @@
+---
+title: "How I Migrated 26,000 Users to Supabase in One Night"
+description: "How I migrated 26,083 users and 117K job applications from Postgres to Supabase overnight with an idempotent loader, and nobody had to reset a password."
+pubDate: 2026-10-07T12:00:00.000Z
+tags:
+  - Supabase
+  - Postgres
+  - Python
+  - Data Migration
+  - System Design
+ogImage: /blog/og/migrating-26000-users-to-supabase.v2.png
+ogImageAlt: "How I Migrated 26,000 Users to Supabase in One Night: 26,342 accounts in 9 minutes, zero errors, zero forced re-logins, above the last steps of the cutover night: core data loads, the guardrail trip, the fix and re-run, and the smoke test."
+---
+
+import Figure from "../../components/blog/Figure.astro";
+import migrationStageOrder from "../../assets/blog/migration-stage-order.webp";
+import migrationLoaderPipeline from "../../assets/blog/migration-loader-pipeline.png";
+import migrationCutoverTimeline from "../../assets/blog/migration-cutover-timeline.png";
+
+On the night of 28 September 2026, I migrated every user of Arya 1.0, Mentoria's AI job-search product, to its rebuild, Arya 2.0, on Supabase. That's 26,083 users, 117,132 job applications, 227,101 emails and replies and 5,209 Gmail connections. I built and owned the toolchain, and I ran every production stage from my laptop, seeing it through to the next morning.
+
+Nobody had to create a new account, reset a password or re-upload a CV. They signed in with Google like before, and their Gmail kept working. Support got no tickets about the migration.
+
+**At a glance**
+
+- 26,342 accounts created in 9 minutes with zero errors (26,083 users plus 259 locked records)
+- Every stage safe to kill and re-run: a second run writes zero rows
+- 3,551 Gmail connections carried over working, with no action from users
+- Zero users left behind: nobody's data needed to be set aside for fixing
+
+<figure class="post-figure-code">
+
+```text
+2026-09-29 04:15:30,597 INFO httpx HTTP Request: POST https://<project>.supabase.co/auth/v1/admin/users "HTTP/1.1 200 OK"
+2026-09-29 04:15:30,603 INFO httpx HTTP Request: POST https://<project>.supabase.co/auth/v1/admin/users "HTTP/1.1 200 OK"
+2026-09-29 04:15:30,614 INFO httpx HTTP Request: POST https://<project>.supabase.co/auth/v1/admin/users "HTTP/1.1 200 OK"
+WILL WRITE (stage counts: run the same command without --execute) → <pooler-host>/postgres (ref <project>)
+
+==============================================================================
+AUTH STAGE
+==============================================================================
+  auth_done                                  26342
+  auth_tombstones                            259
+==============================================================================
+```
+
+<figcaption>The auth stage, finished: 26,342 accounts created, including 259 locked records (auth_tombstones).</figcaption>
+</figure>
+
+## The problem
+
+Arya 2.0 wasn't an upgrade. It was a rebuild, with a different stack, UI, auth system and schema.
+
+| | Arya 1.0 | Arya 2.0 |
+| --- | --- | --- |
+| Sign-in | Its own Google sign-in | Supabase auth (GoTrue) |
+| Billing | Daily quotas | Credits; payments are write-once |
+| Outreach | One email-tracking table | Applications, messages and replies |
+| Stack | FastAPI + Postgres | FastAPI + Supabase Postgres + Next.js |
+
+Users needed the same Google sign-in, a working Gmail connection, and follow-up emails that picked up where they left off. Two things made that hard. 1.0 stayed live and kept changing until the cutover. And several 2.0 tables, such as payments, are write-once, so a mistake there can't be corrected.
+
+## Four decisions
+
+| Decision | What I rejected | Why |
+| --- | --- | --- |
+| One closed window from a frozen copy of 1.0 | Running both systems side by side | Both could have emailed the same recruiter. One cut-off instant keeps all tables consistent. |
+| Pre-create every account with its 1.0 ID | Creating accounts on first sign-in | Applications and payments need an account to point to, even for users who never return. |
+| Insert-or-skip with deterministic IDs | Upserts | Any stage can be killed and re-run, and a second run writes nothing. |
+| Verify with 2.0's own logic | Trusting row counts | Matching counts can hide wrong values. |
+
+The risk I designed around most was the billing stage. Payments in 2.0 are write-once. Before billing wrote them, a wipe and reload was still possible, but once it had, the only way back was the pre-load backup. So billing had its own quarantine limit of zero. Billing was the last core load stage to finish, at 8:27 a.m., after applications, referrals, job decisions, pixels and credits had loaded. Reconcile ran right after it, at 8:28.
+
+## A loader you can kill at any moment
+
+The toolchain is one Python program. It's built from 16 stages that take slices of 1.0's data and load them into 36 tables in 2.0. The stages run in a set order, because later stages need rows that earlier ones created. An application can't exist before its user does.
+
+<Figure
+  src={migrationStageOrder}
+  alt="Sixteen migration stages in dependency order: a preflight check, thirteen load stages from auth to backfill-links, then reconcile and fieldcheck"
+  caption="Sixteen stages in dependency order: a preflight check, thirteen load stages, then two that verify the result."
+/>
+
+Each stage is a dry run by default, so nothing is ever written by accident. I designed every stage so it can be stopped at any moment and simply re-run, because every row's ID is deterministic. Users keep their 1.0 IDs, and every other row gets a UUIDv5 of its table name and 1.0 key. Each batch is loaded with `COPY` into a temp table and then moved across with `INSERT … ON CONFLICT DO NOTHING`, so a re-run skips every row that already exists.
+
+<Figure
+  src={migrationLoaderPipeline}
+  alt="Loader pipeline: four steps from the frozen 1.0 replica to Arya 2.0 on Supabase, each with its guardrail"
+  caption="The loader's four steps, from the frozen 1.0 replica to Arya 2.0, each with the guardrail beneath it."
+/>
+
+Each step writes only what it can prove, and the guardrail under it stops the run instead of writing bad data.
+
+In crash drills, I killed the loader mid-stage with `kill -9` and re-ran it. Every drill ended in an identical database. In production, the users stage wrote 263,306 rows with zero duplicates.
+
+## No re-login, no reconnect
+
+**Accounts.** Every account was created through Supabase's Admin API before sign-in reopened. Nobody knew the API's rate limit, so I wrapped it in an adaptive limiter that halves its rate on any HTTP 429 and checks before retrying. Nothing was ever created twice. Deleted 1.0 accounts became locked records that keep only the payment history that tax rules require.
+
+**Gmail.** Each token was re-encrypted with 2.0's key after a test round-trip, then validated against Google. Working connections stayed active, and dead ones were flagged for reconnect.
+
+**Follow-ups.** Email sequences that were paused in 1.0 picked up over five days, so no recruiter got a burst of mail.
+
+## Reshaping the data
+
+Most of the work wasn't moving rows. It was translating them into a different model.
+
+<div class="table-label-column">
+
+| Data | In 1.0 | In 2.0 | How it was translated |
+| --- | --- | --- | --- |
+| Outreach | One email-tracking table | Applications, contacts, messages and events | One application per user and job, one contact per recipient. Duplicate sends kept a single survivor and the rest became events, so history was preserved without double-counting. |
+| Résumés | A CV JSON with its own history | Versioned résumés in a new v2 shape | Every history entry became a version, transformed by 2.0's own résumé function. Each version carries a hash of its source, so content could be verified later. |
+| Billing | Daily quotas | Credits | Quotas didn't carry over. Live paid plans were converted to credits for their remaining days at 2.0's rate, plus one extra day for the downtime. |
+
+</div>
+
+## Proving it was right
+
+Row counts don't prove the data is correct. Reconcile compared every core table against the source at the same cut-off instant. Fieldcheck went further. It re-derived each field from 1.0's data using 2.0's own functions and compared the result with the database, so it couldn't share the loader's blind spots.
+
+Three staging pilots of 2, 24 and 87 users uncovered quirks the schema didn't document. The one that changed the plan most was 1,880 threads marked "replied" in 1.0 with no reply row. Loaded as-is, 2.0 would have treated them as unanswered and restarted follow-ups to recruiters who had already replied. I changed the loader to treat them as replied, and the pilots after that confirmed it.
+
+## The night itself
+
+Users saw about 10 hours of downtime, from the 11:43 p.m. freeze to the first sign-in at 10:02 a.m. That covered the migration and a full smoke test of 2.0. Times are in IST, taken from the run logs.
+
+<Figure
+  src={migrationCutoverTimeline}
+  alt="Cutover timeline from the source freeze at 11:43 p.m. through the Gmail guardrail, the fix, the re-run, and the smoke test."
+  caption="The night, from the run logs: freeze, accounts, core data, a guardrail stop, the fix, and the reopen."
+/>
+
+1. **11:43 p.m.** A fresh dump of 1.0 freezes the source. It's complete by 12:08 a.m.
+2. **4:06 a.m.** The auth stage begins. All 26,342 accounts exist by 4:15.
+3. **4:16–5:06 a.m.** Profiles and résumés load by 4:39, and all 5,209 Gmail connections by 5:06. Then the run pauses between stages until 7:55, and I step away to get some rest. That's only safe because every stage reads from the frozen source and can be re-run, so the pause costs nothing.
+4. **7:55–8:28 a.m.** Applications, referrals, credits and billing load, and reconcile confirms every core table balances.
+5. **8:10–9:28 a.m.** Gmail validation checks each connection against Google while the last load stages run. 3,551 pass. But in the main run, 1,545 of 4,594 checks (33.6%) end up quarantined, far above the 0.5% the run allows, so it exits with an error instead of reporting success. After a long night, seeing 33.6% on the screen was not the number I wanted.
+6. **Diagnosis.** I don't re-run anything until I know the cause. I reproduce the failure read-only, through the loader's own connection, so I see exactly what the loader saw. Under psycopg 3, one statement in the status update sends a parameter to Postgres without a type, so the whole update rolls back. Every connection that should have been flagged for reconnect was left untouched. Mocked tests can't see that, but a real database can.
+7. **9:32 a.m.** I patch that one line locally to type the parameter explicitly, and re-run the 1,545 connections in about a minute. 1,544 are correctly flagged for reconnect, 1 is refused by Google, and none are quarantined. The same one-line change goes up for review at 9:52 and merges at 10:08.
+8. **10:02 a.m.** Smoke test and reopen. 2.0 is checked end to end before users are let back in, and the first migrated user signs back in at 10:02.
+
+Separately, a LinkedIn redesign had broken the [Arya extension's autofill](/blog/ai-chrome-extension-autofill-job-applications/), and I committed its fix that same night, at 2:38 and 3:23 a.m., between the dump finishing and the auth stage starting.
+
+For the migration, the boring design choices paid off. Every stage could be re-run, so the fix was just a re-run. And because the guardrail refused to call the run a success, 1,545 dead connections never got quietly marked as working.
+
+If a friend were about to run a migration like this, I'd tell them to make every stage safe to stop and re-run before making anything fast. The biggest problem the migration hit that night was solved by re-running a stage, not by repairing data.
+
+<figure class="post-figure-code">
+
+```text
+==============================================================================
+RECONCILE
+==============================================================================
+  applications_read                          117132
+  applications_users_excluded                0
+  applications_without_contacts              0
+  applications_without_events                0
+  applications_without_messages              0
+  applications_written                       117132
+  auth.users_read                            26342
+  auth.users_written                         26342
+```
+
+<figcaption>Reconcile the next morning: applications and accounts match on both sides, with nothing excluded.</figcaption>
+</figure>
+
+## What landed
+
+| What moved | Count |
+| --- | --- |
+| Users (plus 259 locked records kept for tax retention) | 26,083 |
+| Job applications | 117,132 |
+| Emails and recruiter replies | 227,101 |
+| Application events | 344,747 |
+| Résumé versions | 57,699 |
+| Subscriptions and payments | 1,255 |
+
+**Gmail.** All 5,209 connections were accounted for. 3,551 kept working with no action from the user, 1,657 were correctly flagged for reconnect, and 1 was refused by Google.
+
+**Users.** In the first three days, 503 migrated users signed straight back in with their existing Google account. For comparison, 1.0 had roughly 540 to 630 weekly active users in its last full week. Every sign-in attached to their migrated account, with zero duplicate accounts.
+
+**Paying customers.** 94 live plans were extended by a day to cover the downtime.
+
+## Trade-offs and what's next
+
+- Insert-or-skip makes re-runs free but corrections expensive. Changing a mapping after load means reloading the affected users. Next time, a mapping version stamped on every row would let a fix target exactly what changed.
+- Fieldcheck holds its comparisons in memory, so in production it verified a sample instead of every user. Streaming would give full coverage at this scale.
+- Parallelism was manual, and the heaviest stages were sliced by hand. Built-in workers with a connection budget would make the next migration faster.
+
+It all ran on Python 3 (async), psycopg 3 with `COPY`, Postgres on Supabase, the GoTrue Admin API, Fernet encryption for tokens, boto3 for S3, a SQLite run ledger, and pytest.

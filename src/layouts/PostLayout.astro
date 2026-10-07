@@ -1,12 +1,19 @@
 ---
-import { tagSlug } from "../utils/tagSlug";
 import type { CollectionEntry } from "astro:content";
 import type { MarkdownHeading } from "astro";
 import MainLayout from "./MainLayout.astro";
 import TableOfContents from "../components/blog/TableOfContents.astro";
+import PostTags from "../components/blog/PostTags.astro";
+import AuthorByline from "../components/blog/AuthorByline.astro";
+import ShareButton from "../components/blog/ShareButton.astro";
 import CodeCopy from "../components/blog/CodeCopy.astro";
 import NavbarWrapper from "../components/NavbarWrapper.astro";
+import LlmBanner from "../components/blog/LlmBanner.astro";
 import { getReadingTime } from "../utils/readingTime";
+import { BLOG_ARCHIVE_ENABLED } from "../lib/blogArchive";
+import { getImage } from "astro:assets";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import beeImage from "../data/bee.avif";
 
 interface Props {
@@ -19,9 +26,19 @@ interface Props {
 const { post, headings, prevPost, nextPost } = Astro.props;
 const readingStats = getReadingTime(post.body || "");
 const hasToc = headings.some((h) => h.depth === 2 || h.depth === 3);
+const authorAvatar = await getImage({
+  src: beeImage,
+  format: "avif",
+  width: 88,
+  height: 88,
+  quality: 80,
+});
 
 const canonicalUrl = post.data.canonicalURL || new URL(`/blog/${post.id}/`, Astro.site || "https://nikshaan.dev").href;
-const ogImage = post.data.ogImage || "https://nikshaan.dev/linkedin_banner.png";
+const ogImagePath = post.data.ogImage || "https://nikshaan.dev/linkedin_banner.png";
+const ogImage = ogImagePath.startsWith("http")
+  ? ogImagePath
+  : new URL(ogImagePath, Astro.site || "https://nikshaan.dev").href;
 
 const formattedDate = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
@@ -37,33 +54,86 @@ const formattedUpdatedDate = post.data.updatedDate
     }).format(post.data.updatedDate)
   : null;
 
+const siteUrl = new URL("/", Astro.site || "https://nikshaan.dev").href;
+const ogImageAlt = post.data.ogImageAlt || post.data.title;
+
+function localPngSize(path: string) {
+  if (path.startsWith("http") || !path.endsWith(".png")) return null;
+  try {
+    const header = readFileSync(join(process.cwd(), "public", path)).subarray(0, 24);
+    if (header.toString("ascii", 12, 16) !== "IHDR") return null;
+    return { width: header.readUInt32BE(16), height: header.readUInt32BE(20) };
+  } catch {
+    return null;
+  }
+}
+
+const ogImageSize = localPngSize(ogImagePath) ?? { width: 1200, height: 630 };
+
+const author = {
+  "@type": "Person",
+  "@id": `${siteUrl}#person`,
+  name: "Nikshaan Shetty",
+  url: siteUrl,
+  jobTitle: "Applied AI and Software Developer",
+  sameAs: [
+    "https://www.linkedin.com/in/nikshaan-shetty/",
+    "https://github.com/Nikshaan",
+  ],
+};
+
+const breadcrumbTrail = [
+  { name: "Home", url: siteUrl },
+  ...(BLOG_ARCHIVE_ENABLED ? [{ name: "Blog", url: new URL("/blog/", siteUrl).href }] : []),
+  { name: post.data.title, url: canonicalUrl },
+];
+
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  headline: post.data.title,
-  description: post.data.description,
-  datePublished: post.data.pubDate.toISOString(),
-  dateModified: (post.data.updatedDate || post.data.pubDate).toISOString(),
-  author: {
-    "@type": "Person",
-    name: "Nikshaan Shetty",
-    url: "https://nikshaan.dev",
-  },
-  publisher: {
-    "@type": "Person",
-    name: "Nikshaan Shetty",
-  },
-  url: canonicalUrl,
-  image: ogImage,
-  keywords: post.data.tags.join(", "),
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      headline: post.data.title,
+      description: post.data.description,
+      datePublished: post.data.pubDate.toISOString(),
+      dateModified: (post.data.updatedDate || post.data.pubDate).toISOString(),
+      author,
+      publisher: author,
+      url: canonicalUrl,
+      mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
+      image: {
+        "@type": "ImageObject",
+        url: ogImage,
+        width: ogImageSize.width,
+        height: ogImageSize.height,
+        caption: ogImageAlt,
+      },
+      inLanguage: "en-IN",
+      wordCount: readingStats.words,
+      articleSection: post.data.tags[0],
+      keywords: post.data.tags.join(", "),
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: breadcrumbTrail.map((crumb, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: crumb.name,
+        item: crumb.url,
+      })),
+    },
+  ],
 };
 ---
 
 <MainLayout
-  title={`${post.data.title} | Nikshaan Shetty`}
+  title={post.data.title}
   description={post.data.description}
   canonicalUrl={canonicalUrl}
   ogImage={ogImage}
+  ogImageAlt={ogImageAlt}
+  ogImageWidth={ogImageSize.width}
+  ogImageHeight={ogImageSize.height}
   ogType="article"
   publishedTime={post.data.pubDate.toISOString()}
   modifiedTime={post.data.updatedDate ? post.data.updatedDate.toISOString() : undefined}
@@ -91,33 +161,30 @@ const jsonLd = {
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 min-w-0">
-        {hasToc && (
-          <aside class="hidden lg:block lg:col-span-3 xl:col-span-3 min-w-0" data-pagefind-ignore>
-            <TableOfContents headings={headings} variant="desktop" />
-          </aside>
-        )}
-
-        <article
-          class:list={[
-            "min-w-0 max-w-full overflow-hidden",
-            hasToc ? "lg:col-span-9 xl:col-span-9" : "lg:col-span-8 lg:col-start-3",
-          ]}
-          data-pagefind-body
+        <aside
+          class="post-rail hidden lg:flex lg:col-span-3 xl:col-span-3 min-w-0 flex-col sticky top-24 self-start h-[calc(100svh-7rem)] max-h-[calc(100svh-7rem)]"
+          data-pagefind-ignore
         >
-          <header class="mb-10 pb-8 border-b border-[var(--border-subtle)]">
-            {post.data.tags && post.data.tags.length > 0 && (
-              <div class="flex flex-wrap gap-2 mb-4">
-                {post.data.tags.map((tag) => (
-                  <a
-                    href={`/blog/tags/${tagSlug(tag)}`}
-                    class="text-xs px-2.5 py-0.5 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors font-mono"
-                  >
-                    #{tag}
-                  </a>
-                ))}
-              </div>
-            )}
+          {hasToc && (
+            <div class="post-rail-index custom-scrollbar min-h-0 shrink overflow-y-auto overscroll-contain pr-3">
+              <TableOfContents headings={headings} variant="desktop" />
+            </div>
+          )}
+          <div class="flex min-h-0 w-full grow shrink-0 basis-auto flex-col justify-evenly">
+            <div class="shrink-0 pr-3">
+              <PostTags tags={post.data.tags} />
+            </div>
+            <div class="shrink-0 pr-3">
+              <ShareButton title={post.data.title} text={post.data.description} url={canonicalUrl} />
+            </div>
+            <div class="shrink-0 pr-3">
+              <AuthorByline avatarSrc={authorAvatar.src} />
+            </div>
+          </div>
+        </aside>
 
+        <article class="min-w-0 max-w-full overflow-hidden lg:col-span-9 xl:col-span-9" data-pagefind-body>
+          <header class="mb-10 pb-8 border-b border-[var(--border-subtle)]">
             <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[var(--text-primary)] leading-tight mb-4 break-words">
               {post.data.title}
             </h1>
@@ -149,13 +216,20 @@ const jsonLd = {
 
           <TableOfContents headings={headings} variant="mobile" />
 
+          <div class="lg:hidden mb-8 flex flex-col gap-6" data-pagefind-ignore>
+            <PostTags tags={post.data.tags} />
+            <ShareButton title={post.data.title} text={post.data.description} url={canonicalUrl} />
+            <AuthorByline avatarSrc={authorAvatar.src} />
+          </div>
+
           <div class="post-prose w-full max-w-full min-w-0">
+            <LlmBanner />
             <slot />
           </div>
 
           <figure class="post-signoff" data-pagefind-ignore>
             <img
-              src="/blog/mona-hifive.gif"
+              src="/blog/mona-hifive.webp"
               alt="Two octocats giving a high five"
               width="128"
               height="48"
@@ -169,68 +243,19 @@ const jsonLd = {
             <button
               type="button"
               id="post-back-to-top"
-              class="inline-flex items-center gap-1.5 mb-8 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors focus-visible:outline-none"
+              class="inline-flex cursor-pointer items-center gap-1.5 mb-8 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors focus-visible:outline-none"
             >
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="18 15 12 9 6 15"></polyline>
               </svg>
               Back to top
             </button>
-            <div class="p-3.5 sm:p-4 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-              <div class="flex items-center gap-3 min-w-0">
-                <img
-                  src={beeImage.src}
-                  alt="Nikshaan Shetty"
-                  width={40}
-                  height={40}
-                  class="w-10 h-10 rounded-full object-cover border border-[var(--border-strong)] shrink-0"
-                />
-                <div class="min-w-0">
-                  <div class="flex items-center gap-2">
-                    <h3 class="font-heading font-semibold text-sm text-[var(--text-primary)]">Nikshaan Shetty</h3>
-                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--surface-raised)] text-[var(--text-tertiary)] border border-[var(--border-subtle)] uppercase">Author</span>
-                  </div>
-                  <p class="text-xs text-[var(--text-secondary)] mt-0.5 truncate sm:text-clip">
-                    Applied AI and software developer in Mumbai.
-                  </p>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-2 text-xs font-mono shrink-0">
-                <a
-                  href="https://github.com/Nikshaan"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="px-2.5 py-1 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-raised)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors flex items-center gap-1.5"
-                  aria-label="GitHub profile"
-                >
-                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                  </svg>
-                  <span>GitHub</span>
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/nikshaan-shetty/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="px-2.5 py-1 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-raised)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors flex items-center gap-1.5"
-                  aria-label="LinkedIn profile"
-                >
-                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-                    <rect x="2" y="9" width="4" height="12"></rect>
-                    <circle cx="4" cy="4" r="2"></circle>
-                  </svg>
-                  <span>LinkedIn</span>
-                </a>
-              </div>
-            </div>
 
             {(prevPost || nextPost) && (
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {prevPost ? (
                   <a
-                    href={`/blog/${prevPost.id}`}
+                    href={`/blog/${prevPost.id}/`}
                     class="p-4 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:border-[var(--accent)] transition-colors group flex flex-col justify-between"
                   >
                     <span class="text-xs font-mono uppercase tracking-wider text-[var(--text-tertiary)] mb-1">
@@ -246,7 +271,7 @@ const jsonLd = {
 
                 {nextPost ? (
                   <a
-                    href={`/blog/${nextPost.id}`}
+                    href={`/blog/${nextPost.id}/`}
                     class="p-4 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:border-[var(--accent)] transition-colors group flex flex-col justify-between sm:text-right"
                   >
                     <span class="text-xs font-mono uppercase tracking-wider text-[var(--text-tertiary)] mb-1">
@@ -309,32 +334,63 @@ const jsonLd = {
         });
       }
 
+      function stampEntry() {
+        var nav = window.portfolioNav;
+        var state = window.history.state;
+        if (!nav || (state && state.blogBack)) return;
+        var from = "";
+        var depth = 0;
+        try {
+          from = sessionStorage.getItem("portfolio_blog_from") || "";
+          depth = Number(sessionStorage.getItem("portfolio_blog_depth"));
+          sessionStorage.removeItem("portfolio_blog_from");
+          sessionStorage.removeItem("portfolio_blog_depth");
+        } catch (err) {}
+        if (!from || !Number.isFinite(depth) || depth < 1) return;
+        var ref = nav.pathOf(document.referrer);
+        if (depth === 1 ? ref !== from : !nav.isPost(ref)) return;
+        try {
+          var next = state && typeof state === "object" ? Object.assign({}, state) : {};
+          next.blogBack = { from: from, depth: depth };
+          window.history.replaceState(next, "");
+        } catch (err) {}
+      }
+
       function setupBackLink() {
         var back = document.getElementById("post-back-link");
         if (!back || back.dataset.bound) return;
         back.dataset.bound = "true";
         back.addEventListener("click", function (event) {
-          var saved = null;
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+          var nav = window.portfolioNav;
+          if (!nav) return;
+          var stamp = window.history.state && window.history.state.blogBack;
+          var handled = stamp
+            ? nav.returnTo(stamp.from, stamp.depth)
+            : nav.returnTo(nav.pathOf(document.referrer), 1);
+          if (handled) event.preventDefault();
+        });
+      }
+
+      function setupInPageLinks() {
+        if (document.documentElement.dataset.inPageLinksBound) return;
+        document.documentElement.dataset.inPageLinksBound = "true";
+        document.addEventListener("click", function (event) {
+          if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          var link = event.target && event.target.closest ? event.target.closest('a[href^="#"]') : null;
+          if (!link) return;
+          var id = decodeURIComponent(link.getAttribute("href").slice(1));
+          var target = id && document.getElementById(id);
+          if (!target) return;
+          event.preventDefault();
+          var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          var top = target.getBoundingClientRect().top + window.scrollY - 90;
+          window.scrollTo({ top: top, behavior: reduce ? "auto" : "smooth" });
           try {
-            saved = sessionStorage.getItem("portfolio_home_scroll");
-          } catch (err) {
-            saved = null;
-          }
-          if (saved !== null && saved !== "") {
-            event.preventDefault();
-            window.location.assign("/");
-            return;
-          }
-          var referrer = "";
-          try {
-            referrer = document.referrer ? new URL(document.referrer).origin : "";
-          } catch (err) {
-            referrer = "";
-          }
-          if (referrer === window.location.origin && window.history.length > 1) {
-            event.preventDefault();
-            window.history.back();
-          }
+            window.history.replaceState(window.history.state, "", "#" + id);
+          } catch (err) {}
+          if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+          target.focus({ preventScroll: true });
         });
       }
 
@@ -343,6 +399,13 @@ const jsonLd = {
         wrapTables();
         setupBackLink();
         setupBackToTop();
+        setupInPageLinks();
+      }
+
+      if (document.prerendering) {
+        document.addEventListener("prerenderingchange", stampEntry, { once: true });
+      } else {
+        stampEntry();
       }
 
       if (document.readyState === "loading") {

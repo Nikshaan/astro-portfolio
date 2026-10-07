@@ -75,6 +75,7 @@ const ContributionDayCell = memo(function ContributionDayCell({
 
 interface GithubContributionsProps {
   initialData?: GitHubAPIResponse;
+  compact?: boolean;
 }
 
 const SKELETON_WEEK_COUNT = 53;
@@ -102,6 +103,7 @@ function HeatmapSkeleton() {
 
 export default memo(function GithubContributions({
   initialData,
+  compact = false,
 }: GithubContributionsProps) {
   const initialCalendar =
     initialData?.data?.user?.contributionsCollection?.contributionCalendar;
@@ -224,13 +226,16 @@ export default memo(function GithubContributions({
       data-bento-shell=""
       suppressHydrationWarning
       className={cn(
-        "bento-reveal relative p-5 rounded-[var(--radius-card)] border overflow-hidden h-full w-full flex flex-col",
-        loading ? "justify-start" : "justify-between",
+        "bento-card bento-reveal relative rounded-[var(--radius-card)] border overflow-hidden h-full w-full min-h-0 flex flex-col",
+        compact ? styles.compact : "p-5",
+        compact || loading ? "justify-start" : "justify-between",
         "bg-[var(--surface-card)] border-[var(--border-subtle)] text-[var(--text-primary)]",
       )}
     >
         <div className={styles.header}>
-          <h2 className="type-panel-title">GitHub Contributions (Last 12 Months)</h2>
+          <h3 className={compact ? styles.title : "type-panel-title"}>
+            GitHub Contributions (Last 12 Months)
+          </h3>
           {loading ? (
             <Placeholder
               as="span"

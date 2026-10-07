@@ -1,0 +1,167 @@
+---
+title: "Building an AI Chrome Extension to Autofill Job Applications"
+description: "How I built Arya's AI Chrome extension that autofills job applications on LinkedIn, Indeed, Workday and more, without ever guessing your answers."
+pubDate: 2026-09-30T12:00:00.000Z
+tags:
+  - Chrome Extensions
+  - JavaScript
+  - LLM
+  - Testing
+  - System Design
+ogImage: /blog/og/ai-chrome-extension-autofill-job-applications.png
+ogImageAlt: "Building an AI Chrome Extension to Autofill Job Applications: LinkedIn, Indeed, Workday, Lever and Internshala, and it never guesses, above the extension's answer ladder."
+---
+
+import Figure from "../../components/blog/Figure.astro";
+import Video from "../../components/blog/Video.astro";
+import linkedinAutofillPoster from "../../assets/blog/linkedin-autofill-poster.png";
+import extensionAnswerLadder from "../../assets/blog/extension-answer-ladder.webp";
+import aryaPortalsSpeedrunPoster from "../../assets/blog/arya-portals-speedrun-poster.webp";
+import workdayTurnOn from "../../assets/blog/workday-turn-on.webp";
+import aryaWorkdayAutofillPoster from "../../assets/blog/arya-workday-autofill-poster.webp";
+
+Applying to jobs means typing the same answers into the same forms, over and over. I wanted a tool that did that part for you, but without ever putting words in your mouth.
+
+At Mentoria, I designed and built the [Arya Chrome extension](https://chromewebstore.google.com/detail/kcenkolmfagdamiifckcbkfpcmkoildl), which fills job applications on LinkedIn Easy Apply, Indeed, Internshala, Lever and Workday from a user's Arya profile. I wrote the complete source code, from its first line in May 2026 to version 1.1.10 by October 2026. It had 64 installs on launch day.
+
+A lot of autofill tools try to fill every field they can. I built mine on the opposite idea. A wrong answer, submitted to an employer under your name, is worse than a blank one.
+
+<Video
+  src="/videos/linkedin-autofill"
+  poster={linkedinAutofillPoster}
+  width={1280}
+  height={616}
+  mode="loop"
+  posterLoading="eager"
+  label="LinkedIn Easy Apply autofill: Arya fills the form, then highlights Submit and stops."
+  caption="LinkedIn Easy Apply, filled from the profile. Arya highlights Submit and stops."
+/>
+
+**At a glance**
+
+- Five portals, built in vanilla JavaScript with zero runtime dependencies
+- A four-rung answer ladder that never guesses numbers or yes/no answers
+- 152 end-to-end checks in a real browser, plus 21 offline test suites
+- Workday shipped post-launch without disabling a single existing install
+
+## The rule: refuse to guess
+
+A made-up "5 years of experience" or a wrong "Yes" on an eligibility question can cost someone a job. Every application goes to an employer under the user's name, so a confident wrong answer is the most expensive failure the product can have. I decided that up front, treated it as the core requirement, and the extension follows three rules because of it.
+
+| Field type | What Arya does |
+| --- | --- |
+| Numbers and yes/no questions | Answers only from the profile. No profile value means no answer. |
+| Dropdowns and radio options | Scores every option and picks one only above a confidence threshold. |
+| Applicant-only questions (criminal record, consents, non-competes, passport) | Never answered. Always left for the applicant. |
+
+AI writes only descriptive text, like a cover note or a role description. On every portal, Arya highlights the Submit button and stops, so the last click on an application is always the user's. On LinkedIn, that also matters because of LinkedIn's terms on automation, since every fill is user-initiated and there's no bulk applying.
+
+The cost is a lower fill rate on some forms. I accepted that, because a blank field is visible and a wrong one isn't. In practice the cost is small. In its first week on Arya 2.0, the extension filled 504 of 527 form fields (95.6%) and left the other 23 for the applicant. That 95.6% is the number that mattered most to me.
+
+## The answer ladder
+
+For every field, the extension climbs down a ladder and stops at the first rung that has a trustworthy answer. The order matters more than anything else here. What you said yourself always wins, and AI only gets a turn when nothing else has an answer.
+
+<Figure
+  src={extensionAnswerLadder}
+  alt="The answer ladder: the applicant's own past answer, then the Arya profile, then a saved answer, then AI for descriptive text only; otherwise the field is left blank for the applicant."
+  caption="The answer ladder."
+/>
+
+The ladder turned a vague "fill the form with AI" into precedence rules I could test field by field. It also makes every filled value traceable to the rung that produced it.
+
+The first and third rungs both remember answers, but they hold different things. The first rung lives in your browser and only ever holds answers you typed yourself. The third is Arya's saved-answer store on the backend: one saved answer per question, whether it came from you, from a profile-based fill or from the model, and it can reuse an answer you gave on another portal. Both are per user and keyed on a hash of the normalised question, so nothing is shared between users. Saved answers that Arya or the model wrote are checked before reuse: they're never used for applicant-only questions, and a salary figure that disagrees with your profile gets thrown away. And AI really is the last resort. In that first week, only around one answer in ten came from the model.
+
+<Video
+  src="/videos/arya-portals-speedrun"
+  av1={false}
+  poster={aryaPortalsSpeedrunPoster}
+  width={1280}
+  height={622}
+  label="Autofill speedrun across Indeed, Internshala, LinkedIn and Lever"
+  caption="Indeed, Internshala, LinkedIn and Lever, filled in one pass. Arya stops before Submit."
+/>
+
+## Learning from what users type
+
+The top rung only works if the extension learns. When Arya leaves a field blank and the applicant fills it in, that answer gets saved and reused the next time the same question, or a very similar one, appears.
+
+The hard part is telling those two kinds of input apart, because Arya and the user change the same fields and fire the same browser events. I went with provenance per element instead of a global "Arya is filling" flag. Every time Arya writes to a field, it records the exact value in a `WeakMap` keyed on that element. An input event counts as the user's only if the value differs from what Arya wrote. A global flag can drift when fills nest across async steps on multi-page forms, but a per-element record can't. The `WeakMap` also lets the browser clean up entries when a form page goes away.
+
+## Filling React-controlled inputs
+
+Most job portals are React apps, and React ignores a value set directly on an input, because its own state never sees the change. So Arya sets each value through the browser's native setter and then fires input, change and blur events. After that, the page and its validation treat it as a real edit. Dropdown libraries, Indeed's comboboxes and Workday's typeaheads each get their own handling. Workday's typeahead, for example, is typed one character at a time, 18 ms apart, the way a person would type it.
+
+## When LinkedIn rebuilt Easy Apply
+
+LinkedIn autofill stopped finding the Easy Apply form. It was either broken code on our side or a change on LinkedIn's. Each one needed a completely different fix, so I wanted proof before acting on either.
+
+First, I took LinkedIn's live page out of the picture by capturing four real Easy Apply steps as redacted HTML fixtures. Then I ran three versions of the extension against them. One was an older store build that had worked on LinkedIn before (1.1.3), one was the live production build (1.1.7), and the third was the in-progress 1.1.8 build.
+
+| Version | Detects the Easy Apply form? |
+| --- | --- |
+| 1.1.3 (older store build) | No |
+| 1.1.7 (live build) | No |
+| 1.1.8 before the fix | No |
+
+Every build, from before and after our latest release, failed in exactly the same way. That pointed to LinkedIn's markup and not our code, and the captured pages confirmed it. LinkedIn had moved the Easy Apply modal into a native HTML dialog element and switched to hashed class names that change with every LinkedIn build.
+
+Instead of patching selectors, I rebuilt detection on signals LinkedIn can't easily change without breaking accessibility. Those are the dialog's header text, `aria-label`s, the progress bar's role and button text. The browser also treated the widget as inert inside the modal dialog, so I moved the widget into the dialog itself.
+
+I fixed this on the night of 28 September, the same night I ran [Arya's 1.0 → 2.0 migration](/blog/migrating-26000-users-to-supabase/). I committed the widget move at 2:38 a.m. and the new detection at 3:23 a.m., both between the migration's dump finishing and the auth stage starting.
+
+So that a change like this gets caught before users ever see it, I built an end-to-end harness. It loads the real, built extension into headless Chromium, serves captured copies of all five portals locally, and asserts that Submit is never clicked. It runs 152 checks across the five portals.
+
+## Adding Workday without breaking a single install
+
+Workday is one of the most widely used application systems, and supporting it came with a trap. In Chrome, a new required host permission disables the extension for every existing user until each of them accepts it.
+
+| Option | Result for existing users |
+| --- | --- |
+| Add Workday as a required permission | Extension disabled until they re-accept |
+| Leave Workday out | Nothing breaks, but no Workday support |
+| **Make Workday an optional permission** | **Nothing breaks; users turn Workday on with one click** |
+
+Existing users were the deciding factor, so I shipped the third option. The widget nudges users to turn Workday on, and that opens the popup with a one-click "Turn on". Until the user opens the popup, a "NEW" badge points them to it. Existing installs updated silently.
+
+The permission covers Workday's two job domains, `*.myworkdayjobs.com` and `*.myworkdaysite.com`. Chrome only grants it from a user's click, which is why the nudge goes through the popup instead of asking directly. Once access is granted, Arya registers its Workday script on the fly, and it unregisters the script if access is revoked.
+
+<Figure
+  src={workdayTurnOn}
+  shotWidth={631}
+  alt="The Arya extension popup with Workday autofill set to Turn on, and the widget's in-page nudge."
+  caption="The Workday toggle in the popup and the widget's nudge."
+/>
+
+<Video
+  src="/videos/arya-workday-autofill"
+  av1={false}
+  poster={aryaWorkdayAutofillPoster}
+  width={1280}
+  height={694}
+  label="Workday application filled end to end"
+  caption="A Workday application filled end to end, after Workday is turned on."
+/>
+
+## Security and speed by design
+
+An extension runs inside pages it doesn't control, holds a user's session and triggers paid AI calls. I treated all three as design constraints from day one.
+
+- The session token never touches the page. Only the background service worker holds it, and content scripts reach storage through a proxy that refuses token keys outright.
+- No API key ships in the package. AI calls go through Arya's backend, which holds the key and enforces per-user daily limits. Quota is a rolling 24-hour count over an append-only usage log, so there's no single counter to decrement. A per-user Postgres advisory lock makes parallel requests queue up instead of racing for the same quota.
+- Page text is untrusted. Job descriptions and field labels reach the model inside a marked untrusted block, and any copy of the marker is stripped first. Job descriptions are cut to 800 characters. Output is capped by a token limit and by the field's own character limit. The model has no tools, every answer is validated before it's filled, and the applicant still reviews everything before Submit.
+- Permissions stay minimal. Apart from access to the supported portals, the manifest only asks for `storage` and `scripting`, and a build gate fails any release that adds more.
+- A circuit breaker pauses AI calls for 60 seconds after three failures. That way, a 20-question form with the AI backend down fails within about two minutes instead of showing "Filling…" for about 15. Switching jobs on LinkedIn now resets the widget within 1.5 seconds by design, down from about 5 seconds in manual testing.
+
+## Trade-offs and what's next
+
+- Per-portal code is the price I pay for determinism. It keeps behaviour predictable and AI costs low, but every portal redesign means new detection work. Next, I'd send a compact inventory of each form's fields to the backend and let rules plus a model map them, so the in-page code stays thin.
+- Question matching lives in the client. Moving it to the backend would let matching improve without shipping a new extension version.
+- Sharing the website's session keeps sign-in to one click. A separate extension session, though, would let people use Arya from the extension alone for longer.
+- Five portals is only the start. I plan to add many more, including Greenhouse, Keka, Workable and Zoho Recruit.
+
+If a friend told me they were building an autofill extension, I'd tell them to decide what the tool must refuse to do before deciding what it should fill. That one rule shaped every other decision in this extension.
+
+## Built with
+
+The extension is built on [Manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3), Vite with [@crxjs/vite-plugin](https://crxjs.dev) and vanilla JavaScript with zero runtime dependencies, backed by FastAPI, Postgres and Supabase auth, with Gemini 2.5 Flash for descriptive answers and [Puppeteer](https://pptr.dev) for end-to-end tests.

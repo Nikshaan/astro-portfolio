@@ -4,25 +4,55 @@ import mdx from "@astrojs/mdx";
 import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
-import { BLOG_ARCHIVE_ENABLED } from "./src/lib/blogArchive.ts";
+import { BLOG_ARCHIVE_ENABLED, MIN_POSTS_TO_INDEX_TAG } from "./src/lib/blogArchive.ts";
+import { tagSlug } from "./src/utils/tagSlug.ts";
 import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-function hasPublishedPosts(
+function publishedFrontmatters(
   dir = fileURLToPath(new URL("./src/content/blog/", import.meta.url)),
 ) {
-  if (!existsSync(dir)) return false;
-  return readdirSync(dir, { recursive: true }).some((name) => {
-    const file = String(name);
-    if (!/\.mdx?$/.test(file)) return false;
-    const source = readFileSync(join(dir, file), "utf8");
-    const frontmatter = source.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "";
-    return !/^draft:\s*true\s*$/m.test(frontmatter);
-  });
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { recursive: true })
+    .map(String)
+    .filter((file) => /\.mdx?$/.test(file))
+    .map((file) => {
+      const source = readFileSync(join(dir, file), "utf8");
+      return {
+        slug: file.replace(/\.mdx?$/, "").replace(/\\/g, "/"),
+        frontmatter: source.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "",
+      };
+    })
+    .filter(({ frontmatter }) => !/^draft:\s*true\s*$/m.test(frontmatter));
 }
 
-const blogIsLive = hasPublishedPosts();
+function dateIn(frontmatter, key) {
+  const raw = frontmatter.match(new RegExp(`^${key}:\\s*["']?([^"'\\r\\n]+)`, "m"))?.[1];
+  const date = raw ? new Date(raw.trim()) : null;
+  return date && !Number.isNaN(date.getTime()) ? date : null;
+}
+
+function tagsIn(frontmatter) {
+  const block = frontmatter.match(/^tags:\s*\r?\n((?:[ \t]+-.*\r?\n?)*)/m)?.[1] ?? "";
+  return block
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s*-\s*/, "").replace(/^["']|["']$/g, "").trim())
+    .filter(Boolean);
+}
+
+const posts = publishedFrontmatters();
+const blogIsLive = posts.length > 0;
+
+const tagPostCounts = new Map();
+const postLastmod = new Map();
+for (const { slug, frontmatter } of posts) {
+  for (const tag of new Set(tagsIn(frontmatter).map(tagSlug))) {
+    tagPostCounts.set(tag, (tagPostCounts.get(tag) ?? 0) + 1);
+  }
+  const lastmod = dateIn(frontmatter, "updatedDate") ?? dateIn(frontmatter, "pubDate");
+  if (lastmod) postLastmod.set(`/blog/${slug}`, lastmod.toISOString());
+}
 
 function openExternalLinks() {
   return (tree) => {
@@ -48,6 +78,38 @@ function openExternalLinks() {
   };
 }
 
+function keepTableWordsWhole() {
+  const hyphenated = /\S*\w[-\u2010\u2011]\w\S*/g;
+  const wrapText = (node) => {
+    const parts = [];
+    let last = 0;
+    for (const match of node.value.matchAll(hyphenated)) {
+      if (match.index > last) parts.push({ type: "text", value: node.value.slice(last, match.index) });
+      parts.push({
+        type: "element",
+        tagName: "span",
+        properties: { className: ["nowrap"] },
+        children: [{ type: "text", value: match[0] }],
+      });
+      last = match.index + match[0].length;
+    }
+    if (!parts.length) return [node];
+    if (last < node.value.length) parts.push({ type: "text", value: node.value.slice(last) });
+    return parts;
+  };
+  const walk = (node, inCell) => {
+    if (!node || !Array.isArray(node.children)) return;
+    const cell = inCell || (node.type === "element" && (node.tagName === "td" || node.tagName === "th"));
+    if (node.type === "element" && node.tagName === "code") return;
+    node.children = node.children.flatMap((child) => {
+      if (cell && child.type === "text") return wrapText(child);
+      walk(child, cell);
+      return [child];
+    });
+  };
+  return (tree) => walk(tree, false);
+}
+
 export default defineConfig({
   site: "https://nikshaan.dev",
   output: "static",
@@ -65,7 +127,7 @@ export default defineConfig({
     defaultStrategy: "hover",
   },
   markdown: {
-    rehypePlugins: [openExternalLinks],
+    rehypePlugins: [openExternalLinks, keepTableWordsWhole],
     shikiConfig: {
       themes: {
         light: "github-light",
@@ -136,7 +198,14 @@ export default defineConfig({
       filter: (page) => {
         const path = new URL(page).pathname.replace(/\/$/, "") || "/";
         if (!BLOG_ARCHIVE_ENABLED && path === "/blog") return false;
+        const tag = path.match(/^\/blog\/tags\/([^/]+)$/)?.[1];
+        if (tag && (tagPostCounts.get(tag) ?? 0) < MIN_POSTS_TO_INDEX_TAG) return false;
         return blogIsLive || !path.startsWith("/blog");
+      },
+      serialize: (item) => {
+        const path = new URL(item.url).pathname.replace(/\/$/, "");
+        const lastmod = postLastmod.get(path);
+        return lastmod ? { ...item, lastmod } : item;
       },
     }),
     mdx(),

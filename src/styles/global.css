@@ -645,6 +645,14 @@ html.lenis body {
   outline-offset: -1px;
 }
 
+#fun-grid {
+  grid-auto-rows: auto;
+}
+
+#fun-grid > .row-span-2 {
+  min-height: calc(var(--bento-row) * 2 + var(--bento-gap));
+}
+
 @keyframes bento-reveal {
   from {
     opacity: 0;
@@ -670,6 +678,19 @@ html.bento-reveal-js .bento-reveal-eager {
   animation: bento-reveal 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
 }
 
+@keyframes bento-rise {
+  from {
+    transform: translateY(16px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+html.bento-reveal-js .bento-reveal-eager.bento-reveal-hero {
+  animation-name: bento-rise;
+}
+
 html.bento-reveal-settled .bento-reveal,
 html.bento-reveal-js.bento-reveal-settled .bento-reveal,
 html.bento-reveal-js.bento-reveal-settled .bento-reveal:not(.bento-reveal-eager),
@@ -677,6 +698,10 @@ html.bento-reveal-js.bento-reveal-settled .bento-reveal-eager {
   animation: none !important;
   opacity: 1 !important;
   transform: none !important;
+}
+
+html.restore-pending {
+  scroll-behavior: auto !important;
 }
 
 html.restore-pending body {
@@ -893,6 +918,7 @@ pre.astro-code {
 
 pre.astro-code span {
   color: var(--shiki-dark, inherit) !important;
+  font-family: inherit;
 }
 
 [data-theme="light"] pre.astro-code {
@@ -911,9 +937,6 @@ pre.astro-code span {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   margin: 2em 0;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border-subtle);
-  background-color: var(--surface-card);
 }
 
 .table-scroll-wrapper table {
@@ -940,6 +963,21 @@ pre.astro-code span {
   padding: 0.75rem 1rem;
   border: 1px solid var(--border-subtle);
   text-align: left;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
+}
+
+.post-prose td .nowrap,
+.post-prose th .nowrap,
+.post-prose td code,
+.post-prose th code {
+  white-space: nowrap;
+}
+
+.table-label-column th:first-child,
+.table-label-column td:first-child {
+  white-space: nowrap;
 }
 
 .post-prose th {
@@ -1019,6 +1057,19 @@ pre.astro-code span {
   background-color: #fff;
 }
 
+.post-prose figure picture {
+  display: block;
+  width: 100%;
+}
+
+.post-prose figure.post-figure-code {
+  align-items: stretch;
+}
+
+.post-prose figure.post-figure-code pre {
+  margin: 0;
+}
+
 .post-prose figcaption {
   margin-top: 0.65rem;
   text-align: center;
@@ -1046,5 +1097,9 @@ pre.astro-code span {
 .post-alert p {
   margin: 0;
   opacity: 1;
+}
+
+.post-alert a {
+  color: var(--accent-strong);
 }
 

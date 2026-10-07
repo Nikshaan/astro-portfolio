@@ -1,0 +1,11 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+---
+
+<blockquote class={`!mt-0 ${className}`} data-pagefind-ignore>
+  <p class="!my-0">I have used the help of an LLM to refine this post.</p>
+</blockquote>

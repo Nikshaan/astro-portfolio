@@ -24,7 +24,6 @@ const hasPublishedPosts = publishedPosts.length > 0;
 
 const sections = [
   { id: "me", label: "me", href: isHome ? "#me" : "/#me" },
-  { id: "projects", label: "projects", href: isHome ? "#projects" : "/#projects" },
   ...(hasPublishedPosts
     ? [
         {
@@ -34,6 +33,7 @@ const sections = [
         },
       ]
     : []),
+  { id: "projects", label: "projects", href: isHome ? "#projects" : "/#projects" },
   { id: "fun", label: "fun", href: isHome ? "#fun" : "/#fun" },
 ];
 ---

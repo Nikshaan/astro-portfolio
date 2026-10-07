@@ -36,7 +36,7 @@ const sortedTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1] ||
     <div class="w-full max-w-[1400px] mx-auto min-w-0">
       <div class="mb-8">
         <a
-          href={BLOG_ARCHIVE_ENABLED ? "/blog" : "/#blogs"}
+          href={BLOG_ARCHIVE_ENABLED ? "/blog/" : "/#blogs"}
           class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors focus-visible:outline-none"
         >
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -63,7 +63,7 @@ const sortedTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1] ||
         <div class="flex flex-wrap gap-3">
           {sortedTags.map(([tag, count]) => (
             <a
-              href={`/blog/tags/${tagSlug(tag)}`}
+              href={`/blog/tags/${tagSlug(tag)}/`}
               class="group flex items-center gap-2 px-4 py-2 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:border-[var(--accent)] transition-all hover:-translate-y-0.5"
             >
               <span class="font-heading font-medium text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">

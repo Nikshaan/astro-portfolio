@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Search as SearchIcon, X, Loader2, ArrowRight } from "lucide-react";
+import { restoredPageState } from "../../utils/restoredPageState";
 
 interface SearchResult {
   url: string;
@@ -66,6 +67,13 @@ export default function BlogSearch() {
     },
     [loadPagefind],
   );
+
+  useEffect(() => {
+    const restored = restoredPageState()?.search;
+    if (!restored?.trim()) return;
+    setIsOpen(true);
+    handleSearch(restored);
+  }, [handleSearch]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

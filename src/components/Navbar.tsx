@@ -31,14 +31,9 @@ const Navbar: React.FC<NavbarProps> = memo(
         if (window.location.pathname.startsWith("/blog")) {
           return "blogs";
         }
-        try {
-          if (
-            window.location.hash === "#blogs" ||
-            window.sessionStorage.getItem("portfolio_return_to") === "blogs"
-          ) {
-            return "blogs";
-          }
-        } catch (e) {}
+        if (window.location.hash === "#blogs") {
+          return "blogs";
+        }
       }
       return isHome ? "me" : "blogs";
     });
@@ -149,7 +144,7 @@ const Navbar: React.FC<NavbarProps> = memo(
         const timer = setTimeout(() => {
           if (window.location.hash) {
             window.history.replaceState(
-              null,
+              window.history.state,
               "",
               window.location.pathname + window.location.search,
             );
@@ -163,7 +158,7 @@ const Navbar: React.FC<NavbarProps> = memo(
 
       if (window.location.hash && isSectionHash(window.location.hash)) {
         window.history.replaceState(
-          null,
+          window.history.state,
           "",
           window.location.pathname + window.location.search,
         );
@@ -173,7 +168,7 @@ const Navbar: React.FC<NavbarProps> = memo(
         if (window.location.hash === "#blogs") return;
         if (window.location.hash && isSectionHash(window.location.hash)) {
           window.history.replaceState(
-            null,
+            window.history.state,
             "",
             window.location.pathname + window.location.search,
           );
@@ -305,7 +300,7 @@ const Navbar: React.FC<NavbarProps> = memo(
         setTimeout(() => {
           if (window.location.hash) {
             window.history.replaceState(
-              null,
+              window.history.state,
               "",
               window.location.pathname + window.location.search,
             );

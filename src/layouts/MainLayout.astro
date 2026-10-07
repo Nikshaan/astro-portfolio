@@ -4,6 +4,9 @@ interface Props {
     description: string;
     canonicalUrl?: string;
     ogImage?: string;
+    ogImageAlt?: string;
+    ogImageWidth?: number;
+    ogImageHeight?: number;
     ogType?: string;
     publishedTime?: string;
     modifiedTime?: string;
@@ -28,6 +31,9 @@ const {
     description,
     canonicalUrl = new URL(Astro.url.pathname, Astro.site || "https://nikshaan.dev").href,
     ogImage,
+    ogImageAlt = "Nikshaan",
+    ogImageWidth = 1200,
+    ogImageHeight = 630,
     ogType = "website",
     publishedTime,
     modifiedTime,
@@ -85,9 +91,9 @@ const resolvedOgImage = ogImage
         <meta content={canonicalUrl} property="og:url" />
         <meta content={resolvedOgImage} property="og:image" />
         <meta content={resolvedOgImage} property="og:image:secure_url" />
-        <meta content="1200" property="og:image:width" />
-        <meta content="630" property="og:image:height" />
-        <meta content="Nikshaan" property="og:image:alt" />
+        <meta content={String(ogImageWidth)} property="og:image:width" />
+        <meta content={String(ogImageHeight)} property="og:image:height" />
+        <meta content={ogImageAlt} property="og:image:alt" />
         <meta content={resolvedOgImage.endsWith(".webp") ? "image/webp" : resolvedOgImage.endsWith(".png") ? "image/png" : "image/jpeg"} property="og:image:type" />
         <meta content="en_IN" property="og:locale" />
         <meta content="Nikshaan Shetty" property="og:site_name" />
@@ -102,6 +108,7 @@ const resolvedOgImage = ogImage
             name="twitter:image"
             content={resolvedOgImage}
         />
+        <meta name="twitter:image:alt" content={ogImageAlt} />
 
         <meta name="theme-color" content="#0a0a0a" id="meta-theme-color" />
         <meta name="color-scheme" content="dark light" />
@@ -164,32 +171,200 @@ const resolvedOgImage = ogImage
 
         <script is:inline>
             (function () {
-                document.documentElement.classList.add("bento-reveal-js");
-                try {
-                    var path = window.location.pathname;
-                    var isHome = path === "/" || path === "";
-                    if (isHome) {
-                        var navEntry = performance.getEntriesByType("navigation")[0];
-                        var isReload = navEntry && navEntry.type === "reload";
-                        var savedHomeScroll = sessionStorage.getItem("portfolio_home_scroll");
-                        if (isReload) {
-                            sessionStorage.removeItem("portfolio_home_scroll");
-                            sessionStorage.removeItem("portfolio_return_to");
-                            savedHomeScroll = null;
-                        }
-                        var returning =
-                            !isReload &&
-                            ((navEntry && navEntry.type === "back_forward") ||
-                                (savedHomeScroll !== null && savedHomeScroll !== ""));
-                        if (returning) {
-                            document.documentElement.classList.add("bento-reveal-settled");
-                            if (savedHomeScroll !== null && savedHomeScroll !== "") {
-                                document.documentElement.classList.add("restore-pending");
-                            }
-                        }
-                    }
-                } catch (e) {}
+                var root = document.documentElement;
+                root.classList.add("bento-reveal-js");
 
+                function pathOf(url) {
+                    if (!url) return "";
+                    try {
+                        var parsed = new URL(url, location.href);
+                        if (parsed.origin !== location.origin) return "";
+                        return parsed.pathname.replace(/\/+$/, "") || "/";
+                    } catch (e) {
+                        return "";
+                    }
+                }
+
+                function isPost(path) {
+                    return /^\/blog\/[^/]+$/.test(path) && path !== "/blog/tags";
+                }
+
+                function currentState() {
+                    var state = history.state;
+                    return state && typeof state === "object" ? Object.assign({}, state) : {};
+                }
+
+                function scrollAnchor() {
+                    var best = null;
+                    var bestTop = -Infinity;
+                    var nodes = document.querySelectorAll("main [id]");
+                    for (var i = 0; i < nodes.length; i++) {
+                        var node = nodes[i];
+                        if (node.closest("[role='dialog']")) continue;
+                        var rect = node.getBoundingClientRect();
+                        if (!rect.height || rect.top > 1 || rect.top <= bestTop) continue;
+                        best = node;
+                        bestTop = rect.top;
+                    }
+                    return best ? { id: best.id, offset: Math.round(-bestTop) } : null;
+                }
+
+                function targetFor(saved) {
+                    var node = saved.anchor && document.getElementById(saved.anchor);
+                    if (!node) return saved.scrollY;
+                    return Math.max(0, Math.round(node.getBoundingClientRect().top + window.scrollY + saved.anchorOffset));
+                }
+
+                function pin(computeTarget, holdMs) {
+                    var stopped = false;
+                    var observer = null;
+                    var inputs = ["wheel", "touchstart", "keydown", "pointerdown"];
+                    var apply = function () {
+                        if (stopped) return;
+                        var target = computeTarget();
+                        if (Number.isFinite(target) && Math.abs(window.scrollY - target) > 1) window.scrollTo(0, target);
+                    };
+                    var stop = function () {
+                        if (stopped) return;
+                        stopped = true;
+                        if (observer) observer.disconnect();
+                        for (var i = 0; i < inputs.length; i++) window.removeEventListener(inputs[i], stop, true);
+                    };
+                    for (var i = 0; i < inputs.length; i++) {
+                        window.addEventListener(inputs[i], stop, { capture: true, passive: true });
+                    }
+                    if ("ResizeObserver" in window) {
+                        observer = new ResizeObserver(apply);
+                        observer.observe(root);
+                        var observeBody = function () { if (document.body) observer.observe(document.body); };
+                        if (document.body) observeBody();
+                        else document.addEventListener("DOMContentLoaded", observeBody, { once: true });
+                    }
+                    var stopLater = function () { setTimeout(stop, holdMs); };
+                    if (document.readyState === "complete") stopLater();
+                    else window.addEventListener("load", stopLater, { once: true });
+                    return apply;
+                }
+
+                function saveState() {
+                    try {
+                        var anchor = scrollAnchor();
+                        var dialog = document.querySelector("[data-history-modal]");
+                        var scroller = dialog && dialog.querySelector("[data-modal-scroll]");
+                        var search = document.getElementById("blog-search-input");
+                        var state = currentState();
+                        state.pageState = Object.assign({}, state.pageState, {
+                            scrollY: Math.round(window.scrollY),
+                            anchor: anchor ? anchor.id : null,
+                            anchorOffset: anchor ? anchor.offset : 0,
+                            modal: dialog ? dialog.getAttribute("data-history-modal") : null,
+                            modalScroll: scroller ? Math.round(scroller.scrollTop) : 0,
+                            search: search ? search.value : "",
+                        });
+                        history.replaceState(state, "");
+                    } catch (e) {}
+                }
+
+                function leaveHint() {
+                    var here = pathOf(location.href);
+                    var stamp = history.state && history.state.blogBack;
+                    var from = isPost(here) && stamp ? stamp.from : here;
+                    var depth = isPost(here) && stamp ? stamp.depth + 1 : 1;
+                    try {
+                        sessionStorage.setItem("portfolio_blog_from", from);
+                        sessionStorage.setItem("portfolio_blog_depth", String(depth));
+                    } catch (e) {}
+                }
+
+                function linkTarget(event) {
+                    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return "";
+                    var link = event.target && event.target.closest ? event.target.closest("a[href]") : null;
+                    if (!link || link.hasAttribute("download")) return "";
+                    if (link.target && link.target !== "_self") return "";
+                    var url = new URL(link.href, location.href);
+                    if (url.origin !== location.origin) return "";
+                    if (url.pathname === location.pathname && url.search === location.search) return "";
+                    return pathOf(url.href);
+                }
+
+                function onLeaveIntent(event) {
+                    var target = linkTarget(event);
+                    if (!target) return;
+                    if (event.type === "click") saveState();
+                    if (isPost(target)) leaveHint();
+                }
+
+                document.addEventListener("pointerdown", onLeaveIntent, true);
+                document.addEventListener("click", onLeaveIntent, true);
+                window.addEventListener("pagehide", saveState);
+
+                window.addEventListener("pageshow", function (event) {
+                    var saved = event.persisted && history.state && history.state.pageState;
+                    if (saved && saved.scrollY > 0) pin(function () { return targetFor(saved); }, 1200)();
+                });
+
+                window.portfolioNav = {
+                    pin: pin,
+                    pathOf: pathOf,
+                    isPost: isPost,
+                    returnTo: function (from, depth) {
+                        if (!from) return false;
+                        try {
+                            if (window.navigation && navigation.currentEntry && navigation.entries) {
+                                var entries = navigation.entries();
+                                for (var i = navigation.currentEntry.index - 1; i >= 0; i--) {
+                                    if (pathOf(entries[i].url) === from) {
+                                        navigation.traverseTo(entries[i].key);
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            }
+                        } catch (e) {}
+                        if (depth >= 1 && history.length > depth) {
+                            history.go(-depth);
+                            return true;
+                        }
+                        return false;
+                    },
+                };
+
+                try {
+                    var navEntry = performance.getEntriesByType("navigation")[0];
+                    if (!navEntry || navEntry.type !== "back_forward") return;
+                    root.classList.add("bento-reveal-settled");
+                    var saved = history.state && history.state.pageState;
+                    if (!saved || !(saved.scrollY > 0)) return;
+
+                    root.classList.add("restore-pending");
+                    root.style.scrollBehavior = "auto";
+                    var hold = pin(function () { return targetFor(saved); }, 1500);
+                    var attempts = 0;
+                    var lastHeight = -1;
+                    var stableFrames = 0;
+                    var tick = function () {
+                        hold();
+                        var target = targetFor(saved);
+                        var height = root.scrollHeight;
+                        stableFrames = height === lastHeight ? stableFrames + 1 : 0;
+                        lastHeight = height;
+                        attempts += 1;
+                        var atTarget = Math.abs(window.scrollY - target) <= 1;
+                        var loaded = document.readyState === "complete";
+                        if ((atTarget && stableFrames >= 2 && (loaded || attempts > 8)) || attempts > 90) {
+                            root.classList.remove("restore-pending");
+                            root.style.scrollBehavior = "";
+                            return;
+                        }
+                        requestAnimationFrame(tick);
+                    };
+                    requestAnimationFrame(tick);
+                } catch (e) {}
+            })();
+        </script>
+
+        <script is:inline>
+            (function () {
                 function applyStoredTheme(sync) {
                     try {
                         var root = document.documentElement;
@@ -359,7 +534,7 @@ const resolvedOgImage = ogImage
                             play(entry.target);
                         }
                     },
-                    { threshold: 0.2, rootMargin: "80px 0px -10% 0px" },
+                    { threshold: 0, rootMargin: "0px" },
                 );
 
                 var earlyIo = new IntersectionObserver(
@@ -454,6 +629,7 @@ const resolvedOgImage = ogImage
             set:html={toJsonLd({
                 "@context": "https://schema.org",
                 "@type": "Person",
+                "@id": "https://nikshaan.dev/#person",
                 name: "Nikshaan Shetty",
                 url: "https://nikshaan.dev",
                 image: "https://nikshaan.dev/linkedin_banner.webp",

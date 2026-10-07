@@ -11,23 +11,16 @@ import beeImage from "../data/bee.avif";
 import { getImage } from "astro:assets";
 import { getCollection } from "astro:content";
 import { BEE_IMAGE_SIZES } from "../lib/imageSizes";
+import { comparePostsNewestFirst } from "../lib/blogArchive";
 
 export const prerender = true;
 
 const publishedPosts = await getCollection("blog", ({ data }) => !data.draft);
 const hasPublishedPosts = publishedPosts.length > 0;
 const blogPrerenderUrls = [...publishedPosts]
-  .sort((a, b) => {
-    if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
-    if (a.data.featured && b.data.featured) {
-      const orderA = a.data.featuredOrder ?? Infinity;
-      const orderB = b.data.featuredOrder ?? Infinity;
-      if (orderA !== orderB) return orderA - orderB;
-    }
-    return b.data.pubDate.getTime() - a.data.pubDate.getTime();
-  })
+  .sort(comparePostsNewestFirst)
   .slice(0, 3)
-  .map((post) => `/blog/${post.id}`);
+  .map((post) => `/blog/${post.id}/`);
 
 const optimizedBeeImage = await getImage({
   src: beeImage,
@@ -39,55 +32,35 @@ const optimizedBeeImage = await getImage({
 ---
 
 <script is:inline>
-  var savedHomeScroll = null;
-  var nav = performance.getEntriesByType("navigation")[0];
-  var isReload = nav && nav.type === "reload";
-  try {
-    if (isReload) {
-      sessionStorage.removeItem("portfolio_home_scroll");
-      sessionStorage.removeItem("portfolio_return_to");
-    } else {
-      savedHomeScroll = sessionStorage.getItem("portfolio_home_scroll");
+  (function () {
+    var nav = performance.getEntriesByType("navigation")[0];
+    var type = nav ? nav.type : "navigate";
+
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "auto";
     }
-  } catch (e) {}
-  var restoreY = savedHomeScroll === null || savedHomeScroll === "" ? NaN : Number(savedHomeScroll);
-  var shouldRestoreHomeScroll = !isReload && Number.isFinite(restoreY) && restoreY >= 0;
 
-  if ("scrollRestoration" in history) {
-    history.scrollRestoration = "manual";
-  }
-  if (!shouldRestoreHomeScroll && (!nav || nav.type !== "back_forward")) {
-    window.scrollTo(0, 0);
-  }
+    if (type === "reload") {
+      window.scrollTo(0, 0);
+    }
 
-  if (shouldRestoreHomeScroll) {
-    var restoreAttempts = 0;
-    var lastHeight = -1;
-    var stableFrames = 0;
-    var restoreHomeScroll = function () {
-      var maxScroll = Math.max(
-        0,
-        document.documentElement.scrollHeight - window.innerHeight,
-      );
-      var y = Math.min(restoreY, maxScroll);
-      window.scrollTo(0, y);
-      var height = document.documentElement.scrollHeight;
-      if (height === lastHeight) stableFrames += 1;
-      else stableFrames = 0;
-      lastHeight = height;
-      restoreAttempts += 1;
-      var blogs = document.getElementById("blogs");
-      if ((blogs && stableFrames >= 2) || restoreAttempts > 40) {
-        document.documentElement.classList.remove("restore-pending");
-        try {
-          sessionStorage.removeItem("portfolio_home_scroll");
-        } catch (e) {}
-        return;
+    if (type === "back_forward" || location.hash) return;
+
+    var root = document.documentElement;
+    var events = ["scroll", "pointerdown", "keydown", "touchstart"];
+    var release = function () {
+      root.classList.remove("blogs-held");
+      for (var i = 0; i < events.length; i++) {
+        window.removeEventListener(events[i], release, true);
       }
-      requestAnimationFrame(restoreHomeScroll);
     };
-    restoreHomeScroll();
-  }
+    root.classList.add("blogs-held");
+    for (var i = 0; i < events.length; i++) {
+      window.addEventListener(events[i], release, { capture: true, passive: true });
+    }
+    window.addEventListener("load", function () { setTimeout(release, 0); }, { once: true });
+    window.addEventListener("hashchange", release, { once: true });
+  })();
 </script>
 
 <script is:inline define:vars={{ baseUrl: import.meta.env.BASE_URL || "/" }}>
@@ -138,14 +111,6 @@ const optimizedBeeImage = await getImage({
         <MeBentoGridWrapper beeImage={optimizedBeeImage} />
       </section>
 
-      <section
-        id="projects"
-        class="w-full flex flex-col gap-2 flex-1 scroll-mt-20"
-        aria-labelledby="projects-heading"
-      >
-        <ProjectsBentoGridWrapper />
-      </section>
-
       {hasPublishedPosts && (
         <section
           id="blogs"
@@ -156,6 +121,14 @@ const optimizedBeeImage = await getImage({
           <WritingBentoGridWrapper />
         </section>
       )}
+
+      <section
+        id="projects"
+        class="w-full flex flex-col gap-2 flex-1 scroll-mt-20"
+        aria-labelledby="projects-heading"
+      >
+        <ProjectsBentoGridWrapper />
+      </section>
 
       <section
         id="fun"
@@ -173,26 +146,8 @@ const optimizedBeeImage = await getImage({
       if (typeof window === "undefined") return;
 
       var hash = window.location.hash;
-      var returnTo = null;
-      try {
-        returnTo = window.sessionStorage.getItem("portfolio_return_to");
-      } catch (e) {}
-
       var navEntry = performance.getEntriesByType("navigation")[0];
-      var isReload = navEntry && navEntry.type === "reload";
-      var savedScroll = null;
-      try {
-        if (!isReload) {
-          savedScroll = window.sessionStorage.getItem("portfolio_home_scroll");
-        }
-      } catch (e) {}
-      var restoringExactScroll =
-        !isReload &&
-        savedScroll !== null &&
-        savedScroll !== "" &&
-        Number.isFinite(Number(savedScroll));
-      var shouldAlignToBlogs =
-        !isReload && !restoringExactScroll && (hash === "#blogs" || returnTo === "blogs");
+      var shouldAlignToBlogs = hash === "#blogs" && (!navEntry || navEntry.type === "navigate");
 
       if (shouldAlignToBlogs) {
         if ("scrollRestoration" in history) {
@@ -211,6 +166,13 @@ const optimizedBeeImage = await getImage({
 
         instantAlignToBlogs();
 
+        if (window.portfolioNav) {
+          window.portfolioNav.pin(function () {
+            var el = document.getElementById("blogs");
+            return el ? Math.max(0, Math.round(el.getBoundingClientRect().top + window.scrollY - 80)) : NaN;
+          }, 1500)();
+        }
+
         if (document.readyState === "loading") {
           document.addEventListener("DOMContentLoaded", instantAlignToBlogs, { once: true });
         }
@@ -221,9 +183,6 @@ const optimizedBeeImage = await getImage({
             if ("scrollRestoration" in history) {
               history.scrollRestoration = "auto";
             }
-            try {
-              window.sessionStorage.removeItem("portfolio_return_to");
-            } catch (e) {}
           }, 150);
         }, { once: true });
 
@@ -256,7 +215,6 @@ const optimizedBeeImage = await getImage({
         rules.setAttribute("data-blog-prerender", "");
         rules.textContent = JSON.stringify({
           prerender: [{ urls: [urls[0]], eagerness: "immediate" }],
-          prefetch: [{ urls: urls, eagerness: "immediate" }],
         });
         document.head.appendChild(rules);
       };
@@ -308,5 +266,15 @@ const optimizedBeeImage = await getImage({
   }
   .save-data video:not(.project-demo-video) {
     display: none;
+  }
+
+  @media (max-width: 1023px) {
+    html.blogs-held .blogs-section {
+      content-visibility: hidden;
+    }
+  }
+
+  html.restore-pending .blogs-section {
+    content-visibility: visible;
   }
 </style>

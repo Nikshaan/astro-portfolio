@@ -5,7 +5,7 @@ import MainLayout from "../../layouts/MainLayout.astro";
 import NavbarWrapper from "../../components/NavbarWrapper.astro";
 import BlogSearch from "../../components/blog/BlogSearch";
 import { getReadingTime } from "../../utils/readingTime";
-import { BLOG_ARCHIVE_ENABLED } from "../../lib/blogArchive";
+import { BLOG_ARCHIVE_ENABLED, comparePostsNewestFirst } from "../../lib/blogArchive";
 
 if (!BLOG_ARCHIVE_ENABLED) {
   Astro.response.status = 404;
@@ -14,11 +14,30 @@ if (!BLOG_ARCHIVE_ENABLED) {
 const isDev = import.meta.env.DEV;
 const allPosts = await getCollection("blog", ({ data }) => (isDev ? true : !data.draft));
 
-const sortedPosts = allPosts.sort(
-  (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
-);
+const sortedPosts = allPosts.sort(comparePostsNewestFirst);
 
 const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).sort();
+
+const siteUrl = new URL("/", Astro.site || "https://nikshaan.dev").href;
+const blogUrl = new URL("/blog/", siteUrl).href;
+const blogJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "@id": `${blogUrl}#blog`,
+  name: "Nikshaan Shetty's Blog",
+  url: blogUrl,
+  inLanguage: "en-IN",
+  author: { "@id": `${siteUrl}#person` },
+  blogPost: sortedPosts.map((post) => ({
+    "@type": "BlogPosting",
+    headline: post.data.title,
+    description: post.data.description,
+    url: new URL(`/blog/${post.id}/`, siteUrl).href,
+    datePublished: post.data.pubDate.toISOString(),
+    dateModified: (post.data.updatedDate || post.data.pubDate).toISOString(),
+    author: { "@id": `${siteUrl}#person` },
+  })),
+};
 ---
 
 {BLOG_ARCHIVE_ENABLED && (
@@ -28,6 +47,9 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
   noindex={allPosts.length === 0}
   preloadMonoFont
 >
+  <Fragment slot="head">
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(blogJsonLd).replace(/</g, "\\u003c")} />
+  </Fragment>
   <NavbarWrapper />
 
   <main id="main-content" class="bg-[var(--surface-page)] text-[var(--text-primary)] min-h-[100svh] w-full pt-24 pb-20 px-4">
@@ -35,7 +57,7 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
       <div class="mb-8">
         <a
           id="back-to-home-link"
-          href="/#blogs"
+          href="/"
           data-astro-prefetch="hover"
           class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors focus-visible:outline-none cursor-pointer group"
           aria-label="Go back to portfolio homepage where you left off"
@@ -56,7 +78,7 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
           <BlogSearch client:idle />
           {allTags.length > 0 && (
             <a
-              href="/blog/tags"
+              href="/blog/tags/"
               class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors self-start sm:self-center"
             >
               Browse all tags ({allTags.length}) →
@@ -87,7 +109,7 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
 
             return (
               <article class="group relative rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 sm:p-6 transition-all duration-200 hover:border-[var(--border-strong)] hover:-translate-y-0.5 active:scale-[0.99] active:transition-transform active:duration-75 min-w-0 max-w-full overflow-hidden flex flex-col justify-between h-full">
-                <a href={`/blog/${post.id}`} class="absolute inset-0 z-10" aria-label={`Read ${post.data.title}`} data-astro-prefetch="hover">
+                <a href={`/blog/${post.id}/`} class="absolute inset-0 z-10" aria-label={`Read ${post.data.title}`} data-astro-prefetch="hover">
                   <span class="sr-only">Read {post.data.title}</span>
                 </a>
 
@@ -118,8 +140,8 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
                   <div class="relative z-20 flex flex-wrap gap-1.5 mt-auto pt-2">
                     {post.data.tags.slice(0, 3).map((tag) => (
                       <a
-                        href={`/blog/tags/${tagSlug(tag)}`}
-                        class="text-xs px-2.5 py-0.5 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-raised)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors font-mono"
+                        href={`/blog/tags/${tagSlug(tag)}/`}
+                        class="text-xs px-2.5 py-1 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-raised)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors font-mono"
                       >
                         #{tag}
                       </a>
@@ -140,13 +162,14 @@ const allTags = Array.from(new Set(allPosts.flatMap((p) => p.data.tags || []))).
 
       function setupBackButton() {
         var backBtn = document.getElementById("back-to-home-link");
-        if (!backBtn) return;
-
-        backBtn.onclick = function () {
-          try {
-            sessionStorage.setItem("portfolio_return_to", "blogs");
-          } catch (err) {}
-        };
+        if (!backBtn || backBtn.dataset.bound) return;
+        backBtn.dataset.bound = "true";
+        backBtn.addEventListener("click", function (event) {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+          var nav = window.portfolioNav;
+          var cameFromHome = nav && nav.pathOf(document.referrer) === "/";
+          if (nav && nav.returnTo("/", cameFromHome ? 1 : 0)) event.preventDefault();
+        });
       }
 
       if (document.readyState === "loading") {

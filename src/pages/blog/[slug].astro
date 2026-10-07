@@ -2,19 +2,18 @@
 import { getCollection, render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 import PostLayout from "../../layouts/PostLayout.astro";
+import { comparePostsNewestFirst } from "../../lib/blogArchive";
 import TableWrapper from "../../components/blog/TableWrapper.astro";
 
 export async function getStaticPaths() {
   const isDev = import.meta.env.DEV;
   const posts = await getCollection("blog", ({ data }) => (isDev ? true : !data.draft));
 
-  const sortedPosts = posts.sort(
-    (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
-  );
+  const sortedPosts = posts.sort(comparePostsNewestFirst);
 
   return sortedPosts.map((post, index) => {
-    const nextPost = index > 0 ? sortedPosts[index - 1] : null;
-    const prevPost = index < sortedPosts.length - 1 ? sortedPosts[index + 1] : null;
+    const nextPost = index < sortedPosts.length - 1 ? sortedPosts[index + 1] : null;
+    const prevPost = index > 0 ? sortedPosts[index - 1] : null;
 
     return {
       params: { slug: post.id },

@@ -1,13 +1,12 @@
 import rss from "@astrojs/rss";
 import { getCollection } from "astro:content";
 import type { APIContext } from "astro";
+import { comparePostsNewestFirst } from "../lib/blogArchive";
 
 export async function GET(context: APIContext) {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
 
-  const sortedPosts = posts.sort(
-    (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
-  );
+  const sortedPosts = posts.sort(comparePostsNewestFirst);
 
   return rss({
     title: "Nikshaan Shetty — Blog",

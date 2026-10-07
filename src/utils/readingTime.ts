@@ -11,6 +11,7 @@ export function getReadingTime(content: string, wpm = 200): ReadingTimeResult {
 
   const clean = content
     .replace(/```[\s\S]*?```/g, "")
+    .replace(/^(?:import|export)\s.*$/gm, "")
     .replace(/<[^>]*>/g, " ")
     .replace(/[#*`_~\[\]()]/g, " ")
     .trim();

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LazyMotion, domAnimation } from "framer-motion";
 import { Github, MapPin, FileText } from "lucide-react";
 import cardsData from "../data/cardsdata.json";
@@ -14,15 +14,14 @@ import aryaLogo from "../data/arya.avif";
 import codeAIlogo from "../data/codeai.avif";
 import varakLogo from "../data/varak.avif";
 import mentoriaLogo from "../data/mentoria.avif";
-import gssocLogo from "../data/gssoc.avif";
 import winIcon from "../data/winIcon.avif";
 import linkedinColor from "../data/linkedin-color.svg";
 import gmailColor from "../data/gmail-color.svg";
 
 import certificateImg from "../data/Nikshaan Shetty Certificate.webp";
 import lorImg from "../data/Nikshaan Shetty LOR.webp";
-import badgeImg from "../data/Contributor's badge.webp";
 import { BEE_IMAGE_SIZES } from "../lib/imageSizes";
+import { takeRestoredModal } from "../utils/restoredPageState";
 
 const defaultImages: Record<string, any> = {
   beeImage: beeImage,
@@ -31,7 +30,6 @@ const defaultImages: Record<string, any> = {
   codeAIlogo: codeAIlogo,
   varakLogo: varakLogo,
   mentoriaLogo: mentoriaLogo,
-  gssocLogo: gssocLogo,
   winIcon: winIcon,
 };
 
@@ -43,8 +41,7 @@ const getProcessedContent = (content: string) => {
   }
   const processed = content
     .replace("{{CERTIFICATE_IMAGE}}", certificateImg.src)
-    .replace("{{LOR_IMAGE}}", lorImg.src)
-    .replace("{{BADGE_IMAGE}}", badgeImg.src);
+    .replace("{{LOR_IMAGE}}", lorImg.src);
   content_cache.set(content, processed);
   return processed;
 };
@@ -83,6 +80,7 @@ interface MeBentoGridProps {
 
 const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [restoredScroll, setRestoredScroll] = useState(0);
   const images = useMemo(() => optimizedImages || defaultImages, [optimizedImages]);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -110,7 +108,19 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
     [selectedId],
   );
 
-  const handleClose = useCallback(() => setSelectedId(null), []);
+  useEffect(() => {
+    const restored = takeRestoredModal((modal) =>
+      cardsData.some((card) => `card-${card.id}` === modal && ["experience", "win"].includes(card.id)),
+    );
+    if (!restored?.modal) return;
+    setRestoredScroll(restored.modalScroll ?? 0);
+    setSelectedId(restored.modal.slice("card-".length));
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setSelectedId(null);
+    setRestoredScroll(0);
+  }, []);
 
   if (!introCard) return null;
 
@@ -200,9 +210,9 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
             onActivate={() => setSelectedId("experience")}
             selected={selectedId === "experience"}
             layoutId="card-experience"
-            aria-label="Experience — view full details"
+            aria-label="Work Experience — view full details"
           >
-            <h3 className="font-heading font-bold mb-3">Experience</h3>
+            <h3 className="font-heading font-bold mb-3">Work Experience</h3>
             <div className="flex flex-col gap-3 flex-1 justify-center">
               {experienceCard.data.items?.map((item: any, i: number) => (
                 <div key={i} className="flex items-center gap-3">
@@ -257,37 +267,54 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
           </BentoCard>
         )}
 
-        <div className={`grid grid-cols-2 gap-[var(--bento-gap)] h-full min-w-0 ${SPANS.third}`}>
-          <BentoCard span="subTile" href="/Nikshaan_Shetty_resume.pdf" target="_blank" rel="noopener noreferrer">
-            <div className="flex flex-col h-full items-center justify-center gap-2 text-center">
-              <FileText size={44} strokeWidth={1.5} className="text-[var(--text-secondary)]" aria-hidden="true" />
-              <h3 className="font-heading font-bold">Resume</h3>
-            </div>
-          </BentoCard>
+        <div className={`relative min-h-0 min-w-0 self-stretch ${SPANS.third}`}>
+          <div className="grid min-h-0 grid-rows-[auto_auto] gap-[var(--bento-gap)] lg:absolute lg:inset-0 lg:h-auto lg:grid-rows-2">
+            <div className="grid h-full min-h-0 min-w-0 grid-cols-2 gap-[var(--bento-gap)]">
+              <BentoCard
+                span="subTile"
+                className="relative z-0 hover:z-10"
+                shellClassName="overflow-visible tile-hover"
+                disableHoverMotion
+                href="/Nikshaan_Shetty_resume.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="flex h-full min-h-0 flex-col items-center justify-center gap-1.5 text-center">
+                  <FileText size={28} strokeWidth={1.5} className="h-7 w-7 shrink-0 text-[var(--text-secondary)] sm:h-8 sm:w-8" aria-hidden="true" />
+                  <h3 className="font-heading text-sm font-bold leading-tight">Resume</h3>
+                </div>
+              </BentoCard>
 
-          {winCard && (
-            <BentoCard
-              span="subTile"
-              expandable
-              onActivate={() => setSelectedId("win")}
-              selected={selectedId === "win"}
-              layoutId="card-win"
-              aria-label="View hackathons"
-            >
-              <div className="flex flex-col h-full items-center justify-center gap-2 text-center">
-                <CardImage
-                  image={images.winIcon}
-                  alt=""
-                  sizes="64px"
-                  eager
-                  className="select-none w-[52px] h-[52px] sm:w-[64px] sm:h-[64px] object-contain"
-                />
-                <h3 className="font-heading font-bold">
-                  Hackathons
-                </h3>
-              </div>
-            </BentoCard>
-          )}
+              {winCard && (
+                <BentoCard
+                  span="subTile"
+                  className="relative z-0 hover:z-10"
+                  shellClassName="overflow-visible"
+                  expandable
+                  onActivate={() => setSelectedId("win")}
+                  selected={selectedId === "win"}
+                  layoutId="card-win"
+                  aria-label="View hackathons"
+                >
+                  <div className="flex h-full min-h-0 flex-col items-center justify-center gap-1.5 text-center">
+                    <CardImage
+                      image={images.winIcon}
+                      alt=""
+                      sizes="40px"
+                      eager
+                      className="h-8 w-8 max-h-full shrink-0 select-none object-contain sm:h-10 sm:w-10"
+                    />
+                    <h3 className="font-heading text-sm font-bold leading-tight">
+                      Hackathons
+                    </h3>
+                  </div>
+                </BentoCard>
+              )}
+            </div>
+            <div className="h-full min-h-0 min-w-0">
+              <GithubContributions compact />
+            </div>
+          </div>
         </div>
 
         {locationCard && (
@@ -345,10 +372,6 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
             </div>
           </BentoCard>
         )}
-
-        <div className={`h-full w-full ${SPANS.wide}`}>
-          <GithubContributions />
-        </div>
       </BentoGrid>
 
       <BentoModal
@@ -358,11 +381,12 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
         titleId="me-modal-title"
         closeLabel="Close details"
         contentRef={wrapperRef}
+        initialScrollTop={restoredScroll}
       >
         {selectedItem && (
           <div className="flex flex-col gap-6">
             <h2 id="me-modal-title" className="pr-12">
-              {selectedItem.id === "win" ? "Hackathons" : "Experience"}
+              {selectedItem.id === "win" ? "Hackathons" : "Work Experience"}
             </h2>
             <div className="prose max-w-none">
               <div

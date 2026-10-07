@@ -46,12 +46,7 @@ const WritingBentoGrid: React.FC<WritingBentoGridProps> = memo(({ posts }) => {
           </div>
           {BLOG_ARCHIVE_ENABLED && (
             <a
-              href="/blog"
-              onClick={() => {
-                try {
-                  sessionStorage.setItem("portfolio_return_to", "blogs");
-                } catch (e) {}
-              }}
+              href="/blog/"
               className="text-xs font-mono uppercase tracking-wider text-[var(--accent)] hover:underline flex items-center gap-1.5 focus-visible:outline-none"
               aria-label="View all blogs"
             >
@@ -66,24 +61,10 @@ const WritingBentoGrid: React.FC<WritingBentoGridProps> = memo(({ posts }) => {
             <BentoCard
               key={post.id}
               span={span}
-              href={`/blog/${post.id}`}
+              href={`/blog/${post.id}/`}
               prefetch="viewport"
               aria-label={`Read ${post.title}`}
               className="flex flex-col justify-between"
-              onPointerDown={() => {
-                try {
-                  sessionStorage.setItem("portfolio_home_scroll", String(window.scrollY));
-                } catch (e) {}
-              }}
-              onClick={() => {
-                try {
-                  if ("scrollRestoration" in history) {
-                    history.scrollRestoration = "manual";
-                  }
-                  sessionStorage.setItem("portfolio_return_to", "blogs");
-                  sessionStorage.setItem("portfolio_home_scroll", String(window.scrollY));
-                } catch (e) {}
-              }}
             >
               <div className="flex flex-col h-full justify-between">
                 <div>
@@ -121,15 +102,10 @@ const WritingBentoGrid: React.FC<WritingBentoGridProps> = memo(({ posts }) => {
           {showCtaCard && (
             <BentoCard
               span={span}
-              href="/blog"
+              href="/blog/"
               aria-label="Browse full blog archive"
               className="flex flex-col justify-between"
               shellClassName="border-dashed hover:border-[var(--accent)]"
-              onClick={() => {
-                try {
-                  sessionStorage.setItem("portfolio_return_to", "blogs");
-                } catch (e) {}
-              }}
             >
               <div className="flex flex-col h-full justify-between">
                 <div>

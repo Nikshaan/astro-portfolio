@@ -3,21 +3,11 @@ import { getCollection } from "astro:content";
 import WritingBentoGrid from "./WritingBentoGrid";
 import type { WritingPostSummary } from "./WritingBentoGrid";
 import { getReadingTime } from "../utils/readingTime";
+import { comparePostsNewestFirst } from "../lib/blogArchive";
 
 const publishedPosts = await getCollection("blog", ({ data }) => !data.draft);
 
-const sortedPosts = [...publishedPosts].sort((a, b) => {
-  if (a.data.featured && !b.data.featured) return -1;
-  if (!a.data.featured && b.data.featured) return 1;
-
-  if (a.data.featured && b.data.featured) {
-    const orderA = a.data.featuredOrder ?? Infinity;
-    const orderB = b.data.featuredOrder ?? Infinity;
-    if (orderA !== orderB) return orderA - orderB;
-  }
-
-  return b.data.pubDate.getTime() - a.data.pubDate.getTime();
-});
+const sortedPosts = [...publishedPosts].sort(comparePostsNewestFirst);
 
 const topPosts: WritingPostSummary[] = sortedPosts.slice(0, 3).map((post) => {
   const readingStats = getReadingTime(post.body || "");
