@@ -174,9 +174,29 @@ export default memo(function GithubContributions({
   }, [hideTooltip, weeks, loading]);
 
   useEffect(() => {
-    if (graphRef.current) {
-      graphRef.current.scrollLeft = graphRef.current.scrollWidth;
-    }
+    const el = graphRef.current;
+    if (!el) return;
+
+    const scrollToEnd = () => {
+      el.scrollLeft = el.scrollWidth;
+    };
+
+    scrollToEnd();
+    const frame = requestAnimationFrame(scrollToEnd);
+    const timer = setTimeout(scrollToEnd, 150);
+
+    const observer =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(scrollToEnd)
+        : null;
+
+    observer?.observe(el);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+      observer?.disconnect();
+    };
   }, [weeks, loading]);
 
   useEffect(() => {
