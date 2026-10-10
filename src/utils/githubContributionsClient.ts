@@ -38,10 +38,11 @@ export interface GitHubAPIResponse {
   errors?: Array<{ message: string }>;
 }
 
-const PERSISTENT_CACHE_KEY = "nikshaan_github_contributions_v1";
+const PERSISTENT_CACHE_KEY = "nikshaan_github_contributions_v2";
 const PERSISTENT_TTL_MS = 12 * 60 * 60 * 1000;
-const FRESH_MS = 10 * 60 * 1000;
+const FRESH_MS = 60 * 1000;
 const POLL_MS = 5 * 60 * 1000;
+const STALE_AFTER_MS = 15 * 60 * 1000;
 
 function validateGithub(data: unknown): GitHubAPIResponse {
   if (typeof data !== "object" || data === null) {
@@ -67,6 +68,7 @@ const resource = createLiveResource<GitHubAPIResponse>({
     (response.data?.user?.contributionsCollection?.contributionCalendar?.weeks
       ?.length ?? 0) > 0,
   freshMs: FRESH_MS,
+  staleAfterMs: STALE_AFTER_MS,
   pollMs: POLL_MS,
   maxAgeMs: PERSISTENT_TTL_MS,
 });
