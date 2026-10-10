@@ -20,25 +20,29 @@
   display: flex;
   gap: 2px;
   overflow-x: auto;
-  padding: 4px 2px;
+  padding: 3px 4px;
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) var(--surface-page);
   width: 100%;
   justify-content: flex-start;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) and (max-width: 1023.98px) {
   .graph {
+    width: 100%;
     justify-content: stretch;
     overflow-x: visible;
+    overflow-y: visible;
+    padding: 3px 4px;
   }
 }
 
 @media (min-width: 1024px) {
   .graph {
     width: 100%;
-    gap: 2px;
+    gap: 3px;
     overflow-x: visible;
+    padding: 3px 4px;
   }
 }
 
@@ -55,7 +59,7 @@
   border-radius: 4px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 639.98px) {
   .graph {
     scrollbar-width: none;
   }
@@ -71,11 +75,20 @@
   gap: 2px;
   flex: 0 0 auto;
   width: 10px;
+  position: relative;
 }
 
-@media (min-width: 640px) {
+.week:hover,
+.week:has(.day:hover),
+.week:focus-within {
+  z-index: 5;
+}
+
+@media (min-width: 640px) and (max-width: 1023.98px) {
   .week {
-    width: 11px;
+    flex: 1 1 0%;
+    width: auto;
+    min-width: 0;
   }
 }
 
@@ -94,15 +107,17 @@
   border-radius: 2px;
   cursor: pointer;
   outline: 1px solid transparent;
+  outline-offset: 0;
   transition:
     outline-color 0.15s ease,
     box-shadow 0.15s ease;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 640px) and (max-width: 1023.98px) {
   .day {
-    width: 11px;
-    height: 11px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
   }
 }
 
@@ -114,7 +129,10 @@
   }
 }
 
-.day:hover {
+.day:hover,
+.day:focus-visible {
+  position: relative;
+  z-index: 10;
   outline-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
 }
@@ -138,12 +156,6 @@
 
 .contributionLevel4 {
   background-color: var(--accent);
-}
-
-@media (min-width: 1024px) {
-  .graph {
-    gap: 3px;
-  }
 }
 
 .dayTooltip {
@@ -184,7 +196,7 @@
 }
 
 .compact {
-  padding: 0.5rem 0.625rem 0.25rem;
+  padding: 0.5rem 0.625rem 0.35rem;
   min-height: 0;
 }
 
@@ -219,14 +231,19 @@
   min-height: 0;
   align-items: flex-start;
   overflow-x: auto;
-  padding-block: 0;
+  padding: 3px 4px;
+  scrollbar-width: none;
+}
+
+.compact .graph::-webkit-scrollbar {
+  display: none;
 }
 
 .compact .week {
   flex: 0 0 auto;
   width: auto;
   min-width: 0;
-  height: auto;
+  height: 100%;
 }
 
 .compact .day {
@@ -234,6 +251,36 @@
   height: 8px;
   aspect-ratio: auto;
   flex: none;
+}
+
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  .compact .graph {
+    width: 100%;
+    height: auto;
+    justify-content: stretch;
+    overflow-x: visible;
+    overflow-y: visible;
+    padding: 3px 4px;
+  }
+
+  .compact .week {
+    flex: 1 1 0%;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    gap: 2px;
+  }
+
+  .compact .day {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    flex: none;
+  }
+
+  .compact .skeleton {
+    width: 100%;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -252,15 +299,20 @@
     align-items: flex-start;
     justify-content: flex-start;
     gap: 2px;
-    padding-block: 0;
+    padding: 3px 6px 3px 4px;
     overflow-x: auto;
     overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .compact .graph::-webkit-scrollbar {
+    display: none;
   }
 
   .compact .week {
     flex: 0 0 auto;
-    width: calc((100cqh - 12px) / 7);
-    height: auto;
+    width: calc((100cqh - 6px - 12px) / 7);
+    height: 100%;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -271,9 +323,10 @@
   .compact .day {
     flex: none;
     width: 100%;
-    height: calc((100cqh - 12px) / 7);
+    height: auto;
     aspect-ratio: 1;
     min-width: 0;
+    min-height: 0;
   }
 }
 

@@ -1,10 +1,11 @@
 import type { APIRoute } from "astro";
 import { GH_TOKEN, GH_USERNAME } from "astro:env/server";
 import { jsonResponse, logApiError } from "../../lib/apiResponse";
+import { ROUTE_CACHE_MS } from "../../lib/freshness";
 
 export const prerender = false;
 
-const CACHE_DURATION = 15 * 60 * 1000;
+const CACHE_DURATION = ROUTE_CACHE_MS;
 const REQUEST_TIMEOUT = 8000;
 let cachedData: GitHubResponse | null = null;
 let lastFetchTime = 0;
@@ -105,7 +106,7 @@ const QUERY = `
   }
 `;
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ request }) => {
   if (!GH_TOKEN || !GH_USERNAME) {
     return respond(
       { error: "GitHub credentials not configured" },
@@ -115,8 +116,14 @@ export const GET: APIRoute = async () => {
     );
   }
 
+  const url = new URL(request.url);
+  const bypass =
+    url.searchParams.has("_") ||
+    url.searchParams.has("force") ||
+    request.headers.get("cache-control") === "no-cache";
+
   const now = Date.now();
-  if (cachedData && now - lastFetchTime < CACHE_DURATION) {
+  if (!bypass && cachedData && now - lastFetchTime < CACHE_DURATION) {
     return respond(cachedData, "HIT", lastFetchTime);
   }
 

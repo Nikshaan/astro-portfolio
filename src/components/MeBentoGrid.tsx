@@ -136,7 +136,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                   dangerouslySetInnerHTML={{ __html: introCard.data.text }}
                 />
                 <p className="type-lead font-bold text-[var(--accent)] mt-1">
-                  Applied AI and software developer
+                  Applied AI and Software Developer
                 </p>
               </div>
               <div className="h-px w-full bg-[var(--border-subtle)]" />
