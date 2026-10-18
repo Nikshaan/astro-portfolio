@@ -25,6 +25,18 @@ export default memo(function ProjectDemoVideo({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [attachSources, setAttachSources] = useState(false);
   const [preloadMetadata, setPreloadMetadata] = useState(false);
+  const [posterReady, setPosterReady] = useState(false);
+
+  useEffect(() => {
+    const probe = new Image();
+    const settle = () => setPosterReady(true);
+    probe.onload = probe.onerror = settle;
+    probe.src = poster;
+    if (probe.complete) settle();
+    return () => {
+      probe.onload = probe.onerror = null;
+    };
+  }, [poster]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -61,7 +73,8 @@ export default memo(function ProjectDemoVideo({
   return (
     <div
       ref={containerRef}
-      className="my-6 overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-raised)]"
+      data-skel-ready={posterReady ? "" : undefined}
+      className="media-skel my-6 overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-raised)]"
     >
       <video
         ref={videoRef}

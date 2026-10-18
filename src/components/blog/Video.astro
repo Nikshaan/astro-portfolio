@@ -41,7 +41,7 @@ const posterAttrs =
 
 <figure class:list={["post-video", mode === "loop" && "post-video-loop"]}>
   {mode === "loop" ? (
-    <div class="post-video-frame">
+    <div class="post-video-frame media-skel media-skel-framed">
       <video
         class="project-demo-video"
         data-loop-video
@@ -69,19 +69,21 @@ const posterAttrs =
       </button>
     </div>
   ) : (
-    <video
-      class="project-demo-video"
-      controls
-      playsinline
-      preload="none"
-      {...posterAttrs}
-      width={width}
-      height={height}
-      aria-label={label}
-    >
-      {av1 && <source src={`${src}.av1.mp4`} type={`video/mp4; codecs="${av1Codec}"`} />}
-      <source src={`${src}.mp4`} type={`video/mp4; codecs="${h264Codec}"`} />
-    </video>
+    <div class="post-video-frame media-skel media-skel-framed">
+      <video
+        class="project-demo-video"
+        controls
+        playsinline
+        preload="none"
+        {...posterAttrs}
+        width={width}
+        height={height}
+        aria-label={label}
+      >
+        {av1 && <source src={`${src}.av1.mp4`} type={`video/mp4; codecs="${av1Codec}"`} />}
+        <source src={`${src}.mp4`} type={`video/mp4; codecs="${h264Codec}"`} />
+      </video>
+    </div>
   )}
   {caption && <figcaption>{caption}</figcaption>}
 </figure>
@@ -103,6 +105,7 @@ const posterAttrs =
   .post-video-frame {
     position: relative;
     width: 100%;
+    border-radius: var(--radius-card);
   }
 
   .post-video-toggle {
@@ -204,6 +207,29 @@ const posterAttrs =
     });
   }
 
+  function settleHost(video: HTMLVideoElement) {
+    video.closest(".media-skel")?.setAttribute("data-skel-ready", "");
+  }
+
+  function afterImage(src: string, done: () => void) {
+    if (!src) {
+      done();
+      return;
+    }
+    const probe = new Image();
+    probe.onload = probe.onerror = done;
+    probe.src = src;
+    if (probe.complete) done();
+  }
+
+  function applyPoster(video: HTMLVideoElement) {
+    const src = video.dataset.poster ?? "";
+    afterImage(src, () => {
+      video.poster = src;
+      settleHost(video);
+    });
+  }
+
   const posterObserver =
     "IntersectionObserver" in window
       ? new IntersectionObserver(
@@ -212,7 +238,7 @@ const posterAttrs =
               if (!entry.isIntersecting) continue;
               const video = entry.target as HTMLVideoElement;
               posterObserver?.unobserve(video);
-              video.poster = video.dataset.poster ?? "";
+              applyPoster(video);
             }
           },
           { rootMargin: "100% 0px" },
@@ -224,7 +250,12 @@ const posterAttrs =
       if (video.dataset.posterBound) return;
       video.dataset.posterBound = "true";
       if (posterObserver) posterObserver.observe(video);
-      else video.poster = video.dataset.poster ?? "";
+      else applyPoster(video);
+    });
+    document.querySelectorAll<HTMLVideoElement>("video[poster]:not([data-poster])").forEach((video) => {
+      if (video.dataset.posterBound) return;
+      video.dataset.posterBound = "true";
+      afterImage(video.getAttribute("poster") ?? "", () => settleHost(video));
     });
   }
 

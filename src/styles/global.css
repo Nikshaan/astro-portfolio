@@ -636,6 +636,59 @@ html.lenis body {
   animation: skel-shimmer 1.5s ease-in-out infinite;
 }
 
+@keyframes media-skel-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.media-skel {
+  position: relative;
+  overflow: hidden;
+}
+
+.media-skel-js .media-skel::before,
+.media-skel-js .media-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    visibility 0s linear 0.25s;
+}
+
+.media-skel-js .media-skel::before {
+  background-color: var(--shimmer-from);
+}
+
+.media-skel-js .media-skel-framed::before {
+  box-shadow: inset 0 0 0 1px var(--border-subtle);
+}
+
+.media-skel-js .media-skel::after {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--shimmer-to) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: media-skel-sweep 1.5s ease-in-out infinite;
+}
+
+.media-skel-js .media-skel[data-skel-ready]::before,
+.media-skel-js .media-skel[data-skel-ready]::after {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.media-skel-js .media-skel[data-skel-ready]::after {
+  animation-play-state: paused;
+}
+
 [data-bento-debug] {
   outline: 1px dashed var(--danger);
 }
@@ -735,6 +788,16 @@ html.restore-pending body {
   .skel {
     animation: none;
     background-image: none;
+  }
+
+  .media-skel-js .media-skel::after {
+    animation: none;
+    display: none;
+  }
+
+  .media-skel-js .media-skel::before,
+  .media-skel-js .media-skel::after {
+    transition: none;
   }
 
   .skel-pulse {
@@ -1060,6 +1123,7 @@ pre.astro-code span {
 .post-prose figure picture {
   display: block;
   width: 100%;
+  border-radius: var(--radius-card);
 }
 
 .post-prose figure.post-figure-code {

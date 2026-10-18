@@ -33,7 +33,7 @@ export interface BentoCardProps {
   "aria-label"?: string;
   onClick?: (e?: any) => void;
   onPointerDown?: React.PointerEventHandler<HTMLElement>;
-  prefetch?: "tap" | "hover" | "viewport" | "load";
+  prefetch?: "tap" | "hover" | "viewport" | "load" | "false";
 }
 
 const BentoCard = React.forwardRef<HTMLDivElement, BentoCardProps>(

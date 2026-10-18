@@ -146,9 +146,9 @@ const resolvedOgImage = ogImage
                     {
                         "where": {
                             "and": [
-                                { "href_matches": "/*" },
-                                { "not": { "href_matches": "/api/*" } },
-                                { "not": { "href_matches": "/rss.xml" } }
+                                { "href_matches": "/blog/:slug{/}?" },
+                                { "not": { "href_matches": "/blog/tags{/}?" } },
+                                { "not": { "selector_matches": "[download], [target=_blank]" } }
                             ]
                         },
                         "eagerness": "moderate"
@@ -160,7 +160,11 @@ const resolvedOgImage = ogImage
                             "and": [
                                 { "href_matches": "/*" },
                                 { "not": { "href_matches": "/api/*" } },
-                                { "not": { "href_matches": "/rss.xml" } }
+                                { "not": { "href_matches": "/rss.xml" } },
+                                { "not": { "href_matches": "/videos/*" } },
+                                { "not": { "href_matches": "/_astro/*" } },
+                                { "not": { "href_matches": "/*.pdf" } },
+                                { "not": { "selector_matches": "[download]" } }
                             ]
                         },
                         "eagerness": "moderate"
@@ -453,6 +457,41 @@ const resolvedOgImage = ogImage
                         e.preventDefault();
                         handleChunkError();
                     }
+                });
+            })();
+        </script>
+
+        <script is:inline>
+            (function () {
+                var root = document.documentElement;
+                root.classList.add("media-skel-js");
+
+                function settle(node) {
+                    var host = node.closest ? node.closest(".media-skel") : null;
+                    if (host && !host.hasAttribute("data-skel-ready")) {
+                        host.setAttribute("data-skel-ready", "");
+                    }
+                }
+
+                function onSettled(event) {
+                    var tag = event.target && event.target.tagName;
+                    if (tag === "IMG" || tag === "VIDEO") settle(event.target);
+                }
+
+                document.addEventListener("load", onSettled, true);
+                document.addEventListener("error", onSettled, true);
+                document.addEventListener("loadeddata", onSettled, true);
+
+                function sweep() {
+                    var images = document.querySelectorAll(".media-skel img");
+                    for (var i = 0; i < images.length; i++) {
+                        if (images[i].complete) settle(images[i]);
+                    }
+                }
+
+                document.addEventListener("DOMContentLoaded", sweep, { once: true });
+                window.addEventListener("pageshow", function (event) {
+                    if (event.persisted) sweep();
                 });
             })();
         </script>

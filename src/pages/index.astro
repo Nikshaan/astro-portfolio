@@ -81,10 +81,17 @@ const optimizedBeeImage = await getImage({
         } catch (e) {}
       });
     };
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(prewarm, { timeout: 2500 });
+    var schedulePrewarm = function () {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(prewarm, { timeout: 2500 });
+      } else {
+        setTimeout(prewarm, 1800);
+      }
+    };
+    if (document.prerendering) {
+      document.addEventListener("prerenderingchange", schedulePrewarm, { once: true });
     } else {
-      setTimeout(prewarm, 1800);
+      schedulePrewarm();
     }
   }
 </script>

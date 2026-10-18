@@ -278,6 +278,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
                 href="/Nikshaan_Shetty_resume.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
+                prefetch="false"
               >
                 <div className="flex h-full min-h-0 flex-col items-center justify-center gap-1.5 text-center">
                   <FileText size={28} strokeWidth={1.5} className="h-7 w-7 shrink-0 text-[var(--text-secondary)] sm:h-8 sm:w-8" aria-hidden="true" />
