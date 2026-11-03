@@ -16,18 +16,16 @@ import blogArchitecture from "../../assets/blog/blog-architecture.webp";
 import blogEditor from "../../assets/blog/blog-editor.webp";
 import seoPreviewChecks from "../../assets/blog/seo-preview-checks.webp";
 import seoMetadataFields from "../../assets/blog/seo-metadata-fields.webp";
-import richResultsArticle from "../../assets/blog/rich-results-article.webp";
-import searchConsoleTrending from "../../assets/blog/search-console-trending.webp";
 
 <aside class="post-alert" role="note">
-  <p>Arya's frontend has since moved to Next.js as part of <a href="/blog/migrating-26000-users-to-supabase/">Arya 2.0</a>, a rebuild for site-wide SEO. This post covers the 1.0 system, which shipped in two days and carried the blog until then; its posts and URLs moved over intact.</p>
+  <p>The web platform's frontend has since transitioned to a full-stack Next.js architecture during a broader platform overhaul. This post covers the initial prerendering engine that solved SEO for the single-page application under tight infrastructure constraints, preserving URL integrity throughout subsequent migrations.</p>
 </aside>
 
-Arya's blog was invisible to Google. The site was a React app on a static host, so crawlers saw an empty page, and I had two days to fix that without adding a single new service.
+The web platform was invisible to Google. The site was a client-rendered React single-page app on a static host, so crawlers saw an empty shell, and I had two days to fix that without adding expensive server infrastructure.
 
-At Mentoria, I built [Arya's blog](https://arya.mentoria.com/blog) end to end, including the CMS, public reader, SEO layer and publishing pipeline. I shipped the first version within those two days, in July 2026, with the blog working end to end. The next four weeks went into hardening it, as a scalability rework so it would hold up at the 500+ posts it was designed for. It has 21 today. The only additions were a deploy hook and a rebuild-delay setting, for about $0 of added infrastructure.
+During my software engineering internship at a career-tech startup, I built the platform's self-hosted blog end to end, including the CMS, public reader, SEO layer and automated publishing pipeline. I shipped the first working version within those two days, followed by a scalability rework so the static prerender pipeline would hold up as content volume scaled. The only additions were a deploy hook and a rebuild-delay setting, for about $0 of added infrastructure.
 
-The brief also required a real `/blog` subfolder on Arya's main domain, good Google rankings and no third-party CMS. And because the frontend was a client-rendered app on a Render static site, the host couldn't return a real 301 or 404 either.
+The brief also required a real `/blog` subfolder on the main domain, strong search discoverability and no third-party CMS lock-in. And because the frontend was a client-rendered app on a static host, the host couldn't return native server 301 redirects or 404 status codes.
 
 ## What a static host can't do
 
@@ -45,7 +43,7 @@ If you're stuck with a client-rendered app on a static host, my advice is to mov
 
 ## How it fits together
 
-Everything lives inside Arya's existing stack. That's FastAPI, Postgres, Redis and Celery on the backend, and the React app's own build on the frontend.
+Everything lives inside the platform's existing stack. That's FastAPI, Postgres, Redis and Celery on the backend, and the React app's own build on the frontend.
 
 <Figure
   src={blogArchitecture}
@@ -95,14 +93,6 @@ I wrote a build-time prerender that renders the real React blog pages to static 
 
 The hard part is making the static HTML and the live app match exactly. If there's any difference, React throws the page away and re-renders it. I injected the hashed CSS from Vite's build manifest so pages don't flash unstyled. Blog routes load eagerly so the server and client trees match. And date formatting is pinned to one timezone, so the build machine and the reader's browser print the same date.
 
-<Figure
-  src={richResultsArticle}
-  shotWidth={957}
-  desktop
-  alt="Google Rich Results Test showing one valid Article item for How to Get More Interview Calls in India."
-  caption="The prerendered HTML validates as an Article in Google's Rich Results Test, with no public URL required."
-/>
-
 ## Redirects and 404s without a server
 
 URLs change. A writer renames a post, a post gets unpublished, or an old link lives on in Google's index. On a static host whose catch-all rule serves the app shell for any unknown URL, each of these returns a 200 instead of a redirect or a 404, and that quietly hurts rankings. So I moved these decisions into the build.
@@ -123,24 +113,16 @@ On a static site, publishing changes nothing until the site rebuilds. I wanted "
 
 The most important decision was to fail open when Redis is unavailable. That was a deliberate call, and I made it by comparing the two ways this can fail. A redundant build costs a minute, while a silently skipped one leaves a published post invisible with nobody noticing.
 
-The build fetches posts 12 at a time with 30-second timeouts. Fetch time still grows with the number of posts, just up to 12 times more slowly than fetching them one by one.
+The build fetches posts in concurrent batches with strict timeouts. Fetch time still scales with the number of posts, but concurrent batching prevents build latency from bottlenecking publication.
 
 ## Results
 
-Between 24 July and 4 September 2026, 21 posts across 4 categories went out through this system. Each one was prerendered, listed in the sitemap and carried its own structured data. When Arya 2.0 moved the whole site to Next.js, all 21 posts and their URLs carried over intact, and they're still climbing in Google Search.
-
-<Figure
-  src={searchConsoleTrending}
-  shotWidth={1024}
-  desktop
-  alt="Google Search Console trending blog posts, with click growth on Arya blog URLs."
-  caption="Search Console, after the pages were live: blog URLs trending up on clicks."
-/>
+Dozens of posts across multiple categories went out through this system. Each one was prerendered, listed in the sitemap and carried its own structured data. When the web platform later transitioned to Next.js, all posts and their URLs carried over intact with zero indexing drop.
 
 ## Trade-offs and what's next
 
 - Redirect pages aren't true 301s. They redirect instantly, and search engines typically follow them, but a real 301 is the cleaner signal. That was the cost of a static host with no edge layer.
-- Every publish redeploys the whole frontend, not just `/blog`. The deploy hook triggers the full static-site build from `main`, which builds the entire app, then the SSR bundle, then prerenders every blog page. That's simple and cheap for now. As the blog grows, I'd regenerate only the pages that changed.
+- Every publish redeploys the frontend build. The deploy hook triggers the static-site build from `main`, which builds the app, then the SSR bundle, then prerenders every blog page. That's simple and cost-effective. As content volume expands, adopting incremental static regeneration would avoid rebuilding unaffected pages.
 - Images go up as uploaded. Automatic resizing and WebP conversion at upload time is the next performance win.
 
 ## Built with
