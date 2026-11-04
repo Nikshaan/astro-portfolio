@@ -1,6 +1,6 @@
 ---
 title: "How I Made a React SPA SEO-Friendly on a Static Host"
-description: "How I made a client-side React SPA SEO-friendly on a static host: build-time prerendering, JSON-LD, redirects and an auto-publishing CMS, for ~$0."
+description: "How I made a client-side React blog visible to Google on a static host by prerendering pages, redirects and not-found pages at build time."
 pubDate: 2026-08-28T12:00:00.000Z
 tags:
   - React
@@ -11,120 +11,214 @@ ogImage: /blog/og/react-spa-seo-static-host-prerendering.png
 ogImageAlt: "How I Made a React SPA SEO-Friendly on a Static Host: build-time prerendering, JSON-LD, redirects and an auto-publishing CMS for about $0, above the publishing pipeline."
 ---
 
+import Mermaid from "../../components/blog/Mermaid.astro";
 import Figure from "../../components/blog/Figure.astro";
-import blogArchitecture from "../../assets/blog/blog-architecture.webp";
 import blogEditor from "../../assets/blog/blog-editor.webp";
 import seoPreviewChecks from "../../assets/blog/seo-preview-checks.webp";
-import seoMetadataFields from "../../assets/blog/seo-metadata-fields.webp";
 
-<aside class="post-alert" role="note">
-  <p>The web platform's frontend has since transitioned to a full-stack Next.js architecture during a broader platform overhaul. This post covers the initial prerendering engine that solved SEO for the single-page application under tight infrastructure constraints, preserving URL integrity throughout subsequent migrations.</p>
-</aside>
+Arya's frontend was a client-side [React](https://react.dev) app on a static host. For users, that worked fine. For search engines, the first HTML response was mostly an empty shell, with the content only appearing after JavaScript ran.
 
-The web platform was invisible to Google. The site was a client-rendered React single-page app on a static host, so crawlers saw an empty shell, and I had two days to fix that without adding expensive server infrastructure.
+I needed to add a blog that could rank on Google, with a few constraints:
 
-During my software engineering internship at a career-tech startup, I built the platform's self-hosted blog end to end, including the CMS, public reader, SEO layer and automated publishing pipeline. I shipped the first working version within those two days, followed by a scalability rework so the static prerender pipeline would hold up as content volume scaled. The only additions were a deploy hook and a rebuild-delay setting, for about $0 of added infrastructure.
+- It had to live under `/blog` on the main domain.
+- It couldn't use a third-party CMS.
+- It couldn't add a new hosted service.
 
-The brief also required a real `/blog` subfolder on the main domain, strong search discoverability and no third-party CMS lock-in. And because the frontend was a client-rendered app on a static host, the host couldn't return native server 301 redirects or 404 status codes.
+The static host created its own problem. It couldn't generate pages per request, return a real 301 redirect or return a real 404 for an unknown URL.
 
-## What a static host can't do
+So I took every decision a server would normally make and moved it into the build.
 
-| SEO needs | The static host gives | What I built instead |
-| --- | --- | --- |
-| Real HTML for crawlers | An empty page, until JavaScript runs | Every post prerendered to static HTML at build time |
-| Per-post titles, descriptions and social cards | One shared head section for every page | Head tags and structured data baked into each page |
-| 301 redirects for renamed posts | No per-URL redirects | A slug history and a redirect page for every old URL |
-| Real 404s | The app shell, with a 200, for any unknown URL | `noindex` not-found pages for removed posts |
-| Fresh content on publish | Nothing changes until a redeploy | A publish-triggered, debounced rebuild |
+## The architecture
 
-The obvious alternative was to move the whole frontend to a server-rendered framework like Next.js. That didn't fit the brief. Next.js server rendering needs a running server, and the brief ruled out adding any new hosted service. Re-platforming the entire app for a blog of a couple of dozen posts would also be a massive undertaking. So I kept the stack and solved each gap at build time.
+The system has three parts: a CMS for writing, a publish pipeline for triggering builds, and a static build that produces the finished site.
 
-If you're stuck with a client-rendered app on a static host, my advice is to move every decision a server would normally make, like redirects, 404s and head tags, into the build. Once the build owns those, the static host stops being a problem almost everywhere. The one thing it still can't give you is a true 301.
+<Mermaid
+  label="Blog architecture. A writer uses a TipTap CMS, which saves posts through FastAPI into Postgres. FastAPI updates Redis version counters, a Celery worker calls a Render deploy hook, and the static build runs Vite then a prerender script. The prerender fetches published posts from the API and writes HTML pages, a sitemap, redirect pages and not-found pages to the static host for search engines and readers."
+  chart={`%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    WRITER["Writer"]
+    CMS["CMS with TipTap editor"]
+    API["FastAPI backend"]
+    DB[("Postgres<br/>posts, categories, slug history")]
+    REDIS[("Redis<br/>version counters and schedule flag")]
+    CELERY["Celery worker"]
+    HOOK["Render deploy hook"]
 
-## How it fits together
+    subgraph BUILD["Static build"]
+        VITE["Vite build"]
+        PRERENDER["Prerender script"]
+        OUTPUT["HTML pages, sitemap,<br/>redirect pages and not-found pages"]
 
-Everything lives inside the platform's existing stack. That's FastAPI, Postgres, Redis and Celery on the backend, and the React app's own build on the frontend.
+        VITE --> PRERENDER --> OUTPUT
+    end
 
-<Figure
-  src={blogArchitecture}
-  alt="Blog architecture: writer publishes, FastAPI and Postgres, Redis debounce, deploy hook, build and prerender, build outputs, static host, readers and crawlers"
-  caption="Publishing a post rebuilds static, crawler-ready pages with no server. New posts flow left to right, and readers flow back along the bottom."
+    HOST["Static host"]
+    GOOGLE["Search engines"]
+    READER["Readers"]
+
+    WRITER --> CMS --> API --> DB
+    API --> REDIS
+    REDIS --> CELERY --> HOOK --> VITE
+    PRERENDER -. "fetches published posts" .-> API
+    OUTPUT --> HOST
+    HOST --> GOOGLE
+    HOST --> READER`}
 />
 
-## The CMS
+Everything fit inside the existing stack. [FastAPI](https://fastapi.tiangolo.com), [Postgres](https://www.postgresql.org), [Redis](https://redis.io) and [Celery](https://docs.celeryq.dev) were already there, and the frontend build could do the rest.
 
-Writers get a [TipTap](https://tiptap.dev) rich-text editor with image upload, categories, draft and publish states, author permissions, and an SEO helper for each post's metadata.
+## Storing a post
+
+Writers use a [TipTap](https://tiptap.dev) editor with draft and publish states, categories, image uploads and SEO fields for each post.
 
 <Figure
   src={blogEditor}
-  shotWidth={1024}
+  shotWidth={520}
   alt="The post editor, with the title, slug, and body of a published post open."
   caption="The editor reopens the saved post: title, slug, and body."
 />
 
-The key decision was how to store a post, and I kept two forms of it.
+Each post is stored in two forms:
 
-- [TipTap](https://tiptap.dev) JSON is the source of truth. It's structured, so the editor always reopens exactly what was saved.
-- Sanitised HTML is a server-rendered cache. The backend renders the JSON once, adds heading IDs for the table of contents, and sanitises it against an allowlist (`nh3`). That way, the reader never renders raw user HTML.
+- **TipTap JSON** is the source of truth, so the editor can reopen exactly what was saved.
+- **Sanitized HTML** is a cache used for rendering.
+
+The backend renders the JSON once, adds heading IDs for the table of contents, and sanitizes the result with [`nh3`](https://nh3.readthedocs.io). The sanitizer uses an allowlist, so any tag or attribute that isn't explicitly allowed gets removed. This keeps a writer's content from running as a script in a reader's browser.
 
 <Figure
   src={seoPreviewChecks}
-  shotWidth={482}
+  shotWidth={420}
   alt="SEO helper showing the search preview and focus-keyphrase checks, all passing, including featured-image alt text."
   caption="The SEO helper checks the preview, the keyphrase, and the featured image before publish."
 />
 
-## SEO-grade HTML from a client-side app
+## Prerendering the real pages
 
-I wrote a build-time prerender that renders the real React blog pages to static HTML, so the page a crawler reads and the page a user sees come from the same components. Each prerendered page carries:
+At build time, a script fetches the published posts and renders the actual React blog pages to static HTML. Crawlers and readers get content from the same components, so there's no separate SEO version of the site to maintain.
 
-- Its own title, meta description and canonical URL
-- Open Graph tags for link previews
-- `Article` structured data for rich results, plus `FAQPage` markup, which helps machines understand the page even though Google stopped showing FAQ rich results for most sites in 2023
-- A table of contents built from the heading IDs
-- An entry in a generated `sitemap.xml`
+Each post gets its own:
 
-<Figure
-  src={seoMetadataFields}
-  shotWidth={718}
-  alt="SEO fields for meta title, meta description, focus keyphrase, canonical URL, Open Graph overrides, and an FAQ section."
-  caption="Each post stores its own title, description, social card, and FAQ block."
-/>
+- Title, meta description and canonical URL
+- [Open Graph](https://ogp.me) tags for link previews
+- `Article` structured data in [JSON-LD](https://json-ld.org)
+- Table of contents
+- Sitemap entry
 
-The hard part is making the static HTML and the live app match exactly. If there's any difference, React throws the page away and re-renders it. I injected the hashed CSS from Vite's build manifest so pages don't flash unstyled. Blog routes load eagerly so the server and client trees match. And date formatting is pinned to one timezone, so the build machine and the reader's browser print the same date.
+The build fetches posts with bounded concurrency and request timeouts. That keeps it from overwhelming the API, and one stuck request can't hang the build forever.
+
+## Keeping hydration clean
+
+Once the HTML loads, React takes over the page in a step called hydration. If the static HTML doesn't match what React would render, React can discard it and render again, causing flicker and wasted work.
+
+I ran into three causes and fixed each one:
+
+1. **Missing CSS.** [Vite](https://vite.dev) gives CSS files hashed names, so the prerender step reads Vite's build manifest and injects the correct file.
+2. **Different component trees.** Blog routes load eagerly, so the build and the browser render the same tree.
+3. **Different dates.** A date could format differently on the build machine and in the reader's browser, so I pinned formatting to one time zone.
 
 ## Redirects and 404s without a server
 
-URLs change. A writer renames a post, a post gets unpublished, or an old link lives on in Google's index. On a static host whose catch-all rule serves the app shell for any unknown URL, each of these returns a 200 instead of a redirect or a 404, and that quietly hurts rankings. So I moved these decisions into the build.
+A static host can't make decisions per request, so the build generates files for those cases ahead of time.
 
-- When a post's slug changes, the old one goes into a slug history. At build time, each old URL gets a tiny page that instantly redirects to the new one.
-- Unpublished posts get a not-found page marked `noindex`, so they drop out of search instead of lingering.
-- Paginated index pages and per-category archives, with previous and next links, make every post reachable through links and not just through the sitemap.
-- To avoid duplicate pages, `/blog/page/1` redirects to `/blog`, and drafts never show up in any public listing.
+<Mermaid
+  label="How a blog URL is handled at build time. A published post is prerendered. An old slug gets a page that redirects to the new URL. A removed post gets a noindex not-found page. A draft is excluded from public pages and the sitemap."
+  chart={`%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    URL["Blog URL in the build"]
+    TYPE{"What is it?"}
+    POST["Prerender the full post"]
+    OLD["Generate a page that<br/>redirects to the new URL"]
+    GONE["Generate a noindex<br/>not-found page"]
+    DRAFT["Exclude it from all<br/>public pages and the sitemap"]
 
-## Publishing without a human
+    URL --> TYPE
+    TYPE -- "Published post" --> POST
+    TYPE -- "Old slug" --> OLD
+    TYPE -- "Removed post" --> GONE
+    TYPE -- "Draft" --> DRAFT`}
+/>
 
-On a static site, publishing changes nothing until the site rebuilds. I wanted "Publish" to mean live. Nobody should have to run a deploy, and five quick edits shouldn't trigger five full builds.
+When a post's slug changes, the old slug goes into a slug history table. The next build creates a small page at the old URL that sends visitors to the new one. It isn't a true 301, but it's the closest option on a static host.
 
-1. Publish marks a rebuild as pending in Redis.
-2. A 45-second debounce window collects further edits, so a burst of changes becomes one build.
-3. The deploy hook fires, and the pending flag clears only after it succeeds, so a failed trigger is never lost.
-4. A guaranteed follow-up job in Celery catches edits made while a build was already running.
+Removed posts get a `noindex` page, so they can drop out of search results. Index, pagination and category pages also link to every published post, which means posts aren't reachable only through the sitemap.
 
-The most important decision was to fail open when Redis is unavailable. That was a deliberate call, and I made it by comparing the two ways this can fail. A redundant build costs a minute, while a silently skipped one leaves a published post invisible with nobody noticing.
+## Publishing without a manual deploy
 
-The build fetches posts in concurrent batches with strict timeouts. Fetch time still scales with the number of posts, but concurrent batching prevents build latency from bottlenecking publication.
+"Publish" had to mean live, without anyone running a deployment. But rebuilding on every click would waste builds, because writers often publish and then fix a few typos right away.
 
-## Results
+The pipeline uses Redis to track changes and Celery to run the build later:
 
-Dozens of posts across multiple categories went out through this system. Each one was prerendered, listed in the sitemap and carried its own structured data. When the web platform later transitioned to Next.js, all posts and their URLs carried over intact with zero indexing drop.
+<Mermaid
+  label="Publish pipeline. A writer publishes through FastAPI, which increases a Redis version and sets a schedule flag, then Celery waits for the debounce window. A typo fix increases the version again. Celery clears the flag, reads the versions, triggers the deploy hook, marks the version as built, and schedules a follow-up check."
+  chart={`%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+sequenceDiagram
+    participant W as Writer
+    participant A as FastAPI
+    participant R as Redis
+    participant C as Celery
+    participant H as Deploy hook
 
-## Trade-offs and what's next
+    W->>A: Publish
+    A->>R: Increase version and set schedule flag
+    A->>C: Schedule rebuild after debounce window
+    W->>A: Fix a typo
+    A->>R: Increase version (flag already set)
+    C->>R: Clear flag and read versions
+    C->>H: Trigger build
+    C->>R: Mark version as built
+    C->>C: Schedule follow-up check`}
+/>
 
-- Redirect pages aren't true 301s. They redirect instantly, and search engines typically follow them, but a real 301 is the cleaner signal. That was the cost of a static host with no edge layer.
-- Every publish redeploys the frontend build. The deploy hook triggers the static-site build from `main`, which builds the app, then the SSR bundle, then prerenders every blog page. That's simple and cost-effective. As content volume expands, adopting incremental static regeneration would avoid rebuilding unaffected pages.
-- Images go up as uploaded. Automatic resizing and WebP conversion at upload time is the next performance win.
+Redis holds a version counter, the last built version and a flag showing that a build is already scheduled:
 
-## Built with
+```python
+def on_publish_or_edit():
+    try:
+        redis.incr(VERSION)
+        if redis.set(SCHEDULED, 1, nx=True, ex=FLAG_TTL):
+            rebuild.apply_async(countdown=DEBOUNCE_SECONDS)
+    except RedisError:
+        trigger_deploy_hook()
+```
 
-React 18 and Vite with a custom Node prerender, [react-helmet-async](https://github.com/staylor/react-helmet-async) for head tags, [TipTap](https://tiptap.dev) for the editor, and FastAPI, SQLAlchemy, Alembic, Postgres, Redis and Celery on the backend, hosted on Render.
+`SET NX` only succeeds if the flag doesn't exist, so only the first change in a window schedules a build. Later edits just increase the version. The countdown doesn't restart, so someone who keeps editing can't postpone the build forever.
+
+When the task runs, it clears the flag and compares the two versions:
+
+```python
+@app.task(bind=True)
+def rebuild(self):
+    redis.delete(SCHEDULED)
+    target = int(redis.get(VERSION) or 0)
+    built = int(redis.get(BUILT) or 0)
+
+    if target <= built:
+        return
+
+    try:
+        trigger_deploy_hook()
+    except Exception as error:
+        raise self.retry(exc=error)
+
+    redis.set(BUILT, target)
+    follow_up.apply_async(countdown=FOLLOW_UP_SECONDS)
+```
+
+A few details make this reliable:
+
+- **Clearing the flag first** lets an edit made during a build schedule its own rebuild.
+- **The built version updates only after the hook succeeds**, so a failed trigger can be retried without losing the change.
+- **The version check makes the task idempotent.** Celery can run a task twice in some failure cases, and the second run exits if nothing is new.
+- **The follow-up task** compares the versions again and rebuilds if an edit was missed.
+
+If Redis is unavailable, the pipeline fails open and triggers a build immediately. I compared the two failures: an extra build takes about a minute, while a skipped build leaves a published post invisible and nobody notices.
+
+## Moving to Next.js without changing the contract
+
+The blog later moved with Arya 2.0 to a [Next.js](https://nextjs.org) frontend. Features I'd built into the static build, like metadata and sitemaps, became part of the framework.
+
+I built the public blog API, the TipTap to HTML renderer and the Next.js blog reader for this move. The contract stayed the same: same URLs, same slug history and same structured data. That let search engines keep seeing the same pages after the frontend changed.
+
+During the cutover window, the site returned HTTP 503 with a `Retry-After` header. That tells crawlers the outage is temporary, so they should come back later rather than treat the pages as gone.
+
+I also made the Next.js build handle an unreachable blog API, so a backend outage couldn't block a frontend deploy.

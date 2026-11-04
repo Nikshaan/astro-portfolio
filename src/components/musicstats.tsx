@@ -94,7 +94,7 @@ export default memo(function MusicStatsClient() {
 
         <div className="w-full text-center">
           <p className="type-stats-label mb-3 text-center text-white">
-            Top artists — last 7 days
+            Top artists - last 7 days
           </p>
           <div className="type-body-sm">
             {data.artistsInfo.length > 0 ? (

@@ -1,5 +1,6 @@
 
 :root {
+  color-scheme: dark;
   --scrollbar-width: 0px;
   --surface-page: #0a0a0a;
   --surface-card: #141414;
@@ -50,6 +51,7 @@
 }
 
 [data-theme="light"] {
+  color-scheme: light;
   --surface-page: #efeef3;
   --surface-card: #ffffff;
   --surface-raised: #e7e4ef;

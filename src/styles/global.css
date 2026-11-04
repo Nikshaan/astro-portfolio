@@ -757,10 +757,6 @@ html.restore-pending {
   scroll-behavior: auto !important;
 }
 
-html.restore-pending body {
-  opacity: 0 !important;
-}
-
 @keyframes skel-pulse {
   0%,
   100% {
@@ -1073,9 +1069,19 @@ pre.astro-code span {
   max-width: 100%;
 }
 
-.post-prose figure.post-figure-shot {
+.post-prose figure.post-figure-shot,
+.prose figure.post-figure-shot {
   width: min(100%, var(--shot-width));
   margin-inline: auto;
+}
+
+.prose figure.post-figure-shot figcaption {
+  margin-top: 0.65rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--text-tertiary);
+  line-height: 1.5;
 }
 
 @media (min-width: 1024px) {
@@ -1132,6 +1138,106 @@ pre.astro-code span {
 
 .post-prose figure.post-figure-code pre {
   margin: 0;
+}
+
+.post-prose figure.post-mermaid {
+  align-items: stretch;
+  margin: 2em 0;
+  padding: 1rem 0.75rem 0.85rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-card);
+}
+
+.post-prose .post-mermaid-scroll {
+  display: flex;
+  justify-content: safe center;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #e2e8f0;
+}
+
+.post-prose .post-mermaid-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.post-prose .post-mermaid-scroll::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 999px;
+}
+
+.post-prose .post-mermaid-canvas {
+  flex: 0 0 auto;
+  width: var(--diagram-width, 100%);
+}
+
+.post-prose figure.post-mermaid svg {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  max-width: none !important;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.post-prose figure.post-mermaid .label {
+  color: #1e293b;
+}
+
+.post-prose figure.post-mermaid p,
+.post-prose figure.post-mermaid span {
+  margin: 0;
+  color: inherit;
+  opacity: 1;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.post-prose figure.post-mermaid p.post-mermaid-hint {
+  display: none;
+  margin: 0.55rem 0 0;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: #64748b;
+}
+
+.post-prose figure.post-mermaid:has(.is-overflowing) p.post-mermaid-hint {
+  display: block;
+}
+
+.prose figure.post-mermaid p,
+.prose figure.post-mermaid span {
+  margin: 0 !important;
+  color: inherit !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+}
+
+.prose figure.post-mermaid p.post-mermaid-hint {
+  display: none;
+  margin: 0.55rem 0 0 !important;
+  font-size: 0.75rem !important;
+  line-height: 1.4 !important;
+  color: #64748b !important;
+}
+
+.prose figure.post-mermaid:has(.is-overflowing) p.post-mermaid-hint {
+  display: block;
 }
 
 .post-prose figcaption {

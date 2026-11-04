@@ -1,0 +1,25 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    subgraph CHROME["Chrome"]
+        PANEL["Side Panel<br/>chat and citations"]
+        WORKER["Service worker<br/>extraction job state"]
+        SCRIPTS["Content scripts<br/>product and review pages"]
+        STORE[("Chrome storage")]
+
+        PANEL <--> WORKER
+        WORKER <--> SCRIPTS
+        WORKER <--> STORE
+    end
+
+    subgraph LOCAL["Local FastAPI server"]
+        INGEST["Chunk and embed"]
+        CHROMA[("Per-product<br/>Chroma collection")]
+        RETRIEVE["Retrieve and rerank"]
+        ZEPHYR["Zephyr-7B<br/>through llama.cpp"]
+
+        INGEST --> CHROMA --> RETRIEVE --> ZEPHYR
+    end
+
+    WORKER -- "product data" --> INGEST
+    PANEL -- "question" --> RETRIEVE
+    ZEPHYR -- "SSE tokens and sources" --> PANEL

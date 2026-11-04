@@ -1,0 +1,14 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    BASE["Pretrained GPT-2 weights"]
+    TASK{"Fine-tuning task"}
+    CLASS["Replace output head<br/>with a 2-class head"]
+    FREEZE["Train only the last block,<br/>final norm and new head"]
+    SPAM["Spam or not spam"]
+    ALPACA["Format data with<br/>Alpaca prompts"]
+    COLLATE["Pad each batch and<br/>mask padding in the loss"]
+    REPLY["Generated response"]
+
+    BASE --> TASK
+    TASK -- "Classification" --> CLASS --> FREEZE --> SPAM
+    TASK -- "Instructions" --> ALPACA --> COLLATE --> REPLY

@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import useIsLightTheme from "../hooks/useTheme";
+import { smoothMonotonePath } from "../lib/monotoneSpline";
 import { LineChartPlaceholder } from "./Placeholder";
 
 interface ChartData {
@@ -26,39 +27,13 @@ const W = 300;
 const H = 120;
 const PAD_X = 16;
 const PAD_Y = 14;
-const MIN_Y = 4;
-const MAX_Y = H - 4;
+const AXIS_Y = H - PAD_Y;
 const VIEWPORT_MARGIN = 10;
 const TOOLTIP_GAP = 10;
 
-function smoothPath(points: Point[]): string {
-  const n = points.length;
-  if (n === 0) return "";
-  if (n === 1) return `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`;
-  if (n === 2) {
-    return `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)} L${points[1].x.toFixed(2)},${points[1].y.toFixed(2)}`;
-  }
-
-  let path = `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`;
-  for (let i = 0; i < n - 1; i++) {
-    const p0 = points[i - 1] ?? points[i];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2] ?? p2;
-
-    let cp1x = p1.x + (p2.x - p0.x) / 6;
-    let cp1y = p1.y + (p2.y - p0.y) / 6;
-    let cp2x = p2.x - (p3.x - p1.x) / 6;
-    let cp2y = p2.y - (p3.y - p1.y) / 6;
-
-    cp1y = Math.min(Math.max(cp1y, MIN_Y), MAX_Y);
-    cp2y = Math.min(Math.max(cp2y, MIN_Y), MAX_Y);
-    cp1x = Math.min(Math.max(cp1x, 0), W);
-    cp2x = Math.min(Math.max(cp2x, 0), W);
-
-    path += ` C${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
-  }
-  return path;
+function scrobbleCount(value: number | undefined): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) return 0;
+  return value;
 }
 
 export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
@@ -79,12 +54,13 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
 
   const { points, maxValue, stepX } = useMemo(() => {
     if (!hasData) return { points: [] as Point[], maxValue: 0, stepX: 0 };
-    const values = data.map((d) => d.scrobbles || 0);
+    const values = data.map((d) => scrobbleCount(d.scrobbles));
     const max = Math.max(1, ...values);
     const sx = data.length > 1 ? (W - PAD_X * 2) / (data.length - 1) : 0;
+    const plotH = AXIS_Y - PAD_Y;
     const pts = values.map((v, i) => ({
       x: PAD_X + i * sx,
-      y: PAD_Y + (H - PAD_Y * 2) * (1 - v / max),
+      y: PAD_Y + plotH * (1 - v / max),
       v,
       name: data[i]?.name || "",
     }));
@@ -210,10 +186,10 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
   const gridColor = isLightTheme ? "#E7E5E4" : "#262626";
   const textColor = isLightTheme ? "#57534E" : "#A3A3A3";
 
-  const linePath = smoothPath(points);
+  const linePath = smoothMonotonePath(points, PAD_Y, AXIS_Y);
   const areaPath =
     points.length > 0
-      ? `${linePath} L${points[points.length - 1].x.toFixed(2)},${H - PAD_Y} L${points[0].x.toFixed(2)},${H - PAD_Y} Z`
+      ? `${linePath} L${points[points.length - 1].x.toFixed(2)},${AXIS_Y.toFixed(2)} L${points[0].x.toFixed(2)},${AXIS_Y.toFixed(2)} Z`
       : "";
 
   const summary = points
@@ -236,7 +212,7 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
               key={tick.f}
               className="type-caption absolute right-0 tabular-nums"
               style={{
-                top: `${((PAD_Y + tick.f * (H - PAD_Y * 2)) / H) * 100}%`,
+                top: `${((PAD_Y + tick.f * (AXIS_Y - PAD_Y)) / H) * 100}%`,
                 color: textColor,
                 transform: "translateY(-50%)",
               }}
@@ -257,9 +233,9 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
               <line
                 key={`h${f}`}
                 x1={PAD_X}
-                y1={PAD_Y + f * (H - PAD_Y * 2)}
+                y1={PAD_Y + f * (AXIS_Y - PAD_Y)}
                 x2={W - PAD_X}
-                y2={PAD_Y + f * (H - PAD_Y * 2)}
+                y2={PAD_Y + f * (AXIS_Y - PAD_Y)}
                 stroke={gridColor}
                 strokeWidth={1}
                 vectorEffect="non-scaling-stroke"
@@ -271,7 +247,7 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
                 x1={p.x}
                 y1={PAD_Y}
                 x2={p.x}
-                y2={H - PAD_Y}
+                y2={AXIS_Y}
                 stroke={gridColor}
                 strokeWidth={1}
                 opacity={0.5}
@@ -293,7 +269,7 @@ export default memo(function MusicCharts({ data }: { data: ChartData[] }) {
                 x1={active.x}
                 y1={PAD_Y}
                 x2={active.x}
-                y2={H - PAD_Y}
+                y2={AXIS_Y}
                 stroke={strokeColor}
                 strokeWidth={1}
                 strokeDasharray="3 2"

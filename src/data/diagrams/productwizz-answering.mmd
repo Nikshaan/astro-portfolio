@@ -1,0 +1,14 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    QUESTION["User question"]
+    TYPE{"Aggregate question?"}
+    MAP["Map-reduce across<br/>all reviews"]
+    FILTER["Apply metadata filters"]
+    MMR["BGE query prefix and MMR<br/>retrieve 10 chunks"]
+    RERANK["Cross-encoder reranks<br/>and keeps 5"]
+    PROMPT["Tag sources and<br/>build grounded prompt"]
+    ANSWER["Stream answer<br/>with citations"]
+
+    QUESTION --> TYPE
+    TYPE -- "Yes" --> MAP --> ANSWER
+    TYPE -- "No" --> FILTER --> MMR --> RERANK --> PROMPT --> ANSWER

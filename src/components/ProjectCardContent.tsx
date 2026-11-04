@@ -1,8 +1,10 @@
 import { memo, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { markMermaidOverflow } from "../lib/mermaidOverflow";
 import ProjectDemoVideo, { type DemoVideoSource } from "./ProjectDemoVideo";
 import vocalopsPoster from "../data/vocalops-poster.webp";
 import productwizzPoster from "../data/productwizz-poster.webp";
+import productwizzV2Poster from "../data/productwizz-v2-poster.webp";
 
 const asset = (path: string) =>
   `${import.meta.env.BASE_URL}${path}`.replace(/\/{2,}/g, "/");
@@ -34,11 +36,18 @@ const DEMO_VIDEOS: Record<string, DemoVideo> = {
     poster: productwizzPoster.src,
     width: 1280,
     height: 720,
-    label: "ProductWizz demo video",
+    label: "ProductWizz v1 demo",
+  },
+  "{{PRODUCTWIZZ_V2_DEMO_VIDEO}}": {
+    sources: [{ src: asset("videos/productwizz-demo.v2.mp4"), type: H264_MP4 }],
+    poster: productwizzV2Poster.src,
+    width: 1920,
+    height: 1080,
+    label: "ProductWizz v2 demo",
   },
 };
 
-const SLOT_PATTERN = /\{\{[A-Z_]+\}\}/g;
+const SLOT_PATTERN = /\{\{[A-Z0-9_]+\}\}/g;
 const SLOT_ATTR = "data-demo-video-slot";
 
 interface ProjectCardContentProps {
@@ -69,6 +78,11 @@ export default memo(function ProjectCardContent({
         token: node.getAttribute(SLOT_ATTR) ?? "",
       })),
     );
+    markMermaidOverflow();
+    if (!("ResizeObserver" in window)) return;
+    const observer = new ResizeObserver(markMermaidOverflow);
+    container.querySelectorAll(".post-mermaid-scroll").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, [markedHtml]);
 
   return (

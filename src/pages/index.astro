@@ -44,7 +44,11 @@ const optimizedBeeImage = await getImage({
       window.scrollTo(0, 0);
     }
 
-    if (type === "back_forward" || location.hash) return;
+    var fromSite = false;
+    try {
+      fromSite = !!document.referrer && new URL(document.referrer).origin === location.origin;
+    } catch (e) {}
+    if (type === "back_forward" || location.hash || fromSite) return;
 
     var root = document.documentElement;
     var events = ["scroll", "pointerdown", "keydown", "touchstart"];

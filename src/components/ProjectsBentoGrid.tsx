@@ -32,11 +32,15 @@ import matplotlib from "../data/Matplotlib.svg";
 import langgraph from "../data/langgraph.svg";
 import sqlite from "../data/SQLite.svg";
 import docker from "../data/Docker.svg";
-import vocalopsArchImg from "../data/vocalops-arch.webp";
-import cliDemoImg from "../data/cli_demo.webp";
 import webApprovalImg from "../data/web_approval.webp";
 import classificationLossImg from "../data/classification_loss.webp";
-import instructionFinetuningLossImg from "../data/instruction_finetuning_loss.webp";
+import instructionLossImg from "../data/instruction_finetuning_loss.webp";
+import vocalopsArchSvg from "../assets/diagrams/vocalops-architecture.svg?raw";
+import vocalopsWritesSvg from "../assets/diagrams/vocalops-writes.svg?raw";
+import productwizzArchSvg from "../assets/diagrams/productwizz-architecture.svg?raw";
+import productwizzAnswerSvg from "../assets/diagrams/productwizz-answering.svg?raw";
+import llmArchSvg from "../assets/diagrams/llm-architecture.svg?raw";
+import llmFinetuneSvg from "../assets/diagrams/llm-finetuning.svg?raw";
 import ProjectCardContent from "./ProjectCardContent";
 import BentoGrid from "./bento/BentoGrid";
 import BentoCard from "./bento/BentoCard";
@@ -75,19 +79,61 @@ function cn(...inputs: ClassValue[]) {
 
 const content_cache = new Map<string, string>();
 
+function mermaidFigure(svg: string, label: string) {
+  const cleaned = svg
+    .replace(/^\uFEFF/, "")
+    .replace(/^<\?xml[^>]*>\s*/i, "")
+    .replace(/<svg\b/, '<svg focusable="false" aria-hidden="true"');
+  const width = Number(cleaned.match(/viewBox="([\d.\s-]+)"/)?.[1]?.trim().split(/\s+/)[2]);
+  const widthStyle = Number.isFinite(width) && width > 0 ? `--diagram-width: ${width}px` : "";
+  const safeLabel = label.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  return `<figure class="post-mermaid"><div class="post-mermaid-scroll" tabindex="0"><div class="post-mermaid-canvas" style="${widthStyle}" role="img" aria-label="${safeLabel}">${cleaned}</div></div><p class="post-mermaid-hint">Scroll sideways to see the full diagram</p></figure>`;
+}
+
+const DIAGRAMS: Record<string, string> = {
+  "{{VOCALOPS_ARCH_DIAGRAM}}": mermaidFigure(
+    vocalopsArchSvg,
+    "VocalOps architecture. Voice or text is transcribed, then a router LLM chooses read tools or write tools that only propose a change. A commit happens after approval. History and checkpoints stay in a sidecar folder.",
+  ),
+  "{{VOCALOPS_WRITE_DIAGRAM}}": mermaidFigure(
+    vocalopsWritesSvg,
+    "VocalOps write flow. A request is validated and previewed. If it is not approved, nothing changes. If it is approved, the schema and rows are checked under a lock, the old rows are saved, and the write commits only when the rows still match the preview.",
+  ),
+  "{{PRODUCTWIZZ_ARCH_DIAGRAM}}": mermaidFigure(
+    productwizzArchSvg,
+    "ProductWizz architecture. A Chrome side panel talks to a service worker, which runs content scripts and stores job state. The worker sends product data to a local server that embeds reviews, retrieves them, and streams a Zephyr answer with sources back to the panel.",
+  ),
+  "{{PRODUCTWIZZ_ANSWER_DIAGRAM}}": mermaidFigure(
+    productwizzAnswerSvg,
+    "How ProductWizz answers a question. Aggregate questions use map-reduce across all reviews. Other questions are filtered, retrieved, reranked, and streamed with citations.",
+  ),
+  "{{LLM_ARCH_DIAGRAM}}": mermaidFigure(
+    llmArchSvg,
+    "GPT architecture. Input text is tokenized, embedded with token and position embeddings, passed through 12 transformer blocks of causal multi-head attention and a feed-forward network, then a final LayerNorm and output head produce next-token logits.",
+  ),
+  "{{LLM_FINETUNE_DIAGRAM}}": mermaidFigure(
+    llmFinetuneSvg,
+    "Two fine-tuning paths from pretrained GPT-2 weights. Classification replaces the output head and trains the last block for spam detection. Instruction tuning formats Alpaca prompts, masks padding in the loss, and generates a response.",
+  ),
+};
+
 const getProcessedContent = (content: string) => {
   if (content_cache.has(content)) {
     return content_cache.get(content) || content;
   }
-  const processed = content
-    .replace("{{VOCALOPS_ARCH_IMAGE}}", vocalopsArchImg.src)
-    .replace("{{CLI_DEMO_IMAGE}}", cliDemoImg.src)
-    .replace("{{WEB_APPROVAL_IMAGE}}", webApprovalImg.src)
-    .replace("{{CLASSIFICATION_LOSS_IMAGE}}", classificationLossImg.src)
-    .replace(
-      "{{INSTRUCTION_FINETUNING_LOSS_IMAGE}}",
-      instructionFinetuningLossImg.src,
-    );
+  const processed = Object.entries(DIAGRAMS).reduce(
+    (html, [token, figure]) => html.replaceAll(token, figure),
+    content,
+  ).replace(
+    "{{VOCALOPS_APPROVAL_IMAGE}}",
+    `<figure class="post-figure-shot my-6" style="--shot-width: 720px"><span class="media-skel media-skel-framed block rounded-lg" style="aspect-ratio:${webApprovalImg.width}/${webApprovalImg.height}"><img src="${webApprovalImg.src}" alt="VocalOps showing a query result and an update waiting for approval" width="${webApprovalImg.width}" height="${webApprovalImg.height}" class="w-full h-auto rounded-lg" /></span><figcaption>A query result, and the update waiting for approval.</figcaption></figure>`,
+  ).replace(
+    "{{CLASSIFICATION_LOSS_IMAGE}}",
+    `<figure class="post-figure-shot my-6" style="--shot-width: ${classificationLossImg.width}px"><span class="media-skel media-skel-framed block rounded-lg" style="aspect-ratio:${classificationLossImg.width}/${classificationLossImg.height}"><img src="${classificationLossImg.src}" alt="Training and validation loss for the spam classifier over five epochs" width="${classificationLossImg.width}" height="${classificationLossImg.height}" class="w-full h-auto rounded-lg" /></span><figcaption>Training and validation loss for the spam classifier.</figcaption></figure>`,
+  ).replace(
+    "{{INSTRUCTION_FINETUNING_LOSS_IMAGE}}",
+    `<figure class="post-figure-shot my-6" style="--shot-width: ${instructionLossImg.width}px"><span class="media-skel media-skel-framed block rounded-lg" style="aspect-ratio:${instructionLossImg.width}/${instructionLossImg.height}"><img src="${instructionLossImg.src}" alt="Training and validation loss for instruction tuning over two epochs" width="${instructionLossImg.width}" height="${instructionLossImg.height}" class="w-full h-auto rounded-lg" /></span><figcaption>Training and validation loss for instruction tuning.</figcaption></figure>`,
+  );
   content_cache.set(content, processed);
   return processed;
 };
@@ -304,7 +350,7 @@ const ProjectsBentoGrid: React.FC = () => {
               onActivate={() => setSelectedId(project.id)}
               selected={selectedId === project.id}
               layoutId={`card-${project.id}`}
-              aria-label={`${project.data.name} — view case study`}
+              aria-label={`${project.data.name} - view case study`}
             >
               <div className="project-card">
                 <div className="project-card__main">
@@ -383,7 +429,7 @@ const ProjectsBentoGrid: React.FC = () => {
             onActivate={() => setSelectedId(OSS_MODAL_ID)}
             selected={selectedId === OSS_MODAL_ID}
             layoutId={`card-${OSS_MODAL_ID}`}
-            aria-label="Open Source Contributions — view all"
+            aria-label="Open Source Contributions - view all"
           >
             <div className="flex h-full flex-col gap-6">
               <div className="min-w-0 space-y-2">
@@ -399,7 +445,7 @@ const ProjectsBentoGrid: React.FC = () => {
                     </p>
                   ) : contributions?.length === 0 ? (
                     <p className="type-body-sm text-[var(--text-tertiary)] italic">
-                      No contributions yet — check back soon.
+                      No contributions yet - check back soon.
                     </p>
                   ) : (
                     <p className="type-body-sm text-[var(--text-secondary)]">

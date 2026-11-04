@@ -5,6 +5,7 @@
   "scripts": {
     "snapshot:lastfm": "node scripts/build-lastfm-snapshot.mjs",
     "generate:linkedin-banner": "node scripts/generate-linkedin-banner.mjs",
+    "render:mermaid": "node scripts/render-mermaid.mjs",
     "index:search": "pagefind --site dist/client --output-path .vercel/output/static/pagefind",
     "predev": "npm run snapshot:lastfm && npm run generate:linkedin-banner",
     "prebuild": "npm run snapshot:lastfm && npm run generate:linkedin-banner",
@@ -45,7 +46,9 @@
     "@astrojs/check": "^0.9.10",
     "@types/d3-geo": "^3.1.0",
     "@types/topojson-client": "^3.1.5",
+    "mermaid": "^12.3.0",
     "pagefind": "^1.5.2",
+    "puppeteer-core": "^25.16.0",
     "sharp": "^0.34.5",
     "typescript": "^6.0.3"
   }

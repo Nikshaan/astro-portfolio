@@ -57,7 +57,7 @@ jobs:
         env:
           GH_USERNAME: Nikshaan
           OSS_API_URL: https://nikshaan.dev/api/oss-contributions
-          # Classic PAT from repo secrets — not GITHUB_TOKEN, which is repo-scoped
+          # Classic PAT from repo secrets - not GITHUB_TOKEN, which is repo-scoped
           # and cannot independently list other organizations' PRs/issues.
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: node scripts/verify-oss-contributions.mjs

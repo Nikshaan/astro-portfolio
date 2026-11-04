@@ -377,7 +377,7 @@ const Navbar: React.FC<NavbarProps> = memo(
                     : undefined
                 }
                 className="nav-brand flex items-center gap-2 rounded-full focus-visible:outline-none shrink-0"
-                aria-label="Nikshaan — back to top"
+                aria-label="Nikshaan - back to top"
               >
                 <img
                   src={avatarSrc || beeImage.src}

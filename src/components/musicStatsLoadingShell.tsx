@@ -42,7 +42,7 @@ export function MusicStatsLoadingShell() {
         </div>
         <div className="w-full text-center">
           <p className="type-stats-label mb-3 text-center text-[var(--text-tertiary)]">
-            Top artists — last 7 days
+            Top artists - last 7 days
           </p>
           <div className="type-body-sm">
             {ARTIST_NAME_WIDTHS.map((nameWidth, i) => (

@@ -1,0 +1,24 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    REQUEST["Write request"]
+    VALIDATE["Validate against the manifest"]
+    PREVIEW["Preview rows and<br/>record primary keys"]
+    APPROVE{"Approved?"}
+    REJECT["No changes made"]
+    CHECK["Check schema hash<br/>and write scope"]
+    LOCK["BEGIN IMMEDIATE"]
+    MATCH{"Same rows<br/>as the preview?"}
+    ABORT["Abort and ask to re-run"]
+    UNDO["Save old rows<br/>to the undo log"]
+    WRITE["Write with bound parameters<br/>and commit"]
+
+    REQUEST --> VALIDATE --> PREVIEW --> APPROVE
+    APPROVE -- "No" --> REJECT
+    APPROVE -- "Yes" --> CHECK --> LOCK --> MATCH
+    MATCH -- "No" --> ABORT
+    MATCH -- "Yes" --> UNDO --> WRITE
+
+    classDef stop fill:#FEF2F2,stroke:#B91C1C,color:#7F1D1D
+    classDef success fill:#F0FDF4,stroke:#15803D,color:#14532D
+    class REJECT,ABORT stop
+    class WRITE success

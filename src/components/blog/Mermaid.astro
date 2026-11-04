@@ -1,0 +1,46 @@
+---
+import { readFileSync } from "node:fs";
+import { mermaidId, mermaidSvgPath } from "../../lib/mermaidId.mjs";
+
+interface Props {
+  chart: string;
+  label: string;
+}
+
+const { chart, label } = Astro.props;
+const id = mermaidId(chart);
+const path = mermaidSvgPath(chart);
+
+let svg: string;
+try {
+  svg = readFileSync(path, "utf8");
+} catch {
+  throw new Error(
+    `Missing Mermaid diagram ${id}.svg. Run npm run render:mermaid after changing a mermaid chart.`,
+  );
+}
+
+svg = svg.replace(/^\uFEFF/, "").replace(/^<\?xml[^>]*>\s*/i, "");
+if (/class="error-text"/.test(svg) || /Syntax error in/.test(svg)) {
+  throw new Error(`Mermaid diagram ${id}.svg failed to render. Re-run npm run render:mermaid.`);
+}
+
+const viewBox = svg.match(/viewBox="([\d.\s-]+)"/)?.[1]?.trim().split(/\s+/) ?? [];
+const diagramWidth = Number(viewBox[2]);
+const widthStyle = Number.isFinite(diagramWidth) && diagramWidth > 0 ? `--diagram-width: ${diagramWidth}px` : undefined;
+
+svg = svg.replace(/<svg\b/, '<svg focusable="false" aria-hidden="true"');
+---
+
+<figure class="post-mermaid">
+  <div class="post-mermaid-scroll" tabindex="0">
+    <div class="post-mermaid-canvas" style={widthStyle} role="img" aria-label={label} set:html={svg} />
+  </div>
+  <p class="post-mermaid-hint">Scroll sideways to see the full diagram</p>
+</figure>
+
+<script>
+  import { installMermaidOverflow } from "../../lib/mermaidOverflow";
+
+  installMermaidOverflow();
+</script>

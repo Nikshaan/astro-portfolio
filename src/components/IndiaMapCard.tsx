@@ -606,8 +606,8 @@ const IndiaMapCard: React.FC<IndiaMapCardProps> = ({
           tabIndex={0}
           aria-label={
             loadFailed
-              ? "Travels — map couldn't load, activate to retry"
-              : `Travels — open map, ${visitedPlaces.length} cities visited`
+              ? "Travels - map couldn't load, activate to retry"
+              : `Travels - open map, ${visitedPlaces.length} cities visited`
           }
           onKeyDown={handleCardKeyDown}
           className={cn(

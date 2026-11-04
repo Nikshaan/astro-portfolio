@@ -1,6 +1,6 @@
 ---
 title: "Building an AI Chrome Extension to Autofill Job Applications"
-description: "How I built an AI Chrome extension that autofills job applications on LinkedIn, Indeed, Workday and more, without ever guessing candidate answers."
+description: "How I built a Chrome extension that fills job applications on LinkedIn, Workday and other portals from the user's profile, and leaves a field blank rather than guessing."
 pubDate: 2026-09-30T12:00:00.000Z
 tags:
   - Chrome Extensions
@@ -12,19 +12,17 @@ ogImage: /blog/og/ai-chrome-extension-autofill-job-applications.png
 ogImageAlt: "Building an AI Chrome Extension to Autofill Job Applications: LinkedIn, Indeed, Workday, Lever and Internshala, and it never guesses, above the extension's answer ladder."
 ---
 
-import Figure from "../../components/blog/Figure.astro";
+import Mermaid from "../../components/blog/Mermaid.astro";
 import Video from "../../components/blog/Video.astro";
 import linkedinAutofillPoster from "../../assets/blog/linkedin-autofill-poster.png";
-import extensionAnswerLadder from "../../assets/blog/extension-answer-ladder.webp";
 import aryaPortalsSpeedrunPoster from "../../assets/blog/arya-portals-speedrun-poster.webp";
-import workdayTurnOn from "../../assets/blog/workday-turn-on.webp";
 import aryaWorkdayAutofillPoster from "../../assets/blog/arya-workday-autofill-poster.webp";
 
-Applying to jobs means typing the same answers into the same forms, over and over. I wanted a tool that automated that repetitive process, without ever putting words in the applicant's mouth.
+At Mentoria, I built the Chrome extension for Arya, an AI job-search platform. It fills job applications on LinkedIn, Workday and three other portals using the user's Arya profile.
 
-During my software engineering internship at a career-tech startup, I designed and built an AI Chrome extension to autofill job applications across LinkedIn Easy Apply, Indeed, Internshala, Lever, and Workday directly from a user's verified candidate profile. Over six months, I developed the project from initial prototype through production releases on the Chrome Web Store.
+Filling forms sounds simple until you think about what a wrong answer means. A blank field is visible, and the user can fix it in seconds. A confident wrong answer can reach an employer under the user's name.
 
-A lot of autofill tools try to fill every field they can. I built this on the opposite idea. A wrong answer, submitted to an employer under your name, is worse than a blank one.
+That gave the extension one rule: **never guess on the user's behalf**. Most of the architecture exists to enforce it.
 
 <Video
   src="/videos/linkedin-autofill"
@@ -33,44 +31,92 @@ A lot of autofill tools try to fill every field they can. I built this on the op
   height={616}
   mode="loop"
   posterLoading="eager"
-  label="LinkedIn Easy Apply autofill: The extension fills the form, then highlights Submit and stops."
+  label="LinkedIn Easy Apply autofill: the extension fills the form, then highlights Submit and stops."
   caption="LinkedIn Easy Apply, filled from the profile. The extension highlights Submit and stops."
 />
 
-**At a glance**
+## The architecture
 
-- Five portals, built in vanilla JavaScript with zero runtime dependencies
-- A four-rung answer ladder that never guesses numbers or yes/no answers
-- 152 end-to-end checks in a real browser, plus 21 offline test suites
-- Workday support shipped post-launch without disabling existing installs
+The extension has three main parts, and each one has a separate job:
 
-## The rule: refuse to guess
+<Mermaid
+  label="Extension architecture. In the browser, the job portal page talks to a content script that detects, fills and verifies fields and shows an in-page widget. The content script talks to a background service worker, which stores local answers in chrome.storage and calls an authenticated FastAPI backend. The backend uses Postgres for the profile and saved answers, and calls an LLM provider."
+  chart={`%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    subgraph BROWSER["User's browser"]
+        PAGE["Job portal page"]
+        CONTENT["Content script<br/>detects, fills and verifies fields"]
+        WIDGET["In-page widget<br/>shows status and missing fields"]
+        WORKER["Background service worker<br/>holds the session and calls the backend"]
+        STORAGE[("chrome.storage<br/>local answers and state")]
 
-A made-up "5 years of experience" or a wrong "Yes" on an eligibility question can cost someone a job. Every application goes to an employer under the user's name, so a confident wrong answer is the most expensive failure the product can have. I decided that up front, treated it as the core requirement, and the extension follows three rules because of it.
+        PAGE <--> CONTENT
+        CONTENT --> WIDGET
+        CONTENT <--> WORKER
+        WORKER <--> STORAGE
+    end
 
-| Field type | What the extension does |
-| --- | --- |
-| Numbers and yes/no questions | Answers only from the profile. No profile value means no answer. |
-| Dropdowns and radio options | Scores every option and picks one only above a confidence threshold. |
-| Applicant-only questions (criminal record, consents, non-competes, passport) | Never answered. Always left for the applicant. |
+    subgraph SERVER["Backend"]
+        API["Authenticated FastAPI backend"]
+        DB[("Postgres<br/>profile and saved answers")]
+        LLM["LLM provider"]
 
-AI writes only descriptive text, like a cover note or a role description. On every portal, the extension highlights the Submit button and stops, ensuring the final review and submission click remains strictly with the user, keeping every interaction explicitly user-initiated.
+        API <--> DB
+        API <--> LLM
+    end
 
-The deliberate trade-off is a lower fill rate on unfamiliar forms. A blank field is visible and easily completed by the applicant, while an incorrect hallucination is silent and costly. In testing and production benchmarks, the extension consistently achieved a ~95% accurate fill rate, leaving only ambiguous or applicant-specific questions for manual completion.
+    WORKER <--> API`}
+/>
+
+- **Content scripts** run inside each portal. They detect the form, fill its fields and confirm the values were written.
+- **The service worker** handles communication with the backend. Page scripts and content scripts don't get direct access to the user's session.
+- **The backend** provides profile data and saved answers, and makes every LLM call. No model API key ships with the extension.
+
+[Chrome](https://developer.chrome.com/docs/extensions/mv3) can stop a [Manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3) service worker whenever it's idle, so I couldn't keep important state in global variables. State lives in [`chrome.storage`](https://developer.chrome.com/docs/extensions/reference/api/storage), and each wake-up is treated as a cold start.
 
 ## The answer ladder
 
-For every field, the extension climbs down a ladder and stops at the first rung that has a trustworthy answer. The order matters more than anything else here. What you said yourself always wins, and AI only gets a turn when nothing else has an answer.
+I didn't want one big "fill this form with AI" step. Instead, every field goes through a fixed order of sources and stops at the first trustworthy answer:
 
-<Figure
-  src={extensionAnswerLadder}
-  alt="The answer ladder: the applicant's own past answer, then the verified profile, then a saved answer, then AI for descriptive text only; otherwise the field is left blank for the applicant."
-  caption="The answer ladder."
+<Mermaid
+  label="Answer ladder. Each field is filled from a previous answer by the user, then the profile, then a valid saved answer. Only a descriptive text question with no earlier answer is sent to the LLM. Anything else is left blank and highlighted for the user."
+  chart={`%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    FIELD["Form field"]
+    OWN{"Has the user answered<br/>this before?"}
+    PROFILE{"Is it in<br/>the profile?"}
+    SAVED{"Is there a valid<br/>saved answer?"}
+    TEXT{"Is it a descriptive<br/>text question?"}
+    FILL["Fill the field"]
+    LLM["Generate with the LLM<br/>from the user's profile"]
+    BLANK["Leave blank and<br/>highlight for the user"]
+
+    FIELD --> OWN
+    OWN -- "Yes" --> FILL
+    OWN -- "No" --> PROFILE
+    PROFILE -- "Yes" --> FILL
+    PROFILE -- "No" --> SAVED
+    SAVED -- "Yes" --> FILL
+    SAVED -- "No" --> TEXT
+    TEXT -- "Yes" --> LLM --> FILL
+    TEXT -- "No" --> BLANK
+
+    classDef blank fill:#FFFBEB,stroke:#B45309,color:#78350F
+    classDef success fill:#F0FDF4,stroke:#15803D,color:#14532D
+    class BLANK blank
+    class FILL success`}
 />
 
-The ladder turned a vague "fill the form with AI" into precedence rules I could test field by field. It also makes every filled value traceable to the rung that produced it.
+The order matters. Something the user typed always wins, and the model only gets a turn when nothing else has an answer.
 
-The first and third rungs both remember answers, but they hold different scopes. The first rung lives in local browser storage and only ever retains answers the user typed manually. The third is a persistent backend answer store: one saved answer per question family, whether sourced from manual input, verified profile fields, or validated model completions, allowing cross-portal reuse. Both stores are isolated per user and keyed on a cryptographic hash of the normalized question string. Saved answers generated by the system or model undergo validation before reuse: applicant-only questions are excluded, and conflicting figures (such as compensation numbers) are discarded. Generative AI is strictly a last resort since most fields resolve deterministically from verified profile data.
+Some rules sit outside the ladder:
+
+- **Numbers and yes/no answers** come only from trusted user data, never from the LLM.
+- **Dropdowns** are selected only when an option is a confident match.
+- **Applicant-only questions**, such as legal declarations and consent, are left for the user.
+- **Submit** is never clicked by the extension.
+
+Each filled value also keeps track of the source that produced it. This made behaviour much easier to test, because I could check the expected source field by field.
 
 <Video
   src="/videos/arya-portals-speedrun"
@@ -82,46 +128,105 @@ The first and third rungs both remember answers, but they hold different scopes.
   caption="Indeed, Internshala, LinkedIn and Lever, filled in one pass. The extension stops before Submit."
 />
 
-## Learning from what users type
+## Matching the same question across portals
 
-The top rung only works if the extension learns. When the tool leaves a field blank and the applicant fills it in, that answer gets saved and reused the next time the same question, or a very similar one, appears.
+Different portals ask the same thing in different ways. "Notice period", "What is your notice period?" and "Notice period (in days)" should map to one answer.
 
-The hard part is telling those two kinds of input apart, because the script and the user change the same fields and fire the same browser events. I went with provenance per element instead of a global "extension is filling" flag. Every time the extension writes to a field, it records the exact value in a `WeakMap` keyed on that element. An input event counts as the user's only if the value differs from what the tool wrote. A global flag can drift when fills nest across async steps on multi-page forms, but a per-element record can't. The `WeakMap` also lets the browser clean up entries when a form page goes away.
+I normalize each question before comparing it: remove filler words and formatting hints, then map common phrasings to a standard form. Saved answers use a hash of that normalized text.
 
-## Filling React-controlled inputs
+Answers the user typed can also match through fuzzy similarity, but only behind strict checks. If two questions differ in something like a number, a negation, a location or the intent behind the question, they don't match, even when most of their words are the same.
 
-Most job portals are React apps, and React ignores a value set directly on an input because its internal state never sees the mutation. To solve this, the extension sets each value through the browser's native property setter on `HTMLInputElement.prototype`, and then dispatches synthetic `input`, `change`, and `blur` events so validation libraries treat it as a genuine edit. Asynchronous comboboxes and dynamic typeahead inputs each get specialized synchronization routines to ensure suggestion menus properly mount, filter, and commit selections before moving to the next field.
+I tuned this for precision over recall. Missing a match means the user types an answer once. A false match puts the wrong words in their application.
 
-## Handling portal redesigns
+## Filling modern forms
 
-Third-party job application flows frequently update their DOM structures. When a major portal updated its modal architecture, existing class-based form detection broke.
+Writing to an input isn't always enough. [React](https://react.dev) tracks an input's value itself, so a direct assignment can update the DOM without updating the component's state.
 
-To debug this cleanly, I isolated the portal's live markup by capturing multiple application steps as sanitized HTML fixtures. Testing against these fixtures revealed that the portal had moved its modal flow into a native HTML `<dialog>` element and switched to dynamic, build-hashed CSS class names.
+The fix is to call the browser's native setter and then dispatch the events the form expects:
 
-Instead of playing cat-and-mouse with brittle CSS selectors, I rebuilt detection on durable semantic and accessibility signals that portals rarely change without breaking screen readers: dialog landmark roles (`role="dialog"`), `aria-label` attributes, form progression headers, and standard button text. Because browsers treat injected content outside modal dialogs as inert, the extension's UI widget was mounted directly inside the dialog element.
+```javascript
+function setNativeValue(element, value) {
+  const prototype = element instanceof HTMLTextAreaElement
+    ? HTMLTextAreaElement.prototype
+    : HTMLInputElement.prototype;
 
-To catch external DOM shifts before users ever see them, I built an automated end-to-end testing harness. It loads the compiled extension in headless Chromium, serves local fixture snapshots of each supported portal, and asserts that fields populate accurately while verifying that Submit is never clicked automatically. It runs 152 checks across the five portals.
+  const setter = Object.getOwnPropertyDescriptor(prototype, "value").set;
+  setter.call(element, value);
 
-## Adding Workday without breaking a single install
+  element.dispatchEvent(new Event("input", { bubbles: true }));
+  element.dispatchEvent(new Event("change", { bubbles: true }));
+  element.dispatchEvent(new Event("blur", { bubbles: true }));
+}
+```
 
-Workday is one of the most widely used application systems, and supporting it came with a trap. In Chrome, a new required host permission disables the extension for every existing user until each of them accepts it.
+Dropdowns, comboboxes and typeaheads each needed their own handling. A field only counts as filled after the extension reads the value back from the page.
 
-| Option | Result for existing users |
-| --- | --- |
-| Add Workday as a required permission | Extension disabled until they re-accept |
-| Leave Workday out | Nothing breaks, but no Workday support |
-| **Make Workday an optional permission** | **Nothing breaks; users turn Workday on with one click** |
+## Learning from the user's edits
 
-Existing users were the deciding factor, so I shipped the third option. The widget nudges users to turn Workday on, and that opens the popup with a one-click "Turn on". Until the user opens the popup, a "NEW" badge points them to it. Existing installs updated silently.
+When a user fills a field the extension left blank, that answer should be available next time. The problem is that the extension and the user both change the same fields and trigger the same events.
 
-The permission covers Workday's job domains (`*.myworkdayjobs.com` and `*.myworkdaysite.com`). Chrome only grants it from an explicit user gesture, which is why the nudge routes through the extension popup rather than prompting spontaneously. Once granted, the extension dynamically registers the portal content script on the fly, and unregisters it if permission is revoked.
+A global "the extension is filling" flag can drift across async steps and multi-page forms. Instead, I record the exact value written to each element in a `WeakMap`:
 
-<Figure
-  src={workdayTurnOn}
-  shotWidth={631}
-  alt="The extension popup with optional portal autofill toggled, and the in-page nudge."
-  caption="The optional portal toggle in the popup and the in-page nudge."
+```javascript
+const extensionValues = new WeakMap();
+
+function fill(element, value) {
+  setNativeValue(element, value);
+  extensionValues.set(element, value);
+}
+
+document.addEventListener("input", (event) => {
+  const element = event.target;
+  if (extensionValues.get(element) === element.value) return;
+  learnUserAnswer(element);
+}, true);
+```
+
+If the current value differs from what the extension wrote, the change came from the user. When a form page goes away, its elements can be garbage-collected, and the `WeakMap` entries go with them.
+
+## Keeping the LLM in its lane
+
+Before any LLM call, the backend authenticates the request, applies usage limits and uses its own copy of the profile instead of trusting profile data sent by the client. Questions the model shouldn't answer are refused before the call is made.
+
+Page text is untrusted, since a job description could contain instructions aimed at the model. The prompt fences that text as data, and the model has no tools. Its output is validated before being filled, and the user reviews everything before submitting.
+
+If the AI backend starts failing, a circuit breaker pauses calls for a short time. The affected fields stay blank, so the rest of the form still works.
+
+## When LinkedIn changed underneath me
+
+LinkedIn autofill once stopped finding the Easy Apply form. The cause could have been my code or a change on LinkedIn, and those need very different fixes.
+
+<Mermaid
+  label="Diagnosing a broken LinkedIn autofill. Real form steps are captured as redacted fixtures. Old, live and in-progress builds all fail the same way, showing the portal changed. Detection is rebuilt on stable accessibility and text signals, the widget is moved inside the modal, and the fixtures are kept as regression tests."
+  chart={`%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    BROKEN["Autofill can't find the form"]
+    CAPTURE["Capture real form steps<br/>as redacted fixtures"]
+    COMPARE["Run old, live and in-progress<br/>builds against them"]
+    RESULT["All builds fail the same way:<br/>the portal changed"]
+    REBUILD["Rebuild detection on stable<br/>accessibility and text signals"]
+    WIDGET["Move the widget inside the<br/>modal so it stays clickable"]
+    TEST["Keep the fixtures<br/>as regression tests"]
+
+    BROKEN --> CAPTURE --> COMPARE --> RESULT --> REBUILD --> WIDGET --> TEST
+
+    classDef stop fill:#FEF2F2,stroke:#B91C1C,color:#7F1D1D
+    classDef success fill:#F0FDF4,stroke:#15803D,color:#14532D
+    class BROKEN stop
+    class TEST success`}
 />
+
+The captured pages took the live site out of the picture. An older working build failed on them too, which pointed to LinkedIn's markup rather than my latest code.
+
+The form had moved into a native `<dialog>`, and its class names were now generated hashes. Instead of replacing old selectors with new brittle ones, I rebuilt detection around header text, ARIA labels, progress roles and button text.
+
+Fixing that exposed a second bug. An open modal makes the rest of the page inert, so a widget outside the dialog couldn't be clicked. Moving the widget inside the dialog fixed it.
+
+## Shipping without breaking installs
+
+Adding a new required host permission can disable an extension for existing users until they accept it. Workday support could have caused exactly that.
+
+I made Workday an optional permission instead. Existing installs update normally, and users can turn Workday on with one click. Once access is granted, the extension registers the Workday content script at runtime.
 
 <Video
   src="/videos/arya-workday-autofill"
@@ -133,25 +238,6 @@ The permission covers Workday's job domains (`*.myworkdayjobs.com` and `*.mywork
   caption="A Workday application filled end to end, after Workday is turned on."
 />
 
-## Security and speed by design
+Testing follows the same approach of removing outside dependencies. [Puppeteer](https://pptr.dev) loads the real built extension into headless [Chromium](https://www.chromium.org/chromium-projects/) and runs it against captured copies of each portal. Every end-to-end check also confirms that Submit was never clicked.
 
-An extension runs inside pages it doesn't control, holds a user's session and triggers paid AI calls. I treated all three as design constraints from day one.
-
-- The session token never touches the page DOM. Only the background service worker retains authentication tokens, and content scripts communicate via an isolated message proxy that rejects token inspection requests.
-- No secret API keys ship in client bundles. AI calls route through an authenticated backend gateway, which manages keys and enforces per-user rate limits via rolling usage quotas.
-- Page text is treated as untrusted input. Job descriptions and form labels are sanitized, stripped of prompt-injection delimiter sequences, truncated to safe character bounds, and passed into toolless inference endpoints with strict JSON schema validation. Every completion is validated against field constraints before insertion, and the applicant reviews every answer before submission.
-- Extension permissions remain strictly minimal: only `storage` and `scripting`, protected by automated manifest build gates.
-- An automated circuit breaker temporarily halts AI requests upon consecutive backend timeouts, ensuring that multi-question forms fail gracefully with clear feedback rather than hanging indefinitely.
-
-## Trade-offs and what's next
-
-- Per-portal DOM adaptation is the trade-off for high reliability. It keeps behavior deterministic and inference costs low, but requires ongoing maintenance as portals evolve. A future iteration could extract structural form schemas and map them with generalized heuristics.
-- Question normalization currently executes in the client script; offloading semantic clustering to a backend service would allow matching rules to evolve without requiring client extension updates.
-- Session bridging: Synchronizing authentication with the web platform provides seamless onboarding, though standalone token refresh would improve offline resilience.
-- Expanding coverage: The core engine currently handles five major platforms, with architecture in place to expand to additional enterprise applicant tracking systems (ATS).
-
-If a friend told me they were building an autofill extension, I'd tell them to decide what the tool must refuse to do before deciding what it should fill. That one rule shaped every other decision in this extension.
-
-## Built with
-
-The extension is built on [Manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3), Vite with [@crxjs/vite-plugin](https://crxjs.dev) and vanilla JavaScript with zero runtime dependencies, backed by FastAPI, Postgres and Supabase auth, with Gemini for descriptive answers and [Puppeteer](https://pptr.dev) for end-to-end tests.
+CI runs linting, formatting, offline tests and the store build on every pull request. The build also includes a permission gate that fails if the extension's permissions change unexpectedly, so a risky permission can't reach users by accident.

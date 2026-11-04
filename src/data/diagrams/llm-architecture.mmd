@@ -1,0 +1,20 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    TEXT["Input text"]
+    TOKENS["Tokenizer and<br/>sliding-window dataset"]
+    EMBED["Token and position<br/>embeddings"]
+
+    subgraph BLOCK["12 transformer blocks"]
+        NORM1["LayerNorm"]
+        ATTN["Causal multi-head attention"]
+        NORM2["LayerNorm"]
+        FF["Feed-forward network with GELU"]
+
+        NORM1 --> ATTN --> NORM2 --> FF
+    end
+
+    FINAL["Final LayerNorm"]
+    HEAD["Output head"]
+    LOGITS["Next-token logits"]
+
+    TEXT --> TOKENS --> EMBED --> BLOCK --> FINAL --> HEAD --> LOGITS

@@ -54,15 +54,45 @@ body {
   navigation: auto;
 }
 
-::view-transition-old(root),
+/* Fade only the outgoing snapshot. Fading both lets the canvas show through
+   behind the fixed navbar, which flashes white or blank. */
+::view-transition,
+::view-transition-group(root) {
+  background-color: #0a0a0a;
+  background-color: var(--surface-page);
+}
+
+:root[data-theme="light"]::view-transition,
+:root[data-theme="light"]::view-transition-group(root) {
+  background-color: #efeef3;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+  mix-blend-mode: normal;
+  animation: vt-root-out 0.16s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+
 ::view-transition-new(root) {
-  animation-duration: 0.16s;
-  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  z-index: 0;
+  mix-blend-mode: normal;
+  animation: none;
+}
+
+@keyframes vt-root-out {
+  to {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   @view-transition {
     navigation: none;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
   }
 }
 

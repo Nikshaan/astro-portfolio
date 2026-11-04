@@ -69,6 +69,55 @@ const resolvedOgImage = ogImage
 <html lang="en">
     <head>
         <meta charset="utf-8" />
+        <script is:inline>
+            (function () {
+                var root = document.documentElement;
+                try {
+                    var stored = localStorage.getItem("theme");
+                    var light =
+                        stored === "light" ||
+                        (stored == null &&
+                            matchMedia("(prefers-color-scheme: light)").matches);
+                    if (light) root.setAttribute("data-theme", "light");
+                } catch (e) {}
+
+                function activationType(activation) {
+                    return activation && activation.navigationType ? activation.navigationType : "";
+                }
+
+                function destinationPath(activation) {
+                    try {
+                        return new URL(activation.entry.url).pathname.replace(/\/+$/, "") || "/";
+                    } catch (e) {
+                        return "";
+                    }
+                }
+
+                window.addEventListener("pageswap", function (event) {
+                    if (!event.viewTransition || !event.activation) return;
+                    var type = activationType(event.activation);
+                    var path = destinationPath(event.activation);
+                    if (type === "traverse" || path === "/") event.viewTransition.skipTransition();
+                });
+
+                window.addEventListener("pagereveal", function (event) {
+                    var type = activationType(window.navigation && window.navigation.activation);
+                    if (type !== "traverse") return;
+                    root.classList.add("bento-reveal-settled");
+                    if (event.viewTransition) event.viewTransition.skipTransition();
+                });
+            })();
+        </script>
+        <style is:inline>
+            html {
+                background: #0a0a0a;
+                color-scheme: dark;
+            }
+            html[data-theme="light"] {
+                background: #efeef3;
+                color-scheme: light;
+            }
+        </style>
         <link rel="icon" type="image/png" href={favicon.src} />
         <link rel="manifest" href="/manifest.json" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -111,7 +160,7 @@ const resolvedOgImage = ogImage
         <meta name="twitter:image:alt" content={ogImageAlt} />
 
         <meta name="theme-color" content="#0a0a0a" id="meta-theme-color" />
-        <meta name="color-scheme" content="dark light" />
+        <meta name="color-scheme" content="dark" id="meta-color-scheme" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta
@@ -177,6 +226,26 @@ const resolvedOgImage = ogImage
             (function () {
                 var root = document.documentElement;
                 root.classList.add("bento-reveal-js");
+
+                var navEntry = null;
+                try {
+                    navEntry = performance.getEntriesByType("navigation")[0] || null;
+                } catch (e) {}
+                var fromSite = false;
+                try {
+                    fromSite = !!document.referrer && new URL(document.referrer).origin === location.origin;
+                } catch (e) {}
+                if (
+                    navEntry &&
+                    (navEntry.type === "back_forward" || (navEntry.type === "navigate" && fromSite))
+                ) {
+                    root.classList.add("bento-reveal-settled");
+                }
+
+                window.addEventListener("pagereveal", function (event) {
+                    if (!event.viewTransition) return;
+                    root.classList.add("bento-reveal-settled");
+                });
 
                 function pathOf(url) {
                     if (!url) return "";
@@ -322,7 +391,6 @@ const resolvedOgImage = ogImage
                                         return true;
                                     }
                                 }
-                                return false;
                             }
                         } catch (e) {}
                         if (depth >= 1 && history.length > depth) {
@@ -334,7 +402,6 @@ const resolvedOgImage = ogImage
                 };
 
                 try {
-                    var navEntry = performance.getEntriesByType("navigation")[0];
                     if (!navEntry || navEntry.type !== "back_forward") return;
                     root.classList.add("bento-reveal-settled");
                     var saved = history.state && history.state.pageState;
@@ -384,12 +451,15 @@ const resolvedOgImage = ogImage
                         }
                         if (sync) root.classList.add("theme-sync");
                         var meta = document.getElementById("meta-theme-color");
+                        var scheme = document.getElementById("meta-color-scheme");
                         if (isLight) {
                             root.setAttribute("data-theme", "light");
                             if (meta) meta.setAttribute("content", "#efeef3");
+                            if (scheme) scheme.setAttribute("content", "light");
                         } else {
                             root.removeAttribute("data-theme");
-                            if (sync && meta) meta.setAttribute("content", "#0a0a0a");
+                            if (meta) meta.setAttribute("content", "#0a0a0a");
+                            if (scheme) scheme.setAttribute("content", "dark");
                         }
                         if (sync) {
                             void root.offsetHeight;

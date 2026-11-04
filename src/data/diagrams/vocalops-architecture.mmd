@@ -1,0 +1,19 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    INPUT["Voice or text"]
+    STT["Speech-to-text<br/>and editable transcript"]
+    APP["CLI or React UI with FastAPI"]
+    AGENT["Router LLM in LangGraph"]
+    READ["Read tools"]
+    PROPOSE["Write tools<br/>propose only"]
+    PAUSE["Checkpoint and<br/>wait for approval"]
+    COMMIT["Commit step"]
+    DB[("Your SQLite database")]
+    SIDE[("Sidecar folder<br/>manifest, history, undo log, checkpoints")]
+
+    INPUT --> STT --> APP --> AGENT
+    AGENT --> READ --> DB
+    READ --> AGENT
+    AGENT --> PROPOSE --> PAUSE --> COMMIT --> DB
+    AGENT -.-> SIDE
+    COMMIT -.-> SIDE

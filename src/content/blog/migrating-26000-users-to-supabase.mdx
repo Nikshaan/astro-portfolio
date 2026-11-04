@@ -1,6 +1,6 @@
 ---
 title: "How I Migrated 26,000 Accounts to Supabase in One Night"
-description: "How I migrated over 26,000 user accounts and 100K+ application records to Supabase overnight with an idempotent loader, with zero forced password resets."
+description: "How I moved 26,000+ users to a rebuilt platform on Supabase with a Python pipeline that stays safe to stop and re-run."
 pubDate: 2026-10-07T12:00:00.000Z
 tags:
   - Supabase
@@ -12,134 +12,205 @@ ogImage: /blog/og/migrating-26000-users-to-supabase.v2.png
 ogImageAlt: "How I Migrated 26,000 Accounts to Supabase in One Night: 26,000+ accounts in under 10 minutes, zero errors, zero forced re-logins, above the cutover execution stages."
 ---
 
-import Figure from "../../components/blog/Figure.astro";
-import migrationStageOrder from "../../assets/blog/migration-stage-order.webp";
-import migrationLoaderPipeline from "../../assets/blog/migration-loader-pipeline.png";
-import migrationCutoverTimeline from "../../assets/blog/migration-cutover-timeline.png";
+import Mermaid from "../../components/blog/Mermaid.astro";
 
-During an infrastructure overhaul at a career-tech startup, I led the overnight database migration from our legacy PostgreSQL backend to a modern Supabase architecture. The cutover transferred over 26,000 user accounts, 100k+ job applications, hundreds of thousands of interaction records, and thousands of OAuth email connections. I built and owned the migration toolchain, executing every cutover stage through the planned maintenance window.
+At Mentoria, I worked on moving Arya, an AI job-search platform, to a rebuilt version on [Supabase](https://supabase.com). This wasn't a normal upgrade. The authentication system, data model and several product rules had changed, so the data had to be translated, not just copied.
 
-Nobody had to create a new account, reset a password or re-upload a résumé. Users authenticated through their existing OAuth providers as before, background workflows resumed seamlessly, and customer support received zero migration-related tickets.
+Some of the new tables were also write-once, which meant a bad write couldn't simply be edited later. Most users would never see the migration, but they would notice if their account or history was wrong.
 
-**At a glance**
+So I started with one question: **what happens if this fails halfway through?**
 
-- Over 26,000 accounts provisioned in under 10 minutes with zero schema errors
-- Every stage safe to kill and re-run: a second run writes zero rows
-- Thousands of OAuth integrations carried over without requiring user re-authentication
-- Zero orphaned records: 100% data reconciliation across relational boundaries
+## The main decisions
 
-## The problem
+I made four decisions early, and most of the system followed from them.
 
-The new architecture wasn't just an upgrade; it was a full platform rebuild featuring a modernized stack, revised UI, new authentication layer, and refactored schema.
+### 1. Migrate from a frozen source
 
-| | Legacy Platform (v1) | Modern Platform (v2) |
-| --- | --- | --- |
-| Sign-in | Custom OAuth implementation | Supabase auth (GoTrue) |
-| Billing | Daily usage quotas | Usage credits; write-once ledgers |
-| Outreach | Single denormalized tracking table | Normalized applications, contacts, and message events |
-| Stack | FastAPI + Postgres | FastAPI + Supabase Postgres + Next.js |
+I considered running both systems side by side, but keeping both in sync would have added another translation layer for a one-time move. It could also have caused both systems to act on the same data.
 
-Users expected their existing sign-in credentials to continue working, active OAuth email tokens to remain connected, and ongoing application sequences to pick up seamlessly. Two constraints made this challenging: the legacy system had to remain live until the exact cutover point, and several v2 ledger tables were write-once, meaning erroneous writes could not simply be updated in place.
+Instead, the old system was frozen, and every stage read from a snapshot taken at one cut-off time. That kept all tables consistent with each other and meant a stage could safely run again.
 
-## Four decisions
+### 2. Create accounts before users return
 
-| Decision | What I rejected | Why |
-| --- | --- | --- |
-| One closed window from a frozen copy of the source | Running both systems side by side | Dual writes risk race conditions and duplicate recruiter messages. An atomic cut-off ensures strict relational consistency. |
-| Pre-create every account with deterministic IDs | Creating accounts on first sign-in | Relational records like applications and billing history require parent account foreign keys immediately. |
-| Insert-or-skip with deterministic IDs | Upserts | Any stage can be halted and restarted safely; subsequent runs write zero redundant rows. |
-| Verify with v2's own validation logic | Trusting simple row counts | Matching counts can easily mask malformed or incorrectly defaulted values. |
+Accounts could have been created when users next signed in, but their existing records needed something to point to immediately. I created accounts in advance and kept the original user IDs, so relationships across the data stayed valid.
 
-The risk I designed around most was the billing stage. Financial ledger tables in v2 are write-once. Before billing wrote them, a wipe and reload was still possible, but once committed, the only way back was the pre-load snapshot. So billing carried a quarantine limit of zero, executing after applications, referrals, and credits had fully loaded and verified. Verification ran immediately after.
+### 3. Make every stage idempotent
 
-## A loader you can kill at any moment
+An idempotent stage leaves the database in the same state whether it runs once or several times. Users kept their existing IDs, and other rows got deterministic UUIDv5 IDs generated from their table and original key:
 
-The toolchain is a Python orchestration suite built from 16 discrete stages that extract slices of the legacy schema and transform them into 36 target tables in the new architecture. The stages run in dependency order, because relational foreign keys require parent rows to exist prior to child insertion.
+```python
+def row_id(table: str, legacy_key: str) -> uuid.UUID:
+    return uuid.uuid5(MIGRATION_NAMESPACE, f"{table}:{legacy_key}")
+```
 
-<Figure
-  src={migrationStageOrder}
-  alt="Sixteen migration stages in dependency order: a preflight check, thirteen load stages from auth to backfill-links, then reconcile and fieldcheck"
-  caption="Sixteen stages in dependency order: a preflight check, thirteen load stages, then two that verify the result."
+If a stage ran again, it produced the same keys, and the database skipped anything already present.
+
+### 4. Don't trust row counts alone
+
+A count can match while the values are wrong. Verification had to check both completeness and correctness, so I treated it as part of the pipeline from the start.
+
+## The pipeline
+
+I built one [Python](https://www.python.org) program with stages that ran in dependency order:
+
+<Mermaid
+  label="Python migration pipeline. A frozen source snapshot feeds preflight checks, account creation, data loaders, reconciliation and field-level verification. Account creation and the loaders write to the rebuilt platform on Supabase. Reconciliation compares source and target. Field-level verification checks stored values. The pipeline records each run in a SQLite ledger."
+  chart={`%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    SOURCE[("Frozen source snapshot")]
+    TARGET[("Rebuilt platform on Supabase")]
+    LEDGER[("SQLite run ledger")]
+
+    subgraph PIPELINE["Python migration pipeline"]
+        PREFLIGHT["Preflight checks"]
+        AUTH["Account creation"]
+        LOADERS["Data loaders<br/>parents before children"]
+        RECONCILE["Reconciliation"]
+        FIELDCHECK["Field-level verification"]
+
+        PREFLIGHT --> AUTH --> LOADERS --> RECONCILE --> FIELDCHECK
+    end
+
+    SOURCE --> PREFLIGHT
+    AUTH --> TARGET
+    LOADERS --> TARGET
+    RECONCILE -. "compares source and target" .-> TARGET
+    FIELDCHECK -. "checks stored values" .-> TARGET
+    PIPELINE -. "records each run" .-> LEDGER`}
 />
 
-Each stage runs as a dry run by default, preventing unintended writes during testing. Every stage is designed to be stopped at any moment and safely restarted, because every row's primary key is deterministic. Accounts retain their legacy identifiers, and relational records receive a deterministic UUIDv5 derived from the table name and legacy identifier. Batches are ingested using `COPY` into staging tables before executing an `INSERT … ON CONFLICT DO NOTHING` statement into production tables, ensuring reruns skip pre-existing rows without side effects.
+Every stage ran as a dry run by default and printed what it would write. Writing to the database required an explicit `--execute` flag.
 
-<Figure
-  src={migrationLoaderPipeline}
-  alt="Loader pipeline: four steps from the frozen legacy replica to the target database on Supabase, each with its guardrail"
-  caption="The loader's four steps, from the frozen legacy replica to the target database, each with the guardrail beneath it."
+A small [SQLite](https://www.sqlite.org) ledger recorded each run, including its stage, status, [Git](https://git-scm.com) commit and source snapshot. This made it easy to see what had happened and which code and data produced it. The ledger was only for reporting and resuming. Correctness still came from the deterministic IDs and database constraints.
+
+## How a batch loads
+
+Each loader processed users in fixed-size batches using keyset pagination. Unlike `OFFSET`, keyset pagination jumps directly to the next ID through the index, so later pages don't get slower.
+
+<Mermaid
+  label="How a batch loads. Read the next batch with keyset pagination, translate the rows, COPY them into a temporary table, then INSERT with ON CONFLICT DO NOTHING. If the database accepts the batch, compare the returned keys with the sent keys, commit, and read the next batch. If it rejects the batch, a bad-data error rolls back and splits the batch, quarantines the bad user, and either continues or stops when the quarantine limit is hit. A connection failure or code bug stops the stage."
+  chart={`%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    READ["Read next batch<br/>with keyset pagination"]
+    TRANSLATE["Translate rows<br/>to the new format"]
+    COPY["COPY into<br/>temporary table"]
+    INSERT["INSERT with<br/>ON CONFLICT DO NOTHING"]
+    ACCEPTED{"Did the database<br/>accept the batch?"}
+    COMPARE["Compare returned keys<br/>with sent keys"]
+    COMMIT["Commit batch and<br/>update ledger"]
+    ERROR{"What kind<br/>of error?"}
+    SPLIT["Roll back and<br/>split the batch"]
+    QUARANTINE["Quarantine bad user<br/>with a reason"]
+    GUARDRAIL{"Quarantine above<br/>the limit?"}
+    STOP["Stop the stage and<br/>refuse to report success"]
+
+    READ --> TRANSLATE --> COPY --> INSERT --> ACCEPTED
+    ACCEPTED -- "Yes" --> COMPARE --> COMMIT
+    COMMIT -- "next batch" --> READ
+    ACCEPTED -- "No" --> ERROR
+    ERROR -- "Bad data" --> SPLIT --> QUARANTINE --> GUARDRAIL
+    ERROR -- "Connection failure<br/>or code bug" --> STOP
+    GUARDRAIL -- "No" --> READ
+    GUARDRAIL -- "Yes" --> STOP
+
+    classDef stop fill:#FEF2F2,stroke:#B91C1C,color:#7F1D1D
+    class STOP stop`}
 />
 
-Each step writes only what it can prove, and automated guardrails halt execution immediately upon encountering data anomalies rather than writing corrupt state.
+For each batch, the loader:
 
-In testing drills and final cutover, mid-stage terminations with `SIGKILL` produced identical databases upon rerun with zero duplicate records.
+1. Translated the old rows into the new format.
+2. Bulk-loaded them into a temporary table with `COPY`.
+3. Inserted them into the real table, skipping conflicts.
+4. Compared the returned keys with the keys it had sent.
+5. Committed the batch and updated the ledger.
 
-## No re-login, no reconnect
+The core SQL looked like this:
 
-**Accounts.** Every account was provisioned through Supabase's Admin API before sign-in reopened. To prevent API throttling, the migration worker used an adaptive token-bucket rate limiter that halved request concurrency on HTTP 429 responses. Inactive accounts with historical transactional records were preserved with disabled authentication to maintain ledger integrity.
+```sql
+INSERT INTO target_table (...)
+SELECT ... FROM temporary_table
+ON CONFLICT DO NOTHING
+RETURNING id;
+```
 
-**OAuth Sessions.** Third-party OAuth tokens were re-encrypted with the new application key using authenticated Fernet cipher suites, then verified for integrity. Active integrations carried over seamlessly, while stale sessions were flagged for standard re-authorization.
+`COPY` is fast, but it can't handle conflicts by itself. The temporary table gave me both fast loading and safe inserts.
 
-**Automated Queues.** Paused message queues resumed gradually across a staged schedule to prevent outbound connection bursts.
+I chose insert-or-skip over upserts because an upsert can silently overwrite existing data during a re-run. With insert-or-skip, a second run writes nothing new, and the returned keys show exactly what changed.
 
-## Reshaping the data
+## Handling bad data
 
-Most of the work wasn't moving rows. It was translating them into a different model.
+One bad record shouldn't stop an entire migration, but it shouldn't disappear either.
 
-<div class="table-label-column">
+When the database rejected a batch, the transaction rolled back and the loader split the batch in half. It kept splitting until it found the bad user, then moved that user to quarantine with a reason. Connection failures and code bugs stopped the stage, because retrying wouldn't fix them.
 
-| Data | In Legacy Schema | In Target Schema | How it was translated |
-| --- | --- | --- | --- |
-| Outreach | Single denormalized tracking table | Normalized applications, contacts, and message events | One application per user and job, one contact per recipient. Duplicate events were coalesced to preserve history without redundant messaging. |
-| Résumés | Freeform JSON with ad-hoc revision histories | Versioned schema records with strict schema constraints | Historical entries were transformed through v2 validation functions, with cryptographic source hashes attached for verification. |
-| Billing | Daily usage quotas | Usage credits | Legacy subscription tiers were deterministically mapped to equivalent usage credit balances calculated from remaining billing period duration. |
+Quarantine also had a limit. If too many records failed, the guardrail stopped the stage and refused to report success. Stages that touched write-once data had a stricter limit.
 
-</div>
+## Creating accounts safely
 
-## Proving it was right
+The auth provider's real rate limit wasn't documented, and I didn't want to guess one. I used an AIMD limiter, the same basic idea TCP uses for congestion control:
 
-Row counts don't prove the data is correct. Reconcile compared every core table against the source at the same cut-off instant. Fieldcheck went further. It re-derived each field from legacy data using v2's own validation functions and compared the result against the target database, avoiding shared blind spots.
+```python
+if throttled:
+    limit = max(1, limit // 2)
+else:
+    limit = min(cap, limit + 1)
+```
 
-Multi-phase staging pilots against sampled datasets uncovered several undocumented legacy schema edge cases. For instance, legacy records occasionally contained thread status flags without corresponding child event rows; mapping rules were refined to infer status deterministically from historical metadata rather than assuming modern foreign-key guarantees.
+Each success allowed one more request in flight, and each HTTP 429 cut the limit in half. Since the user IDs were fixed, a retry couldn't create a second account.
 
-## The cutover night
+## The bug the guardrail caught
 
-The migration was scheduled during a planned overnight maintenance window to minimize user impact. Execution milestones from the run log:
+During the production run, a guardrail stopped one stage because far too many records were being quarantined. I didn't re-run anything until I understood why.
 
-<Figure
-  src={migrationCutoverTimeline}
-  alt="Cutover timeline from the source freeze through verification, validation, and smoke tests."
-  caption="The execution flow: freeze, accounts, core entities, verification guardrail, and validation."
+<Mermaid
+  label="How the guardrail failure was handled. The guardrail stops the stage, work pauses, the failure is reproduced read-only with the loader's connection, the cause is a Postgres parameter type that cannot be inferred, an explicit type cast is added, the same stage is re-run, existing rows are skipped because the stage is idempotent, and the quarantine count is confirmed clean."
+  chart={`%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Arial, sans-serif","fontSize":"14px","primaryColor":"#F8FAFC","primaryTextColor":"#1E293B","primaryBorderColor":"#475569","lineColor":"#64748B","secondaryColor":"#E2E8F0","tertiaryColor":"#FFFFFF"}}}%%
+flowchart TD
+    TRIP["Guardrail stops the stage"]
+    PAUSE["Pause before re-running"]
+    REPRODUCE["Reproduce read-only<br/>with the loader's connection"]
+    CAUSE["Find the cause:<br/>Postgres can't infer a parameter type"]
+    FIX["Add an explicit<br/>type cast"]
+    RERUN["Re-run the same stage"]
+    SKIP["Existing rows are skipped<br/>because the stage is idempotent"]
+    CHECK["Confirm the quarantine<br/>count is clean"]
+
+    TRIP --> PAUSE --> REPRODUCE --> CAUSE --> FIX --> RERUN --> SKIP --> CHECK
+
+    classDef stop fill:#FEF2F2,stroke:#B91C1C,color:#7F1D1D
+    classDef success fill:#F0FDF4,stroke:#15803D,color:#14532D
+    class TRIP stop
+    class CHECK success`}
 />
 
-1. **Source Freeze & Backup:** A fresh logical dump of the legacy database was taken and locked read-only, establishing an immutable cut-off boundary.
-2. **Auth Provisioning:** The administrative auth worker ran concurrently, safely creating user accounts with deterministic IDs across the target schema in minutes.
-3. **Core Entity Ingestion:** Candidate profiles, structured résumé histories, and application records loaded in strict dependency sequence.
-4. **Relational Integrity & Balances:** Applications, event timelines, and billing credit balances were imported under idempotent transactions.
-5. **OAuth Token Verification & Error Handling:** During token validation against external provider endpoints, an automated guardrail triggered due to a type casting discrepancy in the driver query under psycopg 3, causing status updates to safely roll back rather than corrupting connection states. Because every stage was idempotent, isolating the query parameter type fix allowed the verification worker to re-run smoothly without dirty data.
-6. **Reconcile & Smoke Testing:** End-to-end data validation confirmed zero row discrepancies across source and destination before DNS cutover and public reopening.
+I reproduced the failure read-only, using the loader's own database connection. The cause was a parameter inside `jsonb_build_object`. [psycopg](https://www.psycopg.org) 3 sends SQL and values separately, so [Postgres](https://www.postgresql.org) has to infer each value's type. This function accepts many types, which left Postgres with nothing to infer from.
 
-For the migration, prioritizing idempotency paid massive dividends. Every stage could be re-run safely, meaning any encountered issue was resolved by re-running a stage rather than undertaking manual database surgery.
+The error rolled back the transaction, so records that should have been updated ended up in quarantine. My tests had missed it because they mocked the database, and a mock can't reproduce this kind of database-level behaviour.
 
-## Migration scale and outcomes
+The change itself was small:
 
-| Entity Layer | Volume / Scale | Validation Result |
-| --- | --- | --- |
-| User Accounts & Auth Identities | 26,000+ accounts | 100% deterministic ID match, zero duplicates |
-| Job Application Records | 100,000+ entries | Zero orphaned records, foreign keys verified |
-| Outreach Messages & History | 200,000+ interactions | Timeline sequences preserved without double-counting |
-| Event Logs & Lifecycle Tracking | 300,000+ events | Full historical state integrity verified |
-| Versioned Résumé Documents | 50,000+ documents | Content hashes matched source snapshots |
-| Transactional Records & Balances | Core payment history | Fully reconciled against billing ledgers |
+```diff
+- jsonb_build_object('reason', %s)
++ jsonb_build_object('reason', %s::text)
+```
 
-**Authentication Continuity.** Existing users signed in seamlessly using standard OAuth flows without password resets or identity re-linking.
+I then re-ran the stage. Because the pipeline was idempotent, recovery didn't need a separate repair script.
 
-**Integration Health.** Active email integrations continued processing background queues without requiring manual credential re-entry, while stale sessions were safely transitioned to standard re-authorization states.
+Without the guardrail, the run could have looked successful while leaving bad data behind. It turned a silent failure into a clear stop, and it taught me that database code needs integration tests against a real database.
 
-## Trade-offs and what's next
+## Proving the data was right
 
-- Insert-or-skip makes re-runs free but corrections expensive. Changing a mapping after load means reloading the affected users. Next time, a mapping version stamped on every row would let a fix target exactly what changed.
-- Fieldcheck holds its comparisons in memory, so in production it verified a sample instead of every user. Streaming would give full coverage at this scale.
-- Parallelism was manual, and the heaviest stages were sliced by hand. Built-in workers with a connection budget would make the next migration faster.
+I used two levels of verification.
 
-It all ran on Python 3 (async), psycopg 3 with `COPY`, Postgres on Supabase, the GoTrue Admin API, Fernet encryption for tokens, boto3 for S3, a SQLite run ledger, and pytest.
+**Reconciliation** checked that the core tables balanced at the same cut-off time:
+
+```text
+read = written + already_present + skipped + quarantined
+```
+
+Every source row had to be accounted for.
+
+**Field-level verification** recalculated a sample of users' data from the source using the new platform's own logic, then compared the results with what was stored. Because it didn't reuse the loader's logic, it was less likely to share the loader's blind spots.
+
+I also ran staged pilots and crash drills. In the drills, I killed the loader mid-stage with `kill -9` and ran it again. It had no chance to clean up, which made it a good test of whether a re-run could really recover safely.

@@ -210,7 +210,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
             onActivate={() => setSelectedId("experience")}
             selected={selectedId === "experience"}
             layoutId="card-experience"
-            aria-label="Work Experience — view full details"
+            aria-label="Work Experience - view full details"
           >
             <h3 className="font-heading font-bold mb-3">Work Experience</h3>
             <div className="flex flex-col gap-3 flex-1 justify-center">
@@ -261,7 +261,7 @@ const MeBentoGrid: React.FC<MeBentoGridProps> = ({ optimizedImages }) => {
               ))}
             </div>
             <p className="type-caption text-[var(--text-tertiary)] mt-3 pt-3 border-t border-[var(--border-subtle)]">
-              Certification: {extracurrCard.data.certification?.title} —{" "}
+              Certification: {extracurrCard.data.certification?.title} -{" "}
               {extracurrCard.data.certification?.issuer}
             </p>
           </BentoCard>

@@ -9,7 +9,7 @@ export async function GET(context: APIContext) {
   const sortedPosts = posts.sort(comparePostsNewestFirst);
 
   return rss({
-    title: "Nikshaan Shetty — Blog",
+    title: "Nikshaan Shetty - Blog",
     description: "Engineering writeups, architecture notes, and production postmortems.",
     site: context.site || "https://nikshaan.dev",
     items: sortedPosts.map((post) => ({

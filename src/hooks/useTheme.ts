@@ -40,15 +40,18 @@ export function toggleThemeWithTransition(duration = 400) {
   const isLight = html.getAttribute("data-theme") === "light";
 
   const meta = document.getElementById("meta-theme-color");
+  const scheme = document.getElementById("meta-color-scheme");
 
   if (isLight) {
     html.removeAttribute("data-theme");
     persistTheme("dark");
     meta?.setAttribute("content", "#0a0a0a");
+    scheme?.setAttribute("content", "dark");
   } else {
     html.setAttribute("data-theme", "light");
     persistTheme("light");
     meta?.setAttribute("content", "#efeef3");
+    scheme?.setAttribute("content", "light");
   }
 
   window.setTimeout(() => {
