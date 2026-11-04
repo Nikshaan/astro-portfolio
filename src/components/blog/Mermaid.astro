@@ -33,14 +33,7 @@ svg = svg.replace(/<svg\b/, '<svg focusable="false" aria-hidden="true"');
 ---
 
 <figure class="post-mermaid">
-  <div class="post-mermaid-scroll" tabindex="0">
+  <div class="post-mermaid-scroll">
     <div class="post-mermaid-canvas" style={widthStyle} role="img" aria-label={label} set:html={svg} />
   </div>
-  <p class="post-mermaid-hint">Scroll sideways to see the full diagram</p>
 </figure>
-
-<script>
-  import { installMermaidOverflow } from "../../lib/mermaidOverflow";
-
-  installMermaidOverflow();
-</script>

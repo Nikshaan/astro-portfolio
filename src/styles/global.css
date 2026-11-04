@@ -1151,34 +1151,23 @@ pre.astro-code span {
 
 .post-prose .post-mermaid-scroll {
   display: flex;
-  justify-content: safe center;
+  justify-content: center;
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: thin;
-  scrollbar-color: #94a3b8 #e2e8f0;
-}
-
-.post-prose .post-mermaid-scroll::-webkit-scrollbar {
-  height: 8px;
-}
-
-.post-prose .post-mermaid-scroll::-webkit-scrollbar-thumb {
-  background: #94a3b8;
-  border-radius: 999px;
+  overflow: hidden;
 }
 
 .post-prose .post-mermaid-canvas {
-  flex: 0 0 auto;
-  width: var(--diagram-width, 100%);
+  width: min(100%, var(--diagram-width, 100%));
+  max-width: 100%;
+  min-width: 0;
 }
 
 .post-prose figure.post-mermaid svg {
   display: block;
   width: 100% !important;
   height: auto !important;
-  max-width: none !important;
+  max-width: 100% !important;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -1200,23 +1189,6 @@ pre.astro-code span {
   letter-spacing: normal;
   word-break: normal;
   overflow-wrap: normal;
-}
-
-.post-prose figure.post-mermaid p.post-mermaid-hint {
-  display: none;
-  margin: 0.55rem 0 0;
-  text-align: center;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 1.4;
-  letter-spacing: normal;
-  color: #64748b;
-}
-
-.post-prose figure.post-mermaid:has(.is-overflowing) p.post-mermaid-hint {
-  display: block;
 }
 
 .prose figure.post-mermaid p,
