@@ -3,4 +3,22 @@ import Analytics from '@vercel/analytics/astro';
 const isVercel = import.meta.env.PROD && (process.env.VERCEL === "1" || !!process.env.VERCEL_ENV);
 ---
 
-{isVercel && <Analytics />}
+{isVercel && (
+  <>
+  <template data-va-deferred>
+    <Analytics />
+  </template>
+  <script is:inline>
+    (function () {
+      var template = document.querySelector("template[data-va-deferred]");
+      if (!template) return;
+      var mount = function () {
+        if (!template.parentNode) return;
+        template.parentNode.replaceChild(document.importNode(template.content, true), template);
+      };
+      if (document.prerendering) document.addEventListener("prerenderingchange", mount, { once: true });
+      else mount();
+    })();
+  </script>
+  </>
+)}
