@@ -12,8 +12,8 @@ export async function getStaticPaths() {
   const sortedPosts = posts.sort(comparePostsNewestFirst);
 
   return sortedPosts.map((post, index) => {
-    const nextPost = index < sortedPosts.length - 1 ? sortedPosts[index + 1] : null;
-    const prevPost = index > 0 ? sortedPosts[index - 1] : null;
+    const nextPost = index > 0 ? sortedPosts[index - 1] : null;
+    const prevPost = index < sortedPosts.length - 1 ? sortedPosts[index + 1] : null;
 
     return {
       params: { slug: post.id },
